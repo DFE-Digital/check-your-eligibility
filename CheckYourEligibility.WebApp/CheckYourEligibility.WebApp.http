@@ -1,0 +1,6 @@
+@CheckYourEligibility.WebApp_HostAddress = http://localhost:5203
+
+GET {{CheckYourEligibility.WebApp_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
