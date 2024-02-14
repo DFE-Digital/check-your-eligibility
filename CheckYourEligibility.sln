@@ -5,11 +5,18 @@ VisualStudioVersion = 17.8.34525.116
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CheckYourEligibility.WebApp", "CheckYourEligibility.WebApp\CheckYourEligibility.WebApp.csproj", "{19544FF4-3872-4C83-BA0C-F06CDF852E5B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CheckYourEligibility.Domain", "CheckYourEligibility.Domain\CheckYourEligibility.Domain.csproj", "{190A4949-62D8-4C0D-A757-51A31B66C938}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CheckYourEligibility.Domain", "CheckYourEligibility.Domain\CheckYourEligibility.Domain.csproj", "{190A4949-62D8-4C0D-A757-51A31B66C938}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CheckYourEligibility.Services", "CheckYourEligibility.Services\CheckYourEligibility.Services.csproj", "{8AE5A8A8-7C7A-4735-839C-BD115892D1D9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CheckYourEligibility.Services", "CheckYourEligibility.Services\CheckYourEligibility.Services.csproj", "{8AE5A8A8-7C7A-4735-839C-BD115892D1D9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CheckYourEligibility.Data", "CheckYourEligibility.Data\CheckYourEligibility.Data.csproj", "{37AD51CA-F35C-4729-A1D5-0F06F7327A26}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CheckYourEligibility.Data", "CheckYourEligibility.Data\CheckYourEligibility.Data.csproj", "{37AD51CA-F35C-4729-A1D5-0F06F7327A26}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{166B2095-B983-49F3-9F46-CA95EBDEF9A1}"
+	ProjectSection(SolutionItems) = preProject
+		README.md = README.md
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CheckYourEligibility.Data.Migrations", "CheckYourEligibility.Data.Migrations\CheckYourEligibility.Data.Migrations.csproj", "{13A99159-4CD7-401F-A95A-CB107FAB4049}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +40,10 @@ Global
 		{37AD51CA-F35C-4729-A1D5-0F06F7327A26}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{37AD51CA-F35C-4729-A1D5-0F06F7327A26}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{37AD51CA-F35C-4729-A1D5-0F06F7327A26}.Release|Any CPU.Build.0 = Release|Any CPU
+		{13A99159-4CD7-401F-A95A-CB107FAB4049}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{13A99159-4CD7-401F-A95A-CB107FAB4049}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{13A99159-4CD7-401F-A95A-CB107FAB4049}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{13A99159-4CD7-401F-A95A-CB107FAB4049}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
