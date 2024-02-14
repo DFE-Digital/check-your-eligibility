@@ -9,10 +9,15 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.22.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.1">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\CheckYourEligibility.Data.Migrations\CheckYourEligibility.Data.Migrations.csproj" />
     <ProjectReference Include="..\CheckYourEligibility.Data\CheckYourEligibility.Data.csproj" />
     <ProjectReference Include="..\CheckYourEligibility.Domain\CheckYourEligibility.Domain.csproj" />
     <ProjectReference Include="..\CheckYourEligibility.Services\CheckYourEligibility.Services.csproj" />
