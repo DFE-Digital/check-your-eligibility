@@ -15,10 +15,3 @@ update-database -migration UpdatedModel
 
 update-Database -project CheckYourEligibility.Data.Migrations -ConfigurationTypeName CheckYourEligibility.Data.Migrations.Configuration
 
-eligibility db
-Enable-Migrations -ProjectName CheckYourEligibility.Data -ContextTypeName ContextScaffolding -MigrationsDirectory ScaffoldMigrations
-Enable-Migrations -ContextTypeName  CheckYourEligibility.Data.EligibilityCheckContext -EnableAutomaticMigrations
-Add-Migration -ProjectName CheckYourEligibility.Data -ConfigurationTypeName CheckYourEligibility.Data.Migrations.Configuration "InitialDatabaseCreation" -force
-Add-Migration -ConfigurationTypeName CheckYourEligibility.Data.Migrations.Configuration  -force
-
-update-Database -ConfigurationTypeName CheckYourEligibility.Data.Migrations.Configuration
