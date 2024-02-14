@@ -44,7 +44,8 @@ using (var scope = app.Services.CreateScope())
 
     var context = services.GetRequiredService<EligibilityCheckContext>();
     //context.Database.EnsureCreated();
-    DbInitializer.Initialize(context);
+    //DbInitializer.Initialize(context);
+    context.Database.Migrate(); //Runs all migrations that have not been processed. ensure there is a BaseMigration
 }
 
 
