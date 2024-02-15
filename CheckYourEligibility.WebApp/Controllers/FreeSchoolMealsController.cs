@@ -15,12 +15,15 @@ namespace CheckYourEligibility.WebApp.Controllers
         [HttpPost]
         public async Task<ActionResult> CheckEligibility([FromBody] CheckEligibilityRequest model)
         {
+            model.Data.NiNumber = model.Data.NiNumber.ToUpper();
+            model.Data.NASSNumber = model.Data.NASSNumber.ToUpper();
+
             var validator = new CheckEligibilityRequestDataValidator();
             var validationResults = validator.Validate(model);
 
             if (!validationResults.IsValid)
             {
-                return BadRequest($"Model.data {validationResults}.");
+                return BadRequest(new CheckEligibilityResponse(){Data = validationResults.ToString()});
             }
 
             //var id = await _service.PostAccessRequest(model);
