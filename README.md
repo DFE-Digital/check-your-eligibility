@@ -9,8 +9,6 @@ Add-Migration BaseMigration -project CheckYourEligibility.Data.Migrations
 Add-Migration UpdatedModel -project CheckYourEligibility.Data.Migrations
 
 
-
-
 update-database -migration UpdatedModel
 
 update-Database -project CheckYourEligibility.Data.Migrations -ConfigurationTypeName CheckYourEligibility.Data.Migrations.Configuration

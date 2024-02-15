@@ -16,15 +16,9 @@ builder.Services.AddApplicationInsightsTelemetry();
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
+//builder.Services.AddSwaggerGenNewtonsoftSupport();
 builder.Services.AddSwaggerGen();
 
-
-
-//builder.Services.AddDbContext<EligibilityCheckContext>(options =>
-//    options.UseSqlServer(builder.Configuration.GetConnectionString("EligibilityCheckContext") ?? throw new InvalidOperationException("Connection string 'EligibilityCheckContext' not found.")));
-//builder.Services.AddDatabaseDeveloperPageExceptionFilter();
-
-//builder.Services.AddTransient<IServiceTest, ServiceTest>();
 builder.Services.AddDatabase(builder.Configuration);
 
 var app = builder.Build();
