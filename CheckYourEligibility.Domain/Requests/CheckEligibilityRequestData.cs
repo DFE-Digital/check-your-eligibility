@@ -2,16 +2,12 @@
 {
     public class CheckEligibilityRequestData
     {
-        //JsonProperty(PropertyName = "nationalInsuranceNumber")]
-        public string NiNumber { get; set; } //nationalInsuranceNumber
+        public string NationalInsuranceNumber { get; set; } 
 
-        //[JsonProperty(PropertyName = "LastName")]
         public string LastName { get; set; }
-
-       // [JsonProperty(PropertyName = "dateOfBirth")]
+               
         public string DateOfBirth { get; set; }
-
-       // [JsonProperty(PropertyName = "nationalAsylumSeekerServiceNumber")]
-        public string NASSNumber { get; set; } //national asylum seeker service number
+               
+        public string NationalAsylumSeekerServiceNumber { get; set; } 
     }
 }

@@ -1,7 +1,6 @@
 ﻿using CheckYourEligibility.Services;
 using CheckYourEligibility.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace CheckYourEligibility.WebApp
 {
@@ -15,8 +14,8 @@ namespace CheckYourEligibility.WebApp
                    configuration.GetConnectionString("EligibilityCheck") ?? throw new InvalidOperationException("Connection string 'EligibilityCheck' not found."),
                    x=>x.MigrationsAssembly("CheckYourEligibility.Data.Migrations")));
             services.AddDatabaseDeveloperPageExceptionFilter();
-
-            services.AddTransient<IServiceTest, ServiceTest>();
+                        
+            services.AddTransient<IFsmCheckEligibility, FsmCheckEligibility>();
             return services;
         }
 
