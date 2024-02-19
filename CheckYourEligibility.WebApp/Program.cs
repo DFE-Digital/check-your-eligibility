@@ -1,7 +1,4 @@
-using CheckYourEligibility.Data;
-using CheckYourEligibility.Data.Models;
-using CheckYourEligibility.Services;
-using CheckYourEligibility.Services.Interfaces;
+using CheckYourEligibility.Data.Mappings;
 using CheckYourEligibility.WebApp;
 using Microsoft.EntityFrameworkCore;
 
@@ -16,10 +13,10 @@ builder.Services.AddApplicationInsightsTelemetry();
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-//builder.Services.AddSwaggerGenNewtonsoftSupport();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddDatabase(builder.Configuration);
+builder.Services.AddAutoMapper(typeof(EligibilityMappingProfile));
 
 var app = builder.Build();
 
@@ -41,8 +38,6 @@ using (var scope = app.Services.CreateScope())
     //DbInitializer.Initialize(context);
     context.Database.Migrate(); //Runs all migrations that have not been processed. ensure there is a BaseMigration
 }
-
-
 
 app.UseHttpsRedirection();
 

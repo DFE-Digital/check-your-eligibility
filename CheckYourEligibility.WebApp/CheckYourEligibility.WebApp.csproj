@@ -8,8 +8,9 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="13.0.1" />
     <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.22.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.1">
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.2">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>

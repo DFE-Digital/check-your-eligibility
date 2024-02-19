@@ -1,8 +1,9 @@
-﻿namespace FeatureManagement.Domain.Validation
+﻿// Ignore Spelling: Validator
+
+namespace FeatureManagement.Domain.Validation
 {
     using CheckYourEligibility.Domain.Requests;
     using FluentValidation;
-    using FluentValidation.Validators;
     using System.Text.RegularExpressions;
 
     public class CheckEligibilityRequestDataValidator : AbstractValidator<CheckEligibilityRequest>
@@ -22,19 +23,19 @@
                .Must(BeAValidDate)
                .WithMessage("Date of birth is required:- (dd/mm/yyyy)");
 
-            When(x => !string.IsNullOrEmpty(x.Data.NiNumber), () =>
+            When(x => !string.IsNullOrEmpty(x.Data.NationalInsuranceNumber), () =>
             {
-                RuleFor(x => x.Data.NASSNumber)
+                RuleFor(x => x.Data.NationalAsylumSeekerServiceNumber)
                     .Empty()
                     .WithMessage("National Insurance Number or National Asylum Seeker Service Number is required is required, not both");
-                RuleFor(x => x.Data.NiNumber)
+                RuleFor(x => x.Data.NationalInsuranceNumber)
                 .NotEmpty()
                    .Must(BeAValidNi)
                    .WithMessage("Invalid National Insurance Number");
 
             }).Otherwise(() =>
             {
-                RuleFor(x => x.Data.NASSNumber)
+                RuleFor(x => x.Data.NationalAsylumSeekerServiceNumber)
                     .NotEmpty()
                    .WithMessage("National Insurance Number or National Asylum Seeker Service Number is required");
             });
@@ -52,7 +53,11 @@
 
         private bool BeAValidDate(string value)
         {
-            return DateTime.TryParse(value, out _);
+            string regexString =
+       @"^(0?[1-9]|[12][0-9]|3[01])[\/\-](0?[1-9]|1[012])[\/\-]\d{4}$";
+            Regex rg = new Regex(regexString);
+            var res = rg.Match(value);
+            return res.Success;
         }
     }
 }

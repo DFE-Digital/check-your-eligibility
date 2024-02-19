@@ -10,8 +10,4 @@
     <ProjectReference Include="..\CheckYourEligibility.Data\CheckYourEligibility.Data.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Migrations\" />
-  </ItemGroup>
-
 </Project>
