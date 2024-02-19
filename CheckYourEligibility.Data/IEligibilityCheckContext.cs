@@ -5,5 +5,6 @@ public interface IEligibilityCheckContext
 {
     DbSet<FsmCheckEligibility> FsmCheckEligibilities { get; set; }
 
-    void SaveChanges();
+    
+    void SaveChangesAsync();
 }

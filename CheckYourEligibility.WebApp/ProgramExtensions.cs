@@ -15,7 +15,7 @@ namespace CheckYourEligibility.WebApp
                    x=>x.MigrationsAssembly("CheckYourEligibility.Data.Migrations")));
             services.AddDatabaseDeveloperPageExceptionFilter();
                         
-            services.AddTransient<IFsmCheckEligibility, FsmCheckEligibility>();
+            services.AddTransient<IFsmCheckEligibility, FsmCheckEligibilityService>();
             return services;
         }
 
