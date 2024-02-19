@@ -5,6 +5,8 @@ pool:
  demands:
  - Agent.OS -equals Linux
 
+steps:
+  - 
 - task: TerraformTaskV4@4
   inputs:
     provider: 'azurerm'
