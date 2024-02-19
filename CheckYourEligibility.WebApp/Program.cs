@@ -1,7 +1,4 @@
-using CheckYourEligibility.Data;
-using CheckYourEligibility.Data.Models;
-using CheckYourEligibility.Services;
-using CheckYourEligibility.Services.Interfaces;
+using CheckYourEligibility.Data.Mappings;
 using CheckYourEligibility.WebApp;
 using Microsoft.EntityFrameworkCore;
 
@@ -18,14 +15,8 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-
-
-//builder.Services.AddDbContext<EligibilityCheckContext>(options =>
-//    options.UseSqlServer(builder.Configuration.GetConnectionString("EligibilityCheckContext") ?? throw new InvalidOperationException("Connection string 'EligibilityCheckContext' not found.")));
-//builder.Services.AddDatabaseDeveloperPageExceptionFilter();
-
-//builder.Services.AddTransient<IServiceTest, ServiceTest>();
 builder.Services.AddDatabase(builder.Configuration);
+builder.Services.AddAutoMapper(typeof(EligibilityMappingProfile));
 
 var app = builder.Build();
 
@@ -47,8 +38,6 @@ using (var scope = app.Services.CreateScope())
     //DbInitializer.Initialize(context);
     context.Database.Migrate(); //Runs all migrations that have not been processed. ensure there is a BaseMigration
 }
-
-
 
 app.UseHttpsRedirection();
 
