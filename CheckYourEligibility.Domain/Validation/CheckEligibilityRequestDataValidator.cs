@@ -2,6 +2,7 @@
 
 namespace FeatureManagement.Domain.Validation
 {
+    using CheckYourEligibility.Domain.Constants.ErrorMessages;
     using CheckYourEligibility.Domain.Requests;
     using FluentValidation;
     using System.Text.RegularExpressions;
@@ -16,28 +17,28 @@ namespace FeatureManagement.Domain.Validation
                 .WithMessage("data is required");
 
             RuleFor(x => x.Data.LastName)
-               .NotEmpty().WithMessage("LastName is required");
+               .NotEmpty().WithMessage(FSM.LastName);
 
             RuleFor(x => x.Data.DateOfBirth)
                .NotEmpty()
                .Must(BeAValidDate)
-               .WithMessage("Date of birth is required:- (dd/mm/yyyy)");
+               .WithMessage(FSM.DOB);
 
             When(x => !string.IsNullOrEmpty(x.Data.NationalInsuranceNumber), () =>
             {
                 RuleFor(x => x.Data.NationalAsylumSeekerServiceNumber)
                     .Empty()
-                    .WithMessage("National Insurance Number or National Asylum Seeker Service Number is required is required, not both");
+                    .WithMessage(FSM.NI_and_NASS);
                 RuleFor(x => x.Data.NationalInsuranceNumber)
                 .NotEmpty()
                    .Must(BeAValidNi)
-                   .WithMessage("Invalid National Insurance Number");
+                   .WithMessage(FSM.NI);
 
             }).Otherwise(() =>
             {
                 RuleFor(x => x.Data.NationalAsylumSeekerServiceNumber)
                     .NotEmpty()
-                   .WithMessage("National Insurance Number or National Asylum Seeker Service Number is required");
+                   .WithMessage(FSM.NI_or_NASS);
             });
 
         }

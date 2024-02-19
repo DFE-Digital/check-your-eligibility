@@ -13,16 +13,15 @@ using System.Linq;
 
 namespace CheckYourEligibility.Services
 {
-    public class FsmCheckEligibility : IFsmCheckEligibility
+    public class FsmCheckEligibilityService : IFsmCheckEligibility
     {
         private  readonly ILogger _logger;
         private readonly IEligibilityCheckContext _db;
         protected readonly IMapper _mapper;
 
 
-        public FsmCheckEligibility(ILoggerFactory logger, IEligibilityCheckContext dbContext, IMapper mapper)
+        public FsmCheckEligibilityService(ILoggerFactory logger, IEligibilityCheckContext dbContext, IMapper mapper)
         {
-            Guard.Against.Null(logger);
             _logger = logger.CreateLogger("ServiceFsmCheckEligibility");
             _db = Guard.Against.Null(dbContext);
             _mapper = Guard.Against.Null(mapper);
@@ -33,12 +32,12 @@ namespace CheckYourEligibility.Services
         {
             try
             {
-                var item = _mapper.Map<Data.Models.FsmCheckEligibility>(data);
+                var item = _mapper.Map<FsmCheckEligibility>(data);
                 item.FsmCheckEligibilityID = Guid.NewGuid().ToString();
                 item.Status = FsmCheckEligibilityStatus.queuedForProcessing;
 
                 await _db.FsmCheckEligibilities.AddAsync(item);
-                _db.SaveChanges();
+                _db.SaveChangesAsync();
                 _logger.LogInformation($"Posted {item.FsmCheckEligibilityID}.");
                 return item.FsmCheckEligibilityID; 
             }

@@ -10,7 +10,11 @@ public class EligibilityCheckContext : DbContext, IEligibilityCheckContext
     }
 
     public virtual  DbSet<FsmCheckEligibility> FsmCheckEligibilities { get; set; }
-   
+
+    public void SaveChangesAsync()
+    {
+        base.SaveChangesAsync();
+    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -23,8 +27,4 @@ public class EligibilityCheckContext : DbContext, IEligibilityCheckContext
             
     }
 
-    void IEligibilityCheckContext.SaveChanges()
-    {
-        base.SaveChanges();
-    }
 }

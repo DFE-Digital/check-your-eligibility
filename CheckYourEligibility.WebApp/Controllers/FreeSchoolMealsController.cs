@@ -1,4 +1,5 @@
-﻿using CheckYourEligibility.Data.Models;
+﻿using Ardalis.GuardClauses;
+using CheckYourEligibility.Data.Models;
 using CheckYourEligibility.Domain.Requests;
 using CheckYourEligibility.Services.Interfaces;
 using FeatureManagement.Domain.Validation;
@@ -16,8 +17,8 @@ namespace CheckYourEligibility.WebApp.Controllers
 
         public FreeSchoolMealsController(ILogger<FreeSchoolMealsController> logger, IFsmCheckEligibility service)
         {
-            _logger = logger;
-            _service = service;
+            _logger = Guard.Against.Null(logger);
+            _service = Guard.Against.Null(service);
         }
 
         [ProducesResponseType(typeof(int), (int)HttpStatusCode.Accepted)]
@@ -25,6 +26,9 @@ namespace CheckYourEligibility.WebApp.Controllers
         [HttpPost]
         public async Task<ActionResult> CheckEligibility([FromBody] CheckEligibilityRequest model)
         {
+            if (model == null || model.Data == null) {
+                return BadRequest(new CheckEligibilityResponse() { Data = "Invalid CheckEligibilityRequest, data is required."});
+                }
             model.Data.NationalInsuranceNumber = model.Data.NationalInsuranceNumber.ToUpper();
             model.Data.NationalAsylumSeekerServiceNumber = model.Data.NationalAsylumSeekerServiceNumber.ToUpper();
 
