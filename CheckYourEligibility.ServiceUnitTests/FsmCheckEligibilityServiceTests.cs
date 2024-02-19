@@ -6,9 +6,7 @@ using CheckYourEligibility.Domain.Requests;
 using CheckYourEligibility.Services;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.Extensions.Logging.Abstractions;
-using Moq;
 
 namespace CheckYourEligibility.ServiceUnitTests
 {
@@ -16,7 +14,8 @@ namespace CheckYourEligibility.ServiceUnitTests
 
     public class FsmCheckEligibilityServiceTests : TestBase.TestBase
     {
-        private Mock<IEligibilityCheckContext> _mockDb;
+        //private Mock<IEligibilityCheckContext> _mockDb;
+        private IEligibilityCheckContext _fakeInMemoryDb;
         private IMapper _mapper;
         private FsmCheckEligibilityService _sut;
 
@@ -24,19 +23,20 @@ namespace CheckYourEligibility.ServiceUnitTests
         public void Setup()
         {
             var options = new DbContextOptionsBuilder<EligibilityCheckContext>()
-            .UseInMemoryDatabase(databaseName: "MovieListDatabase")
+            .UseInMemoryDatabase(databaseName: "FakeInMemoryDb")
             .Options;
-            _mockDb = new Mock<IEligibilityCheckContext>(MockBehavior.Strict);
-           
-             var config = new MapperConfiguration(cfg => cfg.AddProfile<EligibilityMappingProfile>());
+
+            _fakeInMemoryDb = new EligibilityCheckContext(options);
+
+            var config = new MapperConfiguration(cfg => cfg.AddProfile<EligibilityMappingProfile>());
             _mapper = config.CreateMapper();
-            _sut = new FsmCheckEligibilityService(new NullLoggerFactory(), _mockDb.Object, _mapper);
+           _sut = new FsmCheckEligibilityService(new NullLoggerFactory(), _fakeInMemoryDb, _mapper);
+
         }
 
         [TearDown]
         public void Teardown()
         {
-            _mockDb.VerifyAll();
         }
 
         [Test]
@@ -56,24 +56,12 @@ namespace CheckYourEligibility.ServiceUnitTests
             // Arrange
             var request = _fixture.Create<CheckEligibilityRequestData>();
             request.DateOfBirth = "01/02/1970";
-            var data = _fixture.Create<FsmCheckEligibility>();
-            var settings = new List<FsmCheckEligibility>() { data};
-            var id = _fixture.Create<string>();
             
-            _mockDb
-    .Setup(_ => _.FsmCheckEligibilities.AddAsync(It.IsAny<FsmCheckEligibility>(), It.IsAny<CancellationToken>()))
-    .Callback((FsmCheckEligibility model, CancellationToken token) => { settings.Add(model); })
-    .Returns((FsmCheckEligibility model, CancellationToken token) => Task.FromResult(data));
-
-
-
-            _mockDb.Setup(c => c.SaveChangesAsync());
-
             // Act
             var response = _sut.PostCheck(request);
 
             // Assert
-            response.Result.Should().Be(id);
+            response.Result.Should().NotBeNullOrEmpty();
         }
     }
 }
