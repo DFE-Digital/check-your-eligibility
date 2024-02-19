@@ -1,25 +1,19 @@
-terraform {
-  required_providers {
-    azurerm = {
-      source  = "hashicorp/azurerm"
-      version = "~> 2.65"
-    }
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
 
-    random = {
-      source  = "hashicorp/random"
-      version = "3.1.0"
-    }
-  }
+trigger:
+- main
 
-  backend "azurerm" {
-    resource_group_name  = "ecrdemostorage"
-    storage_account_name = "ecrdemostorage"
-    container_name       = "microservice"
-    key                  = "microservice.state"
-  }
-}
+pool:
+  vmImage: ubuntu-latest
 
-provider "azurerm" {
-  features {}
-}
+steps:
+- script: echo Hello, world!
+  displayName: 'Run a one-line script'
 
+- script: |
+    echo Add other tasks to build, test, and deploy your project.
+    echo See https://aka.ms/yaml
+  displayName: 'Run a multi-line script'
