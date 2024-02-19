@@ -12,8 +12,8 @@ terraform {
   }
 
   backend "azurerm" {
-    resource_group_name  = "patricksdemostorage"
-    storage_account_name = "patricksdemostorage"
+    resource_group_name  = "ecrdemostorage"
+    storage_account_name = "ecrdemostorage"
     container_name       = "microservice"
     key                  = "microservice.state"
   }
