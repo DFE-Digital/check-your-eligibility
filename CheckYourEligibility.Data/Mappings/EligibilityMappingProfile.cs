@@ -12,7 +12,7 @@ public class EligibilityMappingProfile : Profile
 {
     public EligibilityMappingProfile()
     {
-        CreateMap<CheckEligibilityRequestData, FsmCheckEligibility>()
+        CreateMap<CheckEligibilityRequestDataFsm, FsmCheckEligibility>()
         .ForMember(dest => dest.NINumber, opt => opt.MapFrom(src => src.NationalInsuranceNumber))
         .ForMember(dest => dest.NASSNumber, opt => opt.MapFrom(src => src.NationalAsylumSeekerServiceNumber))
         .ForMember(x => x.DateOfBirth, y => y.MapFrom(z => DateTime.ParseExact(z.DateOfBirth, "dd/MM/yyyy", CultureInfo.InvariantCulture)))
