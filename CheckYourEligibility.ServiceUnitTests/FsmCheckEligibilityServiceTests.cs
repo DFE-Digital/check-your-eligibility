@@ -63,5 +63,33 @@ namespace CheckYourEligibility.ServiceUnitTests
             // Assert
             response.Result.Should().NotBeNullOrEmpty();
         }
+
+        [Test]
+        public void Given_InValidRequest_GetStatus_Should_Return_null()
+        {
+            // Arrange
+            var request = _fixture.Create<Guid>().ToString();
+
+            // Act
+            var response = _sut.GetStatus(request);
+
+            // Assert
+            response.Result.Should().BeNull();
+        }
+
+        [Test]
+        public void Given_InValidRequest_GetStatus_Should_Return_status()
+        {
+            // Arrange
+            var item = _fixture.Create<FsmCheckEligibility>();
+            _fakeInMemoryDb.FsmCheckEligibilities.Add(item);
+            _fakeInMemoryDb.SaveChangesAsync();
+
+            // Act
+            var response = _sut.GetStatus(item.FsmCheckEligibilityID);
+
+            // Assert
+            response.Result.Data.Status.Should().BeEquivalentTo(item.Status.ToString());
+        }
     }
 }
