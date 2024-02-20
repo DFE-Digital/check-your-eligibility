@@ -44,5 +44,19 @@ namespace CheckYourEligibility.WebApp.Controllers
             var status = FsmCheckEligibilityStatus.queuedForProcessing.ToString();
             return new ObjectResult(new CheckEligibilityResponse() { Data = $"status : {status}", Links = $"eligibilityCheck: /eligibilityCheck/{id}" }) { StatusCode = StatusCodes.Status202Accepted };
         }
+
+        [ProducesResponseType(typeof(CheckEligibilityStatusResponse), (int)HttpStatusCode.OK)]
+        [ProducesResponseType((int)HttpStatusCode.NotFound)]
+        [HttpGet("{guid}/status")]
+        public async Task<ActionResult> CheckEligibilityStatus(string guid)
+        {
+            var response = await _service.GetStatus(guid);
+            if (response == null)
+            {
+                return NotFound(guid);
+            }
+
+            return new ObjectResult(response) { StatusCode = StatusCodes.Status200OK };
+        }
     }
 }

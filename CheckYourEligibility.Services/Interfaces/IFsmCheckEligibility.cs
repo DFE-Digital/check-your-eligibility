@@ -7,6 +7,7 @@ namespace CheckYourEligibility.Services.Interfaces
 {
     public interface IFsmCheckEligibility
     {
+        Task<CheckEligibilityStatusResponse?> GetStatus(string guid);
         Task<string> PostCheck(CheckEligibilityRequestData data);
     }
 }
