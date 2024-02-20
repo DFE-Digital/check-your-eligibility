@@ -1,4 +1,6 @@
 using AutoFixture;
+using AutoMapper.Execution;
+using Azure.Core;
 using CheckYourEligibility.Data.Models;
 using CheckYourEligibility.Domain.Constants.ErrorMessages;
 using CheckYourEligibility.Domain.Requests;
@@ -166,6 +168,37 @@ namespace CheckYourEligibility.APIUnitTests
             var response = _sut.CheckEligibility(request);
             var expectedResult = new ObjectResult(new CheckEligibilityResponse() { Data = FSM.LastName })
             { StatusCode = StatusCodes.Status400BadRequest };
+
+            // Assert
+            response.Result.Should().BeEquivalentTo(expectedResult);
+        }
+
+        [Test]
+        public void Given_InValid_guid_CheckEligibilityStatus_Should_Return_StatusNotFound()
+        {
+            // Arrange
+            var guid = _fixture.Create<Guid>().ToString();
+            _mockService.Setup(cs => cs.GetStatus(guid)).Returns(Task.FromResult<CheckEligibilityStatusResponse>(null));
+            // Act
+            var response = _sut.CheckEligibilityStatus(guid);
+            var expectedResult = new ObjectResult(guid)
+            { StatusCode = StatusCodes.Status404NotFound };
+
+            // Assert
+            response.Result.Should().BeEquivalentTo(expectedResult);
+        }
+
+        [Test]
+        public void Given_Valid_guid_CheckEligibilityStatus_Should_Return_StatusOk()
+        {
+            // Arrange
+            var guid = _fixture.Create<Guid>().ToString();
+            var expectedResponse = _fixture.Create<CheckEligibilityStatusResponse>();
+            _mockService.Setup(cs => cs.GetStatus(guid)).ReturnsAsync(expectedResponse);
+            // Act
+            var response = _sut.CheckEligibilityStatus(guid);
+            var expectedResult = new ObjectResult(expectedResponse)
+            { StatusCode = StatusCodes.Status200OK };
 
             // Assert
             response.Result.Should().BeEquivalentTo(expectedResult);

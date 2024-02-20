@@ -47,5 +47,13 @@ namespace CheckYourEligibility.Services
                 throw;
             }
         }
+
+        public async Task<CheckEligibilityStatusResponse?> GetStatus(string guid)
+        {
+            var result = await _db.FsmCheckEligibilities.FirstOrDefaultAsync(x=> x.FsmCheckEligibilityID == guid);
+            if (result != null)
+                return new CheckEligibilityStatusResponse { Data = new Domain.Requests.Data { Status = result.Status.ToString() } };
+            return null;
+        }
     }
 }
