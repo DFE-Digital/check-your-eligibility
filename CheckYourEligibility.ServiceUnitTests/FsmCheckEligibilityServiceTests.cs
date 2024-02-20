@@ -54,7 +54,7 @@ namespace CheckYourEligibility.ServiceUnitTests
         public void Given_validRequest_PostFeature_Should_Return_id()
         {
             // Arrange
-            var request = _fixture.Create<CheckEligibilityRequestData>();
+            var request = _fixture.Create<CheckEligibilityRequestDataFsm>();
             request.DateOfBirth = "01/02/1970";
             
             // Act
