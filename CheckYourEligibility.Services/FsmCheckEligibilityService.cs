@@ -28,7 +28,7 @@ namespace CheckYourEligibility.Services
             
         }
 
-        public async Task<string> PostCheck(CheckEligibilityRequestData data)
+        public async Task<string> PostCheck(CheckEligibilityRequestDataFsm data)
         {
             try
             {

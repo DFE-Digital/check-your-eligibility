@@ -1,6 +1,8 @@
-﻿namespace CheckYourEligibility.Domain.Requests
+﻿// Ignore Spelling: Fsm
+
+namespace CheckYourEligibility.Domain.Requests
 {
-    public class CheckEligibilityRequestData
+    public class CheckEligibilityRequestDataFsm
     {
         public string NationalInsuranceNumber { get; set; } 
 
