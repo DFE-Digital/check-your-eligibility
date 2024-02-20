@@ -42,7 +42,7 @@ namespace CheckYourEligibility.WebApp.Controllers
 
             var id = await _service.PostCheck(model.Data);
             var status = FsmCheckEligibilityStatus.queuedForProcessing.ToString();
-            return new ObjectResult(new CheckEligibilityResponse() { Data = $"status : {status}", Links = $"eligibilityCheck: /eligibilityCheck/{id}" }) { StatusCode = StatusCodes.Status202Accepted };
+            return new ObjectResult(new CheckEligibilityResponse() { Data = $"status : {status}", Links = $"eligibilityCheck: /freeSchoolMeals/{id}" }) { StatusCode = StatusCodes.Status202Accepted };
         }
 
         [ProducesResponseType(typeof(CheckEligibilityStatusResponse), (int)HttpStatusCode.OK)]

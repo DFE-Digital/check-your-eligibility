@@ -8,6 +8,6 @@ namespace CheckYourEligibility.Domain.Requests
 {
     public class CheckEligibilityRequest
     {
-       public CheckEligibilityRequestData Data { get; set; }
+       public CheckEligibilityRequestDataFsm Data { get; set; }
     }
 }
