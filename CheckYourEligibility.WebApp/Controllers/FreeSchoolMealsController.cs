@@ -1,10 +1,12 @@
 ﻿using Ardalis.GuardClauses;
 using CheckYourEligibility.Data.Models;
+using CheckYourEligibility.Domain.Constants;
 using CheckYourEligibility.Domain.Requests;
 using CheckYourEligibility.Services.Interfaces;
 using FeatureManagement.Domain.Validation;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
+using System.Net.NetworkInformation;
 
 namespace CheckYourEligibility.WebApp.Controllers
 {
@@ -42,7 +44,7 @@ namespace CheckYourEligibility.WebApp.Controllers
 
             var id = await _service.PostCheck(model.Data);
             var status = FsmCheckEligibilityStatus.queuedForProcessing.ToString();
-            return new ObjectResult(new CheckEligibilityResponse() { Data = $"status : {status}", Links = $"eligibilityCheck: /freeSchoolMeals/{id}" }) { StatusCode = StatusCodes.Status202Accepted };
+            return new ObjectResult(new CheckEligibilityResponse() { Data = $"{FSM.Status}{status}", Links = $"{FSM.GetLink}{id}" }) { StatusCode = StatusCodes.Status202Accepted };
         }
 
         [ProducesResponseType(typeof(CheckEligibilityStatusResponse), (int)HttpStatusCode.OK)]
@@ -57,6 +59,20 @@ namespace CheckYourEligibility.WebApp.Controllers
             }
 
             return new ObjectResult(response) { StatusCode = StatusCodes.Status200OK };
+        }
+
+
+        [ProducesResponseType(typeof(CheckEligibilityResponse), (int)HttpStatusCode.OK)]
+        [ProducesResponseType((int)HttpStatusCode.NotFound)]
+        [HttpPost("{guid}")]
+        public async Task<ActionResult> Process(string guid)
+        {
+            var response = await _service.Process(guid);
+            if (response == null)
+            {
+                return NotFound(guid);
+            }
+            return new ObjectResult(new CheckEligibilityResponse() { Data = $"{FSM.Status}{response.Data.Status}", Links = $"{FSM.GetLink}{guid}" }) { StatusCode = StatusCodes.Status200OK };
         }
     }
 }

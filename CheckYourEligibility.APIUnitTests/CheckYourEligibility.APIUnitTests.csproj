@@ -19,6 +19,7 @@
 	</ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\CheckYourEligibility.Domain\CheckYourEligibility.Domain.csproj" />
     <ProjectReference Include="..\CheckYourEligibility.TestBase\CheckYourEligibility.TestBase.csproj" />
     <ProjectReference Include="..\CheckYourEligibility.WebApp\CheckYourEligibility.WebApp.csproj" />
   </ItemGroup>

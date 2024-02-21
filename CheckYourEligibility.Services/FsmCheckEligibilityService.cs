@@ -55,5 +55,17 @@ namespace CheckYourEligibility.Services
                 return new CheckEligibilityStatusResponse { Data = new Domain.Requests.Data { Status = result.Status.ToString() } };
             return null;
         }
+
+        public async Task<CheckEligibilityStatusResponse?> Process(string guid)
+        {
+            var result = await _db.FsmCheckEligibilities.FirstOrDefaultAsync(x => x.FsmCheckEligibilityID == guid);
+            if (result != null)
+            {
+                result.Status = FsmCheckEligibilityStatus.parentNotFound;
+                _db.SaveChangesAsync();
+                return new CheckEligibilityStatusResponse { Data = new Domain.Requests.Data { Status = result.Status.ToString() } };
+            }
+            return null;
+        }
     }
 }

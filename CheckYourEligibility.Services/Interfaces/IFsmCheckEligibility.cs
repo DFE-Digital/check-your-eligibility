@@ -9,5 +9,6 @@ namespace CheckYourEligibility.Services.Interfaces
     {
         Task<CheckEligibilityStatusResponse?> GetStatus(string guid);
         Task<string> PostCheck(CheckEligibilityRequestDataFsm data);
+        Task<CheckEligibilityStatusResponse?> Process(string guid);
     }
 }
