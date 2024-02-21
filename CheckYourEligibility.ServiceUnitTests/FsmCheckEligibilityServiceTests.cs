@@ -89,7 +89,36 @@ namespace CheckYourEligibility.ServiceUnitTests
             var response = _sut.GetStatus(item.FsmCheckEligibilityID);
 
             // Assert
-            response.Result.Data.Status.Should().BeEquivalentTo(item.Status.ToString());
+            _ = response.Result.Data.Status.Should().BeEquivalentTo(item.Status.ToString());
+        }
+
+        [Test]
+        public void Given_InValidRequest_Process_Should_Return_null()
+        {
+            // Arrange
+            var request = _fixture.Create<Guid>().ToString();
+
+            // Act
+            var response = _sut.Process(request);
+
+            // Assert
+            response.Result.Should().BeNull();
+        }
+
+        [Test]
+        public void Given_validRequest_Process_Should_Return_updatedStatus()
+        {
+            // Arrange
+            var item = _fixture.Create<FsmCheckEligibility>();
+            _fakeInMemoryDb.FsmCheckEligibilities.Add(item);
+            _fakeInMemoryDb.SaveChangesAsync();
+            
+
+            // Act
+            var response = _sut.Process(item.FsmCheckEligibilityID);
+
+            // Assert
+            response.Result.Data.Status.Should().BeEquivalentTo(FsmCheckEligibilityStatus.parentNotFound.ToString());
         }
     }
 }

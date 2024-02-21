@@ -58,7 +58,9 @@ namespace CheckYourEligibility.APIUnitTests
             request.Data.DateOfBirth = "01/02/1970";
             request.Data.NationalAsylumSeekerServiceNumber = string.Empty;
             _mockService.Setup(cs => cs.PostCheck(request.Data)).ReturnsAsync(id);
-            var expectedResult = new ObjectResult(new CheckEligibilityResponse() { Data = $"status : {FsmCheckEligibilityStatus.queuedForProcessing}", Links = $"eligibilityCheck: /eligibilityCheck/{id}" })
+            var expectedResult = new ObjectResult(new CheckEligibilityResponse() 
+            { Data = $"{Domain.Constants.FSM.Status}{FsmCheckEligibilityStatus.queuedForProcessing}", 
+                Links = $"{Domain.Constants.FSM.GetLink}{id}" })
             { StatusCode = StatusCodes.Status202Accepted };
 
             // Act
@@ -89,12 +91,12 @@ namespace CheckYourEligibility.APIUnitTests
             request.Data.NationalInsuranceNumber = "ns738356d";
             request.Data.DateOfBirth = "01/02/1970";
             request.Data.NationalAsylumSeekerServiceNumber = "789";
-
-            // Act
-            var response = _sut.CheckEligibility(request);
             var expectedResult = new ObjectResult(new CheckEligibilityResponse() { Data = FSM.NI_and_NASS })
             { StatusCode = StatusCodes.Status400BadRequest };
 
+            // Act
+            var response = _sut.CheckEligibility(request);
+            
             // Assert
             response.Result.Should().BeEquivalentTo(expectedResult);
         }
@@ -107,12 +109,13 @@ namespace CheckYourEligibility.APIUnitTests
             request.Data.NationalInsuranceNumber = string.Empty;
             request.Data.DateOfBirth = "01/02/1970";
             request.Data.NationalAsylumSeekerServiceNumber = string.Empty;
-
-            // Act
-            var response = _sut.CheckEligibility(request);
             var expectedResult = new ObjectResult(new CheckEligibilityResponse() { Data = FSM.NI_or_NASS })
             { StatusCode = StatusCodes.Status400BadRequest };
 
+
+            // Act
+            var response = _sut.CheckEligibility(request);
+           
             // Assert
             response.Result.Should().BeEquivalentTo(expectedResult);
         }
@@ -125,12 +128,12 @@ namespace CheckYourEligibility.APIUnitTests
             request.Data.NationalInsuranceNumber = "123";
             request.Data.DateOfBirth = "01/02/1970";
             request.Data.NationalAsylumSeekerServiceNumber = "";
-
-            // Act
-            var response = _sut.CheckEligibility(request);
             var expectedResult = new ObjectResult(new CheckEligibilityResponse() { Data = FSM.NI })
             { StatusCode = StatusCodes.Status400BadRequest };
 
+            // Act
+            var response = _sut.CheckEligibility(request);
+            
             // Assert
             response.Result.Should().BeEquivalentTo(expectedResult);
         }
@@ -143,12 +146,12 @@ namespace CheckYourEligibility.APIUnitTests
             request.Data.NationalInsuranceNumber = "ns738356d";
             request.Data.DateOfBirth = "01/02/70";
             request.Data.NationalAsylumSeekerServiceNumber = "";
-
-            // Act
-            var response = _sut.CheckEligibility(request);
             var expectedResult = new ObjectResult(new CheckEligibilityResponse() { Data = FSM.DOB })
             { StatusCode = StatusCodes.Status400BadRequest };
 
+            // Act
+            var response = _sut.CheckEligibility(request);
+            
             // Assert
             response.Result.Should().BeEquivalentTo(expectedResult);
         }
@@ -163,12 +166,12 @@ namespace CheckYourEligibility.APIUnitTests
             request.Data.DateOfBirth = "01/02/1970";
             request.Data.LastName = string.Empty;
             request.Data.NationalAsylumSeekerServiceNumber = string.Empty;
-
-            // Act
-            var response = _sut.CheckEligibility(request);
             var expectedResult = new ObjectResult(new CheckEligibilityResponse() { Data = FSM.LastName })
             { StatusCode = StatusCodes.Status400BadRequest };
 
+            // Act
+            var response = _sut.CheckEligibility(request);
+           
             // Assert
             response.Result.Should().BeEquivalentTo(expectedResult);
         }
@@ -179,11 +182,12 @@ namespace CheckYourEligibility.APIUnitTests
             // Arrange
             var guid = _fixture.Create<Guid>().ToString();
             _mockService.Setup(cs => cs.GetStatus(guid)).Returns(Task.FromResult<CheckEligibilityStatusResponse>(null));
-            // Act
-            var response = _sut.CheckEligibilityStatus(guid);
             var expectedResult = new ObjectResult(guid)
             { StatusCode = StatusCodes.Status404NotFound };
 
+            // Act
+            var response = _sut.CheckEligibilityStatus(guid);
+            
             // Assert
             response.Result.Should().BeEquivalentTo(expectedResult);
         }
@@ -195,10 +199,50 @@ namespace CheckYourEligibility.APIUnitTests
             var guid = _fixture.Create<Guid>().ToString();
             var expectedResponse = _fixture.Create<CheckEligibilityStatusResponse>();
             _mockService.Setup(cs => cs.GetStatus(guid)).ReturnsAsync(expectedResponse);
-            // Act
-            var response = _sut.CheckEligibilityStatus(guid);
             var expectedResult = new ObjectResult(expectedResponse)
             { StatusCode = StatusCodes.Status200OK };
+
+            // Act
+            var response = _sut.CheckEligibilityStatus(guid);
+            
+            // Assert
+            response.Result.Should().BeEquivalentTo(expectedResult);
+        }
+
+        [Test]
+        public void Given_InValid_guid_Process_Should_Return_StatusNotFound()
+        {
+            // Arrange
+            var guid = _fixture.Create<Guid>().ToString();
+            _mockService.Setup(cs => cs.Process(guid)).Returns(Task.FromResult<CheckEligibilityStatusResponse>(null));
+            var expectedResult = new ObjectResult(guid)
+            { StatusCode = StatusCodes.Status404NotFound };
+
+            // Act
+            var response = _sut.Process(guid);
+
+
+            // Assert
+            response.Result.Should().BeEquivalentTo(expectedResult);
+        }
+
+        [Test]
+        public void Given_Valid_guid_Process_Should_Return_StatusOk()
+        {
+            // Arrange
+            var guid = _fixture.Create<Guid>().ToString();
+            var expectedResponse = _fixture.Create<CheckEligibilityStatusResponse>();
+            _mockService.Setup(cs => cs.Process(guid)).ReturnsAsync(expectedResponse);
+            expectedResponse.Data.Status = FsmCheckEligibilityStatus.parentNotFound.ToString();
+            var expectedResult = new ObjectResult(new CheckEligibilityResponse()
+            {
+                Data = $"{Domain.Constants.FSM.Status}{FsmCheckEligibilityStatus.parentNotFound}",
+                Links = $"{Domain.Constants.FSM.GetLink}{guid}"
+            })
+            { StatusCode = StatusCodes.Status200OK };
+
+            // Act
+            var response = _sut.Process(guid);
 
             // Assert
             response.Result.Should().BeEquivalentTo(expectedResult);
