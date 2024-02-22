@@ -16,6 +16,11 @@ provider "azurerm" {
 resource "azurerm_resource_group" "rg" {
   name     = "s203d01-core1"
   location = "westeurope"
+  tags = {
+      environment = "dev"
+      service offering = "Eligibility Checking Service GOV.UK"
+      product = "Eligibility Checking Service GOV.UK"
+    }
 }
 
 # Create the Linux App Service Plan
