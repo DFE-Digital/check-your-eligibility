@@ -21,3 +21,7 @@ steps:
     command: 'plan'
     environmentServiceNameAzureRM: 's203d.azdo.deployment'
 
+- task: TerraformTaskV4@4
+  inputs:
+    provider: 'azurerm'
+    command: 'apply'
