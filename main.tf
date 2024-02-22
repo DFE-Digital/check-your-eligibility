@@ -14,7 +14,7 @@ provider "azurerm" {
 
 # Create the resource group
 resource "azurerm_resource_group" "rg" {
-  name     = "s203d01-test"
+  name     = "s203d01-core1"
   location = "westeurope"
 }
 
