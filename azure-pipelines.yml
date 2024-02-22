@@ -25,3 +25,4 @@ steps:
   inputs:
     provider: 'azurerm'
     command: 'apply'
+    environmentServiceNameAzureRM: 's203d.azdo.deployment'
