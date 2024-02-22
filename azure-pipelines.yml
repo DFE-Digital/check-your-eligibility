@@ -14,3 +14,10 @@ steps:
     backendAzureRmStorageAccountName: 's203terraformdev'
     backendAzureRmContainerName: 's203terraform'
     backendAzureRmKey: 'tfstate'
+
+- task: TerraformTaskV4@4
+  inputs:
+    provider: 'azurerm'
+    command: 'plan'
+    environmentServiceNameAzureRM: 's203d.azdo.deployment'
+
