@@ -4,8 +4,13 @@ pool:
  name: Azure Pipelines
 
 steps:
-  - task: TerraformTaskV4@4
-    inputs:
-      provider: 'azurerm'
-      command: 'init'
-      backendServiceArm: 's203d.azdo.deployment'
+
+- task: TerraformTaskV4@4
+  inputs:
+    provider: 'azurerm'
+    command: 'init'
+    backendServiceArm: 's203d.azdo.deployment'
+    backendAzureRmResourceGroupName: 's203d01-tf'
+    backendAzureRmStorageAccountName: 's203terraformdev'
+    backendAzureRmContainerName: 's203terraform'
+    backendAzureRmKey: 'tfstate'
