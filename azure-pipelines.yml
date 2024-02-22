@@ -10,4 +10,4 @@ steps:
     inputs:
       provider: 'azurerm'
       command: 'init'
-      backendServiceArm: 's203-eligibilitycheckingservicegovuk-development(244821ce-c33f-48f4-9b47-0157b636c597)'
+      backendServiceArm: 's203d.azdo.deployment'
