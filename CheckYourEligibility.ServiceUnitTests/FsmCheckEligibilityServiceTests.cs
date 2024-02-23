@@ -106,10 +106,11 @@ namespace CheckYourEligibility.ServiceUnitTests
         }
 
         [Test]
-        public void Given_validRequest_Process_Should_Return_updatedStatus()
+        public void Given_validRequest_Process_Should_Return_updatedStatus_parentNotFound()
         {
             // Arrange
             var item = _fixture.Create<FsmCheckEligibility>();
+            item.NASSNumber = string.Empty;
             _fakeInMemoryDb.FsmCheckEligibilities.Add(item);
             _fakeInMemoryDb.SaveChangesAsync();
             
@@ -119,6 +120,41 @@ namespace CheckYourEligibility.ServiceUnitTests
 
             // Assert
             response.Result.Data.Status.Should().BeEquivalentTo(FsmCheckEligibilityStatus.parentNotFound.ToString());
+        }
+
+        [Test]
+        public void Given_validRequest_HMRC_Process_Should_Return_updatedStatus_parentNotFound()
+        {
+            // Arrange
+            var item = _fixture.Create<FsmCheckEligibility>();
+            item.NASSNumber = string.Empty;
+            _fakeInMemoryDb.FsmCheckEligibilities.Add(item);
+            _fakeInMemoryDb.SaveChangesAsync();
+
+
+            // Act
+            var response = _sut.Process(item.FsmCheckEligibilityID);
+
+            // Assert
+            response.Result.Data.Status.Should().BeEquivalentTo(FsmCheckEligibilityStatus.parentNotFound.ToString());
+        }
+
+        [Test]
+        public void Given_validRequest_HMRC_Process_Should_Return_updatedStatus_eligible()
+        {
+            // Arrange
+            var item = _fixture.Create<FsmCheckEligibility>();
+            item.NASSNumber = string.Empty;
+            _fakeInMemoryDb.FsmCheckEligibilities.Add(item);
+            _fakeInMemoryDb.FreeSchoolMealsHMRC.Add(new FreeSchoolMealsHMRC { FreeSchoolMealsHMRCID= item.NINumber,Surname = item.LastName, DateOfBirth = item.DateOfBirth });
+            _fakeInMemoryDb.SaveChangesAsync();
+
+
+            // Act
+            var response = _sut.Process(item.FsmCheckEligibilityID);
+
+            // Assert
+            response.Result.Data.Status.Should().BeEquivalentTo(FsmCheckEligibilityStatus.eligible.ToString());
         }
     }
 }

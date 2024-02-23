@@ -7,5 +7,6 @@ http://stackoverflow.com/questions/8546257/is-it-possible-to-change-the-location
 
 Add-Migration BaseMigration -project CheckYourEligibility.Data.Migrations
 Add-Migration UpdatedModel -project CheckYourEligibility.Data.Migrations
+Add-Migration FsmHMRC -project CheckYourEligibility.Data.Migrations
 
 update-database -migration UpdatedModel

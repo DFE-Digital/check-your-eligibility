@@ -22,6 +22,7 @@ namespace CheckYourEligibility.Data.Models
     public  enum FsmCheckEligibilityStatus
     {
         queuedForProcessing,
-        parentNotFound
+        parentNotFound,
+        eligible
     }
 }

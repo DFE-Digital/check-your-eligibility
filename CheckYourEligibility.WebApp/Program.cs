@@ -1,3 +1,4 @@
+using CheckYourEligibility.Data;
 using CheckYourEligibility.Data.Mappings;
 using CheckYourEligibility.WebApp;
 using Microsoft.EntityFrameworkCore;
@@ -20,6 +21,7 @@ builder.Services.AddAutoMapper(typeof(EligibilityMappingProfile));
 
 var app = builder.Build();
 
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -27,6 +29,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
     app.UseDeveloperExceptionPage();
     app.UseMigrationsEndPoint();
+    
 }
 
 using (var scope = app.Services.CreateScope())
@@ -35,8 +38,8 @@ using (var scope = app.Services.CreateScope())
 
     var context = services.GetRequiredService<EligibilityCheckContext>();
     //context.Database.EnsureCreated();
-    //DbInitializer.Initialize(context);
     context.Database.Migrate(); //Runs all migrations that have not been processed. ensure there is a BaseMigration
+    DbInitializer.Initialize(context);
 }
 
 app.UseHttpsRedirection();
