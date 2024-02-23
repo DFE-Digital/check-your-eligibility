@@ -17,12 +17,7 @@ namespace CheckYourEligibility.Data.Models
 
         public string NASSNumber { get; set; }
 
-    }
+        public DateTime TimeStamp { get; set; }
 
-    public  enum FsmCheckEligibilityStatus
-    {
-        queuedForProcessing,
-        parentNotFound,
-        eligible
     }
 }
