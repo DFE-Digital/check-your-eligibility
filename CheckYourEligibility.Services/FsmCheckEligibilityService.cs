@@ -8,6 +8,7 @@ using CheckYourEligibility.Services.Interfaces;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Linq;
 
@@ -62,10 +63,30 @@ namespace CheckYourEligibility.Services
             if (result != null)
             {
                 result.Status = FsmCheckEligibilityStatus.parentNotFound;
+                if (!result.NINumber.IsNullOrEmpty())
+                {
+                    var hmrcCheck = await HMRC_Check(result);
+                    result.Status = hmrcCheck;
+                }
+                
                 _db.SaveChangesAsync();
                 return new CheckEligibilityStatusResponse { Data = new Domain.Requests.Data { Status = result.Status.ToString() } };
             }
             return null;
+        }
+
+        private async Task<FsmCheckEligibilityStatus> HMRC_Check(FsmCheckEligibility data)
+        {
+            var check = await _db.FreeSchoolMealsHMRC.FirstOrDefaultAsync(x =>
+            x.FreeSchoolMealsHMRCID == data.NINumber 
+            && x.Surname == data.LastName 
+            && x.DateOfBirth == data.DateOfBirth);
+            if (check != null) 
+            { 
+                return FsmCheckEligibilityStatus.eligible; 
+            };
+
+            return FsmCheckEligibilityStatus.parentNotFound;
         }
     }
 }
