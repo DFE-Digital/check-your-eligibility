@@ -10,6 +10,7 @@ public class EligibilityCheckContext : DbContext, IEligibilityCheckContext
     }
 
     public virtual  DbSet<FsmCheckEligibility> FsmCheckEligibilities { get; set; }
+    public virtual DbSet<FreeSchoolMealsHMRC> FreeSchoolMealsHMRC { get; set; }
 
     public void SaveChangesAsync()
     {

@@ -64,7 +64,7 @@ namespace CheckYourEligibility.WebApp.Controllers
 
         [ProducesResponseType(typeof(CheckEligibilityResponse), (int)HttpStatusCode.OK)]
         [ProducesResponseType((int)HttpStatusCode.NotFound)]
-        [HttpPost("{guid}")]
+        [HttpPut("processEligibilityCheck/{guid}")]
         public async Task<ActionResult> Process(string guid)
         {
             var response = await _service.Process(guid);
