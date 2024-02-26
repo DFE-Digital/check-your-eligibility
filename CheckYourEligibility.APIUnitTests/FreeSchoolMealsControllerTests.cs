@@ -247,5 +247,38 @@ namespace CheckYourEligibility.APIUnitTests
             // Assert
             response.Result.Should().BeEquivalentTo(expectedResult);
         }
+
+        [Test]
+        public void Given_InValid_guid_GetEligibilityCheck_Should_Return_StatusNotFound()
+        {
+            // Arrange
+            var guid = _fixture.Create<Guid>().ToString();
+            _mockService.Setup(cs => cs.GetItem(guid)).Returns(Task.FromResult<CheckEligibilityItemFsmResponse>(null));
+            var expectedResult = new ObjectResult(guid)
+            { StatusCode = StatusCodes.Status404NotFound };
+
+            // Act
+            var response = _sut.GetEligibilityCheck(guid);
+
+            // Assert
+            response.Result.Should().BeEquivalentTo(expectedResult);
+        }
+
+        [Test]
+        public void Given_Valid_guid_GetEligibilityCheck_Should_Return_StatusOk()
+        {
+            // Arrange
+            var guid = _fixture.Create<Guid>().ToString();
+            var expectedResponse = _fixture.Create<CheckEligibilityItemFsmResponse>();
+            _mockService.Setup(cs => cs.GetItem(guid)).ReturnsAsync(expectedResponse);
+            var expectedResult = new ObjectResult(expectedResponse)
+            { StatusCode = StatusCodes.Status200OK };
+
+            // Act
+            var response = _sut.GetEligibilityCheck(guid);
+
+            // Assert
+            response.Result.Should().BeEquivalentTo(expectedResult);
+        }
     }
 }
