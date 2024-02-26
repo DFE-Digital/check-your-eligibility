@@ -186,5 +186,33 @@ namespace CheckYourEligibility.ServiceUnitTests
             // Assert
             response.Result.Data.Status.Should().BeEquivalentTo(FsmCheckEligibilityStatus.eligible.ToString());
         }
+
+        [Test]
+        public void Given_InValidRequest_GetItem_Should_Return_null()
+        {
+            // Arrange
+            var request = _fixture.Create<Guid>().ToString();
+
+            // Act
+            var response = _sut.GetItem(request);
+
+            // Assert
+            response.Result.Should().BeNull();
+        }
+
+        [Test]
+        public void Given_ValidRequest_GetItem_Should_Return_Item()
+        {
+            // Arrange
+            var item = _fixture.Create<FsmCheckEligibility>();
+            _fakeInMemoryDb.FsmCheckEligibilities.Add(item);
+            _fakeInMemoryDb.SaveChangesAsync();
+
+            // Act
+            var response = _sut.GetItem(item.FsmCheckEligibilityID);
+
+            // Assert
+            response.Result.Data.Should().BeOfType<CheckEligibilityItemFsm>();
+        }
     }
 }

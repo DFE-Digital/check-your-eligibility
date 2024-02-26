@@ -17,5 +17,11 @@ public class EligibilityMappingProfile : Profile
         .ForMember(dest => dest.NASSNumber, opt => opt.MapFrom(src => src.NationalAsylumSeekerServiceNumber))
         .ForMember(x => x.DateOfBirth, y => y.MapFrom(z => DateTime.ParseExact(z.DateOfBirth, "dd/MM/yyyy", CultureInfo.InvariantCulture)))
         .ReverseMap();
+
+        CreateMap<FsmCheckEligibility, CheckEligibilityItemFsm>()
+        .ForMember(dest => dest.NationalInsuranceNumber, opt => opt.MapFrom(src => src.NINumber))
+        .ForMember(dest => dest.NationalAsylumSeekerServiceNumber, opt => opt.MapFrom(src => src.NASSNumber))
+        .ForMember(x => x.DateOfBirth, y => y.MapFrom(z => z.DateOfBirth.ToString("dd/MM/yyyy")))
+        .ReverseMap();
     }
 }
