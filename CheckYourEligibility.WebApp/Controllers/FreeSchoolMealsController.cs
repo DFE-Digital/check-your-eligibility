@@ -67,7 +67,7 @@ namespace CheckYourEligibility.WebApp.Controllers
         [HttpPut("processEligibilityCheck/{guid}")]
         public async Task<ActionResult> Process(string guid)
         {
-            var response = await _service.Process(guid);
+            var response = await _service.ProcessCheck(guid);
             if (response == null)
             {
                 return NotFound(guid);

@@ -13,23 +13,36 @@ namespace CheckYourEligibility.Data
         {
             context.Database.EnsureCreated();
 
-            // Look for any students.
-            if (context.FreeSchoolMealsHMRC.Any())
+            // Look for any FreeSchoolMealsHMRC.
+            if (!context.FreeSchoolMealsHMRC.Any())
             {
-                return;   // DB has been seeded
-            }
 
-            var fsmHmrc = new FreeSchoolMealsHMRC[]
-            {
+                var fsmHmrc = new FreeSchoolMealsHMRC[]
+                {
             new FreeSchoolMealsHMRC{FreeSchoolMealsHMRCID="AB123456C",Surname="SIMPSON",DateOfBirth=DateTime.Parse("01-01-1990"),DataType = 1},
             new FreeSchoolMealsHMRC{FreeSchoolMealsHMRCID="AC123456D",Surname="GRIFFIN",DateOfBirth=DateTime.Parse("31-12-2000"),DataType = 1},
-            };
-            foreach (FreeSchoolMealsHMRC s in fsmHmrc)
-            {
-                context.FreeSchoolMealsHMRC.Add(s);
+                };
+                foreach (FreeSchoolMealsHMRC s in fsmHmrc)
+                {
+                    context.FreeSchoolMealsHMRC.Add(s);
+                }
             }
-            context.SaveChanges();
 
+            // Look for any FreeSchoolMealsHO.
+            if (!context.FreeSchoolMealsHO.Any())
+            {
+                var fsmHo = new FreeSchoolMealsHO[]
+            {
+            new FreeSchoolMealsHO{FreeSchoolMealsHOID=Guid.NewGuid().ToString(),LastName="SIMPSON",DateOfBirth=DateTime.Parse("01-01-1990"),NASS = "AB123456C"},
+            new FreeSchoolMealsHO{FreeSchoolMealsHOID=Guid.NewGuid().ToString(),LastName="GRIFFIN",DateOfBirth=DateTime.Parse("31-12-2000"),NASS = "AC123456D"},
+            };
+                foreach (FreeSchoolMealsHO s in fsmHo)
+                {
+                    context.FreeSchoolMealsHO.Add(s);
+                }
+
+                context.SaveChanges();
+            }
         }
     }
 }

@@ -214,7 +214,7 @@ namespace CheckYourEligibility.APIUnitTests
         {
             // Arrange
             var guid = _fixture.Create<Guid>().ToString();
-            _mockService.Setup(cs => cs.Process(guid)).Returns(Task.FromResult<CheckEligibilityStatusResponse>(null));
+            _mockService.Setup(cs => cs.ProcessCheck(guid)).Returns(Task.FromResult<CheckEligibilityStatusResponse>(null));
             var expectedResult = new ObjectResult(guid)
             { StatusCode = StatusCodes.Status404NotFound };
 
@@ -232,7 +232,7 @@ namespace CheckYourEligibility.APIUnitTests
             // Arrange
             var guid = _fixture.Create<Guid>().ToString();
             var expectedResponse = _fixture.Create<CheckEligibilityStatusResponse>();
-            _mockService.Setup(cs => cs.Process(guid)).ReturnsAsync(expectedResponse);
+            _mockService.Setup(cs => cs.ProcessCheck(guid)).ReturnsAsync(expectedResponse);
             expectedResponse.Data.Status = FsmCheckEligibilityStatus.parentNotFound.ToString();
             var expectedResult = new ObjectResult(new CheckEligibilityResponse()
             {
