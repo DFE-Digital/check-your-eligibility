@@ -99,7 +99,7 @@ namespace CheckYourEligibility.ServiceUnitTests
             var request = _fixture.Create<Guid>().ToString();
 
             // Act
-            var response = _sut.Process(request);
+            var response = _sut.ProcessCheck(request);
 
             // Assert
             response.Result.Should().BeNull();
@@ -114,16 +114,15 @@ namespace CheckYourEligibility.ServiceUnitTests
             _fakeInMemoryDb.FsmCheckEligibilities.Add(item);
             _fakeInMemoryDb.SaveChangesAsync();
             
-
             // Act
-            var response = _sut.Process(item.FsmCheckEligibilityID);
+            var response = _sut.ProcessCheck(item.FsmCheckEligibilityID);
 
             // Assert
             response.Result.Data.Status.Should().BeEquivalentTo(FsmCheckEligibilityStatus.parentNotFound.ToString());
         }
 
         [Test]
-        public void Given_validRequest_HMRC_Process_Should_Return_updatedStatus_parentNotFound()
+        public void Given_validRequest_HMRC_InvalidNI_Process_Should_Return_updatedStatus_parentNotFound()
         {
             // Arrange
             var item = _fixture.Create<FsmCheckEligibility>();
@@ -131,9 +130,24 @@ namespace CheckYourEligibility.ServiceUnitTests
             _fakeInMemoryDb.FsmCheckEligibilities.Add(item);
             _fakeInMemoryDb.SaveChangesAsync();
 
+            // Act
+            var response = _sut.ProcessCheck(item.FsmCheckEligibilityID);
+
+            // Assert
+            response.Result.Data.Status.Should().BeEquivalentTo(FsmCheckEligibilityStatus.parentNotFound.ToString());
+        }
+
+        [Test]
+        public void Given_validRequest_HO_InvalidNASS_Process_Should_Return_updatedStatus_parentNotFound()
+        {
+            // Arrange
+            var item = _fixture.Create<FsmCheckEligibility>();
+            item.NINumber = string.Empty;
+            _fakeInMemoryDb.FsmCheckEligibilities.Add(item);
+            _fakeInMemoryDb.SaveChangesAsync();
 
             // Act
-            var response = _sut.Process(item.FsmCheckEligibilityID);
+            var response = _sut.ProcessCheck(item.FsmCheckEligibilityID);
 
             // Assert
             response.Result.Data.Status.Should().BeEquivalentTo(FsmCheckEligibilityStatus.parentNotFound.ToString());
@@ -149,9 +163,25 @@ namespace CheckYourEligibility.ServiceUnitTests
             _fakeInMemoryDb.FreeSchoolMealsHMRC.Add(new FreeSchoolMealsHMRC { FreeSchoolMealsHMRCID= item.NINumber,Surname = item.LastName, DateOfBirth = item.DateOfBirth });
             _fakeInMemoryDb.SaveChangesAsync();
 
+            // Act
+            var response = _sut.ProcessCheck(item.FsmCheckEligibilityID);
+
+            // Assert
+            response.Result.Data.Status.Should().BeEquivalentTo(FsmCheckEligibilityStatus.eligible.ToString());
+        }
+
+        [Test]
+        public void Given_validRequest_HO_Process_Should_Return_updatedStatus_eligible()
+        {
+            // Arrange
+            var item = _fixture.Create<FsmCheckEligibility>();
+            item.NINumber = string.Empty;
+            _fakeInMemoryDb.FsmCheckEligibilities.Add(item);
+            _fakeInMemoryDb.FreeSchoolMealsHO.Add(new FreeSchoolMealsHO {FreeSchoolMealsHOID ="123", NASS  = item.NASSNumber, LastName = item.LastName, DateOfBirth = item.DateOfBirth });
+            _fakeInMemoryDb.SaveChangesAsync();
 
             // Act
-            var response = _sut.Process(item.FsmCheckEligibilityID);
+            var response = _sut.ProcessCheck(item.FsmCheckEligibilityID);
 
             // Assert
             response.Result.Data.Status.Should().BeEquivalentTo(FsmCheckEligibilityStatus.eligible.ToString());

@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Linq;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace CheckYourEligibility.Services
 {
@@ -58,22 +59,40 @@ namespace CheckYourEligibility.Services
             return null;
         }
 
-        public async Task<CheckEligibilityStatusResponse?> Process(string guid)
+        public async Task<CheckEligibilityStatusResponse?> ProcessCheck(string guid)
         {
             var result = await _db.FsmCheckEligibilities.FirstOrDefaultAsync(x => x.FsmCheckEligibilityID == guid);
             if (result != null)
             {
-                result.Status = FsmCheckEligibilityStatus.parentNotFound;
+                
+                FsmCheckEligibilityStatus checkResult = FsmCheckEligibilityStatus.parentNotFound;
                 if (!result.NINumber.IsNullOrEmpty())
                 {
-                    var hmrcCheck = await HMRC_Check(result);
-                    result.Status = hmrcCheck;
+                    checkResult = await HMRC_Check(result);
                 }
-                
+                else if (!result.NASSNumber.IsNullOrEmpty()) 
+                {
+                    checkResult = await HO_Check(result);                  
+                }
+                result.Status = checkResult;
                 _db.SaveChangesAsync();
                 return new CheckEligibilityStatusResponse { Data = new Domain.Requests.Data { Status = result.Status.ToString() } };
             }
             return null;
+        }
+
+        private async Task<FsmCheckEligibilityStatus> HO_Check(FsmCheckEligibility data)
+        {
+            var check = await _db.FreeSchoolMealsHO.FirstOrDefaultAsync(x =>
+           x.NASS == data.NASSNumber
+           && x.LastName == data.LastName
+           && x.DateOfBirth == data.DateOfBirth);
+            if (check != null)
+            {
+                return FsmCheckEligibilityStatus.eligible;
+            };
+
+            return FsmCheckEligibilityStatus.parentNotFound;
         }
 
         private async Task<FsmCheckEligibilityStatus> HMRC_Check(FsmCheckEligibility data)
