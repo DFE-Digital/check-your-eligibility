@@ -6,6 +6,7 @@ pool:
 steps:
 
 - task: TerraformTaskV4@4
+  name: 'Terraform - init' 
   inputs:
     provider: 'azurerm'
     command: 'init'
@@ -16,12 +17,14 @@ steps:
     backendAzureRmKey: 'tfstate'
 
 - task: TerraformTaskV4@4
+  name: 'Terraform - plan'
   inputs:
     provider: 'azurerm'
     command: 'plan'
     environmentServiceNameAzureRM: 's203d.azdo.deployment'
 
 - task: TerraformTaskV4@4
+  name: 'Terraform - apply'
   inputs:
     provider: 'azurerm'
     command: 'apply'
