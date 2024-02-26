@@ -6,8 +6,12 @@ terraform {
       version = "~> 3.0.0"
     }
   }
+  backend "local" {
+  }
   required_version = ">= 0.14.9"
 }
+
+
 provider "azurerm" {
   features {}
 }
