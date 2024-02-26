@@ -20,7 +20,5 @@ resource "azurerm_resource_group" "rg" {
   location = "westeurope"
   tags = {
       environment = "dev"
-      service offering = "Eligibility Checking Service GOV.UK"
-      product = "Eligibility Checking Service GOV.UK"
     }
 }
