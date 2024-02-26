@@ -20,5 +20,6 @@ resource "azurerm_resource_group" "rg" {
   location = "westeurope"
   tags = {
       environment = "dev"
+      product = "test"
     }
 }
