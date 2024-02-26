@@ -81,6 +81,17 @@ namespace CheckYourEligibility.Services
             return null;
         }
 
+        public async Task<CheckEligibilityItemFsmResponse?> GetItem(string guid)
+        {
+            var result = await _db.FsmCheckEligibilities.FirstOrDefaultAsync(x => x.FsmCheckEligibilityID == guid);
+            if (result != null)
+            {
+                var item = _mapper.Map<CheckEligibilityItemFsm>(result);
+                return new CheckEligibilityItemFsmResponse { Data = item } ;
+            }
+            return null;
+        }
+
         private async Task<FsmCheckEligibilityStatus> HO_Check(FsmCheckEligibility data)
         {
             var check = await _db.FreeSchoolMealsHO.FirstOrDefaultAsync(x =>
@@ -108,5 +119,7 @@ namespace CheckYourEligibility.Services
 
             return FsmCheckEligibilityStatus.parentNotFound;
         }
+
+        
     }
 }
