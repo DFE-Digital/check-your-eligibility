@@ -37,9 +37,12 @@ using (var scope = app.Services.CreateScope())
     var services = scope.ServiceProvider;
 
     var context = services.GetRequiredService<EligibilityCheckContext>();
-    //context.Database.EnsureCreated();
-    context.Database.Migrate(); //Runs all migrations that have not been processed. ensure there is a BaseMigration
-    DbInitializer.Initialize(context);
+    if (app.Environment.IsDevelopment())
+    {
+        //context.Database.EnsureCreated();
+        context.Database.Migrate(); //Runs all migrations that have not been processed. ensure there is a BaseMigration
+        DbInitializer.Initialize(context);
+    }
 }
 
 app.UseHttpsRedirection();
