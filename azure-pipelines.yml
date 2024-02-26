@@ -14,7 +14,7 @@ steps:
     backendAzureRmResourceGroupName: 's203d01-tf'
     backendAzureRmStorageAccountName: 's203terraformdev'
     backendAzureRmContainerName: 's203terraform'
-    backendAzureRmKey: 'tfstate'
+    backendAzureRmKey: 'tfstate.state'
 
 - task: TerraformTaskV4@4
   name: 'plan'
