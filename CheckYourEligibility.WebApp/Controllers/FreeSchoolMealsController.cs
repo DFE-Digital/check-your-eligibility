@@ -31,8 +31,8 @@ namespace CheckYourEligibility.WebApp.Controllers
             if (model == null || model.Data == null) {
                 return BadRequest(new CheckEligibilityResponse() { Data = "Invalid CheckEligibilityRequest, data is required."});
                 }
-            model.Data.NationalInsuranceNumber = model.Data.NationalInsuranceNumber.ToUpper();
-            model.Data.NationalAsylumSeekerServiceNumber = model.Data.NationalAsylumSeekerServiceNumber.ToUpper();
+            model.Data.NationalInsuranceNumber = model.Data.NationalInsuranceNumber?.ToUpper();
+            model.Data.NationalAsylumSeekerServiceNumber = model.Data.NationalAsylumSeekerServiceNumber?.ToUpper();
 
             var validator = new CheckEligibilityRequestDataValidator();
             var validationResults = validator.Validate(model);
