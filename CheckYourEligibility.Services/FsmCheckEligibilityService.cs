@@ -36,7 +36,7 @@ namespace CheckYourEligibility.Services
             {
                 var item = _mapper.Map<FsmCheckEligibility>(data);
                 item.FsmCheckEligibilityID = Guid.NewGuid().ToString();
-                item.TimeStamp = DateTime.UtcNow;
+                item.Created = DateTime.UtcNow;
                 item.Status = FsmCheckEligibilityStatus.queuedForProcessing;
 
                 await _db.FsmCheckEligibilities.AddAsync(item);

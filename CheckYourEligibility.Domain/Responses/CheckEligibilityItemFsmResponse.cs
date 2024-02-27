@@ -15,6 +15,6 @@
         public string NationalAsylumSeekerServiceNumber { get; set; }
 
         public string Status { get; set; }
-        public DateTime TimeStamp { get; set; }
+        public DateTime Created { get; set; }
     }
 }
