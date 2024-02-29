@@ -1,9 +1,10 @@
 using AutoFixture;
 using AutoMapper.Execution;
 using Azure.Core;
-using CheckYourEligibility.Data.Models;
+using CheckYourEligibility.Data.Enums;
 using CheckYourEligibility.Domain.Constants.ErrorMessages;
 using CheckYourEligibility.Domain.Requests;
+using CheckYourEligibility.Domain.Responses;
 using CheckYourEligibility.Services.Interfaces;
 using CheckYourEligibility.WebApp.Controllers;
 using FluentAssertions;
@@ -59,7 +60,7 @@ namespace CheckYourEligibility.APIUnitTests
             request.Data.NationalAsylumSeekerServiceNumber = string.Empty;
             _mockService.Setup(cs => cs.PostCheck(request.Data)).ReturnsAsync(id);
             var expectedResult = new ObjectResult(new CheckEligibilityResponse() 
-            { Data = $"{Domain.Constants.FSM.Status}{FsmCheckEligibilityStatus.queuedForProcessing}", 
+            { Data = $"{Domain.Constants.FSM.Status}{CheckEligibilityStatus.queuedForProcessing}", 
                 Links = $"{Domain.Constants.FSM.GetLink}{id}" })
             { StatusCode = StatusCodes.Status202Accepted };
 
@@ -233,10 +234,10 @@ namespace CheckYourEligibility.APIUnitTests
             var guid = _fixture.Create<Guid>().ToString();
             var expectedResponse = _fixture.Create<CheckEligibilityStatusResponse>();
             _mockService.Setup(cs => cs.ProcessCheck(guid)).ReturnsAsync(expectedResponse);
-            expectedResponse.Data.Status = FsmCheckEligibilityStatus.parentNotFound.ToString();
+            expectedResponse.Data.Status = CheckEligibilityStatus.parentNotFound.ToString();
             var expectedResult = new ObjectResult(new CheckEligibilityResponse()
             {
-                Data = $"{Domain.Constants.FSM.Status}{FsmCheckEligibilityStatus.parentNotFound}",
+                Data = $"{Domain.Constants.FSM.Status}{CheckEligibilityStatus.parentNotFound}",
                 Links = $"{Domain.Constants.FSM.GetLink}{guid}"
             })
             { StatusCode = StatusCodes.Status200OK };

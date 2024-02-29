@@ -21,50 +21,9 @@ namespace CheckYourEligibility.Data.Migrations.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("CheckYourEligibility.Data.Models.FreeSchoolMealsHMRC", b =>
+            modelBuilder.Entity("CheckYourEligibility.Data.Models.EligibilityCheck", b =>
                 {
-                    b.Property<string>("FreeSchoolMealsHMRCID")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<int>("DataType")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("DateOfBirth")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Surname")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("FreeSchoolMealsHMRCID");
-
-                    b.ToTable("FreeSchoolMealsHMRC");
-                });
-
-            modelBuilder.Entity("CheckYourEligibility.Data.Models.FreeSchoolMealsHO", b =>
-                {
-                    b.Property<string>("FreeSchoolMealsHOID")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<DateTime>("DateOfBirth")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("LastName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("NASS")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("FreeSchoolMealsHOID");
-
-                    b.ToTable("FreeSchoolMealsHO");
-                });
-
-            modelBuilder.Entity("CheckYourEligibility.Data.Models.FsmCheckEligibility", b =>
-                {
-                    b.Property<string>("FsmCheckEligibilityID")
+                    b.Property<string>("EligibilityCheckID")
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<DateTime>("Created")
@@ -75,23 +34,69 @@ namespace CheckYourEligibility.Data.Migrations.Migrations
 
                     b.Property<string>("LastName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("varchar(100)");
 
                     b.Property<string>("NASSNumber")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("varchar(50)");
 
                     b.Property<string>("NINumber")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("varchar(50)");
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("varchar(100)");
 
-                    b.HasKey("FsmCheckEligibilityID");
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<DateTime>("Updated")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("EligibilityCheckID");
 
                     b.ToTable("FsmCheckEligibility", (string)null);
+                });
+
+            modelBuilder.Entity("CheckYourEligibility.Data.Models.FreeSchoolMealsHMRC", b =>
+                {
+                    b.Property<string>("FreeSchoolMealsHMRCID")
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<int>("DataType")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("DateOfBirth")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Surname")
+                        .IsRequired()
+                        .HasColumnType("varchar(100)");
+
+                    b.HasKey("FreeSchoolMealsHMRCID");
+
+                    b.ToTable("FreeSchoolMealsHMRC");
+                });
+
+            modelBuilder.Entity("CheckYourEligibility.Data.Models.FreeSchoolMealsHO", b =>
+                {
+                    b.Property<string>("FreeSchoolMealsHOID")
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<DateTime>("DateOfBirth")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LastName")
+                        .IsRequired()
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<string>("NASS")
+                        .IsRequired()
+                        .HasColumnType("varchar(50)");
+
+                    b.HasKey("FreeSchoolMealsHOID");
+
+                    b.ToTable("FreeSchoolMealsHO");
                 });
 #pragma warning restore 612, 618
         }

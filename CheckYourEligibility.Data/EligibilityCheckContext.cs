@@ -1,5 +1,6 @@
 ﻿// Ignore Spelling: Fsm
 
+using CheckYourEligibility.Data.Enums;
 using CheckYourEligibility.Data.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -9,24 +10,29 @@ public class EligibilityCheckContext : DbContext, IEligibilityCheckContext
     {
     }
 
-    public virtual  DbSet<FsmCheckEligibility> FsmCheckEligibilities { get; set; }
+    public virtual  DbSet<EligibilityCheck> FsmCheckEligibilities { get; set; }
     public virtual DbSet<FreeSchoolMealsHMRC> FreeSchoolMealsHMRC { get; set; }
     public virtual DbSet<FreeSchoolMealsHO> FreeSchoolMealsHO { get; set; }
 
-    public void SaveChangesAsync()
+    public Task<int> SaveChangesAsync()
     {
-        base.SaveChangesAsync();
+      return  base.SaveChangesAsync();
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<FsmCheckEligibility>().ToTable("FsmCheckEligibility");
-        modelBuilder.Entity<FsmCheckEligibility>()
+        modelBuilder.Entity<EligibilityCheck>().ToTable("FsmCheckEligibility");
+        modelBuilder.Entity<EligibilityCheck>()
             .Property(p => p.Status)
             .HasConversion(
             v => v.ToString(),
-            v => (FsmCheckEligibilityStatus)Enum.Parse(typeof(FsmCheckEligibilityStatus), v));
-            
+            v => (CheckEligibilityStatus)Enum.Parse(typeof(CheckEligibilityStatus), v));
+        modelBuilder.Entity<EligibilityCheck>()
+           .Property(p => p.Type)
+           .HasConversion(
+           v => v.ToString(),
+           v => (CheckEligibilityType)Enum.Parse(typeof(CheckEligibilityType), v));
+
     }
 
 }
