@@ -2,8 +2,10 @@
 
 using Ardalis.GuardClauses;
 using AutoMapper;
+using CheckYourEligibility.Data.Enums;
 using CheckYourEligibility.Data.Models;
 using CheckYourEligibility.Domain.Requests;
+using CheckYourEligibility.Domain.Responses;
 using CheckYourEligibility.Services.Interfaces;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
@@ -34,15 +36,18 @@ namespace CheckYourEligibility.Services
         {
             try
             {
-                var item = _mapper.Map<FsmCheckEligibility>(data);
-                item.FsmCheckEligibilityID = Guid.NewGuid().ToString();
+                var item = _mapper.Map<EligibilityCheck>(data);
+                item.EligibilityCheckID = Guid.NewGuid().ToString();
                 item.Created = DateTime.UtcNow;
-                item.Status = FsmCheckEligibilityStatus.queuedForProcessing;
+                item.Updated = DateTime.UtcNow;
+
+                item.Status = CheckEligibilityStatus.queuedForProcessing;
+                item.Type = CheckEligibilityType.FreeSchoolMeals;
 
                 await _db.FsmCheckEligibilities.AddAsync(item);
-                _db.SaveChangesAsync();
-                _logger.LogInformation($"Posted {item.FsmCheckEligibilityID}.");
-                return item.FsmCheckEligibilityID; 
+                await _db.SaveChangesAsync();
+                _logger.LogInformation($"Posted {item.EligibilityCheckID}.");
+                return item.EligibilityCheckID; 
             }
             catch (Exception ex)
             {
@@ -53,19 +58,19 @@ namespace CheckYourEligibility.Services
 
         public async Task<CheckEligibilityStatusResponse?> GetStatus(string guid)
         {
-            var result = await _db.FsmCheckEligibilities.FirstOrDefaultAsync(x=> x.FsmCheckEligibilityID == guid);
+            var result = await _db.FsmCheckEligibilities.FirstOrDefaultAsync(x=> x.EligibilityCheckID == guid);
             if (result != null)
-                return new CheckEligibilityStatusResponse { Data = new Domain.Requests.Data { Status = result.Status.ToString() } };
+                return new CheckEligibilityStatusResponse { Data = new StatusResponse { Status = result.Status.ToString() } };
             return null;
         }
 
         public async Task<CheckEligibilityStatusResponse?> ProcessCheck(string guid)
         {
-            var result = await _db.FsmCheckEligibilities.FirstOrDefaultAsync(x => x.FsmCheckEligibilityID == guid);
+            var result = await _db.FsmCheckEligibilities.FirstOrDefaultAsync(x => x.EligibilityCheckID == guid);
             if (result != null)
             {
                 
-                FsmCheckEligibilityStatus checkResult = FsmCheckEligibilityStatus.parentNotFound;
+                CheckEligibilityStatus checkResult = CheckEligibilityStatus.parentNotFound;
                 if (!result.NINumber.IsNullOrEmpty())
                 {
                     checkResult = await HMRC_Check(result);
@@ -75,15 +80,16 @@ namespace CheckYourEligibility.Services
                     checkResult = await HO_Check(result);                  
                 }
                 result.Status = checkResult;
-                _db.SaveChangesAsync();
-                return new CheckEligibilityStatusResponse { Data = new Domain.Requests.Data { Status = result.Status.ToString() } };
+                result.Updated = DateTime.UtcNow;
+                await _db.SaveChangesAsync();
+                return new CheckEligibilityStatusResponse { Data = new StatusResponse { Status = result.Status.ToString() } };
             }
             return null;
         }
 
         public async Task<CheckEligibilityItemFsmResponse?> GetItem(string guid)
         {
-            var result = await _db.FsmCheckEligibilities.FirstOrDefaultAsync(x => x.FsmCheckEligibilityID == guid);
+            var result = await _db.FsmCheckEligibilities.FirstOrDefaultAsync(x => x.EligibilityCheckID == guid);
             if (result != null)
             {
                 var item = _mapper.Map<CheckEligibilityItemFsm>(result);
@@ -92,7 +98,7 @@ namespace CheckYourEligibility.Services
             return null;
         }
 
-        private async Task<FsmCheckEligibilityStatus> HO_Check(FsmCheckEligibility data)
+        private async Task<CheckEligibilityStatus> HO_Check(EligibilityCheck data)
         {
             var check = await _db.FreeSchoolMealsHO.FirstOrDefaultAsync(x =>
            x.NASS == data.NASSNumber
@@ -100,13 +106,13 @@ namespace CheckYourEligibility.Services
            && x.DateOfBirth == data.DateOfBirth);
             if (check != null)
             {
-                return FsmCheckEligibilityStatus.eligible;
+                return CheckEligibilityStatus.eligible;
             };
 
-            return FsmCheckEligibilityStatus.parentNotFound;
+            return CheckEligibilityStatus.parentNotFound;
         }
 
-        private async Task<FsmCheckEligibilityStatus> HMRC_Check(FsmCheckEligibility data)
+        private async Task<CheckEligibilityStatus> HMRC_Check(EligibilityCheck data)
         {
             var check = await _db.FreeSchoolMealsHMRC.FirstOrDefaultAsync(x =>
             x.FreeSchoolMealsHMRCID == data.NINumber 
@@ -114,10 +120,10 @@ namespace CheckYourEligibility.Services
             && x.DateOfBirth == data.DateOfBirth);
             if (check != null) 
             { 
-                return FsmCheckEligibilityStatus.eligible; 
+                return CheckEligibilityStatus.eligible; 
             };
 
-            return FsmCheckEligibilityStatus.parentNotFound;
+            return CheckEligibilityStatus.parentNotFound;
         }
 
         

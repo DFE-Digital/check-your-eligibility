@@ -1,4 +1,4 @@
-﻿namespace CheckYourEligibility.Domain.Requests
+﻿namespace CheckYourEligibility.Domain.Responses
 {
     public class CheckEligibilityResponse
     {

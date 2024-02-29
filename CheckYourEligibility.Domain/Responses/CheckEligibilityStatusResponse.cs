@@ -1,11 +1,7 @@
-﻿namespace CheckYourEligibility.Domain.Requests
+﻿namespace CheckYourEligibility.Domain.Responses
 {
     public class CheckEligibilityStatusResponse
     {
-        public Data Data { get; set; }
-    }
-    public class Data
-    {
-        public string Status { get; set; }
+        public StatusResponse Data { get; set; }
     }
 }
