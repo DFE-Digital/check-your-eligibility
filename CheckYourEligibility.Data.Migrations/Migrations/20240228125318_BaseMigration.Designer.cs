@@ -11,8 +11,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CheckYourEligibility.Data.Migrations.Migrations
 {
     [DbContext(typeof(EligibilityCheckContext))]
-    [Migration("20240226094837_FsmHO_lookup")]
-    partial class FsmHO_lookup
+    [Migration("20240228125318_BaseMigration")]
+    partial class BaseMigration
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -24,10 +24,47 @@ namespace CheckYourEligibility.Data.Migrations.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("CheckYourEligibility.Data.Models.EligibilityCheck", b =>
+                {
+                    b.Property<string>("EligibilityCheckID")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("Created")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("DateOfBirth")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LastName")
+                        .IsRequired()
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<string>("NASSNumber")
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<string>("NINumber")
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<DateTime>("Updated")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("EligibilityCheckID");
+
+                    b.ToTable("FsmCheckEligibility", (string)null);
+                });
+
             modelBuilder.Entity("CheckYourEligibility.Data.Models.FreeSchoolMealsHMRC", b =>
                 {
                     b.Property<string>("FreeSchoolMealsHMRCID")
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("varchar(50)");
 
                     b.Property<int>("DataType")
                         .HasColumnType("int");
@@ -37,7 +74,7 @@ namespace CheckYourEligibility.Data.Migrations.Migrations
 
                     b.Property<string>("Surname")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("varchar(100)");
 
                     b.HasKey("FreeSchoolMealsHMRCID");
 
@@ -47,54 +84,22 @@ namespace CheckYourEligibility.Data.Migrations.Migrations
             modelBuilder.Entity("CheckYourEligibility.Data.Models.FreeSchoolMealsHO", b =>
                 {
                     b.Property<string>("FreeSchoolMealsHOID")
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("varchar(100)");
 
                     b.Property<DateTime>("DateOfBirth")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("LastName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("varchar(100)");
 
                     b.Property<string>("NASS")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("varchar(50)");
 
                     b.HasKey("FreeSchoolMealsHOID");
 
                     b.ToTable("FreeSchoolMealsHO");
-                });
-
-            modelBuilder.Entity("CheckYourEligibility.Data.Models.FsmCheckEligibility", b =>
-                {
-                    b.Property<string>("FsmCheckEligibilityID")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<DateTime>("DateOfBirth")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("LastName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("NASSNumber")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("NINumber")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("TimeStamp")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("FsmCheckEligibilityID");
-
-                    b.ToTable("FsmCheckEligibility", (string)null);
                 });
 #pragma warning restore 612, 618
         }

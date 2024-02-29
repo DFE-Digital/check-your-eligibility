@@ -1,7 +1,7 @@
 ﻿using Ardalis.GuardClauses;
-using CheckYourEligibility.Data.Models;
 using CheckYourEligibility.Domain.Constants;
 using CheckYourEligibility.Domain.Requests;
+using CheckYourEligibility.Domain.Responses;
 using CheckYourEligibility.Services.Interfaces;
 using FeatureManagement.Domain.Validation;
 using Microsoft.AspNetCore.Mvc;
@@ -43,7 +43,7 @@ namespace CheckYourEligibility.WebApp.Controllers
             }
 
             var id = await _service.PostCheck(model.Data);
-            var status = FsmCheckEligibilityStatus.queuedForProcessing.ToString();
+            var status = Data.Enums.CheckEligibilityStatus.queuedForProcessing.ToString();
             return new ObjectResult(new CheckEligibilityResponse() { Data = $"{FSM.Status}{status}", Links = $"{FSM.GetLink}{id}" }) { StatusCode = StatusCodes.Status202Accepted };
         }
 
