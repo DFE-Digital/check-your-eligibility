@@ -4,7 +4,8 @@ namespace CheckYourEligibility.Domain.Constants
 {
     public static class FSM
     {
-        public const string GetLink = "eligibilityCheck: /freeSchoolMeals/";
+        public const string GetLink = "Get eligibilityCheck: /freeSchoolMeals/";
+        public const string ProcessLink = "Put eligibilityCheck Process: /freeSchoolMeals/processEligibilityCheck/";
         public const string Status = "status : ";
 
 
