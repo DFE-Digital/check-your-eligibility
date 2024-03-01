@@ -2,6 +2,7 @@ using CheckYourEligibility.Data;
 using CheckYourEligibility.Data.Mappings;
 using CheckYourEligibility.WebApp;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Azure;
 
 var builder = WebApplication.CreateBuilder(args);
 //builder.Logging.AddEventLog(eventLogSettings =>
@@ -17,6 +18,8 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddDatabase(builder.Configuration);
+builder.Services.AddAzureClients(builder.Configuration);
+
 builder.Services.AddAutoMapper(typeof(EligibilityMappingProfile));
 
 var app = builder.Build();

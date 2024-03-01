@@ -1,6 +1,7 @@
 ﻿using CheckYourEligibility.Services;
 using CheckYourEligibility.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Azure;
 
 namespace CheckYourEligibility.WebApp
 {
@@ -16,6 +17,16 @@ namespace CheckYourEligibility.WebApp
             services.AddDatabaseDeveloperPageExceptionFilter();
                         
             services.AddTransient<IFsmCheckEligibility, FsmCheckEligibilityService>();
+            return services;
+        }
+
+        public static IServiceCollection AddAzureClients(this IServiceCollection services, IConfiguration configuration)
+        {
+            services.AddAzureClients(builder =>
+            {
+                builder.AddQueueServiceClient(configuration.GetValue<string>("AzureWebJobsStorage"));
+
+            });
             return services;
         }
 

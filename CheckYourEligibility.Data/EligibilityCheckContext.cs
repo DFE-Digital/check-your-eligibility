@@ -21,7 +21,7 @@ public class EligibilityCheckContext : DbContext, IEligibilityCheckContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<EligibilityCheck>().ToTable("FsmCheckEligibility");
+        modelBuilder.Entity<EligibilityCheck>().ToTable("EligibilityCheck");
         modelBuilder.Entity<EligibilityCheck>()
             .Property(p => p.Status)
             .HasConversion(
