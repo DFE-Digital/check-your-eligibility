@@ -61,7 +61,7 @@ namespace CheckYourEligibility.APIUnitTests
             _mockService.Setup(cs => cs.PostCheck(request.Data)).ReturnsAsync(id);
             var expectedResult = new ObjectResult(new CheckEligibilityResponse() 
             { Data = $"{Domain.Constants.FSM.Status}{CheckEligibilityStatus.queuedForProcessing}", 
-                Links = $"{Domain.Constants.FSM.GetLink}{id}" })
+                Links = $"{Domain.Constants.FSM.GetLink}{id}, {Domain.Constants.FSM.ProcessLink}{id}" })
             { StatusCode = StatusCodes.Status202Accepted };
 
             // Act

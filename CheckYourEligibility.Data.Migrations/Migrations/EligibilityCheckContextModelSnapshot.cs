@@ -55,7 +55,7 @@ namespace CheckYourEligibility.Data.Migrations.Migrations
 
                     b.HasKey("EligibilityCheckID");
 
-                    b.ToTable("FsmCheckEligibility", (string)null);
+                    b.ToTable("EligibilityCheck", (string)null);
                 });
 
             modelBuilder.Entity("CheckYourEligibility.Data.Models.FreeSchoolMealsHMRC", b =>

@@ -2,18 +2,17 @@
 
 using Ardalis.GuardClauses;
 using AutoMapper;
+using Azure.Storage.Queues;
 using CheckYourEligibility.Data.Enums;
 using CheckYourEligibility.Data.Models;
 using CheckYourEligibility.Domain.Requests;
 using CheckYourEligibility.Domain.Responses;
 using CheckYourEligibility.Services.Interfaces;
-using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
-using System;
-using System.Linq;
-using static System.Runtime.InteropServices.JavaScript.JSType;
+using Newtonsoft.Json;
 
 namespace CheckYourEligibility.Services
 {
@@ -22,14 +21,18 @@ namespace CheckYourEligibility.Services
         private  readonly ILogger _logger;
         private readonly IEligibilityCheckContext _db;
         protected readonly IMapper _mapper;
+        private readonly QueueClient _queueClient;
 
-
-        public FsmCheckEligibilityService(ILoggerFactory logger, IEligibilityCheckContext dbContext, IMapper mapper)
+        public FsmCheckEligibilityService(ILoggerFactory logger, IEligibilityCheckContext dbContext, IMapper mapper, QueueServiceClient queueClientService, IConfiguration configuration)
         {
             _logger = logger.CreateLogger("ServiceFsmCheckEligibility");
             _db = Guard.Against.Null(dbContext);
             _mapper = Guard.Against.Null(mapper);
-            
+            var queName = configuration.GetValue<string>("QueueFsmCheckStandard");
+            if (queName != "notSet")
+            {
+                _queueClient = queueClientService.GetQueueClient(queName);
+            }
         }
 
         public async Task<string> PostCheck(CheckEligibilityRequestDataFsm data)
@@ -46,8 +49,12 @@ namespace CheckYourEligibility.Services
 
                 await _db.FsmCheckEligibilities.AddAsync(item);
                 await _db.SaveChangesAsync();
-                _logger.LogInformation($"Posted {item.EligibilityCheckID}.");
-                return item.EligibilityCheckID; 
+                if (_queueClient != null)
+                {
+                    await _queueClient.SendMessageAsync(
+                        JsonConvert.SerializeObject(new QueueMessageCheck() { Type = item.Type.ToString(), Guid = item.EligibilityCheckID }));
+                }
+                return item.EligibilityCheckID;
             }
             catch (Exception ex)
             {
