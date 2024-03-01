@@ -12,6 +12,25 @@ namespace CheckYourEligibility.Data.Migrations.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
+                name: "EligibilityCheck",
+                columns: table => new
+                {
+                    EligibilityCheckID = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Type = table.Column<string>(type: "varchar(100)", nullable: false),
+                    Status = table.Column<string>(type: "varchar(100)", nullable: false),
+                    Created = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Updated = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    NINumber = table.Column<string>(type: "varchar(50)", nullable: true),
+                    NASSNumber = table.Column<string>(type: "varchar(50)", nullable: true),
+                    LastName = table.Column<string>(type: "varchar(100)", nullable: false),
+                    DateOfBirth = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_EligibilityCheck", x => x.EligibilityCheckID);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "FreeSchoolMealsHMRC",
                 columns: table => new
                 {
@@ -38,38 +57,19 @@ namespace CheckYourEligibility.Data.Migrations.Migrations
                 {
                     table.PrimaryKey("PK_FreeSchoolMealsHO", x => x.FreeSchoolMealsHOID);
                 });
-
-            migrationBuilder.CreateTable(
-                name: "FsmCheckEligibility",
-                columns: table => new
-                {
-                    EligibilityCheckID = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    Type = table.Column<string>(type: "varchar(100)", nullable: false),
-                    Status = table.Column<string>(type: "varchar(100)", nullable: false),
-                    Created = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    Updated = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    NINumber = table.Column<string>(type: "varchar(50)", nullable: true),
-                    NASSNumber = table.Column<string>(type: "varchar(50)", nullable: true),
-                    LastName = table.Column<string>(type: "varchar(100)", nullable: false),
-                    DateOfBirth = table.Column<DateTime>(type: "datetime2", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_FsmCheckEligibility", x => x.EligibilityCheckID);
-                });
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
+                name: "EligibilityCheck");
+
+            migrationBuilder.DropTable(
                 name: "FreeSchoolMealsHMRC");
 
             migrationBuilder.DropTable(
                 name: "FreeSchoolMealsHO");
-
-            migrationBuilder.DropTable(
-                name: "FsmCheckEligibility");
         }
     }
 }

@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CheckYourEligibility.Data.Migrations.Migrations
 {
     [DbContext(typeof(EligibilityCheckContext))]
-    [Migration("20240228125318_BaseMigration")]
+    [Migration("20240229142252_BaseMigration")]
     partial class BaseMigration
     {
         /// <inheritdoc />
@@ -58,7 +58,7 @@ namespace CheckYourEligibility.Data.Migrations.Migrations
 
                     b.HasKey("EligibilityCheckID");
 
-                    b.ToTable("FsmCheckEligibility", (string)null);
+                    b.ToTable("EligibilityCheck", (string)null);
                 });
 
             modelBuilder.Entity("CheckYourEligibility.Data.Models.FreeSchoolMealsHMRC", b =>

@@ -1,5 +1,6 @@
 using AutoFixture;
 using AutoMapper;
+using Azure.Storage.Queues;
 using CheckYourEligibility.Data.Enums;
 using CheckYourEligibility.Data.Mappings;
 using CheckYourEligibility.Data.Models;
@@ -8,6 +9,7 @@ using CheckYourEligibility.Domain.Responses;
 using CheckYourEligibility.Services;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace CheckYourEligibility.ServiceUnitTests
@@ -16,9 +18,9 @@ namespace CheckYourEligibility.ServiceUnitTests
 
     public class FsmCheckEligibilityServiceTests : TestBase.TestBase
     {
-        //private Mock<IEligibilityCheckContext> _mockDb;
         private IEligibilityCheckContext _fakeInMemoryDb;
         private IMapper _mapper;
+        private IConfiguration _configuration;
         private FsmCheckEligibilityService _sut;
 
         [SetUp]
@@ -32,7 +34,17 @@ namespace CheckYourEligibility.ServiceUnitTests
 
             var config = new MapperConfiguration(cfg => cfg.AddProfile<EligibilityMappingProfile>());
             _mapper = config.CreateMapper();
-           _sut = new FsmCheckEligibilityService(new NullLoggerFactory(), _fakeInMemoryDb, _mapper);
+            var configForSmsApi = new Dictionary<string, string>
+            {
+                {"QueueFsmCheckStandard", "notSet"},
+            };
+            _configuration = new ConfigurationBuilder()
+                .AddInMemoryCollection(configForSmsApi)
+                .Build();
+            var webJobsConnection = "DefaultEndpointsProtocol=https;AccountName=none;AccountKey=none;EndpointSuffix=core.windows.net";
+
+
+            _sut = new FsmCheckEligibilityService(new NullLoggerFactory(), _fakeInMemoryDb, _mapper, new QueueServiceClient(webJobsConnection), _configuration);
 
         }
 
@@ -46,7 +58,7 @@ namespace CheckYourEligibility.ServiceUnitTests
         {
             // Arrange
             // Act
-            Action act = () => new FsmCheckEligibilityService(new NullLoggerFactory(), null,_mapper);
+            Action act = () => new FsmCheckEligibilityService(new NullLoggerFactory(), null,_mapper,null,null);
 
             // Assert
             act.Should().ThrowExactly<ArgumentNullException>().And.Message.Should().EndWithEquivalentOf("Value cannot be null. (Parameter 'dbContext')");

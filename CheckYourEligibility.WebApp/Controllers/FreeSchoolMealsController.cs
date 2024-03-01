@@ -44,7 +44,7 @@ namespace CheckYourEligibility.WebApp.Controllers
 
             var id = await _service.PostCheck(model.Data);
             var status = Data.Enums.CheckEligibilityStatus.queuedForProcessing.ToString();
-            return new ObjectResult(new CheckEligibilityResponse() { Data = $"{FSM.Status}{status}", Links = $"{FSM.GetLink}{id}" }) { StatusCode = StatusCodes.Status202Accepted };
+            return new ObjectResult(new CheckEligibilityResponse() { Data = $"{FSM.Status}{status}", Links = $"{FSM.GetLink}{id}, {FSM.ProcessLink}{id}" }) { StatusCode = StatusCodes.Status202Accepted };
         }
 
         [ProducesResponseType(typeof(CheckEligibilityStatusResponse), (int)HttpStatusCode.OK)]
