@@ -14,6 +14,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace CheckYourEligibility.Services
 {
@@ -23,6 +24,7 @@ namespace CheckYourEligibility.Services
         private readonly IEligibilityCheckContext _db;
         protected readonly IMapper _mapper;
         private readonly QueueClient _queueClient;
+        private const int SurnameCheckCharachters = 3;
 
         public FsmCheckEligibilityService(ILoggerFactory logger, IEligibilityCheckContext dbContext, IMapper mapper, QueueServiceClient queueClientService, IConfiguration configuration)
         {
@@ -108,34 +110,29 @@ namespace CheckYourEligibility.Services
 
         private async Task<CheckEligibilityStatus> HO_Check(EligibilityCheck data)
         {
-            var check = await _db.FreeSchoolMealsHO.FirstOrDefaultAsync(x =>
+            var checkReults = _db.FreeSchoolMealsHO.Where(x =>
            x.NASS == data.NASSNumber
-           && x.LastName == data.LastName
-           && x.DateOfBirth == data.DateOfBirth);
-            if (check != null)
-            {
-                return CheckEligibilityStatus.eligible;
-            };
-
-            return CheckEligibilityStatus.parentNotFound;
+           && x.DateOfBirth == data.DateOfBirth).Select(x => x.LastName);
+            return CheckSurname(data.LastName, checkReults);
         }
 
         private async Task<CheckEligibilityStatus> HMRC_Check(EligibilityCheck data)
         {
-            var check = await _db.FreeSchoolMealsHMRC.FirstOrDefaultAsync(x =>
+            var checkReults =  _db.FreeSchoolMealsHMRC.Where(x =>
             x.FreeSchoolMealsHMRCID == data.NINumber 
-            && x.Surname == data.LastName 
-            && x.DateOfBirth == data.DateOfBirth);
+            && x.DateOfBirth == data.DateOfBirth).Select(x=>x.Surname);
 
-
-            if (check != null) 
-            { 
-                return CheckEligibilityStatus.eligible; 
-            };
-
-            return CheckEligibilityStatus.parentNotFound;
+            return CheckSurname(data.LastName, checkReults);
         }
 
-        
+        private CheckEligibilityStatus CheckSurname(string lastNamePartial, IQueryable<string> validData)
+        {
+            if (validData.Any())
+            {
+                return validData.FirstOrDefault(x => x.ToUpper().StartsWith(lastNamePartial.Substring(0, SurnameCheckCharachters).ToUpper())) != null
+                    ? CheckEligibilityStatus.eligible : CheckEligibilityStatus.parentNotFound;
+            };
+            return CheckEligibilityStatus.parentNotFound;
+        }
     }
 }
