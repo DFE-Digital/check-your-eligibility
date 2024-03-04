@@ -5,6 +5,7 @@ using AutoMapper;
 using Azure.Storage.Queues;
 using CheckYourEligibility.Data.Enums;
 using CheckYourEligibility.Data.Models;
+using CheckYourEligibility.Domain.Constants;
 using CheckYourEligibility.Domain.Requests;
 using CheckYourEligibility.Domain.Responses;
 using CheckYourEligibility.Services.Interfaces;
@@ -52,7 +53,7 @@ namespace CheckYourEligibility.Services
                 if (_queueClient != null)
                 {
                     await _queueClient.SendMessageAsync(
-                        JsonConvert.SerializeObject(new QueueMessageCheck() { Type = item.Type.ToString(), Guid = item.EligibilityCheckID }));
+                        JsonConvert.SerializeObject(new QueueMessageCheck() { Type = item.Type.ToString(), Guid = item.EligibilityCheckID, Url =$"{FSM.ProcessLinkRaw}{item.EligibilityCheckID}" }));
                 }
                 return item.EligibilityCheckID;
             }
@@ -125,6 +126,8 @@ namespace CheckYourEligibility.Services
             x.FreeSchoolMealsHMRCID == data.NINumber 
             && x.Surname == data.LastName 
             && x.DateOfBirth == data.DateOfBirth);
+
+
             if (check != null) 
             { 
                 return CheckEligibilityStatus.eligible; 
