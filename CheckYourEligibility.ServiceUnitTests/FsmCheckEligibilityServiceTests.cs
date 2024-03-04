@@ -185,6 +185,46 @@ namespace CheckYourEligibility.ServiceUnitTests
         }
 
         [Test]
+        public void Given_SurnameCharacterMatchFails_HMRC_Process_Should_Return_updatedStatus_parentNotFound()
+        {
+            // Arrange
+            var item = _fixture.Create<EligibilityCheck>();
+            var surnamevalid = "simpson";
+            item.LastName = surnamevalid;
+            var surnameInvalid = "x" + surnamevalid;
+            item.NASSNumber = string.Empty;
+            _fakeInMemoryDb.FsmCheckEligibilities.Add(item);
+            _fakeInMemoryDb.FreeSchoolMealsHMRC.Add(new FreeSchoolMealsHMRC { FreeSchoolMealsHMRCID = item.NINumber, Surname = surnameInvalid, DateOfBirth = item.DateOfBirth });
+            _fakeInMemoryDb.SaveChangesAsync();
+
+            // Act
+            var response = _sut.ProcessCheck(item.EligibilityCheckID);
+
+            // Assert
+            response.Result.Data.Status.Should().BeEquivalentTo(CheckEligibilityStatus.parentNotFound.ToString());
+        }
+
+        [Test]
+        public void Given_SurnameCharacterMatchPasses_HMRC_Process_Should_Return_updatedStatus_eligible()
+        {
+            // Arrange
+            var item = _fixture.Create<EligibilityCheck>();
+            var surnamevalid = "simpson";
+            item.LastName = surnamevalid;
+            var surnameInvalid = surnamevalid + "x";
+            item.NASSNumber = string.Empty;
+            _fakeInMemoryDb.FsmCheckEligibilities.Add(item);
+            _fakeInMemoryDb.FreeSchoolMealsHMRC.Add(new FreeSchoolMealsHMRC { FreeSchoolMealsHMRCID = item.NINumber, Surname = surnameInvalid, DateOfBirth = item.DateOfBirth });
+            _fakeInMemoryDb.SaveChangesAsync();
+
+            // Act
+            var response = _sut.ProcessCheck(item.EligibilityCheckID);
+
+            // Assert
+            response.Result.Data.Status.Should().BeEquivalentTo(CheckEligibilityStatus.eligible.ToString());
+        }
+
+        [Test]
         public void Given_validRequest_HO_Process_Should_Return_updatedStatus_eligible()
         {
             // Arrange
