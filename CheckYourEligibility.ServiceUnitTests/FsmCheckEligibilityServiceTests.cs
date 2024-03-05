@@ -1,3 +1,5 @@
+// Ignore Spelling: Levenshtein
+
 using AutoFixture;
 using AutoMapper;
 using Azure.Storage.Queues;
@@ -270,9 +272,14 @@ namespace CheckYourEligibility.ServiceUnitTests
         }
 
         [Test]
-        public void testLevenstein()
-        { 
-
+        public void testLevenshtein()
+        {
+            int levenshteinDistance = Fastenshtein.Levenshtein.Distance("value1", "value2");//1
+            levenshteinDistance = Fastenshtein.Levenshtein.Distance("value1", "value1");//0
+            levenshteinDistance = Fastenshtein.Levenshtein.Distance("value1", "value");//1
+            levenshteinDistance = Fastenshtein.Levenshtein.Distance("value1", "valu");//2
+            levenshteinDistance = Fastenshtein.Levenshtein.Distance("value1", "val");//3
         }
+
         }
 }
