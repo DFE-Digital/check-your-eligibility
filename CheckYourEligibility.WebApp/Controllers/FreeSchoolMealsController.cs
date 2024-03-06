@@ -26,7 +26,7 @@ namespace CheckYourEligibility.WebApp.Controllers
             _service = Guard.Against.Null(service);
         }
 
-        [ProducesResponseType(typeof(BaseResponse), (int)HttpStatusCode.Accepted)]
+        [ProducesResponseType(typeof(Response), (int)HttpStatusCode.Accepted)]
         [ProducesResponseType((int)HttpStatusCode.BadRequest)]
         [HttpPost]
         public async Task<ActionResult> CheckEligibility([FromBody] CheckEligibilityRequest model)
@@ -64,7 +64,7 @@ namespace CheckYourEligibility.WebApp.Controllers
         }
 
 
-        [ProducesResponseType(typeof(BaseResponse), (int)HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(Response), (int)HttpStatusCode.OK)]
         [ProducesResponseType((int)HttpStatusCode.NotFound)]
         [HttpPut("processEligibilityCheck/{guid}")]
         public async Task<ActionResult> Process(string guid)
