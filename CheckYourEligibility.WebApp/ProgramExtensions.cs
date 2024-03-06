@@ -15,8 +15,7 @@ namespace CheckYourEligibility.WebApp
                    configuration.GetConnectionString("EligibilityCheck") ?? throw new InvalidOperationException("Connection string 'EligibilityCheck' not found."),
                    x=>x.MigrationsAssembly("CheckYourEligibility.Data.Migrations")));
             services.AddDatabaseDeveloperPageExceptionFilter();
-                        
-            services.AddTransient<IFsmCheckEligibility, FsmCheckEligibilityService>();
+          
             return services;
         }
 
@@ -27,6 +26,14 @@ namespace CheckYourEligibility.WebApp
                 builder.AddQueueServiceClient(configuration.GetValue<string>("AzureWebJobsStorage"));
 
             });
+            return services;
+        }
+
+        public static IServiceCollection AddServices(this IServiceCollection services)
+        {
+
+            services.AddTransient<IFsmCheckEligibility, FsmCheckEligibilityService>();
+            services.AddTransient<IAdministration, AdministrationService>();
             return services;
         }
 
