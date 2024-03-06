@@ -1,10 +1,10 @@
 ﻿using Ardalis.GuardClauses;
 using Azure;
+using CheckYourEligibility.Domain.Constants;
 using CheckYourEligibility.Domain.Responses;
 using CheckYourEligibility.Services.Interfaces;
 using CheckYourEligibility.WebApp.Support;
 using Microsoft.AspNetCore.Mvc;
-using System;
 using System.Net;
 
 namespace CheckYourEligibility.WebApp.Controllers
@@ -31,7 +31,7 @@ namespace CheckYourEligibility.WebApp.Controllers
         public async Task<ActionResult> CleanUpEligibilityChecks()
         {
             await _service.CleanUpEligibilityChecks();
-            return new ObjectResult(ResponseFormatter.GetResponseMessage($"EligibilityChecks deleted based on configuration settings.")) { StatusCode = StatusCodes.Status200OK };
+            return new ObjectResult(ResponseFormatter.GetResponseMessage($"{Admin.EligibilityChecksCleanse}")) { StatusCode = StatusCodes.Status200OK };
         }
 
     }
