@@ -105,7 +105,7 @@ namespace CheckYourEligibility.ServiceUnitTests
             var response = _sut.GetStatus(item.EligibilityCheckID);
 
             // Assert
-            _ = response.Result.Data.Status.Should().BeEquivalentTo(item.Status.ToString());
+            _ = response.Result.ToString().Should().Be(item.Status.ToString());
         }
 
         [Test]
@@ -134,7 +134,7 @@ namespace CheckYourEligibility.ServiceUnitTests
             var response = _sut.ProcessCheck(item.EligibilityCheckID);
 
             // Assert
-            response.Result.Data.Status.Should().BeEquivalentTo(CheckEligibilityStatus.parentNotFound.ToString());
+            response.Result.Should().Be(CheckEligibilityStatus.parentNotFound);
         }
 
         [Test]
@@ -150,7 +150,7 @@ namespace CheckYourEligibility.ServiceUnitTests
             var response = _sut.ProcessCheck(item.EligibilityCheckID);
 
             // Assert
-            response.Result.Data.Status.Should().BeEquivalentTo(CheckEligibilityStatus.parentNotFound.ToString());
+            response.Result.Should().Be(CheckEligibilityStatus.parentNotFound);
         }
 
         [Test]
@@ -166,7 +166,7 @@ namespace CheckYourEligibility.ServiceUnitTests
             var response = _sut.ProcessCheck(item.EligibilityCheckID);
 
             // Assert
-            response.Result.Data.Status.Should().BeEquivalentTo(CheckEligibilityStatus.parentNotFound.ToString());
+            response.Result.Should().Be(CheckEligibilityStatus.parentNotFound);
         }
 
         [Test]
@@ -183,7 +183,7 @@ namespace CheckYourEligibility.ServiceUnitTests
             var response = _sut.ProcessCheck(item.EligibilityCheckID);
 
             // Assert
-            response.Result.Data.Status.Should().BeEquivalentTo(CheckEligibilityStatus.eligible.ToString());
+            response.Result.Should().Be(CheckEligibilityStatus.eligible);
         }
 
         [Test]
@@ -203,7 +203,7 @@ namespace CheckYourEligibility.ServiceUnitTests
             var response = _sut.ProcessCheck(item.EligibilityCheckID);
 
             // Assert
-            response.Result.Data.Status.Should().BeEquivalentTo(CheckEligibilityStatus.parentNotFound.ToString());
+            response.Result.Should().Be(CheckEligibilityStatus.parentNotFound);
         }
 
         [Test]
@@ -223,7 +223,7 @@ namespace CheckYourEligibility.ServiceUnitTests
             var response = _sut.ProcessCheck(item.EligibilityCheckID);
 
             // Assert
-            response.Result.Data.Status.Should().BeEquivalentTo(CheckEligibilityStatus.eligible.ToString());
+            response.Result.Should().Be(CheckEligibilityStatus.eligible);
         }
 
         [Test]
@@ -240,7 +240,7 @@ namespace CheckYourEligibility.ServiceUnitTests
             var response = _sut.ProcessCheck(item.EligibilityCheckID);
 
             // Assert
-            response.Result.Data.Status.Should().BeEquivalentTo(CheckEligibilityStatus.eligible.ToString());
+            response.Result.Should().Be(CheckEligibilityStatus.eligible);
         }
 
         [Test]
@@ -268,7 +268,7 @@ namespace CheckYourEligibility.ServiceUnitTests
             var response = _sut.GetItem(item.EligibilityCheckID);
 
             // Assert
-            response.Result.Data.Should().BeOfType<CheckEligibilityItemFsm>();
+            response.Result.Should().BeOfType<CheckEligibilityItemFsm>();
         }
 
         [Test]

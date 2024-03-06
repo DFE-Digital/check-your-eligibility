@@ -54,7 +54,7 @@ namespace CheckYourEligibility.Services
                 if (_queueClient != null)
                 {
                     await _queueClient.SendMessageAsync(
-                        JsonConvert.SerializeObject(new QueueMessageCheck() { Type = item.Type.ToString(), Guid = item.EligibilityCheckID, Url =$"{FSM.ProcessLinkRaw}{item.EligibilityCheckID}" }));
+                        JsonConvert.SerializeObject(new QueueMessageCheck() { Type = item.Type.ToString(), Guid = item.EligibilityCheckID, Url =$"{FSM.ProcessLink}{item.EligibilityCheckID}" }));
                 }
                 return item.EligibilityCheckID;
             }
@@ -65,15 +65,15 @@ namespace CheckYourEligibility.Services
             }
         }
 
-        public async Task<CheckEligibilityStatusResponse?> GetStatus(string guid)
+        public async Task<CheckEligibilityStatus?> GetStatus(string guid)
         {
             var result = await _db.FsmCheckEligibilities.FirstOrDefaultAsync(x=> x.EligibilityCheckID == guid);
             if (result != null)
-                return new CheckEligibilityStatusResponse { Data = new StatusResponse { Status = result.Status.ToString() } };
+                return result.Status;
             return null;
         }
 
-        public async Task<CheckEligibilityStatusResponse?> ProcessCheck(string guid)
+        public async Task<CheckEligibilityStatus?> ProcessCheck(string guid)
         {
             var result = await _db.FsmCheckEligibilities.FirstOrDefaultAsync(x => x.EligibilityCheckID == guid);
             if (result != null)
@@ -91,18 +91,18 @@ namespace CheckYourEligibility.Services
                 result.Status = checkResult;
                 result.Updated = DateTime.UtcNow;
                 await _db.SaveChangesAsync();
-                return new CheckEligibilityStatusResponse { Data = new StatusResponse { Status = result.Status.ToString() } };
+                return result.Status;
             }
             return null;
         }
 
-        public async Task<CheckEligibilityItemFsmResponse?> GetItem(string guid)
+        public async Task<CheckEligibilityItemFsm?> GetItem(string guid)
         {
             var result = await _db.FsmCheckEligibilities.FirstOrDefaultAsync(x => x.EligibilityCheckID == guid);
             if (result != null)
             {
                 var item = _mapper.Map<CheckEligibilityItemFsm>(result);
-                return new CheckEligibilityItemFsmResponse { Data = item } ;
+                return  item ;
             }
             return null;
         }
