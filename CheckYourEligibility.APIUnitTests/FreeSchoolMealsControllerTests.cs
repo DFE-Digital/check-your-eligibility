@@ -59,7 +59,7 @@ namespace CheckYourEligibility.APIUnitTests
             request.Data.DateOfBirth = "01/02/1970";
             request.Data.NationalAsylumSeekerServiceNumber = string.Empty;
             _mockService.Setup(cs => cs.PostCheck(request.Data)).ReturnsAsync(id);
-            var expectedResult = new ObjectResult(new CheckEligibilityResponse() 
+            var expectedResult = new ObjectResult(new BaseResponse() 
             { Data = $"{Domain.Constants.FSM.Status}{CheckEligibilityStatus.queuedForProcessing}", 
                 Links = $"{Domain.Constants.FSM.GetLink}{id}, {Domain.Constants.FSM.ProcessLink}{id}" })
             { StatusCode = StatusCodes.Status202Accepted };
@@ -92,7 +92,7 @@ namespace CheckYourEligibility.APIUnitTests
             request.Data.NationalInsuranceNumber = "ns738356d";
             request.Data.DateOfBirth = "01/02/1970";
             request.Data.NationalAsylumSeekerServiceNumber = "789";
-            var expectedResult = new ObjectResult(new CheckEligibilityResponse() { Data = FSM.NI_and_NASS })
+            var expectedResult = new ObjectResult(new BaseResponse() { Data = FSM.NI_and_NASS })
             { StatusCode = StatusCodes.Status400BadRequest };
 
             // Act
@@ -110,7 +110,7 @@ namespace CheckYourEligibility.APIUnitTests
             request.Data.NationalInsuranceNumber = string.Empty;
             request.Data.DateOfBirth = "01/02/1970";
             request.Data.NationalAsylumSeekerServiceNumber = string.Empty;
-            var expectedResult = new ObjectResult(new CheckEligibilityResponse() { Data = FSM.NI_or_NASS })
+            var expectedResult = new ObjectResult(new BaseResponse() { Data = FSM.NI_or_NASS })
             { StatusCode = StatusCodes.Status400BadRequest };
 
 
@@ -129,7 +129,7 @@ namespace CheckYourEligibility.APIUnitTests
             request.Data.NationalInsuranceNumber = "123";
             request.Data.DateOfBirth = "01/02/1970";
             request.Data.NationalAsylumSeekerServiceNumber = "";
-            var expectedResult = new ObjectResult(new CheckEligibilityResponse() { Data = FSM.NI })
+            var expectedResult = new ObjectResult(new BaseResponse() { Data = FSM.NI })
             { StatusCode = StatusCodes.Status400BadRequest };
 
             // Act
@@ -147,7 +147,7 @@ namespace CheckYourEligibility.APIUnitTests
             request.Data.NationalInsuranceNumber = "ns738356d";
             request.Data.DateOfBirth = "01/02/70";
             request.Data.NationalAsylumSeekerServiceNumber = "";
-            var expectedResult = new ObjectResult(new CheckEligibilityResponse() { Data = FSM.DOB })
+            var expectedResult = new ObjectResult(new BaseResponse() { Data = FSM.DOB })
             { StatusCode = StatusCodes.Status400BadRequest };
 
             // Act
@@ -167,7 +167,7 @@ namespace CheckYourEligibility.APIUnitTests
             request.Data.DateOfBirth = "01/02/1970";
             request.Data.LastName = string.Empty;
             request.Data.NationalAsylumSeekerServiceNumber = string.Empty;
-            var expectedResult = new ObjectResult(new CheckEligibilityResponse() { Data = FSM.LastName })
+            var expectedResult = new ObjectResult(new BaseResponse() { Data = FSM.LastName })
             { StatusCode = StatusCodes.Status400BadRequest };
 
             // Act
@@ -235,7 +235,7 @@ namespace CheckYourEligibility.APIUnitTests
             var expectedResponse = _fixture.Create<CheckEligibilityStatusResponse>();
             _mockService.Setup(cs => cs.ProcessCheck(guid)).ReturnsAsync(expectedResponse);
             expectedResponse.Data.Status = CheckEligibilityStatus.parentNotFound.ToString();
-            var expectedResult = new ObjectResult(new CheckEligibilityResponse()
+            var expectedResult = new ObjectResult(new BaseResponse()
             {
                 Data = $"{Domain.Constants.FSM.Status}{CheckEligibilityStatus.parentNotFound}",
                 Links = $"{Domain.Constants.FSM.GetLink}{guid}"

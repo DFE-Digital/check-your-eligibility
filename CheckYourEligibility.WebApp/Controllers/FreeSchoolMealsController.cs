@@ -29,7 +29,7 @@ namespace CheckYourEligibility.WebApp.Controllers
         public async Task<ActionResult> CheckEligibility([FromBody] CheckEligibilityRequest model)
         {
             if (model == null || model.Data == null) {
-                return BadRequest(new CheckEligibilityResponse() { Data = "Invalid CheckEligibilityRequest, data is required."});
+                return BadRequest(new BaseResponse() { Data = "Invalid CheckEligibilityRequest, data is required."});
                 }
             model.Data.NationalInsuranceNumber = model.Data.NationalInsuranceNumber?.ToUpper();
             model.Data.NationalAsylumSeekerServiceNumber = model.Data.NationalAsylumSeekerServiceNumber?.ToUpper();
@@ -39,12 +39,12 @@ namespace CheckYourEligibility.WebApp.Controllers
 
             if (!validationResults.IsValid)
             {
-                return BadRequest(new CheckEligibilityResponse(){Data = validationResults.ToString()});
+                return BadRequest(new BaseResponse(){Data = validationResults.ToString()});
             }
 
             var id = await _service.PostCheck(model.Data);
             var status = Data.Enums.CheckEligibilityStatus.queuedForProcessing.ToString();
-            return new ObjectResult(new CheckEligibilityResponse() { Data = $"{FSM.Status}{status}", Links = $"{FSM.GetLink}{id}, {FSM.ProcessLink}{id}" }) { StatusCode = StatusCodes.Status202Accepted };
+            return new ObjectResult(new BaseResponse() { Data = $"{FSM.Status}{status}", Links = $"{FSM.GetLink}{id}, {FSM.ProcessLink}{id}" }) { StatusCode = StatusCodes.Status202Accepted };
         }
 
         [ProducesResponseType(typeof(CheckEligibilityStatusResponse), (int)HttpStatusCode.OK)]
@@ -62,7 +62,7 @@ namespace CheckYourEligibility.WebApp.Controllers
         }
 
 
-        [ProducesResponseType(typeof(CheckEligibilityResponse), (int)HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(BaseResponse), (int)HttpStatusCode.OK)]
         [ProducesResponseType((int)HttpStatusCode.NotFound)]
         [HttpPut("processEligibilityCheck/{guid}")]
         public async Task<ActionResult> Process(string guid)
@@ -72,7 +72,7 @@ namespace CheckYourEligibility.WebApp.Controllers
             {
                 return NotFound(guid);
             }
-            return new ObjectResult(new CheckEligibilityResponse() { Data = $"{FSM.Status}{response.Data.Status}", Links = $"{FSM.GetLink}{guid}" }) { StatusCode = StatusCodes.Status200OK };
+            return new ObjectResult(new BaseResponse() { Data = $"{FSM.Status}{response.Data.Status}", Links = $"{FSM.GetLink}{guid}" }) { StatusCode = StatusCodes.Status200OK };
         }
 
         [ProducesResponseType(typeof(CheckEligibilityItemFsmResponse), (int)HttpStatusCode.OK)]

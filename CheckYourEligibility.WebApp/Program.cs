@@ -5,10 +5,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Azure;
 
 var builder = WebApplication.CreateBuilder(args);
-//builder.Logging.AddEventLog(eventLogSettings =>
-//{
-//    eventLogSettings.SourceName = "CheckYourEligibility";
-//});
 
 // Add services to the container.
 builder.Services.AddApplicationInsightsTelemetry();
@@ -19,6 +15,7 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddDatabase(builder.Configuration);
 builder.Services.AddAzureClients(builder.Configuration);
+builder.Services.AddServices();
 
 builder.Services.AddAutoMapper(typeof(EligibilityMappingProfile));
 
@@ -26,14 +23,14 @@ var app = builder.Build();
 
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
+//if (app.Environment.IsDevelopment())
+//{
     app.UseSwagger();
     app.UseSwaggerUI();
     app.UseDeveloperExceptionPage();
     app.UseMigrationsEndPoint();
     
-}
+//}
 
 using (var scope = app.Services.CreateScope())
 {
