@@ -6,6 +6,9 @@ Set folders for migration files
 http://stackoverflow.com/questions/8546257/is-it-possible-to-change-the-location-of-the-ef-migrations-migrations-folder
 
 Add-Migration BaseMigration -project CheckYourEligibility.Data.Migrations
+Add-Migration establishmentImport -project CheckYourEligibility.Data.Migrations
+
+Remove-Migration -Force -project CheckYourEligibility.Data.Migrations
 
 --Run specific migration
 update-database -migration BaseMigration -project CheckYourEligibility.Data.Migrations
