@@ -1,13 +1,12 @@
 ﻿// Ignore Spelling: Fsm
 
-using CheckYourEligibility.Data.Models;
-using CheckYourEligibility.Domain.Requests;
-using CheckYourEligibility.Domain.Responses;
+using Microsoft.AspNetCore.Http;
 
 namespace CheckYourEligibility.Services.Interfaces
 {
     public interface IAdministration
     {
         Task CleanUpEligibilityChecks();
+        Task ImportEstablishments(IFormFile file);
     }
 }

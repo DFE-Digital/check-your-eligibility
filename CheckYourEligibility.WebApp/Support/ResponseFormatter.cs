@@ -10,62 +10,62 @@ namespace CheckYourEligibility.WebApp.Support
 
         public static dynamic GetResponseBadRequest(string message)
         {
-            dynamic Data = new ExpandoObject();
-            Data.Reason = message;
+            dynamic data = new ExpandoObject();
+            data.Reason = message;
             dynamic response = new ExpandoObject();
-            response.Data = Data;
+            response.data = data;
             return response;
         }
 
-        public static dynamic GetResponseStatus(CheckEligibilityStatus? status, string linkId = null)
+        public static dynamic GetResponseStatus(CheckEligibilityStatus? status, string? linkId = null)
         {
-            dynamic Data = new ExpandoObject();
-            Data.Status = $"{status}";
-            dynamic Links = new ExpandoObject();
+            dynamic data = new ExpandoObject();
+            data.status = $"{status}";
+            dynamic links = new ExpandoObject();
             if (!string.IsNullOrEmpty(linkId))
             {
-                Links.Get_EligibilityCheck = $"{FSM.GetLink}{linkId}";
-                Links.Put_EligibilityCheckProcess = $"{FSM.ProcessLink}{linkId}";
+                links.get_EligibilityCheck = $"{FSM.GetLink}{linkId}";
+                links.put_EligibilityCheckProcess = $"{FSM.ProcessLink}{linkId}";
             }
 
             dynamic response = new ExpandoObject();
-            response.Data = Data;
+            response.data = data;
             if (!string.IsNullOrEmpty(linkId))
             {
-                response.Links = Links;
+                response.links = links;
             }
             return response;
         }
 
         public static dynamic GetResponseItem(CheckEligibilityItemFsm? item, string linkId = null)
         {
-            dynamic Data = new ExpandoObject();
-            Data.CheckEligibility = item;
-            dynamic Links = new ExpandoObject();
+            dynamic data = new ExpandoObject();
+            data.CheckEligibility = item;
+            dynamic links = new ExpandoObject();
             if (!string.IsNullOrEmpty(linkId))
             {
-                Links.Get_EligibilityCheck = $"{FSM.GetLink}{linkId}";
-                Links.Put_EligibilityCheckProcess = $"{FSM.ProcessLink}{linkId}";
+                links.get_EligibilityCheck = $"{FSM.GetLink}{linkId}";
+                links.put_EligibilityCheckProcess = $"{FSM.ProcessLink}{linkId}";
             }
 
             dynamic response = new ExpandoObject();
-            response.Data = Data;
+            response.data = data;
             if (!string.IsNullOrEmpty(linkId))
             {
-                response.Links = Links;
+                response.links = links;
             }
             return response;
         }
 
         public static dynamic GetResponseMessage(string message)
         {
-            dynamic Data = new ExpandoObject();
-            Data.Message = $"{message}";
-            dynamic Links = new ExpandoObject();
+            dynamic data = new ExpandoObject();
+            data.Message = $"{message}";
+            dynamic links = new ExpandoObject();
             
 
             dynamic response = new ExpandoObject();
-            response.Data = Data;
+            response.data = data;
             
             return response;
         }
