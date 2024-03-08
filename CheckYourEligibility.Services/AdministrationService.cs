@@ -1,20 +1,20 @@
 ﻿// Ignore Spelling: Fsm
 
 using Ardalis.GuardClauses;
-using AutoMapper;
-using Azure.Storage.Queues;
 using CheckYourEligibility.Data.Enums;
 using CheckYourEligibility.Data.Models;
-using CheckYourEligibility.Domain.Constants;
-using CheckYourEligibility.Domain.Requests;
-using CheckYourEligibility.Domain.Responses;
+using CheckYourEligibility.Services.CsvImport;
 using CheckYourEligibility.Services.Interfaces;
+using CsvHelper;
+using CsvHelper.Configuration;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Microsoft.IdentityModel.Tokens;
-using Newtonsoft.Json;
-using static System.Runtime.InteropServices.JavaScript.JSType;
+using System.Collections.Generic;
+using System.Formats.Asn1;
+using System.Globalization;
+using System.Reflection.Emit;
 
 namespace CheckYourEligibility.Services
 {
@@ -43,6 +43,73 @@ namespace CheckYourEligibility.Services
             _db.FsmCheckEligibilities.RemoveRange(items);
             await _db.SaveChangesAsync();
         }
-        
+
+        public async Task ImportEstablishments(IFormFile file)
+        {
+            try
+            {
+                var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+                {
+                    HasHeaderRecord = true,
+                };
+                using (var fileStream = file.OpenReadStream())
+
+                using (var csv = new CsvReader(new StreamReader(fileStream), config))
+                {
+                    csv.Context.RegisterClassMap<EstablishmentRowMap>();
+                    var records = csv.GetRecords<EstablishmentRow>();
+                    //remove records where la is 0
+                    records = records.Where(x => x.LaCode != 0).ToList();
+
+                    var localAuthorites = records
+                             .Select(m => new { m.LaCode, m.LaName })
+                             .Distinct()
+                             .Select(x => new LocalAuthority { LaCode = x.LaCode, LaName = x.LaName });
+
+                    foreach (var la in localAuthorites)
+                    {
+                        var item = _db.LocalAuthorities.FirstOrDefault(x => x.LaCode == la.LaCode);
+                        if (item != null)
+                            _db.LocalAuthorities.Update(la);
+                        else
+                            _db.LocalAuthorities.Add(la);
+                    }
+                    await _db.SaveChangesAsync();
+
+                    var scools = records.Select(x => new School
+                    {
+                        Urn = x.Urn,
+                        EstablishmentName = x.EstablishmentName,
+                        LocalAuthorityLaCode = x.LaCode,
+                        Locality = x.Locality,
+                        Postcode = x.Postcode,
+                        Status = x.Status,
+                        Street = x.Street,
+                        Town = x.Town,
+                        County = x.County,
+                    });
+
+                    
+                    foreach (var sc in scools)
+                    {
+                        var item = _db.Schools.FirstOrDefault(x => x.Urn == sc.Urn);
+
+                        if (item != null)
+                            _db.Schools.Update(sc);
+                        else
+                            _db.Schools.Add(sc);
+                    }
+                    await _db.SaveChangesAsync();
+                }
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
+        }
+
+ 
+        }
     }
-}
+
