@@ -93,7 +93,7 @@ stages:
             az --version
             az account show
             dotnet tool install --global dotnet-ef
-            dotnet ef database update --project $(Pipeline.Workspace)/CheckYourEligibility.Data.Migrations/CheckYourEligibility.Data.Migrations.csproj
+            dotnet ef database update --project $(Build.SourcesDirectory)/CheckYourEligibility.Data.Migrations/CheckYourEligibility.Data.Migrations.csproj
 
       - task: AzureRmWebAppDeployment@4
         inputs:
