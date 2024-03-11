@@ -1,0 +1,104 @@
+pool:
+  name: Azure Pipelines
+  vmImage: 'windows-latest'
+
+variables:
+  solution: '**/*.sln'
+  buildPlatform: 'Any CPU'
+  buildConfiguration: 'Release'
+
+stages:
+  - stage: BuildApp
+    displayName: Build App
+    jobs:
+      #- template: templates/app-build.yml@templates
+    - job: 
+      pool:
+        name: Azure Pipelines
+        vmImage: 'windows-latest'
+      steps:
+      - task: NuGetToolInstaller@1
+
+      - task: NuGetCommand@2
+        inputs:
+          restoreSolution: '$(solution)'
+
+      - task: VSBuild@1
+        inputs:
+          solution: '$(solution)'
+          msbuildArgs: '/p:DeployOnBuild=true /p:WebPublishMethod=Package /p:PackageAsSingleFile=true /p:SkipInvalidConfigurations=true /p:DesktopBuildPackageLocation="$(build.artifactStagingDirectory)\WebApp.zip" /p:DeployIisAppPath="Default Web Site"'
+          platform: '$(buildPlatform)'
+          configuration: '$(buildConfiguration)'
+
+      - task: VSTest@2
+        inputs:
+          platform: '$(buildPlatform)'
+          configuration: '$(buildConfiguration)'
+
+      - task: DotNetCoreCLI@2
+        inputs:
+          command: publish
+          publishWebProjects: True
+          arguments: '--configuration $(BuildConfiguration) --output $(Build.ArtifactStagingDirectory)'
+          zipAfterPublish: True
+
+      - task: PublishPipelineArtifact@1
+        inputs:
+          targetPath: '$(Build.ArtifactStagingDirectory)' 
+          artifactName: 'myWebsite'
+
+  - stage: DeployAppDev
+    displayName: Deploy App Dev
+    jobs:
+    - job: 
+      pool:
+        name: Azure Pipelines
+        vmImage: 'windows-latest'
+      steps:
+      - task: DownloadPipelineArtifact@2
+        inputs:
+          buildType: 'current'
+          targetPath: '$(Pipeline.Workspace)'
+      
+      - task: CmdLine@2
+        inputs:
+          script: |
+            echo "Structure of work folder of this pipeline:"
+            echo "$(Agent.WorkFolder)"
+            tree $(Agent.WorkFolder)\1 /f
+            
+            echo "Build.ArtifactStagingDirectory:" 
+            
+            echo "$(Build.ArtifactStagingDirectory)"
+            
+            echo "Build.BinariesDirectory:" 
+            
+            echo "$(Build.BinariesDirectory)"
+            
+            echo "Build.SourcesDirectory:"
+            
+            echo "$(Build.SourcesDirectory)"
+            
+            tree $(Build.SourcesDirectory)\1 /f
+
+            echo "$(Pipeline.Workspace)/myWebsite"
+            
+      - task: AzureCLI@2
+        displayName: 'Run Migrations'
+        inputs:
+          azureSubscription: 's203d.azdo.deployment'
+          scriptType: 'ps'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            az --version
+            az account show
+            dotnet tool install --global dotnet-ef
+            dotnet ef database update --project $(Pipeline.Workspace)/myWebsite/CheckYourEligibility.Data.Migrations
+
+      - task: AzureRmWebAppDeployment@4
+        inputs:
+          ConnectionType: 'AzureRM'
+          azureSubscription: 's203d.azdo.deployment'
+          appType: 'webApp'
+          WebAppName: 'ecs-as-01'
+          packageForLinux: '$(Pipeline.Workspace)/myWebsite/CheckYourEligibility.WebApp.zip'
