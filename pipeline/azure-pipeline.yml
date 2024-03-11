@@ -45,7 +45,7 @@ stages:
       - task: PublishPipelineArtifact@1
         inputs:
           targetPath: '$(Build.ArtifactStagingDirectory)' 
-          artifactName: 'myWebsite'
+          artifactName: 'checkYourEligibilityAPI'
 
   - stage: DeployAppDev
     displayName: Deploy App Dev
@@ -81,7 +81,7 @@ stages:
             
             tree $(Build.SourcesDirectory)\1 /f
 
-            echo "$(Pipeline.Workspace)/myWebsite"
+            echo "$(Pipeline.Workspace)/checkYourEligibilityAPI"
             
       - task: AzureCLI@2
         displayName: 'Run Migrations'
@@ -93,7 +93,7 @@ stages:
             az --version
             az account show
             dotnet tool install --global dotnet-ef
-            dotnet ef database update --project $(Pipeline.Workspace)/myWebsite/CheckYourEligibility.Data.Migrations
+            dotnet ef database update --project $(Pipeline.Workspace)/CheckYourEligibility.Data.Migrations
 
       - task: AzureRmWebAppDeployment@4
         inputs:
@@ -101,4 +101,4 @@ stages:
           azureSubscription: 's203d.azdo.deployment'
           appType: 'webApp'
           WebAppName: 'ecs-as-01'
-          packageForLinux: '$(Pipeline.Workspace)/myWebsite/CheckYourEligibility.WebApp.zip'
+          packageForLinux: '$(Pipeline.Workspace)/checkYourEligibilityAPI/CheckYourEligibility.WebApp.zip'
