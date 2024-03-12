@@ -1,6 +1,7 @@
 using CheckYourEligibility.Data;
 using CheckYourEligibility.Data.Mappings;
 using CheckYourEligibility.WebApp;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Azure;
 using System.Text.Json.Serialization;
@@ -20,6 +21,14 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDatabase(builder.Configuration);
 builder.Services.AddAzureClients(builder.Configuration);
 builder.Services.AddServices();
+builder.Services.Configure<IISServerOptions>(options =>
+{
+    options.MaxRequestBodySize = int.MaxValue;
+});
+builder.Services.Configure<KestrelServerOptions>(options =>
+{
+    options.Limits.MaxRequestBodySize = int.MaxValue; // if don't set default value is: 30 MB
+});
 
 builder.Services.AddAutoMapper(typeof(EligibilityMappingProfile));
 

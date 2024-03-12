@@ -13,7 +13,9 @@ namespace CheckYourEligibility.WebApp
             services.AddDbContext<IEligibilityCheckContext, EligibilityCheckContext>(options =>
                options.UseSqlServer(
                    configuration.GetConnectionString("EligibilityCheck") ?? throw new InvalidOperationException("Connection string 'EligibilityCheck' not found."),
-                   x=>x.MigrationsAssembly("CheckYourEligibility.Data.Migrations")));
+                   x=>x.MigrationsAssembly("CheckYourEligibility.Data.Migrations"))
+               .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
+               );
             services.AddDatabaseDeveloperPageExceptionFilter();
           
             return services;
