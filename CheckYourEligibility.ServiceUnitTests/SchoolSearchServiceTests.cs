@@ -29,11 +29,13 @@ namespace CheckYourEligibility.ServiceUnitTests
             .Options;
 
             _fakeInMemoryDb = new EligibilityCheckContext(options);
-
-             school = _fixture.Create<Data.Models.School>();
-            _fakeInMemoryDb.Schools.Add(school);
-            _fakeInMemoryDb.SaveChangesAsync();
-
+            if (!_fakeInMemoryDb.Schools.Any())
+            {
+                school = _fixture.Create<Data.Models.School>();
+                _fakeInMemoryDb.Schools.Add(school);
+                _fakeInMemoryDb.SaveChangesAsync();
+            }
+           
             _sut = new SchoolSearchService(new NullLoggerFactory(), _fakeInMemoryDb);
 
         }
@@ -58,6 +60,9 @@ namespace CheckYourEligibility.ServiceUnitTests
         public void Given_Search_Should_Return_ExpectedResult()
         {
             // Arrange
+
+            
+
             var expectedResult = _fakeInMemoryDb.Schools.Select(x => new Domain.Responses.School()
             {
                 Id = x.Urn,
