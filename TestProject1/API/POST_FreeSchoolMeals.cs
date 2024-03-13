@@ -3,9 +3,11 @@ using Microsoft.Playwright;
 
 namespace CheckYourEligibility.SystemTests.API
 {
+
     public class POST_FreeSchoolMeals : PlaywrightTest
     {
         private IAPIRequestContext Request;
+        public static T AsNullable<T>(T value) where T : class => value;
 
         [SetUp]
         public async Task SetUpAPITesting()
@@ -121,7 +123,7 @@ namespace CheckYourEligibility.SystemTests.API
                 data = new
                 {
                     nationalInsuranceNumber = "AB123456C",
-                    lastName = "123",
+                    lastName = "Joe",
                     dateOfBirth = "",
                     nationalAsylumSeekerServiceNumber = ""
                 }
@@ -132,22 +134,23 @@ namespace CheckYourEligibility.SystemTests.API
         }
 
         [Test, Description("POST Request with null NI")]
-        public async Task PostRequestWithNulldNI()
+        public async Task PostRequestWithNullNI()
         {
+
             var endpoint = "/FreeSchoolMeals";
             var requestBody = new
             {
                 data = new
                 {
-                    nationalInsuranceNumber = "null",
+                    nationalInsuranceNumber = AsNullable<string>(null),
                     lastName = "Joe",
                     dateOfBirth = "01/12/1990",
-                    nationalAsylumSeekerServiceNumber = "123456789"
+                    nationalAsylumSeekerServiceNumber = ""
                 }
             };
 
             var response = await ApiHelper.PostRequest(endpoint, requestBody);
-            await ApiHelper.AssertStatusCode(response, HttpStatusCode.Accepted);
+            await ApiHelper.AssertStatusCode(response, HttpStatusCode.BadRequest);
         }
 
         [Test, Description("POST Request with Null NASS number")]
@@ -161,12 +164,12 @@ namespace CheckYourEligibility.SystemTests.API
                     nationalInsuranceNumber = "",
                     lastName = "Joe",
                     dateOfBirth = "01/12/1990",
-                    nationalAsylumSeekerServiceNumber = "null"
+                    nationalAsylumSeekerServiceNumber = AsNullable<string>(null)
                 }
             };
 
             var response = await ApiHelper.PostRequest(endpoint, requestBody);
-            await ApiHelper.AssertStatusCode(response, HttpStatusCode.Accepted);
+            await ApiHelper.AssertStatusCode(response, HttpStatusCode.BadRequest);
         }
 
         [TearDown]
