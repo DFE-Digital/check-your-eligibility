@@ -1,7 +1,10 @@
 // Ignore Spelling: Levenshtein
 
+using AutoFixture;
 using AutoMapper;
 using CheckYourEligibility.Data.Mappings;
+using CheckYourEligibility.Data.Models;
+using CheckYourEligibility.Domain.Responses;
 using CheckYourEligibility.Services;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
@@ -12,12 +15,11 @@ namespace CheckYourEligibility.ServiceUnitTests
 {
 
 
-    public class AdministrationServiceTests : TestBase.TestBase
+    public class SchoolSearchServiceTests : TestBase.TestBase
     {
         private IEligibilityCheckContext _fakeInMemoryDb;
-        private IMapper _mapper;
-        private IConfiguration _configuration;
-        private AdministrationService _sut;
+        private SchoolSearchService _sut;
+        private Data.Models.School school;
 
         [SetUp]
         public void Setup()
@@ -28,19 +30,11 @@ namespace CheckYourEligibility.ServiceUnitTests
 
             _fakeInMemoryDb = new EligibilityCheckContext(options);
 
-            var config = new MapperConfiguration(cfg => cfg.AddProfile<EligibilityMappingProfile>());
-            _mapper = config.CreateMapper();
-            var configForSmsApi = new Dictionary<string, string>
-            {
-                {"QueueFsmCheckStandard", "notSet"},
-            };
-            _configuration = new ConfigurationBuilder()
-                .AddInMemoryCollection(configForSmsApi)
-                .Build();
-            var webJobsConnection = "DefaultEndpointsProtocol=https;AccountName=none;AccountKey=none;EndpointSuffix=core.windows.net";
+             school = _fixture.Create<Data.Models.School>();
+            _fakeInMemoryDb.Schools.Add(school);
+            _fakeInMemoryDb.SaveChangesAsync();
 
-
-            _sut = new AdministrationService(new NullLoggerFactory(), _fakeInMemoryDb, _configuration);
+            _sut = new SchoolSearchService(new NullLoggerFactory(), _fakeInMemoryDb);
 
         }
 
@@ -54,22 +48,34 @@ namespace CheckYourEligibility.ServiceUnitTests
         {
             // Arrange
             // Act
-            Action act = () => new AdministrationService(new NullLoggerFactory(), null, null);
+            Action act = () => new SchoolSearchService(new NullLoggerFactory(), null);
 
             // Assert
             act.Should().ThrowExactly<ArgumentNullException>().And.Message.Should().EndWithEquivalentOf("Value cannot be null. (Parameter 'dbContext')");
         }
 
         [Test]
-        public void Given_CleanUpEligibilityChecks_Should_Return_Pass()
+        public void Given_Search_Should_Return_ExpectedResult()
         {
             // Arrange
+            var expectedResult = _fakeInMemoryDb.Schools.Select(x => new Domain.Responses.School()
+            {
+                Id = x.Urn,
+                Name = x.EstablishmentName,
+                Postcode = x.Postcode,
+                Locality = x.Locality,
+                County = x.County,
+                Street = x.Street,
+                Town = x.Town,
+                La = x.LocalAuthority.LaName
+            });
 
             // Act
-            _sut.CleanUpEligibilityChecks();
+            var response = _sut.Search(school.EstablishmentName);
 
             // Assert
-            Assert.Pass();
+
+            response.Result.Should().BeEquivalentTo(expectedResult);
         }
     }
 }

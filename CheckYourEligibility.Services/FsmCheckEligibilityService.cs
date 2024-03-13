@@ -3,9 +3,9 @@
 using Ardalis.GuardClauses;
 using AutoMapper;
 using Azure.Storage.Queues;
-using CheckYourEligibility.Data.Enums;
 using CheckYourEligibility.Data.Models;
 using CheckYourEligibility.Domain.Constants;
+using CheckYourEligibility.Domain.Enums;
 using CheckYourEligibility.Domain.Requests;
 using CheckYourEligibility.Domain.Responses;
 using CheckYourEligibility.Services.Interfaces;
