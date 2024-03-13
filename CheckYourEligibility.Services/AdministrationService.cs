@@ -1,8 +1,8 @@
 ﻿// Ignore Spelling: Fsm
 
 using Ardalis.GuardClauses;
-using CheckYourEligibility.Data.Enums;
 using CheckYourEligibility.Data.Models;
+using CheckYourEligibility.Domain.Enums;
 using CheckYourEligibility.Services.CsvImport;
 using CheckYourEligibility.Services.Interfaces;
 using CsvHelper;

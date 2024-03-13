@@ -1,6 +1,6 @@
 ﻿// Ignore Spelling: Fsm
 
-namespace CheckYourEligibility.Data.Enums
+namespace CheckYourEligibility.Domain.Enums
 {
     public enum CheckEligibilityType
     {
