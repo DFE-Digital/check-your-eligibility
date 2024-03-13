@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace CheckYourEligibility.Data.Models
 {
@@ -15,5 +16,7 @@ namespace CheckYourEligibility.Data.Models
         public string Status { get; set; }
         public int LocalAuthorityLaCode { get; set; }
         public virtual LocalAuthority LocalAuthority { get; set; }
+        [NotMapped]
+        public int? LevenshteinDistance { get; set; }
     }
 }

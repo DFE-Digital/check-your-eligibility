@@ -2,7 +2,7 @@
 
 // Ignore Spelling: Fsm
 
-using CheckYourEligibility.Data.Enums;
+using CheckYourEligibility.Domain.Enums;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace CheckYourEligibility.Data.Models
