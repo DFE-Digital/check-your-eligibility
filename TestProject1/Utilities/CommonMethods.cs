@@ -12,12 +12,7 @@ using Microsoft.Playwright;
 namespace CheckYourEligibility.SystemTests.Utilities
 {
     public static class CommonMethods 
-    {
-        private static string ReadRequestBodyFromFile(string filePath)
-        {
-            // Read the request body from a file
-            return File.ReadAllText(filePath);
-        }             
+    {         
 
         public static string ExtractStringAfterLastSlash(string url)
         {
