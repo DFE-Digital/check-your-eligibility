@@ -3,9 +3,9 @@
 using AutoFixture;
 using AutoMapper;
 using Azure.Storage.Queues;
-using CheckYourEligibility.Data.Enums;
 using CheckYourEligibility.Data.Mappings;
 using CheckYourEligibility.Data.Models;
+using CheckYourEligibility.Domain.Enums;
 using CheckYourEligibility.Domain.Requests;
 using CheckYourEligibility.Domain.Responses;
 using CheckYourEligibility.Services;
@@ -60,7 +60,7 @@ namespace CheckYourEligibility.ServiceUnitTests
         {
             // Arrange
             // Act
-            Action act = () => new FsmCheckEligibilityService(new NullLoggerFactory(), null,_mapper,null,null);
+            Action act = () => new FsmCheckEligibilityService(new NullLoggerFactory(), null, _mapper, null, null);
 
             // Assert
             act.Should().ThrowExactly<ArgumentNullException>().And.Message.Should().EndWithEquivalentOf("Value cannot be null. (Parameter 'dbContext')");
@@ -72,7 +72,7 @@ namespace CheckYourEligibility.ServiceUnitTests
             // Arrange
             var request = _fixture.Create<CheckEligibilityRequestDataFsm>();
             request.DateOfBirth = "01/02/1970";
-            
+
             // Act
             var response = _sut.PostCheck(request);
 
@@ -129,7 +129,7 @@ namespace CheckYourEligibility.ServiceUnitTests
             item.NASSNumber = string.Empty;
             _fakeInMemoryDb.FsmCheckEligibilities.Add(item);
             _fakeInMemoryDb.SaveChangesAsync();
-            
+
             // Act
             var response = _sut.ProcessCheck(item.EligibilityCheckID);
 
@@ -176,7 +176,7 @@ namespace CheckYourEligibility.ServiceUnitTests
             var item = _fixture.Create<EligibilityCheck>();
             item.NASSNumber = string.Empty;
             _fakeInMemoryDb.FsmCheckEligibilities.Add(item);
-            _fakeInMemoryDb.FreeSchoolMealsHMRC.Add(new FreeSchoolMealsHMRC { FreeSchoolMealsHMRCID= item.NINumber,Surname = item.LastName, DateOfBirth = item.DateOfBirth });
+            _fakeInMemoryDb.FreeSchoolMealsHMRC.Add(new FreeSchoolMealsHMRC { FreeSchoolMealsHMRCID = item.NINumber, Surname = item.LastName, DateOfBirth = item.DateOfBirth });
             _fakeInMemoryDb.SaveChangesAsync();
 
             // Act
@@ -233,7 +233,7 @@ namespace CheckYourEligibility.ServiceUnitTests
             var item = _fixture.Create<EligibilityCheck>();
             item.NINumber = string.Empty;
             _fakeInMemoryDb.FsmCheckEligibilities.Add(item);
-            _fakeInMemoryDb.FreeSchoolMealsHO.Add(new FreeSchoolMealsHO {FreeSchoolMealsHOID ="123", NASS  = item.NASSNumber, LastName = item.LastName, DateOfBirth = item.DateOfBirth });
+            _fakeInMemoryDb.FreeSchoolMealsHO.Add(new FreeSchoolMealsHO { FreeSchoolMealsHOID = "123", NASS = item.NASSNumber, LastName = item.LastName, DateOfBirth = item.DateOfBirth });
             _fakeInMemoryDb.SaveChangesAsync();
 
             // Act
@@ -271,15 +271,5 @@ namespace CheckYourEligibility.ServiceUnitTests
             response.Result.Should().BeOfType<CheckEligibilityItemFsm>();
         }
 
-        [Test]
-        public void testLevenshtein()
-        {
-            int levenshteinDistance = Fastenshtein.Levenshtein.Distance("value1", "value2");//1
-            levenshteinDistance = Fastenshtein.Levenshtein.Distance("value1", "value1");//0
-            levenshteinDistance = Fastenshtein.Levenshtein.Distance("value1", "value");//1
-            levenshteinDistance = Fastenshtein.Levenshtein.Distance("value1", "valu");//2
-            levenshteinDistance = Fastenshtein.Levenshtein.Distance("value1", "val");//3
-        }
-
-        }
+    }
 }
