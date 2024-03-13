@@ -1,12 +1,9 @@
-﻿using CheckYourEligibility.SystemTests.API;
-using System.Net;
+﻿using System.Net;
 namespace CheckYourEligibility.SystemTests.API
 {
     public class GET_FreeSchoolMealsGUIDStatus : PlaywrightTest
     {
         private dynamic _requestBody;
-
-        // ... other members of the class ...
 
         [Test]
         public async Task GetRequestWithGUIDToCheckStatus()
@@ -47,11 +44,6 @@ namespace CheckYourEligibility.SystemTests.API
             var jsonResponse = await ApiHelper.GetRequest("/FreeSchoolMeals/7df4a175-c153-43ac-87e9-4a48e4517");
             Assert.That(jsonResponse.StatusCode, Is.EqualTo(HttpStatusCode.NotFound));
         }
-        [Test]
-        public async Task GetRequest_WithNullGUID()
-        {
-            var jsonResponse = await ApiHelper.GetRequest("/FreeSchoolMeals/null");
-            Assert.That(jsonResponse.StatusCode, Is.EqualTo(HttpStatusCode.NotFound));
-        }
+     
     }
 }

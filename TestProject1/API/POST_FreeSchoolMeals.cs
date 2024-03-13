@@ -1,11 +1,5 @@
-﻿using System;
-using System.Net;
-using System.Net.Http;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Net;
 using Microsoft.Playwright;
-using Newtonsoft.Json;
-using NUnit.Framework;
 
 namespace CheckYourEligibility.SystemTests.API
 {
@@ -51,7 +45,7 @@ namespace CheckYourEligibility.SystemTests.API
                 data = new
                 {
                     nationalInsuranceNumber = "",
-                    lastName = "123",
+                    lastName = "Joe",
                     dateOfBirth = "01/12/1990",
                     nationalAsylumSeekerServiceNumber = "313"
                 }
@@ -70,7 +64,7 @@ namespace CheckYourEligibility.SystemTests.API
                 data = new
                 {
                     nationalInsuranceNumber = "AB1234561",
-                    lastName = "123",
+                    lastName = "Joe",
                     dateOfBirth = "01/12/1990",
                     nationalAsylumSeekerServiceNumber = "null"
                 }
@@ -89,7 +83,7 @@ namespace CheckYourEligibility.SystemTests.API
                 data = new
                 {
                     nationalInsuranceNumber = "",
-                    lastName = "123",
+                    lastName = "Joe",
                     dateOfBirth = "01/13/1990",
                     nationalAsylumSeekerServiceNumber = "313"
                 }
@@ -108,7 +102,7 @@ namespace CheckYourEligibility.SystemTests.API
                 data = new
                 {
                     nationalInsuranceNumber = "",
-                    lastName = "123",
+                    lastName = "Joe",
                     dateOfBirth = "01/13/1990",
                     nationalAsylumSeekerServiceNumber = ""
                 }
@@ -146,7 +140,7 @@ namespace CheckYourEligibility.SystemTests.API
                 data = new
                 {
                     nationalInsuranceNumber = "null",
-                    lastName = "123",
+                    lastName = "Joe",
                     dateOfBirth = "01/12/1990",
                     nationalAsylumSeekerServiceNumber = "123456789"
                 }
@@ -165,7 +159,7 @@ namespace CheckYourEligibility.SystemTests.API
                 data = new
                 {
                     nationalInsuranceNumber = "",
-                    lastName = "123",
+                    lastName = "Joe",
                     dateOfBirth = "01/12/1990",
                     nationalAsylumSeekerServiceNumber = "null"
                 }
