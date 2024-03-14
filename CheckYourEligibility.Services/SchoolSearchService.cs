@@ -1,17 +1,9 @@
-﻿// Ignore Spelling: Fsm
-
-using Ardalis.GuardClauses;
+﻿using Ardalis.GuardClauses;
 using CheckYourEligibility.Data.Models;
-using CheckYourEligibility.Services.CsvImport;
 using CheckYourEligibility.Services.Interfaces;
-using CsvHelper;
-using CsvHelper.Configuration;
-using Microsoft.AspNetCore.Http;
+using F23.StringSimilarity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using System.Globalization;
-using System.Net.NetworkInformation;
 
 namespace CheckYourEligibility.Services
 {
@@ -34,10 +26,14 @@ namespace CheckYourEligibility.Services
         {
             var results = new List<Domain.Responses.School>();
             var queryResult = new List<School>();
-            Fastenshtein.Levenshtein lev = new Fastenshtein.Levenshtein(query);
+
+            var lev = new NormalizedLevenshtein();
+            //var lev = new Fastenshtein.Levenshtein(query);
+            //var lev = new Damerau();
+
             foreach (var item in _schools)
             {
-                int levenshteinDistance = lev.DistanceFrom(item.EstablishmentName);
+                var levenshteinDistance = lev.Distance(query, item.EstablishmentName);// lev.DistanceFrom(item.EstablishmentName);
                 if (levenshteinDistance < 20)
                 {
                     item.LevenshteinDistance = levenshteinDistance;
@@ -47,7 +43,7 @@ namespace CheckYourEligibility.Services
 
             if (queryResult.Any())
             {
-                return queryResult
+                return queryResult.Where(x=>x.EstablishmentName.Contains(query))
                     .OrderBy(x => x.LevenshteinDistance)
                     .ThenBy(x => x.EstablishmentName).Take(takeScoolResultsMax)
                     .Select(x => new Domain.Responses.School()
@@ -59,7 +55,8 @@ namespace CheckYourEligibility.Services
                         County = x.County,
                         Street = x.Street,
                         Town = x.Town,
-                        La = x.LocalAuthority.LaName
+                        La = x.LocalAuthority.LaName,
+                        Distance = x.LevenshteinDistance
                     });
             }
             return null;
