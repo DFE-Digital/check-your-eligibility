@@ -1,5 +1,5 @@
-﻿using CheckYourEligibility.Data.Enums;
-using CheckYourEligibility.Domain.Constants;
+﻿using CheckYourEligibility.Domain.Constants;
+using CheckYourEligibility.Domain.Enums;
 using CheckYourEligibility.Domain.Responses;
 using System.Dynamic;
 
@@ -61,12 +61,18 @@ namespace CheckYourEligibility.WebApp.Support
         {
             dynamic data = new ExpandoObject();
             data.Message = $"{message}";
-            dynamic links = new ExpandoObject();
-            
 
             dynamic response = new ExpandoObject();
             response.data = data;
             
+            return response;
+        }
+
+        public static object? GetSchoolsResponseMessage(IEnumerable<School>? results)
+        {
+            dynamic response = new ExpandoObject();
+            response.data = results;
+
             return response;
         }
     }

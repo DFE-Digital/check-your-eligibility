@@ -1,7 +1,7 @@
 ﻿// Ignore Spelling: Fsm
 
-using CheckYourEligibility.Data.Enums;
 using CheckYourEligibility.Data.Models;
+using CheckYourEligibility.Domain.Enums;
 using CheckYourEligibility.Domain.Requests;
 using CheckYourEligibility.Domain.Responses;
 
