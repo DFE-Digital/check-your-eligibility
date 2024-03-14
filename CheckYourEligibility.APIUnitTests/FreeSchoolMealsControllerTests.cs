@@ -1,8 +1,8 @@
 using AutoFixture;
 using AutoMapper.Execution;
 using Azure.Core;
-using CheckYourEligibility.Data.Enums;
 using CheckYourEligibility.Domain.Constants.ErrorMessages;
+using CheckYourEligibility.Domain.Enums;
 using CheckYourEligibility.Domain.Requests;
 using CheckYourEligibility.Domain.Responses;
 using CheckYourEligibility.Services.Interfaces;

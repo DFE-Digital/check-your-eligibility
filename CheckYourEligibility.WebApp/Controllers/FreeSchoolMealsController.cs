@@ -1,15 +1,12 @@
 ﻿using Ardalis.GuardClauses;
-using CheckYourEligibility.Data.Enums;
-using CheckYourEligibility.Domain.Constants;
+using CheckYourEligibility.Domain.Enums;
 using CheckYourEligibility.Domain.Requests;
 using CheckYourEligibility.Domain.Responses;
 using CheckYourEligibility.Services.Interfaces;
 using CheckYourEligibility.WebApp.Support;
 using FeatureManagement.Domain.Validation;
 using Microsoft.AspNetCore.Mvc;
-using System.Dynamic;
 using System.Net;
-using System.Net.NetworkInformation;
 
 namespace CheckYourEligibility.WebApp.Controllers
 {
@@ -47,7 +44,7 @@ namespace CheckYourEligibility.WebApp.Controllers
             }
 
             var id = await _service.PostCheck(model.Data);
-            return new ObjectResult(ResponseFormatter.GetResponseStatus(Data.Enums.CheckEligibilityStatus.queuedForProcessing, id)) { StatusCode = StatusCodes.Status202Accepted };
+            return new ObjectResult(ResponseFormatter.GetResponseStatus(Domain.Enums.CheckEligibilityStatus.queuedForProcessing, id)) { StatusCode = StatusCodes.Status202Accepted };
         }
 
         [ProducesResponseType(typeof(CheckEligibilityStatus), (int)HttpStatusCode.OK)]
