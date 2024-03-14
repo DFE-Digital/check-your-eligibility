@@ -10,5 +10,6 @@
         public string Town { get; set; }
         public string County { get; set; }
         public string La { get; set; }
+        public double? Distance { get; set; }
     }
 }
