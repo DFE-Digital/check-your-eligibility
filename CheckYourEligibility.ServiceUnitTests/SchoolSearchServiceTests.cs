@@ -72,7 +72,8 @@ namespace CheckYourEligibility.ServiceUnitTests
                 County = x.County,
                 Street = x.Street,
                 Town = x.Town,
-                La = x.LocalAuthority.LaName
+                La = x.LocalAuthority.LaName,
+                Distance = 0.0
             });
 
             // Act
