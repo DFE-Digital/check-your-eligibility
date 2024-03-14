@@ -56,7 +56,8 @@ namespace CheckYourEligibility.Services
                         Street = x.Street,
                         Town = x.Town,
                         La = x.LocalAuthority.LaName,
-                        Distance = x.LevenshteinDistance
+                        Distance = x.LevenshteinDistance,
+                        Status = x.Status
                     });
             }
             return null;
