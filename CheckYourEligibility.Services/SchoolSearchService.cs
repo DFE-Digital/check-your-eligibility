@@ -30,10 +30,10 @@ namespace CheckYourEligibility.Services
             var lev = new NormalizedLevenshtein();
             //var lev = new Fastenshtein.Levenshtein(query);
             //var lev = new Damerau();
-
+            double levenshteinDistance;
             foreach (var item in _schools)
             {
-                var levenshteinDistance = lev.Distance(query, item.EstablishmentName);// lev.DistanceFrom(item.EstablishmentName);
+                levenshteinDistance = lev.Distance(query.ToUpper(), item.EstablishmentName.ToUpper());// lev.DistanceFrom(item.EstablishmentName);
                 if (levenshteinDistance < 20)
                 {
                     item.LevenshteinDistance = levenshteinDistance;
@@ -43,7 +43,7 @@ namespace CheckYourEligibility.Services
 
             if (queryResult.Any())
             {
-                return queryResult.Where(x=>x.EstablishmentName.Contains(query))
+                return queryResult.Where(x=>x.EstablishmentName.ToUpper().Contains(query.ToUpper()))
                     .OrderBy(x => x.LevenshteinDistance)
                     .ThenBy(x => x.EstablishmentName).Take(takeScoolResultsMax)
                     .Select(x => new Domain.Responses.School()
