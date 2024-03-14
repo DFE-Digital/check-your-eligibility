@@ -17,6 +17,6 @@ namespace CheckYourEligibility.Data.Models
         public int LocalAuthorityLaCode { get; set; }
         public virtual LocalAuthority LocalAuthority { get; set; }
         [NotMapped]
-        public int? LevenshteinDistance { get; set; }
+        public double? LevenshteinDistance { get; set; }
     }
 }
