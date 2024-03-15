@@ -13,7 +13,7 @@ namespace CheckYourEligibility.Data.Models
         public string Locality { get; set; }
         public string Town { get; set; }
         public string County { get; set; }
-        public string Status { get; set; }
+        public bool StatusOpen { get; set; }
         public int LocalAuthorityLaCode { get; set; }
         public virtual LocalAuthority LocalAuthority { get; set; }
         [NotMapped]

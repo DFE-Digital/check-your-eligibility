@@ -56,7 +56,7 @@ namespace CheckYourEligibility.WebApp.Controllers
             catch (Exception ex)
             {
                 _logger.LogError("ImportEstablishments", ex);
-                return new ObjectResult(ResponseFormatter.GetResponseMessage($"{file.FileName} - {JsonConvert.SerializeObject(new EstablishmentRow())} :- {ex.Message}")) { StatusCode = StatusCodes.Status500InternalServerError }; 
+                return new ObjectResult(ResponseFormatter.GetResponseMessage($"{file.FileName} - {JsonConvert.SerializeObject(new EstablishmentRow())} :- {ex.Message},{ex.InnerException.Message}")) { StatusCode = StatusCodes.Status500InternalServerError }; 
             }
             
             return new ObjectResult(ResponseFormatter.GetResponseMessage($"{file.FileName} - {Admin.EstablishmentFileProcessed}")) { StatusCode = StatusCodes.Status200OK };

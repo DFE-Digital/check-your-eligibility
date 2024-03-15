@@ -73,8 +73,7 @@ namespace CheckYourEligibility.ServiceUnitTests
                 Street = x.Street,
                 Town = x.Town,
                 La = x.LocalAuthority.LaName,
-                Distance = 0.0,
-                Status = x.Status,
+                Distance = 0.0
             });
 
             // Act

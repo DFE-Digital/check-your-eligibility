@@ -8,6 +8,9 @@ http://stackoverflow.com/questions/8546257/is-it-possible-to-change-the-location
 Add-Migration BaseMigration -project CheckYourEligibility.Data.Migrations
 Add-Migration establishmentImport -project CheckYourEligibility.Data.Migrations
 
+--List Migrations
+Get-Migration
+
 Remove-Migration -Force -project CheckYourEligibility.Data.Migrations
 
 --Run specific migration
