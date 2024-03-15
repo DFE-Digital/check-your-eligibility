@@ -64,7 +64,7 @@ namespace CheckYourEligibility.Services
                     var localAuthorites = records
                              .Select(m => new { m.LaCode, m.LaName })
                              .Distinct()
-                             .Select(x => new LocalAuthority { LaCode = x.LaCode, LaName = x.LaName });
+                             .Select(x => new LocalAuthority { LaCode = x.LaCode, LaName = x.LaName});
 
                     foreach (var la in localAuthorites)
                     {
@@ -83,7 +83,7 @@ namespace CheckYourEligibility.Services
                         LocalAuthorityLaCode = x.LaCode,
                         Locality = x.Locality,
                         Postcode = x.Postcode,
-                        Status = x.Status,
+                        StatusOpen = x.Status=="Open" ,
                         Street = x.Street,
                         Town = x.Town,
                         County = x.County,
