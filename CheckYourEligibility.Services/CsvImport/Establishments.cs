@@ -29,7 +29,7 @@ namespace CheckYourEligibility.Services.CsvImport
             Map(m => m.Locality).Index(60);
             Map(m => m.Town).Index(62);
             Map(m => m.County).Index(63);
-            Map(m => m.Status).Index(11);
+            Map(m => m.Status).Index(10);
         }
     }
 }

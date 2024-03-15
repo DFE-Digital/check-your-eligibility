@@ -13,13 +13,16 @@ namespace CheckYourEligibility.Services
 
         private readonly ILogger _logger;
         private readonly IEligibilityCheckContext _db;
-        private readonly IEnumerable<School> _schools;
+        static IEnumerable<School> _schools = new List<School>();
 
         public SchoolSearchService(ILoggerFactory logger, IEligibilityCheckContext dbContext)
         {
             _logger = logger.CreateLogger("SchoolSearchService");
             _db = Guard.Against.Null(dbContext);
-            _schools = _db.Schools.Include(x=>x.LocalAuthority).ToList();
+            if (!_schools.Any())
+            {
+                _schools = _db.Schools.Where(x => x.StatusOpen).Include(x => x.LocalAuthority).ToList();
+            }
         }
 
         public async Task<IEnumerable<Domain.Responses.School>?> Search(string query)
@@ -56,8 +59,7 @@ namespace CheckYourEligibility.Services
                         Street = x.Street,
                         Town = x.Town,
                         La = x.LocalAuthority.LaName,
-                        Distance = x.LevenshteinDistance,
-                        Status = x.Status
+                        Distance = x.LevenshteinDistance
                     });
             }
             return null;

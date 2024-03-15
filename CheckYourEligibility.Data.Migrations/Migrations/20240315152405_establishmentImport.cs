@@ -33,7 +33,7 @@ namespace CheckYourEligibility.Data.Migrations.Migrations
                     Locality = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Town = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     County = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    StatusOpen = table.Column<bool>(type: "bit", nullable: false),
                     LocalAuthorityLaCode = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
