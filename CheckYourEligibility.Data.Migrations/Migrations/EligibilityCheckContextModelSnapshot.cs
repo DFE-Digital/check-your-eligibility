@@ -21,6 +21,91 @@ namespace CheckYourEligibility.Data.Migrations.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("CheckYourEligibility.Data.Models.Application", b =>
+                {
+                    b.Property<string>("ApplicationID")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("ChildDateOfBirth")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ChildFirstName")
+                        .IsRequired()
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<string>("ChildLastName")
+                        .IsRequired()
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<DateTime>("Created")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("LocalAuthorityId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("ParentDateOfBirth")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ParentFirstName")
+                        .IsRequired()
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<string>("ParentLastName")
+                        .IsRequired()
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<string>("ParentNationalAsylumSeekerServiceNumber")
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<string>("ParentNationalInsuranceNumber")
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<string>("Reference")
+                        .IsRequired()
+                        .HasColumnType("varchar(8)");
+
+                    b.Property<int>("SchoolId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<DateTime>("Updated")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("ApplicationID");
+
+                    b.HasIndex("LocalAuthorityId");
+
+                    b.HasIndex("SchoolId");
+
+                    b.ToTable("Applications");
+                });
+
+            modelBuilder.Entity("CheckYourEligibility.Data.Models.ApplicationStatus", b =>
+                {
+                    b.Property<string>("ApplicationStatusID")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("ApplicationID")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("TimeStamp")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("varchar(100)");
+
+                    b.HasKey("ApplicationStatusID");
+
+                    b.HasIndex("ApplicationID");
+
+                    b.ToTable("ApplicationStatuses");
+                });
+
             modelBuilder.Entity("CheckYourEligibility.Data.Models.EligibilityCheck", b =>
                 {
                     b.Property<string>("EligibilityCheckID")
@@ -101,28 +186,28 @@ namespace CheckYourEligibility.Data.Migrations.Migrations
 
             modelBuilder.Entity("CheckYourEligibility.Data.Models.LocalAuthority", b =>
                 {
-                    b.Property<int>("LaCode")
+                    b.Property<int>("LocalAuthorityId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("LaCode"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("LocalAuthorityId"));
 
                     b.Property<string>("LaName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("LaCode");
+                    b.HasKey("LocalAuthorityId");
 
                     b.ToTable("LocalAuthorities");
                 });
 
             modelBuilder.Entity("CheckYourEligibility.Data.Models.School", b =>
                 {
-                    b.Property<int>("Urn")
+                    b.Property<int>("SchoolId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Urn"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("SchoolId"));
 
                     b.Property<string>("County")
                         .IsRequired()
@@ -132,7 +217,7 @@ namespace CheckYourEligibility.Data.Migrations.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("LocalAuthorityLaCode")
+                    b.Property<int>("LocalAuthorityId")
                         .HasColumnType("int");
 
                     b.Property<string>("Locality")
@@ -154,22 +239,57 @@ namespace CheckYourEligibility.Data.Migrations.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("Urn");
+                    b.HasKey("SchoolId");
 
-                    b.HasIndex("LocalAuthorityLaCode");
+                    b.HasIndex("LocalAuthorityId");
 
                     b.ToTable("Schools");
+                });
+
+            modelBuilder.Entity("CheckYourEligibility.Data.Models.Application", b =>
+                {
+                    b.HasOne("CheckYourEligibility.Data.Models.LocalAuthority", "LocalAuthority")
+                        .WithMany()
+                        .HasForeignKey("LocalAuthorityId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("CheckYourEligibility.Data.Models.School", "School")
+                        .WithMany()
+                        .HasForeignKey("SchoolId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("LocalAuthority");
+
+                    b.Navigation("School");
+                });
+
+            modelBuilder.Entity("CheckYourEligibility.Data.Models.ApplicationStatus", b =>
+                {
+                    b.HasOne("CheckYourEligibility.Data.Models.Application", "Application")
+                        .WithMany("Statuses")
+                        .HasForeignKey("ApplicationID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Application");
                 });
 
             modelBuilder.Entity("CheckYourEligibility.Data.Models.School", b =>
                 {
                     b.HasOne("CheckYourEligibility.Data.Models.LocalAuthority", "LocalAuthority")
                         .WithMany()
-                        .HasForeignKey("LocalAuthorityLaCode")
+                        .HasForeignKey("LocalAuthorityId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("LocalAuthority");
+                });
+
+            modelBuilder.Entity("CheckYourEligibility.Data.Models.Application", b =>
+                {
+                    b.Navigation("Statuses");
                 });
 #pragma warning restore 612, 618
         }

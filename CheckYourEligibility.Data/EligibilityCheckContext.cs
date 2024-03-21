@@ -16,6 +16,8 @@ public class EligibilityCheckContext : DbContext, IEligibilityCheckContext
     public virtual DbSet<FreeSchoolMealsHO> FreeSchoolMealsHO { get; set; }
     public virtual DbSet<School> Schools { get; set; }
     public virtual DbSet<LocalAuthority> LocalAuthorities { get; set; }
+    public virtual DbSet<Application> Applications { get; set; }
+    public virtual DbSet<CheckYourEligibility.Data.Models.ApplicationStatus> ApplicationStatuses { get; set; }
 
     public Task<int> SaveChangesAsync()
     {

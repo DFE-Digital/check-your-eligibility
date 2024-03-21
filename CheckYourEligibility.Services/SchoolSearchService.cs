@@ -51,7 +51,7 @@ namespace CheckYourEligibility.Services
                     .ThenBy(x => x.EstablishmentName).Take(takeScoolResultsMax)
                     .Select(x => new Domain.Responses.School()
                     {
-                        Id = x.Urn,
+                        Id = x.SchoolId,
                         Name = x.EstablishmentName,
                         Postcode = x.Postcode,
                         Locality = x.Locality,

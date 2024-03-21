@@ -65,7 +65,7 @@ namespace CheckYourEligibility.ServiceUnitTests
 
             var expectedResult = _fakeInMemoryDb.Schools.Select(x => new Domain.Responses.School()
             {
-                Id = x.Urn,
+                Id = x.SchoolId,
                 Name = x.EstablishmentName,
                 Postcode = x.Postcode,
                 Locality = x.Locality,

@@ -88,6 +88,28 @@ namespace CheckYourEligibility.WebApp.Controllers
             return new ObjectResult(ResponseFormatter.GetResponseItem(response)) { StatusCode = StatusCodes.Status200OK };
         }
 
+        [ProducesResponseType(typeof(Response), (int)HttpStatusCode.Created)]
+        [ProducesResponseType((int)HttpStatusCode.BadRequest)]
+        [HttpPost("application")]
+        public async Task<ActionResult> Application([FromBody] ApplicationRequestFsm model)
+        {
+            if (model == null || model.Data == null)
+            {
+                return BadRequest(ResponseFormatter.GetResponseBadRequest("Invalid request, data is required."));
+            }
+            model.Data.ParentNationalInsuranceNumber = model.Data.ParentNationalInsuranceNumber?.ToUpper();
+            model.Data.ParentNationalAsylumSeekerServiceNumber = model.Data.ParentNationalAsylumSeekerServiceNumber?.ToUpper();
 
+            var validator = new FsmApplicationRequestDataValidator();
+            var validationResults = validator.Validate(model);
+
+            if (!validationResults.IsValid)
+            {
+                return BadRequest(ResponseFormatter.GetResponseBadRequest(validationResults.ToString()));
+            }
+
+            var response = await _service.PostApplication(model.Data);
+            return new ObjectResult(ResponseFormatter.GetResponseApplication(response)) { StatusCode = StatusCodes.Status201Created };
+        }
     }
 }

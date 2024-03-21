@@ -75,5 +75,18 @@ namespace CheckYourEligibility.WebApp.Support
 
             return response;
         }
+
+        public static dynamic GetResponseApplication(ApplicationSaveFsm? item)
+        {
+            dynamic data = new ExpandoObject();
+            data.CheckEligibility = item;
+            dynamic links = new ExpandoObject();
+            links.get_EligibilityCheck = $"{FSM.GetLinkApplication}{item.Id}";
+
+            dynamic response = new ExpandoObject();
+            response.data = data;
+            response.links = links;
+            return response;
+        }
     }
 }
