@@ -11,7 +11,7 @@ namespace CheckYourEligibility.Data.Models
     public class LocalAuthority
     {
         [Key]
-        public int LaCode { get; set; }
+        public int LocalAuthorityId { get; set; }
         public string LaName { get; set; }
     }
 }

@@ -6,7 +6,7 @@ namespace CheckYourEligibility.Data.Models
     public class School
     {
         [Key]
-        public int Urn { get; set; }
+        public int SchoolId { get; set; }
         public string EstablishmentName { get; set; }
         public string Postcode { get; set; }
         public string Street { get; set; }
@@ -14,8 +14,9 @@ namespace CheckYourEligibility.Data.Models
         public string Town { get; set; }
         public string County { get; set; }
         public bool StatusOpen { get; set; }
-        public int LocalAuthorityLaCode { get; set; }
+        public int LocalAuthorityId { get; set; }
         public virtual LocalAuthority LocalAuthority { get; set; }
+
         [NotMapped]
         public double? LevenshteinDistance { get; set; }
     }

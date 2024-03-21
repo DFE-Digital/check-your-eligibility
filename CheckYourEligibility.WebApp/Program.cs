@@ -30,7 +30,7 @@ builder.Services.Configure<KestrelServerOptions>(options =>
     options.Limits.MaxRequestBodySize = int.MaxValue; // if don't set default value is: 30 MB
 });
 
-builder.Services.AddAutoMapper(typeof(EligibilityMappingProfile));
+builder.Services.AddAutoMapper(typeof(FsmMappingProfile));
 
 var app = builder.Build();
 

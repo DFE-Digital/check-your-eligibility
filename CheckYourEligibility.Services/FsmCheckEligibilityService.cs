@@ -133,5 +133,46 @@ namespace CheckYourEligibility.Services
             };
             return CheckEligibilityStatus.parentNotFound;
         }
+
+        public async Task<ApplicationSaveFsm> PostApplication(ApplicationRequestDataFsm data)
+        {
+            try
+            {
+                var item = _mapper.Map<Application>(data);
+                item.ApplicationID = Guid.NewGuid().ToString();
+                item.Reference = GetReference(data);
+                item.Created = DateTime.UtcNow;
+                item.Updated = DateTime.UtcNow;
+                item.Type = CheckEligibilityType.ApplcicationFsm;
+                await _db.Applications.AddAsync(item);
+
+                var status = new Data.Models.ApplicationStatus() {
+                    ApplicationStatusID = Guid.NewGuid().ToString(),
+                    ApplicationID = item.ApplicationID,
+                    Type = Domain.Enums.ApplicationStatus.Open,
+                    TimeStamp = DateTime.UtcNow };
+                await _db.ApplicationStatuses.AddAsync(status);
+
+                await _db.SaveChangesAsync();
+
+                var saved = _db.Applications
+                    .First(x=>x.ApplicationID == item.ApplicationID);
+
+                var returnItem = _mapper.Map<ApplicationSaveFsm>(item);
+
+                return returnItem;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Db post application");
+                throw;
+            }
+        }
+
+        private string GetReference(ApplicationRequestDataFsm data)
+        {
+            var reference = Guid.NewGuid().ToString().Substring(0, 7);
+            return reference;
+        }
     }
 }
