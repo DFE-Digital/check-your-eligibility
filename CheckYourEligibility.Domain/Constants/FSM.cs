@@ -7,7 +7,6 @@ namespace CheckYourEligibility.Domain.Constants
         public const string GetLink = "/freeSchoolMeals/";
         public const string ProcessLink = " /freeSchoolMeals/processEligibilityCheck/";
         public const string Status = "status : ";
-
-
+        public const string GetLinkApplication = "/freeSchoolMeals/application/";
     }
 }

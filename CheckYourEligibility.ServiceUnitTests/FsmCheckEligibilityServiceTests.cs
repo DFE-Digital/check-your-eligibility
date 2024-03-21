@@ -34,7 +34,7 @@ namespace CheckYourEligibility.ServiceUnitTests
 
             _fakeInMemoryDb = new EligibilityCheckContext(options);
 
-            var config = new MapperConfiguration(cfg => cfg.AddProfile<EligibilityMappingProfile>());
+            var config = new MapperConfiguration(cfg => cfg.AddProfile<FsmMappingProfile>());
             _mapper = config.CreateMapper();
             var configForSmsApi = new Dictionary<string, string>
             {
@@ -64,6 +64,21 @@ namespace CheckYourEligibility.ServiceUnitTests
 
             // Assert
             act.Should().ThrowExactly<ArgumentNullException>().And.Message.Should().EndWithEquivalentOf("Value cannot be null. (Parameter 'dbContext')");
+        }
+
+        [Test]
+        public void Given_validRequest_PostApplication_Should_Return_ApplicationSaveFsm()
+        {
+            // Arrange
+            var request = _fixture.Create<ApplicationRequestDataFsm>();
+            request.ParentDateOfBirth = "01/02/1970";
+            request.ChildDateOfBirth = "01/02/2007";
+
+            // Act
+            var response = _sut.PostApplication(request);
+
+            // Assert
+            response.Result.Should().BeOfType<ApplicationSaveFsm>();
         }
 
         [Test]

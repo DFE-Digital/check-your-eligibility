@@ -64,11 +64,11 @@ namespace CheckYourEligibility.Services
                     var localAuthorites = records
                              .Select(m => new { m.LaCode, m.LaName })
                              .Distinct()
-                             .Select(x => new LocalAuthority { LaCode = x.LaCode, LaName = x.LaName});
+                             .Select(x => new LocalAuthority { LocalAuthorityId = x.LaCode, LaName = x.LaName});
 
                     foreach (var la in localAuthorites)
                     {
-                        var item = _db.LocalAuthorities.FirstOrDefault(x => x.LaCode == la.LaCode);
+                        var item = _db.LocalAuthorities.FirstOrDefault(x => x.LocalAuthorityId == la.LocalAuthorityId);
                         if (item != null)
                             _db.LocalAuthorities.Update(la);
                         else
@@ -78,9 +78,9 @@ namespace CheckYourEligibility.Services
 
                     var scools = records.Select(x => new School
                     {
-                        Urn = x.Urn,
+                        SchoolId = x.Urn,
                         EstablishmentName = x.EstablishmentName,
-                        LocalAuthorityLaCode = x.LaCode,
+                        LocalAuthorityId = x.LaCode,
                         Locality = x.Locality,
                         Postcode = x.Postcode,
                         StatusOpen = x.Status=="Open" ,
@@ -92,7 +92,7 @@ namespace CheckYourEligibility.Services
                     
                     foreach (var sc in scools)
                     {
-                        var item = _db.Schools.FirstOrDefault(x => x.Urn == sc.Urn);
+                        var item = _db.Schools.FirstOrDefault(x => x.SchoolId == sc.SchoolId);
 
                         if (item != null)
                             _db.Schools.Update(sc);
