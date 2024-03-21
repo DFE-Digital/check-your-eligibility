@@ -9,9 +9,9 @@ using System.Globalization;
 namespace CheckYourEligibility.Data.Mappings;
 
 [ExcludeFromCodeCoverage]
-public class EligibilityMappingProfile : Profile
+public class FsmMappingProfile : Profile
 {
-    public EligibilityMappingProfile()
+    public FsmMappingProfile()
     {
         CreateMap<CheckEligibilityRequestDataFsm, EligibilityCheck>()
         .ForMember(dest => dest.NINumber, opt => opt.MapFrom(src => src.NationalInsuranceNumber))
@@ -23,6 +23,28 @@ public class EligibilityMappingProfile : Profile
         .ForMember(dest => dest.NationalInsuranceNumber, opt => opt.MapFrom(src => src.NINumber))
         .ForMember(dest => dest.NationalAsylumSeekerServiceNumber, opt => opt.MapFrom(src => src.NASSNumber))
         .ForMember(x => x.DateOfBirth, y => y.MapFrom(z => z.DateOfBirth.ToString("dd/MM/yyyy")))
+        .ReverseMap();
+
+        CreateMap<ApplicationRequestDataFsm, Application>()
+       .ForMember(dest => dest.ParentNationalInsuranceNumber, opt => opt.MapFrom(src => src.ParentNationalInsuranceNumber))
+       .ForMember(dest => dest.ParentNationalAsylumSeekerServiceNumber, opt => opt.MapFrom(src => src.ParentNationalAsylumSeekerServiceNumber))
+       .ForMember(x => x.ParentDateOfBirth, y => y.MapFrom(z => DateTime.ParseExact(z.ParentDateOfBirth, "dd/MM/yyyy", CultureInfo.InvariantCulture)))
+       .ForMember(x => x.ChildDateOfBirth, y => y.MapFrom(z => DateTime.ParseExact(z.ChildDateOfBirth, "dd/MM/yyyy", CultureInfo.InvariantCulture)))
+       .ForMember(dest => dest.LocalAuthorityId, opt => opt.MapFrom(src => src.LocalAuthority))
+       .ForMember(dest => dest.SchoolId, opt => opt.MapFrom(src => src.School))
+       .ForMember(dest => dest.LocalAuthority, opt => opt.Ignore())
+       .ForMember(dest => dest.School, opt => opt.Ignore())
+       .ReverseMap();
+
+        CreateMap<Application, ApplicationSaveFsm>()
+        .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.ApplicationID))
+        .ForMember(dest => dest.ParentNationalInsuranceNumber, opt => opt.MapFrom(src => src.ParentNationalInsuranceNumber))
+        .ForMember(dest => dest.ParentNationalAsylumSeekerServiceNumber, opt => opt.MapFrom(src => src.ParentNationalAsylumSeekerServiceNumber))
+        .ForMember(x => x.ParentDateOfBirth, y => y.MapFrom(z => z.ParentDateOfBirth.ToString("dd/MM/yyyy")))
+        .ForMember(x => x.ChildDateOfBirth, y => y.MapFrom(z => z.ChildDateOfBirth.ToString("dd/MM/yyyy")))
+        .ForMember(dest => dest.LocalAuthority, opt => opt.MapFrom(src => src.LocalAuthorityId))
+        .ForMember(dest => dest.School, opt => opt.MapFrom(src => src.SchoolId))
+
         .ReverseMap();
     }
 }

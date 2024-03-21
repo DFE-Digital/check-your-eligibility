@@ -2,9 +2,8 @@
 
 namespace CheckYourEligibility.Domain.Enums
 {
-    public enum CheckEligibilityType
+    public enum ApplicationStatus
     {
-        FreeSchoolMeals,
-        ApplcicationFsm
+        Open,
     }
 }

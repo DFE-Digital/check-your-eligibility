@@ -53,6 +53,40 @@ namespace CheckYourEligibility.APIUnitTests
         }
 
         [Test]
+        public void Given_valid_NInumber_ApplicationRequest_Post_Should_Return_Status201Created()
+        {
+            // Arrange
+            var request = _fixture.Create<ApplicationRequestFsm>();
+            var applicationFsm = _fixture.Create<ApplicationSaveFsm>();
+            request.Data.ParentNationalInsuranceNumber = "ns738356d";
+            request.Data.ParentDateOfBirth = "01/02/1970";
+            request.Data.ChildDateOfBirth = "01/02/1970";
+            request.Data.ParentNationalAsylumSeekerServiceNumber = string.Empty;
+            _mockService.Setup(cs => cs.PostApplication(request.Data)).ReturnsAsync(applicationFsm);
+
+            var expectedResult = new ObjectResult(ResponseFormatter.GetResponseApplication(applicationFsm)) { StatusCode = StatusCodes.Status201Created };
+
+            // Act
+            var response = _sut.Application(request);
+
+            // Assert
+            response.Result.Should().BeEquivalentTo(expectedResult);
+        }
+
+        [Test]
+        public void Given_InValidRequest_Values_Application_Should_Return_Status400BadRequest()
+        {
+            // Arrange
+            var request = new ApplicationRequestFsm();
+
+            // Act
+            var response = _sut.Application(request);
+
+            // Assert
+            response.Result.Should().BeOfType(typeof(BadRequestObjectResult));
+        }
+
+        [Test]
         public void Given_valid_NInumber_Request_Post_Should_Return_Status202Accepted()
         {
             // Arrange
