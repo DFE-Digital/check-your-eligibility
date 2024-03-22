@@ -144,6 +144,10 @@ namespace CheckYourEligibility.Services
                 item.Created = DateTime.UtcNow;
                 item.Updated = DateTime.UtcNow;
                 item.Type = CheckEligibilityType.ApplcicationFsm;
+
+                var school = _db.Schools.Include(x => x.LocalAuthority).First(x=>x.SchoolId == data.School);
+                item.LocalAuthorityId = school.LocalAuthorityId;
+
                 await _db.Applications.AddAsync(item);
 
                 var status = new Data.Models.ApplicationStatus() {
