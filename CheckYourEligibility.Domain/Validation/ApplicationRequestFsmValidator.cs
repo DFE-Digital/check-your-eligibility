@@ -8,9 +8,9 @@ namespace FeatureManagement.Domain.Validation
     using FluentValidation;
     using System.Text.RegularExpressions;
 
-    public class FsmApplicationRequestDataValidator : AbstractValidator<ApplicationRequestFsm>
+    public class ApplicationRequestFsmValidator : AbstractValidator<ApplicationRequestFsm>
     {
-        public FsmApplicationRequestDataValidator()
+        public ApplicationRequestFsmValidator()
         {
 
             RuleFor(x => x.Data)
@@ -22,9 +22,9 @@ namespace FeatureManagement.Domain.Validation
             RuleFor(x => x.Data.ParentLastName)
                .NotEmpty().WithMessage(FSM.LastName);
             RuleFor(x => x.Data.ChildFirstName)
-              .NotEmpty().WithMessage(FSM.FirstName);
+              .NotEmpty().WithMessage(FSM.ChildFirstName);
             RuleFor(x => x.Data.ChildLastName)
-               .NotEmpty().WithMessage(FSM.LastName);
+               .NotEmpty().WithMessage(FSM.ChildLastName);
 
             RuleFor(x => x.Data.ParentDateOfBirth)
                .NotEmpty()
@@ -33,7 +33,7 @@ namespace FeatureManagement.Domain.Validation
             RuleFor(x => x.Data.ChildDateOfBirth)
                .NotEmpty()
                .Must(DataValidation.BeAValidDate)
-               .WithMessage(FSM.DOB);
+               .WithMessage(FSM.ChildDOB);
 
             When(x => !string.IsNullOrEmpty(x.Data.ParentNationalInsuranceNumber), () =>
             {

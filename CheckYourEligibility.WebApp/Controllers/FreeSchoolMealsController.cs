@@ -49,7 +49,7 @@ namespace CheckYourEligibility.WebApp.Controllers
 
         [ProducesResponseType(typeof(CheckEligibilityStatus), (int)HttpStatusCode.OK)]
         [ProducesResponseType((int)HttpStatusCode.NotFound)]
-        [HttpGet("{guid}/status")]
+        [HttpGet("{guid}/Status")]
         public async Task<ActionResult> CheckEligibilityStatus(string guid)
         {
             var response = await _service.GetStatus(guid);
@@ -63,7 +63,7 @@ namespace CheckYourEligibility.WebApp.Controllers
 
         [ProducesResponseType(typeof(Response), (int)HttpStatusCode.OK)]
         [ProducesResponseType((int)HttpStatusCode.NotFound)]
-        [HttpPut("processEligibilityCheck/{guid}")]
+        [HttpPut("ProcessEligibilityCheck/{guid}")]
         public async Task<ActionResult> Process(string guid)
         {
             var response = await _service.ProcessCheck(guid);
@@ -100,7 +100,7 @@ namespace CheckYourEligibility.WebApp.Controllers
             model.Data.ParentNationalInsuranceNumber = model.Data.ParentNationalInsuranceNumber?.ToUpper();
             model.Data.ParentNationalAsylumSeekerServiceNumber = model.Data.ParentNationalAsylumSeekerServiceNumber?.ToUpper();
 
-            var validator = new FsmApplicationRequestDataValidator();
+            var validator = new ApplicationRequestFsmValidator();
             var validationResults = validator.Validate(model);
 
             if (!validationResults.IsValid)

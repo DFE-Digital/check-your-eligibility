@@ -4,7 +4,6 @@ namespace CheckYourEligibility.Domain.Requests
 {
     public class ApplicationRequestDataFsm
     {
-        public int LocalAuthority { get; set; }
         public int School { get; set; }
         public string ParentFirstName { get; set; }
         public string ParentLastName { get; set; }

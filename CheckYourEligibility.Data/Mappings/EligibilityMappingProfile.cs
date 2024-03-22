@@ -30,7 +30,7 @@ public class FsmMappingProfile : Profile
        .ForMember(dest => dest.ParentNationalAsylumSeekerServiceNumber, opt => opt.MapFrom(src => src.ParentNationalAsylumSeekerServiceNumber))
        .ForMember(x => x.ParentDateOfBirth, y => y.MapFrom(z => DateTime.ParseExact(z.ParentDateOfBirth, "dd/MM/yyyy", CultureInfo.InvariantCulture)))
        .ForMember(x => x.ChildDateOfBirth, y => y.MapFrom(z => DateTime.ParseExact(z.ChildDateOfBirth, "dd/MM/yyyy", CultureInfo.InvariantCulture)))
-       .ForMember(dest => dest.LocalAuthorityId, opt => opt.MapFrom(src => src.LocalAuthority))
+       .ForMember(dest => dest.LocalAuthorityId, opt => opt.Ignore())
        .ForMember(dest => dest.SchoolId, opt => opt.MapFrom(src => src.School))
        .ForMember(dest => dest.LocalAuthority, opt => opt.Ignore())
        .ForMember(dest => dest.School, opt => opt.Ignore())
