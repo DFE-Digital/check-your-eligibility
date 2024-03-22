@@ -13,6 +13,7 @@ using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
+using School = CheckYourEligibility.Data.Models.School;
 
 namespace CheckYourEligibility.ServiceUnitTests
 {
@@ -73,6 +74,13 @@ namespace CheckYourEligibility.ServiceUnitTests
             var request = _fixture.Create<ApplicationRequestDataFsm>();
             request.ParentDateOfBirth = "01/02/1970";
             request.ChildDateOfBirth = "01/02/2007";
+            var la = _fixture.Create<LocalAuthority>();
+            var school = _fixture.Create<School>();
+            school.LocalAuthorityId = la.LocalAuthorityId;
+            request.School = school.SchoolId;
+            _fakeInMemoryDb.LocalAuthorities.Add(la);
+            _fakeInMemoryDb.Schools.Add(school);
+            _fakeInMemoryDb.SaveChangesAsync();
 
             // Act
             var response = _sut.PostApplication(request);
