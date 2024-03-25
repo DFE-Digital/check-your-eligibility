@@ -40,9 +40,10 @@ public class EligibilityCheckContext : DbContext, IEligibilityCheckContext
 
         modelBuilder.Entity<School>()
        .HasOne(e => e.LocalAuthority);
-       //.WithOne(e => e.LaCode)
-      // .HasForeignKey<LocalAuthority>(e => e.)
-       //.IsRequired();
+
+        modelBuilder.Entity<Application>()
+            .HasIndex(b => b.Reference, "idx_Reference")
+            .IsUnique();
     }
 
 }

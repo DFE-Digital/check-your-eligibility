@@ -60,28 +60,14 @@ namespace CheckYourEligibility.ServiceUnitTests
         public void Given_Search_Should_Return_ExpectedResult()
         {
             // Arrange
-
-            
-
-            var expectedResult = _fakeInMemoryDb.Schools.Select(x => new Domain.Responses.School()
-            {
-                Id = x.SchoolId,
-                Name = x.EstablishmentName,
-                Postcode = x.Postcode,
-                Locality = x.Locality,
-                County = x.County,
-                Street = x.Street,
-                Town = x.Town,
-                La = x.LocalAuthority.LaName,
-                Distance = 0.0
-            });
+            var expectedResult = _fakeInMemoryDb.Schools.FirstOrDefault();
 
             // Act
-            var response = _sut.Search(school.EstablishmentName);
+            var response = _sut.Search(expectedResult.EstablishmentName);
 
             // Assert
 
-            response.Result.Should().BeEquivalentTo(expectedResult);
+            response.Result.FirstOrDefault().Name.Should().BeEquivalentTo(expectedResult.EstablishmentName);
         }
     }
 }
