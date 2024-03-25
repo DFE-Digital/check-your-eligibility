@@ -19,11 +19,13 @@ namespace CheckYourEligibility.Services
 {
     public class FsmCheckEligibilityService : IFsmCheckEligibility
     {
+        const int referenceMaxValue = 99999999;
         private  readonly ILogger _logger;
         private readonly IEligibilityCheckContext _db;
         protected readonly IMapper _mapper;
         private readonly QueueClient _queueClient;
         private const int SurnameCheckCharachters = 3;
+        private static Random randomNumber;
 
         public FsmCheckEligibilityService(ILoggerFactory logger, IEligibilityCheckContext dbContext, IMapper mapper, QueueServiceClient queueClientService, IConfiguration configuration)
         {
@@ -34,6 +36,10 @@ namespace CheckYourEligibility.Services
             if (queName != "notSet")
             {
                 _queueClient = queueClientService.GetQueueClient(queName);
+            }
+            if (randomNumber == null)
+            {
+               randomNumber = new Random(referenceMaxValue);
             }
         }
 
@@ -140,7 +146,7 @@ namespace CheckYourEligibility.Services
             {
                 var item = _mapper.Map<Application>(data);
                 item.ApplicationID = Guid.NewGuid().ToString();
-                item.Reference = GetReference(data);
+                item.Reference = GetReference();
                 item.Created = DateTime.UtcNow;
                 item.Updated = DateTime.UtcNow;
                 item.Type = CheckEligibilityType.ApplcicationFsm;
@@ -173,10 +179,17 @@ namespace CheckYourEligibility.Services
             }
         }
 
-        private string GetReference(ApplicationRequestDataFsm data)
+        private string GetReference()
         {
-            var reference = Guid.NewGuid().ToString().Substring(0, 7);
-            return reference;
+            var unique = false;
+            string nextReference = string.Empty;
+             while (!unique)
+            {
+                nextReference = randomNumber.Next(1, referenceMaxValue).ToString();
+                unique =   _db.Applications.FirstOrDefault(x => x.Reference == nextReference)== null;
+            }
+
+            return nextReference;
         }
     }
 }
