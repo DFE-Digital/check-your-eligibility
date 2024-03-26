@@ -294,5 +294,41 @@ namespace CheckYourEligibility.ServiceUnitTests
             response.Result.Should().BeOfType<CheckEligibilityItemFsm>();
         }
 
+        [Test]
+        public void Given_InValidRequest_GetApplication_Should_Return_null()
+        {
+            // Arrange
+            var request = _fixture.Create<Guid>().ToString();
+
+            // Act
+            var response = _sut.GetApplication(request);
+
+            // Assert
+            response.Result.Should().BeNull();
+        }
+
+        [Test]
+        public async Task Given_ValidRequest_GetApplication_Should_Return_Item()
+        {
+            // Arrange
+            var request = _fixture.Create<ApplicationRequestDataFsm>();
+            request.ParentDateOfBirth = "01/02/1970";
+            request.ChildDateOfBirth = "01/02/2007";
+            var la = _fixture.Create<LocalAuthority>();
+            var school = _fixture.Create<School>();
+            school.LocalAuthorityId = la.LocalAuthorityId;
+            request.School = school.SchoolId;
+            _fakeInMemoryDb.LocalAuthorities.Add(la);
+            _fakeInMemoryDb.Schools.Add(school);
+            await _fakeInMemoryDb.SaveChangesAsync();
+            var response = await _sut.PostApplication(request);
+
+            // Act
+            var responseApplication = _sut.GetApplication(response.Id);
+
+            // Assert
+            responseApplication.Result.Should().BeOfType<ApplicationFsm>();
+        }
+
     }
 }

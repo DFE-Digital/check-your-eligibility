@@ -282,7 +282,7 @@ namespace CheckYourEligibility.APIUnitTests
             { StatusCode = StatusCodes.Status404NotFound };
 
             // Act
-            var response = _sut.GetEligibilityCheck(guid);
+            var response = _sut.EligibilityCheck(guid);
 
             // Assert
             response.Result.Should().BeEquivalentTo(expectedResult);
@@ -298,7 +298,39 @@ namespace CheckYourEligibility.APIUnitTests
             var expectedResult = new ObjectResult(ResponseFormatter.GetResponseItem(expectedResponse)) { StatusCode = StatusCodes.Status200OK };
 
             // Act
-            var response = _sut.GetEligibilityCheck(guid);
+            var response = _sut.EligibilityCheck(guid);
+
+            // Assert
+            response.Result.Should().BeEquivalentTo(expectedResult);
+        }
+
+        [Test]
+        public void Given_InValid_guid_Application_Should_Return_StatusNotFound()
+        {
+            // Arrange
+            var guid = _fixture.Create<Guid>().ToString();
+            _mockService.Setup(cs => cs.GetApplication(guid)).Returns(Task.FromResult<ApplicationFsm?>(null));
+            var expectedResult = new ObjectResult(guid)
+            { StatusCode = StatusCodes.Status404NotFound };
+
+            // Act
+            var response = _sut.Application(guid);
+
+            // Assert
+            response.Result.Should().BeEquivalentTo(expectedResult);
+        }
+
+        [Test]
+        public void Given_Valid_guid_Application_Should_Return_StatusOk()
+        {
+            // Arrange
+            var guid = _fixture.Create<Guid>().ToString();
+            var expectedResponse = _fixture.Create<ApplicationFsm>();
+            _mockService.Setup(cs => cs.GetApplication(guid)).ReturnsAsync(expectedResponse);
+            var expectedResult = new ObjectResult(ResponseFormatter.GetResponseApplication(expectedResponse)) { StatusCode = StatusCodes.Status200OK };
+
+            // Act
+            var response = _sut.Application(guid);
 
             // Assert
             response.Result.Should().BeEquivalentTo(expectedResult);
