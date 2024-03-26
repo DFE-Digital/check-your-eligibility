@@ -191,5 +191,29 @@ namespace CheckYourEligibility.Services
 
             return nextReference;
         }
+
+        public async Task<ApplicationFsm?> GetApplication(string guid)
+        {
+            var result = await _db.Applications
+                .Include(x => x.Statuses)
+                .Include(x => x.School)
+                .ThenInclude(x => x.LocalAuthority)
+                .FirstOrDefaultAsync(x => x.ApplicationID == guid);
+            if (result != null)
+            {
+                var item = _mapper.Map<ApplicationFsm>(result);
+                item.School = new ApplicationFsm.ApplicationSchool()
+                {
+                    Id = result.SchoolId,
+                    Name = result.School.EstablishmentName,
+                    LocalAuthority = new ApplicationFsm.ApplicationSchool.SchoolLocalAuthority {
+                        Id = result.School.LocalAuthority.LocalAuthorityId,
+                        Name = result.School.LocalAuthority.LaName }
+                };
+                return item;
+            }
+
+            return null;
+        }
     }
 }
