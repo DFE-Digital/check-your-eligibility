@@ -19,7 +19,7 @@ namespace CheckYourEligibility.WebApp
 
                 Console.Write(keyVault.GetPropertiesOfSecrets().AsPages().ToList());
                 
-                connectionString = keyVault.GetSecret("ConnectionString").Value.ToString();
+                connectionString = keyVault.GetSecret("ConnectionnString").Value.ToString();
             }
 
             Console.WriteLine("-------------");
