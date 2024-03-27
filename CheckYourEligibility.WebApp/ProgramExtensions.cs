@@ -19,6 +19,10 @@ namespace CheckYourEligibility.WebApp
                 connectionString = keyVault.GetSecret("ConnectionString").Value.ToString();
             }
 
+            Console.WriteLine("-------------");
+            Console.WriteLine(Environment.GetEnvironmentVariable("KEY_VAULT_NAME"));
+            throw new InvalidOperationException(connectionString);
+            
             services.AddDbContext<IEligibilityCheckContext, EligibilityCheckContext>(options =>
                options.UseSqlServer(
                    connectionString,
