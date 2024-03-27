@@ -2,6 +2,8 @@
 using CheckYourEligibility.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Azure;
+using Azure.Identity;
+using Azure.Security.KeyVault.Secrets;
 
 namespace CheckYourEligibility.WebApp
 {
@@ -9,10 +11,12 @@ namespace CheckYourEligibility.WebApp
     {
         public static IServiceCollection AddDatabase(this IServiceCollection services, IConfiguration configuration)
         {
+            var keyVault = GetAzureKeyVault();
+            var connectionString = keyVault.GetSecret("ConnectionString").Value;
 
             services.AddDbContext<IEligibilityCheckContext, EligibilityCheckContext>(options =>
                options.UseSqlServer(
-                   configuration.GetConnectionString("EligibilityCheck") ?? throw new InvalidOperationException("Connection string 'EligibilityCheck' not found."),
+                   connectionString.Value,
                    x=>x.MigrationsAssembly("CheckYourEligibility.Data.Migrations"))
                .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
                );
@@ -40,5 +44,13 @@ namespace CheckYourEligibility.WebApp
             return services;
         }
 
+        private static Azure.Security.KeyVault.Secrets.SecretClient GetAzureKeyVault()
+        {
+            const string secretName = "mySecret";
+            var keyVaultName = Environment.GetEnvironmentVariable("KEY_VAULT_NAME");
+            var kvUri = $"https://{keyVaultName}.vault.azure.net";
+
+            return new SecretClient(new Uri(kvUri), new DefaultAzureCredential());
+        }
     }
 }
