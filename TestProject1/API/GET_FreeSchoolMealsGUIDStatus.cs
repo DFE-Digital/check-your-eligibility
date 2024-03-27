@@ -6,6 +6,7 @@ namespace CheckYourEligibility.SystemTests.API
         private dynamic _requestBody;
 
         [Test]
+        [Ignore("Targeting live environment")]
         public async Task GetRequestWithGUIDToCheckStatus()
         {
             _requestBody = new
@@ -39,6 +40,7 @@ namespace CheckYourEligibility.SystemTests.API
         }
 
         [Test]
+        [Ignore("Targeting live environment")]
         public async Task GetRequest_WithInvalidGUID()
         {
             var jsonResponse = await ApiHelper.GetRequest("/FreeSchoolMeals/7df4a175-c153-43ac-87e9-4a48e4517");

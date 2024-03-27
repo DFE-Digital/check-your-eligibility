@@ -13,7 +13,7 @@ namespace CheckYourEligibility.SystemTests.API
 {
     public static class ApiHelper
     {
-        public static Uri BaseUri => new Uri("http://ecs-as-01.azurewebsites.net");
+        public static Uri BaseUri => new Uri("http://ecs-dev-as.azurewebsites.net");
 
         public static async Task<HttpResponseMessage> PostRequest(string endpoint, object requestBody)
         {
