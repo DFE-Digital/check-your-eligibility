@@ -76,5 +76,36 @@ stages:
           ConnectionType: 'AzureRM'
           azureSubscription: 's203d.azdo.deployment'
           appType: 'webApp'
-          WebAppName: 'ecs-as-01'
+          WebAppName: 'ecs-dev-as'
           packageForLinux: '$(Pipeline.Workspace)/checkYourEligibilityAPI/CheckYourEligibility.WebApp.zip'
+  - stage: DeployAppTest
+    displayName: Deploy App Test
+    jobs:
+      - job:
+        pool:
+          name: Azure Pipelines
+          vmImage: 'windows-latest'
+        steps:
+          - task: DownloadPipelineArtifact@2
+            inputs:
+              buildType: 'current'
+              targetPath: '$(Pipeline.Workspace)'
+
+          - task: AzureCLI@2
+            displayName: 'Run Migrations'
+            inputs:
+              azureSubscription: 's203t.azdo.deployment'
+              scriptType: 'ps'
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                az account show
+                dotnet tool install --global dotnet-ef
+                dotnet ef database update --project $(Build.SourcesDirectory)/CheckYourEligibility.Data.Migrations/CheckYourEligibility.Data.Migrations.csproj -s $(Build.SourcesDirectory)/CheckYourEligibility.WebApp
+
+          - task: AzureRmWebAppDeployment@4
+            inputs:
+              ConnectionType: 'AzureRM'
+              azureSubscription: 's203t.azdo.deployment'
+              appType: 'webApp'
+              WebAppName: 'ecs-test-as'
+              packageForLinux: '$(Pipeline.Workspace)/checkYourEligibilityAPI/CheckYourEligibility.WebApp.zip'
