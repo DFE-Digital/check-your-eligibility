@@ -18,7 +18,7 @@ builder.Services.AddControllers()
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddDatabase(builder.Configuration);
+builder.Services.AddDatabase(builder.Configuration, builder.Environment.IsDevelopment());
 builder.Services.AddAzureClients(builder.Configuration);
 builder.Services.AddServices();
 builder.Services.Configure<IISServerOptions>(options =>
