@@ -16,12 +16,16 @@ namespace CheckYourEligibility.WebApp
             if (!Environment.GetEnvironmentVariable("KEY_VAULT_NAME").IsNullOrEmpty())
             {
                 var keyVault = GetAzureKeyVault();
+
+                Console.Write(keyVault.GetPropertiesOfSecrets().AsPages().ToList());
+                
                 connectionString = keyVault.GetSecret("ConnectionString").Value.ToString();
             }
 
             Console.WriteLine("-------------");
             Console.WriteLine(Environment.GetEnvironmentVariable("KEY_VAULT_NAME"));
-            throw new InvalidOperationException(connectionString);
+            Console.WriteLine(connectionString);
+            Console.WriteLine("-------------");
             
             services.AddDbContext<IEligibilityCheckContext, EligibilityCheckContext>(options =>
                options.UseSqlServer(
