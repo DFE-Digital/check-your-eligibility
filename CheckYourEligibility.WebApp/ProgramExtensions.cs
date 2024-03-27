@@ -4,15 +4,16 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Azure;
 using Azure.Identity;
 using Azure.Security.KeyVault.Secrets;
+using Microsoft.IdentityModel.Tokens;
 
 namespace CheckYourEligibility.WebApp
 {
     public static class ProgramExtensions
     {
-        public static IServiceCollection AddDatabase(this IServiceCollection services, IConfiguration configuration, bool isDevelopment)
+        public static IServiceCollection AddDatabase(this IServiceCollection services, IConfiguration configuration)
         {
             var connectionString = configuration.GetConnectionString("EligibilityCheck");
-            if (!isDevelopment)
+            if (!Environment.GetEnvironmentVariable("KEY_VAULT_NAME").IsNullOrEmpty())
             {
                 var keyVault = GetAzureKeyVault();
                 connectionString = keyVault.GetSecret("ConnectionString").Value.ToString();
@@ -29,10 +30,10 @@ namespace CheckYourEligibility.WebApp
             return services;
         }
 
-        public static IServiceCollection AddAzureClients(this IServiceCollection services, IConfiguration configuration, bool isDevelopment)
+        public static IServiceCollection AddAzureClients(this IServiceCollection services, IConfiguration configuration)
         {
             var connectionString = configuration.GetValue<string>("AzureWebJobsStorage");
-            if (!isDevelopment)
+            if (!Environment.GetEnvironmentVariable("KEY_VAULT_NAME").IsNullOrEmpty())
             {
                 var keyVault = GetAzureKeyVault();
                 connectionString = keyVault.GetSecret("QueueConnectionString").Value.ToString();
