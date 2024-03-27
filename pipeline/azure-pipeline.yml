@@ -69,6 +69,7 @@ stages:
           inlineScript: |
             az account show
             dotnet tool install --global dotnet-ef
+            export KEY_VAULT_NAME=ecs-dev-kv
             dotnet ef database update --project $(Build.SourcesDirectory)/CheckYourEligibility.Data.Migrations/CheckYourEligibility.Data.Migrations.csproj -s $(Build.SourcesDirectory)/CheckYourEligibility.WebApp
 
       - task: AzureRmWebAppDeployment@4
@@ -100,6 +101,7 @@ stages:
               inlineScript: |
                 az account show
                 dotnet tool install --global dotnet-ef
+                export KEY_VAULT_NAME=ecs-test-kv
                 dotnet ef database update --project $(Build.SourcesDirectory)/CheckYourEligibility.Data.Migrations/CheckYourEligibility.Data.Migrations.csproj -s $(Build.SourcesDirectory)/CheckYourEligibility.WebApp
 
           - task: AzureRmWebAppDeployment@4
