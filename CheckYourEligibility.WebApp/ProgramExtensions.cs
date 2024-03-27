@@ -29,11 +29,18 @@ namespace CheckYourEligibility.WebApp
             return services;
         }
 
-        public static IServiceCollection AddAzureClients(this IServiceCollection services, IConfiguration configuration)
+        public static IServiceCollection AddAzureClients(this IServiceCollection services, IConfiguration configuration, bool isDevelopment)
         {
+            var connectionString = configuration.GetValue<string>("AzureWebJobsStorage");
+            if (!isDevelopment)
+            {
+                var keyVault = GetAzureKeyVault();
+                connectionString = keyVault.GetSecret("QueueConnectionString").Value.ToString();
+            }
+            
             services.AddAzureClients(builder =>
             {
-                builder.AddQueueServiceClient(configuration.GetValue<string>("AzureWebJobsStorage"));
+                builder.AddQueueServiceClient(connectionString);
 
             });
             return services;
