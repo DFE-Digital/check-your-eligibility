@@ -59,29 +59,6 @@ stages:
         inputs:
           buildType: 'current'
           targetPath: '$(Pipeline.Workspace)'
-      
-      - task: CmdLine@2
-        inputs:
-          script: |
-            echo "Structure of work folder of this pipeline:"
-            echo "$(Agent.WorkFolder)"
-            tree $(Agent.WorkFolder)\1 /f
-            
-            echo "Build.ArtifactStagingDirectory:" 
-            
-            echo "$(Build.ArtifactStagingDirectory)"
-            
-            echo "Build.BinariesDirectory:" 
-            
-            echo "$(Build.BinariesDirectory)"
-            
-            echo "Build.SourcesDirectory:"
-            
-            echo "$(Build.SourcesDirectory)"
-            
-            tree $(Build.SourcesDirectory)\1 /f
-
-            echo "$(Pipeline.Workspace)/checkYourEligibilityAPI"
             
       - task: AzureCLI@2
         displayName: 'Run Migrations'
@@ -90,7 +67,6 @@ stages:
           scriptType: 'ps'
           scriptLocation: 'inlineScript'
           inlineScript: |
-            az --version
             az account show
             dotnet tool install --global dotnet-ef
             dotnet ef database update --project $(Build.SourcesDirectory)/CheckYourEligibility.Data.Migrations/CheckYourEligibility.Data.Migrations.csproj -s $(Build.SourcesDirectory)/CheckYourEligibility.WebApp
