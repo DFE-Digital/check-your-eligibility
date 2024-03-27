@@ -9,14 +9,18 @@ namespace CheckYourEligibility.WebApp
 {
     public static class ProgramExtensions
     {
-        public static IServiceCollection AddDatabase(this IServiceCollection services, IConfiguration configuration)
+        public static IServiceCollection AddDatabase(this IServiceCollection services, IConfiguration configuration, bool isDevelopment)
         {
-            var keyVault = GetAzureKeyVault();
-            var connectionString = keyVault.GetSecret("ConnectionString").Value;
+            var connectionString = configuration.GetConnectionString("EligibilityCheck");
+            if (!isDevelopment)
+            {
+                var keyVault = GetAzureKeyVault();
+                connectionString = keyVault.GetSecret("ConnectionString").Value.ToString();
+            }
 
             services.AddDbContext<IEligibilityCheckContext, EligibilityCheckContext>(options =>
                options.UseSqlServer(
-                   connectionString.Value,
+                   connectionString,
                    x=>x.MigrationsAssembly("CheckYourEligibility.Data.Migrations"))
                .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
                );
@@ -46,7 +50,6 @@ namespace CheckYourEligibility.WebApp
 
         private static Azure.Security.KeyVault.Secrets.SecretClient GetAzureKeyVault()
         {
-            const string secretName = "mySecret";
             var keyVaultName = Environment.GetEnvironmentVariable("KEY_VAULT_NAME");
             var kvUri = $"https://{keyVaultName}.vault.azure.net";
 
