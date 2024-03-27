@@ -17,9 +17,7 @@ namespace CheckYourEligibility.WebApp
             {
                 var keyVault = GetAzureKeyVault();
 
-                Console.Write(keyVault.GetPropertiesOfSecrets().AsPages().ToList());
-                
-                connectionString = keyVault.GetSecret("ConnectionnString").Value.ToString();
+                connectionString = keyVault.GetSecret("ConnectionString").Value.Value;
             }
 
             Console.WriteLine("-------------");
