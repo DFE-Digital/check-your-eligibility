@@ -19,11 +19,6 @@ namespace CheckYourEligibility.WebApp
 
                 connectionString = keyVault.GetSecret("ConnectionString").Value.Value;
             }
-
-            Console.WriteLine("-------------");
-            Console.WriteLine(Environment.GetEnvironmentVariable("KEY_VAULT_NAME"));
-            Console.WriteLine(connectionString);
-            Console.WriteLine("-------------");
             
             services.AddDbContext<IEligibilityCheckContext, EligibilityCheckContext>(options =>
                options.UseSqlServer(
@@ -42,7 +37,7 @@ namespace CheckYourEligibility.WebApp
             if (!Environment.GetEnvironmentVariable("KEY_VAULT_NAME").IsNullOrEmpty())
             {
                 var keyVault = GetAzureKeyVault();
-                connectionString = keyVault.GetSecret("QueueConnectionString").Value.ToString();
+                connectionString = keyVault.GetSecret("QueueConnectionString").Value.Value;
             }
             
             services.AddAzureClients(builder =>
