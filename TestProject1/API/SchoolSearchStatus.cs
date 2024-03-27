@@ -10,6 +10,7 @@ namespace CheckYourEligibility.SystemTests.API
     internal class SchoolSearchStatus
     {
         [Test]
+        [Ignore("Targeting live environment")]
         public async Task GetRequestSchoolSearchWithValidName()
         {
             var endpoint = "/Schools/search?query=hinde house";
@@ -31,6 +32,7 @@ namespace CheckYourEligibility.SystemTests.API
         }
 
         [Test]
+        [Ignore("Targeting live environment")]
         public async Task GetRequestSchoolSearchWithInvalidName()
         {
             var endpoint = "/Schools/search?query=hinde house123";
@@ -45,6 +47,7 @@ namespace CheckYourEligibility.SystemTests.API
         }
 
         [Test]
+        [Ignore("Targeting live environment")]
         public async Task GetRequestSchoolSearchWith20Records()
         {
             var endpoint = "/Schools/search?query=hin";
@@ -60,6 +63,7 @@ namespace CheckYourEligibility.SystemTests.API
         }
 
         [Test]
+        [Ignore("Targeting live environment")]
         public async Task GetRequestSchoolSearchWitNoName()
         {
             var endpoint = "/Schools/search?query=";
@@ -71,6 +75,7 @@ namespace CheckYourEligibility.SystemTests.API
         }
 
         [Test]
+        [Ignore("Targeting live environment")]
         public async Task GetRequestSchoolSearchCheckResponseBody()
         {
             var endpoint = "/Schools/search?query=hinde house";
