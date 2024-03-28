@@ -32,7 +32,6 @@ public class FsmMappingProfile : Profile
        .ForMember(x => x.ChildDateOfBirth, y => y.MapFrom(z => DateTime.ParseExact(z.ChildDateOfBirth, "dd/MM/yyyy", CultureInfo.InvariantCulture)))
        .ForMember(dest => dest.LocalAuthorityId, opt => opt.Ignore())
        .ForMember(dest => dest.SchoolId, opt => opt.MapFrom(src => src.School))
-       .ForMember(dest => dest.LocalAuthority, opt => opt.Ignore())
        .ForMember(dest => dest.School, opt => opt.Ignore())
        .ReverseMap();
 
@@ -44,7 +43,15 @@ public class FsmMappingProfile : Profile
         .ForMember(x => x.ChildDateOfBirth, y => y.MapFrom(z => z.ChildDateOfBirth.ToString("dd/MM/yyyy")))
         .ForMember(dest => dest.LocalAuthority, opt => opt.MapFrom(src => src.LocalAuthorityId))
         .ForMember(dest => dest.School, opt => opt.MapFrom(src => src.SchoolId))
+        .ReverseMap();
 
+        CreateMap<Application, ApplicationFsm>()
+        .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.ApplicationID))
+        .ForMember(dest => dest.ParentNationalInsuranceNumber, opt => opt.MapFrom(src => src.ParentNationalInsuranceNumber))
+        .ForMember(dest => dest.ParentNationalAsylumSeekerServiceNumber, opt => opt.MapFrom(src => src.ParentNationalAsylumSeekerServiceNumber))
+        .ForMember(x => x.ParentDateOfBirth, y => y.MapFrom(z => z.ParentDateOfBirth.ToString("dd/MM/yyyy")))
+        .ForMember(x => x.ChildDateOfBirth, y => y.MapFrom(z => z.ChildDateOfBirth.ToString("dd/MM/yyyy")))
+        .ForMember(dest => dest.School, opt => opt.Ignore())
         .ReverseMap();
     }
 }
