@@ -17,8 +17,6 @@ namespace CheckYourEligibility.Data.Models
         [Column(TypeName = "varchar(8)")]
         public string Reference { get; set; }
 
-        
-        public virtual LocalAuthority LocalAuthority { get; set; }
         public int LocalAuthorityId { get; set; }
 
         public virtual School School { get; set; }

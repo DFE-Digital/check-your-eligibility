@@ -77,7 +77,7 @@ namespace CheckYourEligibility.WebApp.Controllers
         [ProducesResponseType(typeof(CheckEligibilityItemFsm), (int)HttpStatusCode.OK)]
         [ProducesResponseType((int)HttpStatusCode.NotFound)]
         [HttpGet("{guid}")]
-        public async Task<ActionResult> GetEligibilityCheck(string guid)
+        public async Task<ActionResult> EligibilityCheck(string guid)
         {
             var response = await _service.GetItem(guid);
             if (response == null)
@@ -90,7 +90,7 @@ namespace CheckYourEligibility.WebApp.Controllers
 
         [ProducesResponseType(typeof(Response), (int)HttpStatusCode.Created)]
         [ProducesResponseType((int)HttpStatusCode.BadRequest)]
-        [HttpPost("application")]
+        [HttpPost("Application")]
         public async Task<ActionResult> Application([FromBody] ApplicationRequestFsm model)
         {
             if (model == null || model.Data == null)
@@ -110,6 +110,20 @@ namespace CheckYourEligibility.WebApp.Controllers
 
             var response = await _service.PostApplication(model.Data);
             return new ObjectResult(ResponseFormatter.GetResponseApplication(response)) { StatusCode = StatusCodes.Status201Created };
+        }
+
+        [ProducesResponseType(typeof(ApplicationFsm), (int)HttpStatusCode.OK)]
+        [ProducesResponseType((int)HttpStatusCode.NotFound)]
+        [HttpGet("Application/{guid}")]
+        public async Task<ActionResult> Application(string guid)
+        {
+            var response = await _service.GetApplication(guid);
+            if (response == null)
+            {
+                return NotFound(guid);
+            }
+
+            return new ObjectResult(ResponseFormatter.GetResponseApplication(response)) { StatusCode = StatusCodes.Status200OK };
         }
     }
 }

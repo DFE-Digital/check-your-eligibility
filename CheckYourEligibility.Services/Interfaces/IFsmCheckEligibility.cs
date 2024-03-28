@@ -14,5 +14,6 @@ namespace CheckYourEligibility.Services.Interfaces
         Task<string> PostCheck(CheckEligibilityRequestDataFsm data);
         Task<CheckEligibilityStatus?> ProcessCheck(string guid);
         Task<ApplicationSaveFsm> PostApplication(ApplicationRequestDataFsm data);
+        Task<ApplicationFsm?> GetApplication(string guid);
     }
 }
