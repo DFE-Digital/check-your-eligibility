@@ -8,7 +8,7 @@ namespace FeatureManagement.Domain.Validation
     using FluentValidation;
     using System.Text.RegularExpressions;
 
-    public class ApplicationRequestFsmValidator : AbstractValidator<ApplicationRequestFsm>
+    public class ApplicationRequestFsmValidator : AbstractValidator<ApplicationRequest>
     {
         public ApplicationRequestFsmValidator()
         {

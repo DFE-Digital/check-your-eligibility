@@ -5,6 +5,8 @@ using CheckYourEligibility.Domain.Responses;
 using System.Data;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
+using static CheckYourEligibility.Domain.Responses.ApplicationFsm;
+using static CheckYourEligibility.Domain.Responses.ApplicationFsm.ApplicationSchool;
 
 namespace CheckYourEligibility.Data.Mappings;
 
@@ -25,7 +27,7 @@ public class FsmMappingProfile : Profile
         .ForMember(x => x.DateOfBirth, y => y.MapFrom(z => z.DateOfBirth.ToString("dd/MM/yyyy")))
         .ReverseMap();
 
-        CreateMap<ApplicationRequestDataFsm, Application>()
+        CreateMap<ApplicationRequestData, Application>()
        .ForMember(dest => dest.ParentNationalInsuranceNumber, opt => opt.MapFrom(src => src.ParentNationalInsuranceNumber))
        .ForMember(dest => dest.ParentNationalAsylumSeekerServiceNumber, opt => opt.MapFrom(src => src.ParentNationalAsylumSeekerServiceNumber))
        .ForMember(x => x.ParentDateOfBirth, y => y.MapFrom(z => DateTime.ParseExact(z.ParentDateOfBirth, "dd/MM/yyyy", CultureInfo.InvariantCulture)))
@@ -51,7 +53,17 @@ public class FsmMappingProfile : Profile
         .ForMember(dest => dest.ParentNationalAsylumSeekerServiceNumber, opt => opt.MapFrom(src => src.ParentNationalAsylumSeekerServiceNumber))
         .ForMember(x => x.ParentDateOfBirth, y => y.MapFrom(z => z.ParentDateOfBirth.ToString("dd/MM/yyyy")))
         .ForMember(x => x.ChildDateOfBirth, y => y.MapFrom(z => z.ChildDateOfBirth.ToString("dd/MM/yyyy")))
-        .ForMember(dest => dest.School, opt => opt.Ignore())
         .ReverseMap();
+
+        CreateMap<Models.School, ApplicationSchool>()
+             .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.SchoolId))
+             .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.EstablishmentName))
+             .ReverseMap();
+
+        CreateMap<LocalAuthority, SchoolLocalAuthority>()
+             .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.LocalAuthorityId))
+             .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.LaName))
+             .ReverseMap();
+       
     }
 }

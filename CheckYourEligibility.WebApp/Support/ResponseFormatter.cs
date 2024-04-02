@@ -92,13 +92,26 @@ namespace CheckYourEligibility.WebApp.Support
         public static dynamic GetResponseApplication(ApplicationFsm? item)
         {
             dynamic data = new ExpandoObject();
-            data.application = item;
             dynamic links = new ExpandoObject();
-            links.get_Application = $"{FSM.GetLinkApplication}{item.Id}";
+
+            data.application = item;
+                links.get_Application = $"{FSM.GetLinkApplication}{item.Id}";
 
             dynamic response = new ExpandoObject();
             response.data = data;
             response.links = links;
+
+            return response;
+        }
+
+        public static dynamic GetResponseApplication(IEnumerable<ApplicationFsm> item)
+        {
+            dynamic data = new ExpandoObject();
+
+            data.application = item;
+            dynamic response = new ExpandoObject();
+            response.data = data;
+
             return response;
         }
     }
