@@ -91,7 +91,7 @@ namespace CheckYourEligibility.WebApp.Controllers
         [ProducesResponseType(typeof(Response), (int)HttpStatusCode.Created)]
         [ProducesResponseType((int)HttpStatusCode.BadRequest)]
         [HttpPost("Application")]
-        public async Task<ActionResult> Application([FromBody] ApplicationRequestFsm model)
+        public async Task<ActionResult> Application([FromBody] ApplicationRequest model)
         {
             if (model == null || model.Data == null)
             {
@@ -121,6 +121,20 @@ namespace CheckYourEligibility.WebApp.Controllers
             if (response == null)
             {
                 return NotFound(guid);
+            }
+
+            return new ObjectResult(ResponseFormatter.GetResponseApplication(response)) { StatusCode = StatusCodes.Status200OK };
+        }
+
+        [ProducesResponseType(typeof(IEnumerable<ApplicationFsm>), (int)HttpStatusCode.OK)]
+        [ProducesResponseType((int)HttpStatusCode.NoContent)]
+        [HttpPost("Application/Search")]
+        public async Task<ActionResult> ApplicationSearch([FromBody] ApplicationRequestSearch model)
+        {
+            var response = await _service.GetApplications(model.Data);
+            if (response == null | !response.Any())
+            {
+                return NoContent();
             }
 
             return new ObjectResult(ResponseFormatter.GetResponseApplication(response)) { StatusCode = StatusCodes.Status200OK };
