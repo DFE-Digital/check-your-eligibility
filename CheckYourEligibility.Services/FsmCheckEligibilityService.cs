@@ -14,6 +14,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
+using System;
 
 namespace CheckYourEligibility.Services
 {
@@ -140,7 +141,7 @@ namespace CheckYourEligibility.Services
             return CheckEligibilityStatus.parentNotFound;
         }
 
-        public async Task<ApplicationSaveFsm> PostApplication(ApplicationRequestDataFsm data)
+        public async Task<ApplicationSaveFsm> PostApplication(ApplicationRequestData data)
         {
             try
             {
@@ -150,8 +151,11 @@ namespace CheckYourEligibility.Services
                 item.Created = DateTime.UtcNow;
                 item.Updated = DateTime.UtcNow;
                 item.Type = CheckEligibilityType.ApplcicationFsm;
+                item.Status = Domain.Enums.ApplicationStatus.Open;
 
-                var school = _db.Schools.Include(x => x.LocalAuthority).First(x=>x.SchoolId == data.School);
+                var school = _db.Schools
+                    .Include(x => x.LocalAuthority)
+                    .First(x=>x.SchoolId == data.School);
                 item.LocalAuthorityId = school.LocalAuthorityId;
 
                 await _db.Applications.AddAsync(item);
@@ -202,18 +206,33 @@ namespace CheckYourEligibility.Services
             if (result != null)
             {
                 var item = _mapper.Map<ApplicationFsm>(result);
-                item.School = new ApplicationFsm.ApplicationSchool()
-                {
-                    Id = result.SchoolId,
-                    Name = result.School.EstablishmentName,
-                    LocalAuthority = new ApplicationFsm.ApplicationSchool.SchoolLocalAuthority {
-                        Id = result.School.LocalAuthority.LocalAuthorityId,
-                        Name = result.School.LocalAuthority.LaName }
-                };
                 return item;
             }
 
             return null;
+        }
+
+        public async Task<IEnumerable<ApplicationFsm>> GetApplications(ApplicationRequestSearchData model)
+        {
+            var results = _db.Applications
+               .Include(x => x.Statuses)
+               .Include(x => x.School)
+               .ThenInclude(x => x.LocalAuthority)
+               .Where(x => x.Type == CheckEligibilityType.ApplcicationFsm);
+
+            if (model.School != null) {
+                results = results.Where(x => x.SchoolId == model.School);
+            }
+            if (model.localAuthority != null)
+            {
+                results = results.Where(x => x.LocalAuthorityId == model.localAuthority);
+            }
+            if (model.Status != null)
+            {
+                results = results.Where(x => x.Status == model.Status);
+            }
+
+            return _mapper.Map<List<ApplicationFsm>>(results);
         }
     }
 }

@@ -1,6 +1,4 @@
 using AutoFixture;
-using AutoMapper.Execution;
-using Azure.Core;
 using CheckYourEligibility.Domain.Constants.ErrorMessages;
 using CheckYourEligibility.Domain.Enums;
 using CheckYourEligibility.Domain.Requests;
@@ -10,12 +8,10 @@ using CheckYourEligibility.WebApp.Controllers;
 using CheckYourEligibility.WebApp.Support;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NUnit.Framework.Internal;
-using System;
 
 namespace CheckYourEligibility.APIUnitTests
 {
@@ -56,7 +52,7 @@ namespace CheckYourEligibility.APIUnitTests
         public void Given_valid_NInumber_ApplicationRequest_Post_Should_Return_Status201Created()
         {
             // Arrange
-            var request = _fixture.Create<ApplicationRequestFsm>();
+            var request = _fixture.Create<ApplicationRequest>();
             var applicationFsm = _fixture.Create<ApplicationSaveFsm>();
             request.Data.ParentNationalInsuranceNumber = "ns738356d";
             request.Data.ParentDateOfBirth = "01/02/1970";
@@ -77,7 +73,7 @@ namespace CheckYourEligibility.APIUnitTests
         public void Given_InValidRequest_Values_Application_Should_Return_Status400BadRequest()
         {
             // Arrange
-            var request = new ApplicationRequestFsm();
+            var request = new ApplicationRequest();
 
             // Act
             var response = _sut.Application(request);
@@ -331,6 +327,37 @@ namespace CheckYourEligibility.APIUnitTests
 
             // Act
             var response = _sut.Application(guid);
+
+            // Assert
+            response.Result.Should().BeEquivalentTo(expectedResult);
+        }
+
+        [Test]
+        public void Given_InValid_ApplicationSearch_Should_Return_Status204NoContent()
+        {
+            // Arrange
+            var model = _fixture.Create<ApplicationRequestSearch>();
+            _mockService.Setup(cs => cs.GetApplications(model.Data)).ReturnsAsync(new List<ApplicationFsm>());
+            var expectedResult = new NoContentResult();
+            
+            // Act
+            var response = _sut.ApplicationSearch(model);
+
+            // Assert
+            response.Result.Should().BeEquivalentTo(expectedResult);
+        }
+
+        [Test]
+        public void Given_Valid_ApplicationSearch_Should_Return_StatusOk()
+        {
+            // Arrange
+            var model = _fixture.Create<ApplicationRequestSearch>();
+            var expectedResponse = _fixture.CreateMany<ApplicationFsm>();
+            _mockService.Setup(cs => cs.GetApplications(model.Data)).ReturnsAsync(expectedResponse);
+            var expectedResult = new ObjectResult(ResponseFormatter.GetResponseApplication(expectedResponse)) { StatusCode = StatusCodes.Status200OK };
+
+            // Act
+            var response = _sut.ApplicationSearch(model);
 
             // Assert
             response.Result.Should().BeEquivalentTo(expectedResult);

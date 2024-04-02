@@ -44,6 +44,9 @@ public class EligibilityCheckContext : DbContext, IEligibilityCheckContext
         modelBuilder.Entity<Application>()
             .HasIndex(b => b.Reference, "idx_Reference")
             .IsUnique();
+        modelBuilder.Entity<Application>()
+           .HasIndex(b => b.Status, "idx_ApplicationStatus");
+           
     }
 
 }
