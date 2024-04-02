@@ -1,13 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace CheckYourEligibility.Domain.Requests
+﻿namespace CheckYourEligibility.Domain.Requests
 {
     public class CheckEligibilityRequest
     {
        public CheckEligibilityRequestDataFsm? Data { get; set; }
+    }
+    public class CheckEligibilityRequestDataFsm
+    {
+        public string? NationalInsuranceNumber { get; set; }
+
+        public string LastName { get; set; }
+
+        public string DateOfBirth { get; set; }
+
+        public string? NationalAsylumSeekerServiceNumber { get; set; }
     }
 }

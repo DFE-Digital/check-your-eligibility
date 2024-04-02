@@ -13,7 +13,8 @@ namespace CheckYourEligibility.Services.Interfaces
         Task<CheckEligibilityStatus?> GetStatus(string guid);
         Task<string> PostCheck(CheckEligibilityRequestDataFsm data);
         Task<CheckEligibilityStatus?> ProcessCheck(string guid);
-        Task<ApplicationSaveFsm> PostApplication(ApplicationRequestDataFsm data);
+        Task<ApplicationSaveFsm> PostApplication(ApplicationRequestData data);
         Task<ApplicationFsm?> GetApplication(string guid);
+        Task<IEnumerable<ApplicationFsm>> GetApplications(ApplicationRequestSearchData model);
     }
 }

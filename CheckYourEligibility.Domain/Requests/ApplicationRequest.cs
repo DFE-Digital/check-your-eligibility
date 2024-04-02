@@ -2,7 +2,11 @@
 
 namespace CheckYourEligibility.Domain.Requests
 {
-    public class ApplicationRequestDataFsm
+    public class ApplicationRequest
+    {
+       public ApplicationRequestData? Data { get; set; }
+    }
+    public class ApplicationRequestData
     {
         public int School { get; set; }
         public string ParentFirstName { get; set; }
@@ -11,7 +15,7 @@ namespace CheckYourEligibility.Domain.Requests
         public string? ParentNationalAsylumSeekerServiceNumber { get; set; }
         public string ParentDateOfBirth { get; set; }
         public string ChildFirstName { get; set; }
-        public string ChildLastName { get; set; }     
-        public string ChildDateOfBirth { get; set; }    
+        public string ChildLastName { get; set; }
+        public string ChildDateOfBirth { get; set; }
     }
 }

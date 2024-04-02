@@ -71,7 +71,7 @@ namespace CheckYourEligibility.ServiceUnitTests
         public void Given_validRequest_PostApplication_Should_Return_ApplicationSaveFsm()
         {
             // Arrange
-            var request = _fixture.Create<ApplicationRequestDataFsm>();
+            var request = _fixture.Create<ApplicationRequestData>();
             request.ParentDateOfBirth = "01/02/1970";
             request.ChildDateOfBirth = "01/02/2007";
             var la = _fixture.Create<LocalAuthority>();
@@ -311,7 +311,7 @@ namespace CheckYourEligibility.ServiceUnitTests
         public async Task Given_ValidRequest_GetApplication_Should_Return_Item()
         {
             // Arrange
-            var request = _fixture.Create<ApplicationRequestDataFsm>();
+            var request = _fixture.Create<ApplicationRequestData>();
             request.ParentDateOfBirth = "01/02/1970";
             request.ChildDateOfBirth = "01/02/2007";
             var la = _fixture.Create<LocalAuthority>();
@@ -321,13 +321,53 @@ namespace CheckYourEligibility.ServiceUnitTests
             _fakeInMemoryDb.LocalAuthorities.Add(la);
             _fakeInMemoryDb.Schools.Add(school);
             await _fakeInMemoryDb.SaveChangesAsync();
-            var response = await _sut.PostApplication(request);
+            
+            var postApplicationResponse =await _sut.PostApplication(request);
 
             // Act
-            var responseApplication = _sut.GetApplication(response.Id);
+            var response = _sut.GetApplication(postApplicationResponse.Id);
 
             // Assert
-            responseApplication.Result.Should().BeOfType<ApplicationFsm>();
+            response.Result.Should().BeOfType<ApplicationFsm>();
+        }
+
+        [Test]
+        public void Given_NoResults_GetApplications_Should_Return_null()
+        {
+            // Arrange
+            var request = _fixture.Create<ApplicationRequestSearchData>();
+
+            // Act
+            var response = _sut.GetApplications(request);
+
+            // Assert
+            response.Result.Should().BeEmpty();
+        }
+
+        [Test]
+        public async Task Given_ValidRequest_GetApplications_Should_Return_results()
+        {
+            // Arrange
+            var request = _fixture.Create<ApplicationRequestData>();
+            request.ParentDateOfBirth = "01/02/1970";
+            request.ChildDateOfBirth = "01/02/2007";
+            var la = _fixture.Create<LocalAuthority>();
+            var school = _fixture.Create<School>();
+            school.LocalAuthorityId = la.LocalAuthorityId;
+            request.School = school.SchoolId;
+            _fakeInMemoryDb.LocalAuthorities.Add(la);
+            _fakeInMemoryDb.Schools.Add(school);
+            await _fakeInMemoryDb.SaveChangesAsync();
+
+            await _sut.PostApplication(request);
+
+            var requestSearch = new ApplicationRequestSearchData() { School = school.SchoolId };
+
+            // Act
+            var response = _sut.GetApplications(requestSearch);
+
+            // Assert
+            response.Result.Should().NotBeEmpty();
         }
 
     }

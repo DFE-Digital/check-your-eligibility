@@ -49,5 +49,7 @@ namespace CheckYourEligibility.Data.Models
         public DateTime Updated { get; set; }
 
         public virtual IEnumerable<ApplicationStatus>  Statuses { get; set; }
+        [Column(TypeName = "varchar(100)")]
+        public Domain.Enums.ApplicationStatus? Status { get; set; }
     }
 }
