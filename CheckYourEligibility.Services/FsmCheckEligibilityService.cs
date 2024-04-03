@@ -81,23 +81,23 @@ namespace CheckYourEligibility.Services
         }
 
         public async Task<CheckEligibilityStatus?> ProcessCheck(string guid)
-        {
+        {         
             var result = await _db.FsmCheckEligibilities.FirstOrDefaultAsync(x => x.EligibilityCheckID == guid);
             if (result != null)
             {
-                
+
                 CheckEligibilityStatus checkResult = CheckEligibilityStatus.parentNotFound;
                 if (!result.NINumber.IsNullOrEmpty())
                 {
                     checkResult = await HMRC_Check(result);
                 }
-                else if (!result.NASSNumber.IsNullOrEmpty()) 
+                else if (!result.NASSNumber.IsNullOrEmpty())
                 {
-                    checkResult = await HO_Check(result);                  
+                    checkResult = await HO_Check(result);
                 }
                 result.Status = checkResult;
                 result.Updated = DateTime.UtcNow;
-                await _db.SaveChangesAsync();
+                var updates = await _db.SaveChangesAsync();
                 return result.Status;
             }
             return null;
