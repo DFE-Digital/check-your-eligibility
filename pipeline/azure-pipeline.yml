@@ -49,8 +49,9 @@ stages:
 
   - stage: DeployAppDev
     displayName: Deploy App Dev
+    environment: dev
     jobs:
-    - job: 
+    - job:
       pool:
         name: Azure Pipelines
         vmImage: 'windows-latest'
@@ -82,6 +83,7 @@ stages:
           packageForLinux: '$(Pipeline.Workspace)/checkYourEligibilityAPI/CheckYourEligibility.WebApp.zip'
   - stage: DeployAppTest
     displayName: Deploy App Test
+    environment: test
     jobs:
       - job:
         pool:
