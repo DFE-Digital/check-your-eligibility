@@ -24,7 +24,7 @@ namespace CheckYourEligibility.WebApp
                options.UseSqlServer(
                    connectionString,
                    x=>x.MigrationsAssembly("CheckYourEligibility.Data.Migrations"))
-               .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
+               //.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
                );
             services.AddDatabaseDeveloperPageExceptionFilter();
           
