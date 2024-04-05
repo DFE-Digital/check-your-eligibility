@@ -1,7 +1,7 @@
 using CheckYourEligibility.Domain.Constants;
+using CheckYourEligibility.Domain.Responses;
 using CheckYourEligibility.Services.Interfaces;
 using CheckYourEligibility.WebApp.Controllers;
-using CheckYourEligibility.WebApp.Support;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -50,7 +50,7 @@ namespace CheckYourEligibility.APIUnitTests
             // Arrange
             _mockService.Setup(cs => cs.CleanUpEligibilityChecks()).Returns(Task.CompletedTask);
 
-            var expectedResult = new ObjectResult(ResponseFormatter.GetResponseMessage($"{Admin.EligibilityChecksCleanse}")) { StatusCode = StatusCodes.Status200OK };
+            var expectedResult = new ObjectResult(new MessageResponse { Data = $"{Admin.EligibilityChecksCleanse}" }) { StatusCode = StatusCodes.Status200OK };
 
             // Act
             var response = _sut.CleanUpEligibilityChecks();

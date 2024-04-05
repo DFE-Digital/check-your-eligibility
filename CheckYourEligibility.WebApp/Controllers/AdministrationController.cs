@@ -1,17 +1,10 @@
 ﻿using Ardalis.GuardClauses;
-using Azure;
 using CheckYourEligibility.Domain.Constants;
 using CheckYourEligibility.Domain.Responses;
 using CheckYourEligibility.Services.CsvImport;
 using CheckYourEligibility.Services.Interfaces;
-using CheckYourEligibility.WebApp.Support;
-using CsvHelper;
-using CsvHelper.Configuration;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
-using System.Diagnostics;
-using System.Globalization;
 using System.Net;
 
 namespace CheckYourEligibility.WebApp.Controllers
@@ -38,7 +31,7 @@ namespace CheckYourEligibility.WebApp.Controllers
         public async Task<ActionResult> CleanUpEligibilityChecks()
         {
             await _service.CleanUpEligibilityChecks();
-            return new ObjectResult(ResponseFormatter.GetResponseMessage($"{Admin.EligibilityChecksCleanse}")) { StatusCode = StatusCodes.Status200OK };
+            return new ObjectResult(new MessageResponse { Data = $"{Admin.EligibilityChecksCleanse}" }) { StatusCode = StatusCodes.Status200OK };
         }
 
         [ProducesResponseType(typeof(int), (int)HttpStatusCode.OK)]
@@ -47,7 +40,7 @@ namespace CheckYourEligibility.WebApp.Controllers
         {
             if (file == null || file.ContentType.ToLower() != "text/csv")
             {
-                return BadRequest(ResponseFormatter.GetResponseBadRequest("Csv data file is required."));
+                return BadRequest(new MessageResponse { Data = "Csv data file is required." });
             }
             try
             {
@@ -56,10 +49,10 @@ namespace CheckYourEligibility.WebApp.Controllers
             catch (Exception ex)
             {
                 _logger.LogError("ImportEstablishments", ex);
-                return new ObjectResult(ResponseFormatter.GetResponseMessage($"{file.FileName} - {JsonConvert.SerializeObject(new EstablishmentRow())} :- {ex.Message},{ex.InnerException.Message}")) { StatusCode = StatusCodes.Status500InternalServerError }; 
+                return new ObjectResult(new MessageResponse { Data = $"{file.FileName} - {JsonConvert.SerializeObject(new EstablishmentRow())} :- {ex.Message},{ex.InnerException.Message}" }) { StatusCode = StatusCodes.Status500InternalServerError };
             }
-            
-            return new ObjectResult(ResponseFormatter.GetResponseMessage($"{file.FileName} - {Admin.EstablishmentFileProcessed}")) { StatusCode = StatusCodes.Status200OK };
+
+            return new ObjectResult(new MessageResponse { Data = $"{file.FileName} - {Admin.EstablishmentFileProcessed}"}){ StatusCode = StatusCodes.Status200OK };
         }
     }
 }
