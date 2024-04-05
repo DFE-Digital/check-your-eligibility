@@ -1,12 +1,18 @@
 ﻿using Ardalis.GuardClauses;
+using Azure;
+using CheckYourEligibility.Domain.Constants;
 using CheckYourEligibility.Domain.Enums;
 using CheckYourEligibility.Domain.Requests;
 using CheckYourEligibility.Domain.Responses;
+using CheckYourEligibility.Services;
 using CheckYourEligibility.Services.Interfaces;
 using CheckYourEligibility.WebApp.Support;
 using FeatureManagement.Domain.Validation;
 using Microsoft.AspNetCore.Mvc;
+using System;
 using System.Net;
+using StatusResponse = CheckYourEligibility.Domain.Responses.StatusResponse;
+using StatusValue = CheckYourEligibility.Domain.Responses.StatusValue;
 
 namespace CheckYourEligibility.WebApp.Controllers
 {
@@ -23,7 +29,7 @@ namespace CheckYourEligibility.WebApp.Controllers
             _service = Guard.Against.Null(service);
         }
 
-        [ProducesResponseType(typeof(Response), (int)HttpStatusCode.Accepted)]
+        [ProducesResponseType(typeof(CheckEligibilityResponse), (int)HttpStatusCode.Accepted)]
         [ProducesResponseType((int)HttpStatusCode.BadRequest)]
         [HttpPost]
         public async Task<ActionResult> CheckEligibility([FromBody] CheckEligibilityRequest model)
@@ -44,10 +50,16 @@ namespace CheckYourEligibility.WebApp.Controllers
             }
 
             var id = await _service.PostCheck(model.Data);
-            return new ObjectResult(ResponseFormatter.GetResponseStatus(Domain.Enums.CheckEligibilityStatus.queuedForProcessing, id)) { StatusCode = StatusCodes.Status202Accepted };
+            return new ObjectResult(new CheckEligibilityResponse() { 
+                Data = new StatusValue() { Status = Domain.Enums.CheckEligibilityStatus.queuedForProcessing.ToString() },
+                Links = new CheckEligibilityResponseLinks {
+                    Get_EligibilityCheck = $"{FSMLinks.GetLink}{id}",
+                    Put_EligibilityCheckProcess = $"{FSMLinks.ProcessLink}{id}"
+                }
+            }) { StatusCode = StatusCodes.Status202Accepted };
         }
 
-        [ProducesResponseType(typeof(CheckEligibilityStatus), (int)HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(StatusResponse), (int)HttpStatusCode.OK)]
         [ProducesResponseType((int)HttpStatusCode.NotFound)]
         [HttpGet("{guid}/Status")]
         public async Task<ActionResult> CheckEligibilityStatus(string guid)
@@ -57,11 +69,11 @@ namespace CheckYourEligibility.WebApp.Controllers
             {
                 return NotFound(guid);
             }
-            return new ObjectResult(ResponseFormatter.GetResponseStatus(response)) { StatusCode = StatusCodes.Status200OK };
+            return new ObjectResult(new StatusResponse() { Data = new StatusValue() { Status = response.Value.ToString() } }) { StatusCode = StatusCodes.Status200OK };
         }
 
 
-        [ProducesResponseType(typeof(Response), (int)HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(StatusResponse), (int)HttpStatusCode.OK)]
         [ProducesResponseType((int)HttpStatusCode.NotFound)]
         [HttpPut("ProcessEligibilityCheck/{guid}")]
         public async Task<ActionResult> Process(string guid)
@@ -71,10 +83,10 @@ namespace CheckYourEligibility.WebApp.Controllers
             {
                 return NotFound(guid);
             }
-            return new ObjectResult(ResponseFormatter.GetResponseStatus(response,guid)) { StatusCode = StatusCodes.Status200OK };
+            return new ObjectResult(new StatusResponse() { Data = new StatusValue() { Status = response.Value.ToString() } }) { StatusCode = StatusCodes.Status200OK };
         }
 
-        [ProducesResponseType(typeof(CheckEligibilityItemFsm), (int)HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(CheckEligibilityItemResponse), (int)HttpStatusCode.OK)]
         [ProducesResponseType((int)HttpStatusCode.NotFound)]
         [HttpGet("{guid}")]
         public async Task<ActionResult> EligibilityCheck(string guid)
@@ -84,11 +96,19 @@ namespace CheckYourEligibility.WebApp.Controllers
             {
                 return NotFound(guid);
             }
-
-            return new ObjectResult(ResponseFormatter.GetResponseItem(response)) { StatusCode = StatusCodes.Status200OK };
+            return new ObjectResult(new CheckEligibilityItemResponse()
+            {
+                Data = response,
+                Links = new CheckEligibilityResponseLinks
+                {
+                    Get_EligibilityCheck = $"{FSMLinks.GetLink}{guid}",
+                    Put_EligibilityCheckProcess = $"{FSMLinks.ProcessLink}{guid}"
+                }
+            })
+            { StatusCode = StatusCodes.Status200OK };
         }
 
-        [ProducesResponseType(typeof(Response), (int)HttpStatusCode.Created)]
+        [ProducesResponseType(typeof(ApplicationSaveItemResponse), (int)HttpStatusCode.Created)]
         [ProducesResponseType((int)HttpStatusCode.BadRequest)]
         [HttpPost("Application")]
         public async Task<ActionResult> Application([FromBody] ApplicationRequest model)
@@ -100,7 +120,7 @@ namespace CheckYourEligibility.WebApp.Controllers
             model.Data.ParentNationalInsuranceNumber = model.Data.ParentNationalInsuranceNumber?.ToUpper();
             model.Data.ParentNationalAsylumSeekerServiceNumber = model.Data.ParentNationalAsylumSeekerServiceNumber?.ToUpper();
 
-            var validator = new ApplicationRequestFsmValidator();
+            var validator = new ApplicationRequestValidator();
             var validationResults = validator.Validate(model);
 
             if (!validationResults.IsValid)
@@ -109,10 +129,19 @@ namespace CheckYourEligibility.WebApp.Controllers
             }
 
             var response = await _service.PostApplication(model.Data);
-            return new ObjectResult(ResponseFormatter.GetResponseApplication(response)) { StatusCode = StatusCodes.Status201Created };
+
+            return new ObjectResult(new ApplicationSaveItemResponse
+            {
+                Data = response,
+                Links = new ApplicationResponseLinks
+                {
+                    get_Application = $"{FSMLinks.GetLinkApplication}{response.Id}"
+                }
+            })
+            { StatusCode = StatusCodes.Status201Created };
         }
 
-        [ProducesResponseType(typeof(ApplicationFsm), (int)HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(ApplicationItemResponse), (int)HttpStatusCode.OK)]
         [ProducesResponseType((int)HttpStatusCode.NotFound)]
         [HttpGet("Application/{guid}")]
         public async Task<ActionResult> Application(string guid)
@@ -123,10 +152,18 @@ namespace CheckYourEligibility.WebApp.Controllers
                 return NotFound(guid);
             }
 
-            return new ObjectResult(ResponseFormatter.GetResponseApplication(response)) { StatusCode = StatusCodes.Status200OK };
+            return new ObjectResult(new ApplicationItemResponse
+            {
+                Data = response,
+                Links = new ApplicationResponseLinks
+                {
+                    get_Application = $"{FSMLinks.GetLinkApplication}{response.Id}"
+                }
+            })
+            { StatusCode = StatusCodes.Status200OK };
         }
 
-        [ProducesResponseType(typeof(IEnumerable<ApplicationFsm>), (int)HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(ApplicationSearchResponse), (int)HttpStatusCode.OK)]
         [ProducesResponseType((int)HttpStatusCode.NoContent)]
         [HttpPost("Application/Search")]
         public async Task<ActionResult> ApplicationSearch([FromBody] ApplicationRequestSearch model)
@@ -137,7 +174,11 @@ namespace CheckYourEligibility.WebApp.Controllers
                 return NoContent();
             }
 
-            return new ObjectResult(ResponseFormatter.GetResponseApplication(response)) { StatusCode = StatusCodes.Status200OK };
+            return new ObjectResult(new ApplicationSearchResponse
+            {
+                Data = response
+            })
+            { StatusCode = StatusCodes.Status200OK };
         }
     }
 }

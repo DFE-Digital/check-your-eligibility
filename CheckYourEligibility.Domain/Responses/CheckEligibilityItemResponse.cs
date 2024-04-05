@@ -1,5 +1,11 @@
 ﻿namespace CheckYourEligibility.Domain.Responses
 {
+    public class CheckEligibilityItemResponse
+    {
+        public CheckEligibilityItemFsm Data { get; set; }
+        public CheckEligibilityResponseLinks Links { get; set; }
+    }
+
     public class CheckEligibilityItemFsm
     {
         public string NationalInsuranceNumber { get; set; }
