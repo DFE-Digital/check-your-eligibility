@@ -1,15 +1,9 @@
 ﻿using Ardalis.GuardClauses;
-using Azure;
-using CheckYourEligibility.Domain.Constants;
-using CheckYourEligibility.Domain.Enums;
 using CheckYourEligibility.Domain.Requests;
 using CheckYourEligibility.Domain.Responses;
-using CheckYourEligibility.Services;
 using CheckYourEligibility.Services.Interfaces;
-using CheckYourEligibility.WebApp.Support;
 using FeatureManagement.Domain.Validation;
 using Microsoft.AspNetCore.Mvc;
-using System;
 using System.Net;
 using StatusResponse = CheckYourEligibility.Domain.Responses.StatusResponse;
 using StatusValue = CheckYourEligibility.Domain.Responses.StatusValue;
@@ -36,7 +30,7 @@ namespace CheckYourEligibility.WebApp.Controllers
         {
             if (model == null || model.Data == null)
             {
-                return BadRequest(ResponseFormatter.GetResponseBadRequest("Invalid CheckEligibilityRequest, data is required."));
+                return BadRequest(new MessageResponse { Data = "Invalid CheckEligibilityRequest, data is required." });
             }
             model.Data.NationalInsuranceNumber = model.Data.NationalInsuranceNumber?.ToUpper();
             model.Data.NationalAsylumSeekerServiceNumber = model.Data.NationalAsylumSeekerServiceNumber?.ToUpper();
@@ -46,15 +40,14 @@ namespace CheckYourEligibility.WebApp.Controllers
 
             if (!validationResults.IsValid)
             {
-                return BadRequest(ResponseFormatter.GetResponseBadRequest(validationResults.ToString()));
+                return BadRequest(new MessageResponse { Data = validationResults.ToString() });
             }
-
             var id = await _service.PostCheck(model.Data);
             return new ObjectResult(new CheckEligibilityResponse() { 
                 Data = new StatusValue() { Status = Domain.Enums.CheckEligibilityStatus.queuedForProcessing.ToString() },
                 Links = new CheckEligibilityResponseLinks {
-                    Get_EligibilityCheck = $"{FSMLinks.GetLink}{id}",
-                    Put_EligibilityCheckProcess = $"{FSMLinks.ProcessLink}{id}"
+                    Get_EligibilityCheck = $"{Domain.Constants.FSMLinks.GetLink}{id}",
+                    Put_EligibilityCheckProcess = $"{Domain.Constants.FSMLinks.ProcessLink}{id}"
                 }
             }) { StatusCode = StatusCodes.Status202Accepted };
         }
@@ -101,8 +94,8 @@ namespace CheckYourEligibility.WebApp.Controllers
                 Data = response,
                 Links = new CheckEligibilityResponseLinks
                 {
-                    Get_EligibilityCheck = $"{FSMLinks.GetLink}{guid}",
-                    Put_EligibilityCheckProcess = $"{FSMLinks.ProcessLink}{guid}"
+                    Get_EligibilityCheck = $"{Domain.Constants.FSMLinks.GetLink}{guid}",
+                    Put_EligibilityCheckProcess = $"{Domain.Constants.FSMLinks.ProcessLink}{guid}"
                 }
             })
             { StatusCode = StatusCodes.Status200OK };
@@ -115,7 +108,7 @@ namespace CheckYourEligibility.WebApp.Controllers
         {
             if (model == null || model.Data == null)
             {
-                return BadRequest(ResponseFormatter.GetResponseBadRequest("Invalid request, data is required."));
+                return BadRequest(new MessageResponse { Data = "Invalid request, data is required." });
             }
             model.Data.ParentNationalInsuranceNumber = model.Data.ParentNationalInsuranceNumber?.ToUpper();
             model.Data.ParentNationalAsylumSeekerServiceNumber = model.Data.ParentNationalAsylumSeekerServiceNumber?.ToUpper();
@@ -125,7 +118,7 @@ namespace CheckYourEligibility.WebApp.Controllers
 
             if (!validationResults.IsValid)
             {
-                return BadRequest(ResponseFormatter.GetResponseBadRequest(validationResults.ToString()));
+                return BadRequest(new MessageResponse { Data = validationResults.ToString() });
             }
 
             var response = await _service.PostApplication(model.Data);
@@ -135,7 +128,7 @@ namespace CheckYourEligibility.WebApp.Controllers
                 Data = response,
                 Links = new ApplicationResponseLinks
                 {
-                    get_Application = $"{FSMLinks.GetLinkApplication}{response.Id}"
+                    get_Application = $"{Domain.Constants.FSMLinks.GetLinkApplication}{response.Id}"
                 }
             })
             { StatusCode = StatusCodes.Status201Created };
@@ -157,7 +150,7 @@ namespace CheckYourEligibility.WebApp.Controllers
                 Data = response,
                 Links = new ApplicationResponseLinks
                 {
-                    get_Application = $"{FSMLinks.GetLinkApplication}{response.Id}"
+                    get_Application = $"{Domain.Constants.FSMLinks.GetLinkApplication}{response.Id}"
                 }
             })
             { StatusCode = StatusCodes.Status200OK };
