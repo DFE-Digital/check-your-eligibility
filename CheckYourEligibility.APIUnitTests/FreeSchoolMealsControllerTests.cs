@@ -1,12 +1,9 @@
 using AutoFixture;
-using CheckYourEligibility.Domain.Constants;
-using CheckYourEligibility.Domain.Constants.ErrorMessages;
 using CheckYourEligibility.Domain.Enums;
 using CheckYourEligibility.Domain.Requests;
 using CheckYourEligibility.Domain.Responses;
 using CheckYourEligibility.Services.Interfaces;
 using CheckYourEligibility.WebApp.Controllers;
-using CheckYourEligibility.WebApp.Support;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -132,7 +129,7 @@ namespace CheckYourEligibility.APIUnitTests
             request.Data.NationalInsuranceNumber = "ns738356d";
             request.Data.DateOfBirth = "01/02/1970";
             request.Data.NationalAsylumSeekerServiceNumber = "789";
-            var expectedResult = new BadRequestObjectResult(ResponseFormatter.GetResponseBadRequest(FSM.NI_and_NASS));
+            var expectedResult = new BadRequestObjectResult(new MessageResponse { Data = Domain.Constants.ErrorMessages.FSM.NI_and_NASS });
 
             // Act
             var response = _sut.CheckEligibility(request);
@@ -149,7 +146,7 @@ namespace CheckYourEligibility.APIUnitTests
             request.Data.NationalInsuranceNumber = string.Empty;
             request.Data.DateOfBirth = "01/02/1970";
             request.Data.NationalAsylumSeekerServiceNumber = string.Empty;
-            var expectedResult = new BadRequestObjectResult(ResponseFormatter.GetResponseBadRequest(FSM.NI_or_NASS));
+            var expectedResult = new BadRequestObjectResult(new MessageResponse { Data = Domain.Constants.ErrorMessages.FSM.NI_or_NASS });
 
             // Act
             var response = _sut.CheckEligibility(request);
@@ -166,7 +163,7 @@ namespace CheckYourEligibility.APIUnitTests
             request.Data.NationalInsuranceNumber = "123";
             request.Data.DateOfBirth = "01/02/1970";
             request.Data.NationalAsylumSeekerServiceNumber = "";
-            var expectedResult = new BadRequestObjectResult(ResponseFormatter.GetResponseBadRequest(FSM.NI));
+            var expectedResult = new BadRequestObjectResult(new MessageResponse { Data = Domain.Constants.ErrorMessages.FSM.NI });
 
             // Act
             var response = _sut.CheckEligibility(request);
@@ -183,7 +180,7 @@ namespace CheckYourEligibility.APIUnitTests
             request.Data.NationalInsuranceNumber = "ns738356d";
             request.Data.DateOfBirth = "01/02/70";
             request.Data.NationalAsylumSeekerServiceNumber = "";
-            var expectedResult = new BadRequestObjectResult(ResponseFormatter.GetResponseBadRequest(FSM.DOB));
+            var expectedResult = new BadRequestObjectResult(new MessageResponse { Data = Domain.Constants.ErrorMessages.FSM.DOB });
 
             // Act
             var response = _sut.CheckEligibility(request);
@@ -202,7 +199,7 @@ namespace CheckYourEligibility.APIUnitTests
             request.Data.DateOfBirth = "01/02/1970";
             request.Data.LastName = string.Empty;
             request.Data.NationalAsylumSeekerServiceNumber = string.Empty;
-            var expectedResult = new BadRequestObjectResult(ResponseFormatter.GetResponseBadRequest(FSM.LastName));
+            var expectedResult = new BadRequestObjectResult(new MessageResponse { Data = Domain.Constants.ErrorMessages.FSM.LastName });
             
             // Act
             var response = _sut.CheckEligibility(request);
@@ -305,8 +302,8 @@ namespace CheckYourEligibility.APIUnitTests
                 Data = expectedResponse,
                 Links = new CheckEligibilityResponseLinks
                 {
-                    Get_EligibilityCheck = $"{FSMLinks.GetLink}{guid}",
-                    Put_EligibilityCheckProcess = $"{FSMLinks.ProcessLink}{guid}"
+                    Get_EligibilityCheck = $"{Domain.Constants.FSMLinks.GetLink}{guid}",
+                    Put_EligibilityCheckProcess = $"{Domain.Constants.FSMLinks.ProcessLink}{guid}"
                 }
             })
             { StatusCode = StatusCodes.Status200OK };
@@ -346,7 +343,7 @@ namespace CheckYourEligibility.APIUnitTests
                 Data = expectedResponse,
                 Links = new ApplicationResponseLinks
                 {
-                    get_Application = $"{FSMLinks.GetLinkApplication}{expectedResponse.Id}"
+                    get_Application = $"{Domain.Constants.FSMLinks.GetLinkApplication}{expectedResponse.Id}"
                 }
             })
             { StatusCode = StatusCodes.Status200OK };

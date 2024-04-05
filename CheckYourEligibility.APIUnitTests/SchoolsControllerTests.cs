@@ -1,16 +1,13 @@
 using AutoFixture;
-using CheckYourEligibility.Domain.Constants;
+using CheckYourEligibility.Domain.Responses;
 using CheckYourEligibility.Services.Interfaces;
 using CheckYourEligibility.WebApp.Controllers;
-using CheckYourEligibility.WebApp.Support;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NUnit.Framework.Internal;
-using System;
 
 namespace CheckYourEligibility.APIUnitTests
 {
@@ -55,7 +52,7 @@ namespace CheckYourEligibility.APIUnitTests
             var result = _fixture.CreateMany<Domain.Responses.School>();
             _mockService.Setup(cs => cs.Search(query)).ReturnsAsync(result);
 
-            var expectedResult = new ObjectResult(ResponseFormatter.GetSchoolsResponseMessage(result)) { StatusCode = StatusCodes.Status200OK };
+            var expectedResult = new ObjectResult(new SchoolSearchResponse { Data = result }) { StatusCode = StatusCodes.Status200OK };
 
             // Act
             var response = _sut.Search(query);
@@ -85,7 +82,7 @@ namespace CheckYourEligibility.APIUnitTests
             var result = Enumerable.Empty<Domain.Responses.School>(); 
             _mockService.Setup(cs => cs.Search(query)).ReturnsAsync(result);
 
-            var expectedResult = new ObjectResult(ResponseFormatter.GetSchoolsResponseMessage(result)) { StatusCode = StatusCodes.Status404NotFound };
+            var expectedResult = new ObjectResult(new SchoolSearchResponse { Data = result }) { StatusCode = StatusCodes.Status404NotFound };
 
             // Act
             var response = _sut.Search(query);
