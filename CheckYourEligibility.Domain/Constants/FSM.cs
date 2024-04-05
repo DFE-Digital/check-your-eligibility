@@ -2,7 +2,7 @@
 
 namespace CheckYourEligibility.Domain.Constants
 {
-    public static class FSM
+    public static class FSMLinks
     {
         public const string GetLink = "/freeSchoolMeals/";
         public const string ProcessLink = " /freeSchoolMeals/processEligibilityCheck/";

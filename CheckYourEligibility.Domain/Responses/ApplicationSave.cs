@@ -1,6 +1,6 @@
 ﻿namespace CheckYourEligibility.Domain.Responses
 {
-    public class ApplicationSaveFsm
+    public class ApplicationSave
     {
         public string Id { get; set; }
         public string Reference { get; set; }
