@@ -14,7 +14,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
-using System;
 
 namespace CheckYourEligibility.Services
 {
@@ -27,12 +26,15 @@ namespace CheckYourEligibility.Services
         private readonly QueueClient _queueClient;
         private const int SurnameCheckCharachters = 3;
         private static Random randomNumber;
+        private readonly IDwpService _dwpService;
 
-        public FsmCheckEligibilityService(ILoggerFactory logger, IEligibilityCheckContext dbContext, IMapper mapper, QueueServiceClient queueClientService, IConfiguration configuration)
+        public FsmCheckEligibilityService(ILoggerFactory logger, IEligibilityCheckContext dbContext, IMapper mapper, QueueServiceClient queueClientService,
+            IConfiguration configuration, IDwpService dwpService)
         {
             _logger = logger.CreateLogger("ServiceFsmCheckEligibility");
             _db = Guard.Against.Null(dbContext);
             _mapper = Guard.Against.Null(mapper);
+            _dwpService = Guard.Against.Null(dwpService);
             var queName = configuration.GetValue<string>("QueueFsmCheckStandard");
             if (queName != "notSet")
             {
@@ -61,7 +63,7 @@ namespace CheckYourEligibility.Services
                 if (_queueClient != null)
                 {
                     await _queueClient.SendMessageAsync(
-                        JsonConvert.SerializeObject(new QueueMessageCheck() { Type = item.Type.ToString(), Guid = item.EligibilityCheckID, Url =$"{FSM.ProcessLink}{item.EligibilityCheckID}" }));
+                        JsonConvert.SerializeObject(new QueueMessageCheck() { Type = item.Type.ToString(), Guid = item.EligibilityCheckID, Url =$"{FSMLinks.ProcessLink}{item.EligibilityCheckID}" }));
                 }
                 return item.EligibilityCheckID;
             }
@@ -76,7 +78,10 @@ namespace CheckYourEligibility.Services
         {
             var result = await _db.FsmCheckEligibilities.FirstOrDefaultAsync(x=> x.EligibilityCheckID == guid);
             if (result != null)
+            {
+               // var x = await _dwpService.GetStatus(guid);
                 return result.Status;
+            }
             return null;
         }
 
@@ -114,34 +119,7 @@ namespace CheckYourEligibility.Services
             return null;
         }
 
-        private async Task<CheckEligibilityStatus> HO_Check(EligibilityCheck data)
-        {
-            var checkReults = _db.FreeSchoolMealsHO.Where(x =>
-           x.NASS == data.NASSNumber
-           && x.DateOfBirth == data.DateOfBirth).Select(x => x.LastName);
-            return CheckSurname(data.LastName, checkReults);
-        }
-
-        private async Task<CheckEligibilityStatus> HMRC_Check(EligibilityCheck data)
-        {
-            var checkReults =  _db.FreeSchoolMealsHMRC.Where(x =>
-            x.FreeSchoolMealsHMRCID == data.NINumber 
-            && x.DateOfBirth == data.DateOfBirth).Select(x=>x.Surname);
-
-            return CheckSurname(data.LastName, checkReults);
-        }
-
-        private CheckEligibilityStatus CheckSurname(string lastNamePartial, IQueryable<string> validData)
-        {
-            if (validData.Any())
-            {
-                return validData.FirstOrDefault(x => x.ToUpper().StartsWith(lastNamePartial.Substring(0, SurnameCheckCharachters).ToUpper())) != null
-                    ? CheckEligibilityStatus.eligible : CheckEligibilityStatus.parentNotFound;
-            };
-            return CheckEligibilityStatus.parentNotFound;
-        }
-
-        public async Task<ApplicationSaveFsm> PostApplication(ApplicationRequestData data)
+        public async Task<ApplicationSave> PostApplication(ApplicationRequestData data)
         {
             try
             {
@@ -172,7 +150,7 @@ namespace CheckYourEligibility.Services
                 var saved = _db.Applications
                     .First(x=>x.ApplicationID == item.ApplicationID);
 
-                var returnItem = _mapper.Map<ApplicationSaveFsm>(item);
+                var returnItem = _mapper.Map<ApplicationSave>(item);
 
                 return returnItem;
             }
@@ -183,20 +161,7 @@ namespace CheckYourEligibility.Services
             }
         }
 
-        private string GetReference()
-        {
-            var unique = false;
-            string nextReference = string.Empty;
-             while (!unique)
-            {
-                nextReference = randomNumber.Next(1, referenceMaxValue).ToString();
-                unique =   _db.Applications.FirstOrDefault(x => x.Reference == nextReference)== null;
-            }
-
-            return nextReference;
-        }
-
-        public async Task<ApplicationFsm?> GetApplication(string guid)
+        public async Task<ApplicationResponse?> GetApplication(string guid)
         {
             var result = await _db.Applications
                 .Include(x => x.Statuses)
@@ -205,14 +170,14 @@ namespace CheckYourEligibility.Services
                 .FirstOrDefaultAsync(x => x.ApplicationID == guid);
             if (result != null)
             {
-                var item = _mapper.Map<ApplicationFsm>(result);
+                var item = _mapper.Map<ApplicationResponse>(result);
                 return item;
             }
 
             return null;
         }
 
-        public async Task<IEnumerable<ApplicationFsm>> GetApplications(ApplicationRequestSearchData model)
+        public async Task<IEnumerable<ApplicationResponse>> GetApplications(ApplicationRequestSearchData model)
         {
             var results = _db.Applications
                .Include(x => x.Statuses)
@@ -232,7 +197,48 @@ namespace CheckYourEligibility.Services
                 results = results.Where(x => x.Status == model.Status);
             }
 
-            return _mapper.Map<List<ApplicationFsm>>(results);
+            return _mapper.Map<List<ApplicationResponse>>(results);
         }
+
+        private string GetReference()
+        {
+            var unique = false;
+            string nextReference = string.Empty;
+            while (!unique)
+            {
+                nextReference = randomNumber.Next(1, referenceMaxValue).ToString();
+                unique = _db.Applications.FirstOrDefault(x => x.Reference == nextReference) == null;
+            }
+
+            return nextReference;
+        }
+
+        private async Task<CheckEligibilityStatus> HO_Check(EligibilityCheck data)
+        {
+            var checkReults = _db.FreeSchoolMealsHO.Where(x =>
+           x.NASS == data.NASSNumber
+           && x.DateOfBirth == data.DateOfBirth).Select(x => x.LastName);
+            return CheckSurname(data.LastName, checkReults);
+        }
+
+        private async Task<CheckEligibilityStatus> HMRC_Check(EligibilityCheck data)
+        {
+            var checkReults = _db.FreeSchoolMealsHMRC.Where(x =>
+            x.FreeSchoolMealsHMRCID == data.NINumber
+            && x.DateOfBirth == data.DateOfBirth).Select(x => x.Surname);
+
+            return CheckSurname(data.LastName, checkReults);
+        }
+
+        private CheckEligibilityStatus CheckSurname(string lastNamePartial, IQueryable<string> validData)
+        {
+            if (validData.Any())
+            {
+                return validData.FirstOrDefault(x => x.ToUpper().StartsWith(lastNamePartial.Substring(0, SurnameCheckCharachters).ToUpper())) != null
+                    ? CheckEligibilityStatus.eligible : CheckEligibilityStatus.parentNotFound;
+            };
+            return CheckEligibilityStatus.parentNotFound;
+        }
+
     }
 }

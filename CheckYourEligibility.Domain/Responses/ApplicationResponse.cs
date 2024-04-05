@@ -1,8 +1,6 @@
-﻿using CheckYourEligibility.Domain.Enums;
-
-namespace CheckYourEligibility.Domain.Responses
+﻿namespace CheckYourEligibility.Domain.Responses
 {
-    public class ApplicationFsm
+    public class ApplicationResponse
     {
         public string Id { get; set; }
         public string Reference { get; set; }

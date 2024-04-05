@@ -2,11 +2,8 @@ using AutoMapper;
 using CheckYourEligibility.Data.Models;
 using CheckYourEligibility.Domain.Requests;
 using CheckYourEligibility.Domain.Responses;
-using System.Data;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
-using static CheckYourEligibility.Domain.Responses.ApplicationFsm;
-using static CheckYourEligibility.Domain.Responses.ApplicationFsm.ApplicationSchool;
 
 namespace CheckYourEligibility.Data.Mappings;
 
@@ -37,7 +34,7 @@ public class FsmMappingProfile : Profile
        .ForMember(dest => dest.School, opt => opt.Ignore())
        .ReverseMap();
 
-        CreateMap<Application, ApplicationSaveFsm>()
+        CreateMap<Application, ApplicationSave>()
         .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.ApplicationID))
         .ForMember(dest => dest.ParentNationalInsuranceNumber, opt => opt.MapFrom(src => src.ParentNationalInsuranceNumber))
         .ForMember(dest => dest.ParentNationalAsylumSeekerServiceNumber, opt => opt.MapFrom(src => src.ParentNationalAsylumSeekerServiceNumber))
@@ -47,7 +44,7 @@ public class FsmMappingProfile : Profile
         .ForMember(dest => dest.School, opt => opt.MapFrom(src => src.SchoolId))
         .ReverseMap();
 
-        CreateMap<Application, ApplicationFsm>()
+        CreateMap<Application, ApplicationResponse>()
         .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.ApplicationID))
         .ForMember(dest => dest.ParentNationalInsuranceNumber, opt => opt.MapFrom(src => src.ParentNationalInsuranceNumber))
         .ForMember(dest => dest.ParentNationalAsylumSeekerServiceNumber, opt => opt.MapFrom(src => src.ParentNationalAsylumSeekerServiceNumber))
@@ -55,12 +52,12 @@ public class FsmMappingProfile : Profile
         .ForMember(x => x.ChildDateOfBirth, y => y.MapFrom(z => z.ChildDateOfBirth.ToString("dd/MM/yyyy")))
         .ReverseMap();
 
-        CreateMap<Models.School, ApplicationSchool>()
+        CreateMap<Models.School, ApplicationResponse.ApplicationSchool>()
              .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.SchoolId))
              .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.EstablishmentName))
              .ReverseMap();
 
-        CreateMap<LocalAuthority, SchoolLocalAuthority>()
+        CreateMap<LocalAuthority, ApplicationResponse.ApplicationSchool.SchoolLocalAuthority>()
              .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.LocalAuthorityId))
              .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.LaName))
              .ReverseMap();

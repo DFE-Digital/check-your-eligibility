@@ -58,7 +58,17 @@ namespace CheckYourEligibility.WebApp
             return services;
         }
 
-        private static Azure.Security.KeyVault.Secrets.SecretClient GetAzureKeyVault()
+        public static IServiceCollection AddExternalServices(this IServiceCollection services, IConfiguration configuration)
+        {
+            var x = configuration["DWPBaseUrl"];
+            services.AddHttpClient<IDwpService, DwpService>(client =>
+            {
+                client.BaseAddress = new Uri(configuration["DWPBaseUrl"]);
+            });
+            return services;
+        }
+
+        private static SecretClient GetAzureKeyVault()
         {
             var keyVaultName = Environment.GetEnvironmentVariable("KEY_VAULT_NAME");
             var kvUri = $"https://{keyVaultName}.vault.azure.net";

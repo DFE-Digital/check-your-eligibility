@@ -6,11 +6,10 @@ namespace FeatureManagement.Domain.Validation
     using CheckYourEligibility.Domain.Requests;
     using CheckYourEligibility.Domain.Validation;
     using FluentValidation;
-    using System.Text.RegularExpressions;
 
-    public class ApplicationRequestFsmValidator : AbstractValidator<ApplicationRequest>
+    public class ApplicationRequestValidator : AbstractValidator<ApplicationRequest>
     {
-        public ApplicationRequestFsmValidator()
+        public ApplicationRequestValidator()
         {
 
             RuleFor(x => x.Data)

@@ -13,6 +13,7 @@ using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
+using Moq;
 using School = CheckYourEligibility.Data.Models.School;
 
 namespace CheckYourEligibility.ServiceUnitTests
@@ -25,6 +26,7 @@ namespace CheckYourEligibility.ServiceUnitTests
         private IMapper _mapper;
         private IConfiguration _configuration;
         private FsmCheckEligibilityService _sut;
+        private Mock<IDwpService> _moqDwpService;
 
         [SetUp]
         public void Setup()
@@ -45,9 +47,10 @@ namespace CheckYourEligibility.ServiceUnitTests
                 .AddInMemoryCollection(configForSmsApi)
                 .Build();
             var webJobsConnection = "DefaultEndpointsProtocol=https;AccountName=none;AccountKey=none;EndpointSuffix=core.windows.net";
+           
+            _moqDwpService = new Mock<IDwpService>(MockBehavior.Strict);
 
-
-            _sut = new FsmCheckEligibilityService(new NullLoggerFactory(), _fakeInMemoryDb, _mapper, new QueueServiceClient(webJobsConnection), _configuration);
+            _sut = new FsmCheckEligibilityService(new NullLoggerFactory(), _fakeInMemoryDb, _mapper, new QueueServiceClient(webJobsConnection), _configuration, _moqDwpService.Object);
 
         }
 
@@ -61,7 +64,7 @@ namespace CheckYourEligibility.ServiceUnitTests
         {
             // Arrange
             // Act
-            Action act = () => new FsmCheckEligibilityService(new NullLoggerFactory(), null, _mapper, null, null);
+            Action act = () => new FsmCheckEligibilityService(new NullLoggerFactory(), null, _mapper, null, null,null);
 
             // Assert
             act.Should().ThrowExactly<ArgumentNullException>().And.Message.Should().EndWithEquivalentOf("Value cannot be null. (Parameter 'dbContext')");
@@ -86,7 +89,7 @@ namespace CheckYourEligibility.ServiceUnitTests
             var response = _sut.PostApplication(request);
 
             // Assert
-            response.Result.Should().BeOfType<ApplicationSaveFsm>();
+            response.Result.Should().BeOfType<ApplicationSave>();
         }
 
         [Test]
@@ -328,7 +331,7 @@ namespace CheckYourEligibility.ServiceUnitTests
             var response = _sut.GetApplication(postApplicationResponse.Id);
 
             // Assert
-            response.Result.Should().BeOfType<ApplicationFsm>();
+            response.Result.Should().BeOfType<Domain.Responses.ApplicationResponse>();
         }
 
         [Test]
