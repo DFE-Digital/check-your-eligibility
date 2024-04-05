@@ -21,6 +21,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDatabase(builder.Configuration);
 builder.Services.AddAzureClients(builder.Configuration);
 builder.Services.AddServices();
+builder.Services.AddExternalServices(builder.Configuration);
 builder.Services.Configure<IISServerOptions>(options =>
 {
     options.MaxRequestBodySize = int.MaxValue;
