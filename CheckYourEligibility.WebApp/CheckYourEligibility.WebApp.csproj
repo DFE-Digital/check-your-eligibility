@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -6,6 +6,13 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <InvariantGlobalization>false</InvariantGlobalization>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Support\**" />
+    <Content Remove="Support\**" />
+    <EmbeddedResource Remove="Support\**" />
+    <None Remove="Support\**" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="AutoMapper" Version="13.0.1" />
@@ -28,10 +35,6 @@
     <ProjectReference Include="..\CheckYourEligibility.Data\CheckYourEligibility.Data.csproj" />
     <ProjectReference Include="..\CheckYourEligibility.Domain\CheckYourEligibility.Domain.csproj" />
     <ProjectReference Include="..\CheckYourEligibility.Services\CheckYourEligibility.Services.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Support\" />
   </ItemGroup>
 
 </Project>

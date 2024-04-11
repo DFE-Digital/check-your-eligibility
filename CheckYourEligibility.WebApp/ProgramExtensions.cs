@@ -59,11 +59,10 @@ namespace CheckYourEligibility.WebApp
         }
 
         public static IServiceCollection AddExternalServices(this IServiceCollection services, IConfiguration configuration)
-        {
-            var x = configuration["DWPBaseUrl"];
+        {           
             services.AddHttpClient<IDwpService, DwpService>(client =>
             {
-                client.BaseAddress = new Uri(configuration["DWPBaseUrl"]);
+                client.BaseAddress = new Uri(configuration["DWPBaseUrl"]);              
             });
             return services;
         }
