@@ -7,9 +7,12 @@ using CheckYourEligibility.Data.Mappings;
 using CheckYourEligibility.Data.Models;
 using CheckYourEligibility.Domain.Enums;
 using CheckYourEligibility.Domain.Requests;
+using CheckYourEligibility.Domain.Requests.DWP;
 using CheckYourEligibility.Domain.Responses;
 using CheckYourEligibility.Services;
 using FluentAssertions;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -155,6 +158,7 @@ namespace CheckYourEligibility.ServiceUnitTests
             item.NASSNumber = string.Empty;
             _fakeInMemoryDb.FsmCheckEligibilities.Add(item);
             _fakeInMemoryDb.SaveChangesAsync();
+            _moqDwpService.Setup(x => x.GetCitizen(It.IsAny<CitizenMatchRequest>())).ReturnsAsync("");
 
             // Act
             var response = _sut.ProcessCheck(item.EligibilityCheckID);
@@ -171,12 +175,51 @@ namespace CheckYourEligibility.ServiceUnitTests
             item.NASSNumber = string.Empty;
             _fakeInMemoryDb.FsmCheckEligibilities.Add(item);
             _fakeInMemoryDb.SaveChangesAsync();
+            _moqDwpService.Setup(x => x.GetCitizen(It.IsAny<CitizenMatchRequest>())).ReturnsAsync("");
 
             // Act
             var response = _sut.ProcessCheck(item.EligibilityCheckID);
 
             // Assert
             response.Result.Should().Be(CheckEligibilityStatus.parentNotFound);
+        }
+
+        [Test]
+        public void Given_validRequest_DWP_Process_Should_Return_updatedStatus_Eligible()
+        {
+            // Arrange
+            var item = _fixture.Create<EligibilityCheck>();
+            item.NASSNumber = string.Empty;
+            _fakeInMemoryDb.FsmCheckEligibilities.Add(item);
+            _fakeInMemoryDb.SaveChangesAsync();
+            _moqDwpService.Setup(x => x.GetCitizen(It.IsAny<CitizenMatchRequest>())).ReturnsAsync("123");
+            var result = new StatusCodeResult(StatusCodes.Status200OK);
+            _moqDwpService.Setup(x => x.CheckForBenefit(It.IsAny<string>())).ReturnsAsync(result);
+
+            // Act
+            var response = _sut.ProcessCheck(item.EligibilityCheckID);
+
+            // Assert
+            response.Result.Should().Be(CheckEligibilityStatus.eligible);
+        }
+
+        [Test]
+        public void Given_validRequest_DWP_Process_Should_Return_updatedStatus_notEligible()
+        {
+            // Arrange
+            var item = _fixture.Create<EligibilityCheck>();
+            item.NASSNumber = string.Empty;
+            _fakeInMemoryDb.FsmCheckEligibilities.Add(item);
+            _fakeInMemoryDb.SaveChangesAsync();
+            _moqDwpService.Setup(x => x.GetCitizen(It.IsAny<CitizenMatchRequest>())).ReturnsAsync("123");
+            var result = new StatusCodeResult(StatusCodes.Status400BadRequest);
+            _moqDwpService.Setup(x => x.CheckForBenefit(It.IsAny<string>())).ReturnsAsync(result);
+
+            // Act
+            var response = _sut.ProcessCheck(item.EligibilityCheckID);
+
+            // Assert
+            response.Result.Should().Be(CheckEligibilityStatus.notEligible);
         }
 
         [Test]
@@ -224,6 +267,8 @@ namespace CheckYourEligibility.ServiceUnitTests
             _fakeInMemoryDb.FsmCheckEligibilities.Add(item);
             _fakeInMemoryDb.FreeSchoolMealsHMRC.Add(new FreeSchoolMealsHMRC { FreeSchoolMealsHMRCID = item.NINumber, Surname = surnameInvalid, DateOfBirth = item.DateOfBirth });
             _fakeInMemoryDb.SaveChangesAsync();
+
+            _moqDwpService.Setup(x => x.GetCitizen(It.IsAny<CitizenMatchRequest>())).ReturnsAsync("");
 
             // Act
             var response = _sut.ProcessCheck(item.EligibilityCheckID);
