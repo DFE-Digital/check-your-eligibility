@@ -6,6 +6,7 @@ namespace CheckYourEligibility.Domain.Enums
     {
         queuedForProcessing,
         parentNotFound,
-        eligible
+        eligible,
+        notEligible
     }
 }

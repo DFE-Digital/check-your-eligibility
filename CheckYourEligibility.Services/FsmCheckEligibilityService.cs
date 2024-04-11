@@ -7,8 +7,10 @@ using CheckYourEligibility.Data.Models;
 using CheckYourEligibility.Domain.Constants;
 using CheckYourEligibility.Domain.Enums;
 using CheckYourEligibility.Domain.Requests;
+using CheckYourEligibility.Domain.Requests.DWP;
 using CheckYourEligibility.Domain.Responses;
 using CheckYourEligibility.Services.Interfaces;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -90,11 +92,14 @@ namespace CheckYourEligibility.Services
             var result = await _db.FsmCheckEligibilities.FirstOrDefaultAsync(x => x.EligibilityCheckID == guid);
             if (result != null)
             {
-
                 CheckEligibilityStatus checkResult = CheckEligibilityStatus.parentNotFound;
                 if (!result.NINumber.IsNullOrEmpty())
                 {
                     checkResult = await HMRC_Check(result);
+                    if (checkResult == CheckEligibilityStatus.parentNotFound)
+                    {
+                        checkResult = await DWP_Check(result);
+                    }
                 }
                 else if (!result.NASSNumber.IsNullOrEmpty())
                 {
@@ -228,6 +233,45 @@ namespace CheckYourEligibility.Services
             && x.DateOfBirth == data.DateOfBirth).Select(x => x.Surname);
 
             return CheckSurname(data.LastName, checkReults);
+        }
+
+        private async Task<CheckEligibilityStatus> DWP_Check(EligibilityCheck data)
+        {
+            var checkResult = CheckEligibilityStatus.parentNotFound;
+
+            var citizenRequest = new CitizenMatchRequest
+            {
+                Jsonapi = new CitizenMatchRequest.CitizenMatchRequest_Jsonapi { Version = "2.0" },
+                Data = new CitizenMatchRequest.CitizenMatchRequest_Data
+                {
+                    Type = "Match",
+                    Attributes = new CitizenMatchRequest.CitizenMatchRequest_Attributes
+                    {
+                        LastName = data.LastName,
+                        NinoFragment = data.NINumber,
+                        DateOfBirth = data.DateOfBirth.ToString("yyyy-MM-dd")
+                    }
+                }
+            };
+
+
+            //check citizen
+            var guid = await _dwpService.GetCitizen(citizenRequest);
+            if (!string.IsNullOrEmpty(guid))
+            {
+                //check for benefit
+                var result = await _dwpService.CheckForBenefit(guid);
+                if (result.StatusCode == StatusCodes.Status200OK)
+                {
+                    checkResult = CheckEligibilityStatus.eligible;
+                }
+                else
+                {
+                    checkResult = CheckEligibilityStatus.notEligible;
+                }
+            }
+
+            return checkResult;
         }
 
         private CheckEligibilityStatus CheckSurname(string lastNamePartial, IQueryable<string> validData)
