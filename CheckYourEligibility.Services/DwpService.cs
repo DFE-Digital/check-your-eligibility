@@ -1,10 +1,15 @@
 ﻿using CheckYourEligibility.Domain.Constants;
+using CheckYourEligibility.Domain.Enums;
 using CheckYourEligibility.Domain.Requests.DWP;
 using CheckYourEligibility.Domain.Responses.DWP;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using System;
+using System.Net;
 using System.Net.Http.Json;
 using System.Text;
 
@@ -32,10 +37,10 @@ namespace CheckYourEligibility.Services
 
         public async Task<StatusCodeResult> CheckForBenefit(string guid)
         {
+            var uri = $"{_moqControllerUrl}/v2/citizens/{guid}/claims?benefitType={MogDWPValues.validUniversalBenefitType}";
+
             try
             {
-                var uri = $"{_moqControllerUrl}/v2/citizens/{guid}/claims?benefitType={MogDWPValues.validUniversalBenefitType}";
-
                 _httpClient.DefaultRequestHeaders.Add("instigating-user-id", "abcdef1234577890abcdeffghi");
                 _httpClient.DefaultRequestHeaders.Add("access-level", "1");
                 _httpClient.DefaultRequestHeaders.Add("correlation-id", "4c6a63f1-1924-4911-b45c-95dbad8b6c37");
@@ -46,21 +51,33 @@ namespace CheckYourEligibility.Services
                 {
                     return new OkResult();
                 }
-                return new BadRequestResult();
-            }
-            catch (Exception)
-            {
+                else
+                {
 
-                throw;
+                    if (response.StatusCode == HttpStatusCode.NotFound)
+                    {
+                        return new NotFoundResult();
+                    }
+                    else
+                    {
+                        _logger.LogInformation($"Get CheckForBenefit failed. uri:-{_httpClient.BaseAddress}{uri} Response:- {response.StatusCode}");
+                        return new InternalServerErrorResult();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"CheckForBenefit failed. uri:-{_httpClient.BaseAddress}{uri}");
+                return new InternalServerErrorResult();
             }
         }
 
         public async Task<string?> GetCitizen(CitizenMatchRequest requestBody)
         {
+            var uri = $"{_moqControllerUrl}/v2/citizens";
+            var content = new StringContent(JsonConvert.SerializeObject(requestBody), Encoding.UTF8, "application/json");
             try
             {
-                var uri = $"{_moqControllerUrl}/v2/citizens";
-                var content = new StringContent(JsonConvert.SerializeObject(requestBody), Encoding.UTF8, "application/json");
                 content.Headers.Add("instigating-user-id", "abcdef1234577890abcdeffghi");
                 content.Headers.Add("policy-id", "fsm");
                 content.Headers.Add("correlation-id", "4c6a63f1-1924-4911-b45c-95dbad8b6c37");
@@ -74,17 +91,37 @@ namespace CheckYourEligibility.Services
                 }
                 else
                 {
-                    _logger.LogInformation($"Get Citizen failed. uri:-{_httpClient.BaseAddress}{uri} Response:- {response.StatusCode} content:-{JsonConvert.SerializeObject(requestBody)}");
+                   
+                    if (response.StatusCode == HttpStatusCode.NotFound)
+                    {
+                        return CheckEligibilityStatus.parentNotFound.ToString();
+                    }
+                    else
+                    {
+                        _logger.LogInformation($"Get Citizen failed. uri:-{_httpClient.BaseAddress}{uri} Response:- {response.StatusCode} content:-{JsonConvert.SerializeObject(requestBody)}");
+                        return CheckEligibilityStatus.queuedForProcessing.ToString();
+                    }
                 }
-                return null;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                throw;
+                _logger.LogError(ex,$"Get Citizen failed. uri:-{_httpClient.BaseAddress}{uri} content:-{JsonConvert.SerializeObject(requestBody)}");
+                return CheckEligibilityStatus.queuedForProcessing.ToString();
             }
             
         }
 
     }
+    public class InternalServerErrorResult : StatusCodeResult
+    {
+        private const int DefaultStatusCode = StatusCodes.Status500InternalServerError;
 
+        /// <summary>
+        /// Creates a new <see cref="BadRequestResult"/> instance.
+        /// </summary>
+        public InternalServerErrorResult()
+            : base(DefaultStatusCode)
+        {
+        }
+    }
 }
