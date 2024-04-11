@@ -16,6 +16,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace CheckYourEligibility.Services
 {
@@ -256,7 +257,13 @@ namespace CheckYourEligibility.Services
 
 
             //check citizen
+            // if a guid is not valid ie the request failed then the status is updated
             var guid = await _dwpService.GetCitizen(citizenRequest);
+            if (!Guid.TryParse(guid, out _))
+            {
+                return (CheckEligibilityStatus)Enum.Parse(typeof(CheckEligibilityStatus), guid);
+            }
+            
             if (!string.IsNullOrEmpty(guid))
             {
                 //check for benefit
@@ -265,9 +272,13 @@ namespace CheckYourEligibility.Services
                 {
                     checkResult = CheckEligibilityStatus.eligible;
                 }
-                else
+                else if(result.StatusCode == StatusCodes.Status404NotFound)
                 {
                     checkResult = CheckEligibilityStatus.notEligible;
+                }
+                else
+                {
+                    checkResult = CheckEligibilityStatus.queuedForProcessing;
                 }
             }
 
