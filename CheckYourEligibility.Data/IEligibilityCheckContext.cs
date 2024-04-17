@@ -10,6 +10,7 @@ public interface IEligibilityCheckContext
     DbSet<LocalAuthority> LocalAuthorities { get; set; }
     DbSet<Application> Applications { get; set; }
     DbSet<ApplicationStatus> ApplicationStatuses { get; set; }
+    DbSet<EligibilityCheckHash> EligibilityCheckHashes { get; set; }
 
     Task<int> SaveChangesAsync();
 }

@@ -18,6 +18,8 @@ public class EligibilityCheckContext : DbContext, IEligibilityCheckContext
     public virtual DbSet<LocalAuthority> LocalAuthorities { get; set; }
     public virtual DbSet<Application> Applications { get; set; }
     public virtual DbSet<CheckYourEligibility.Data.Models.ApplicationStatus> ApplicationStatuses { get; set; }
+    public virtual DbSet<EligibilityCheckHash> EligibilityCheckHashes { get; set; }
+
 
     public Task<int> SaveChangesAsync()
     {
@@ -46,7 +48,10 @@ public class EligibilityCheckContext : DbContext, IEligibilityCheckContext
             .IsUnique();
         modelBuilder.Entity<Application>()
            .HasIndex(b => b.Status, "idx_ApplicationStatus");
-           
+
+        modelBuilder.Entity<EligibilityCheckHash>()
+           .HasIndex(b => b.Hash, "idx_EligibilityCheckHash");
+
     }
 
 }
