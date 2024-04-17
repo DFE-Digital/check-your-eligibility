@@ -7,6 +7,7 @@ namespace CheckYourEligibility.Domain.Enums
         queuedForProcessing,
         parentNotFound,
         eligible,
-        notEligible
+        notEligible,
+        DwpError
     }
 }
