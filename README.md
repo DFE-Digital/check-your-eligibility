@@ -9,7 +9,11 @@ Add-Migration BaseMigration -project CheckYourEligibility.Data.Migrations
 Add-Migration establishmentImport -project CheckYourEligibility.Data.Migrations
 Add-Migration idxReference -project CheckYourEligibility.Data.Migrations
 Add-Migration applicationStatus -project CheckYourEligibility.Data.Migrations
+Add-Migration checkHash -project CheckYourEligibility.Data.Migrations
 
+
+--Run Latest migration
+update-database -project CheckYourEligibility.Data.Migrations
 
 --List Migrations
 Get-Migration
@@ -19,8 +23,6 @@ Remove-Migration -Force -project CheckYourEligibility.Data.Migrations
 --Run specific migration
 update-database -migration BaseMigration -project CheckYourEligibility.Data.Migrations
 
---Run Latest migration
-update-database -project CheckYourEligibility.Data.Migrations
 
 --MoqDWP
 DWP checking:-
