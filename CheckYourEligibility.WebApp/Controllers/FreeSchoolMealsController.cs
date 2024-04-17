@@ -47,7 +47,8 @@ namespace CheckYourEligibility.WebApp.Controllers
                 Data = new StatusValue() { Status = Domain.Enums.CheckEligibilityStatus.queuedForProcessing.ToString() },
                 Links = new CheckEligibilityResponseLinks {
                     Get_EligibilityCheck = $"{Domain.Constants.FSMLinks.GetLink}{id}",
-                    Put_EligibilityCheckProcess = $"{Domain.Constants.FSMLinks.ProcessLink}{id}"
+                    Put_EligibilityCheckProcess = $"{Domain.Constants.FSMLinks.ProcessLink}{id}",
+                    Get_EligibilityCheckStatus = $"{Domain.Constants.FSMLinks.ProcessLink}{id}/Status"
                 }
             }) { StatusCode = StatusCodes.Status202Accepted };
         }
