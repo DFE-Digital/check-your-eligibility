@@ -17,6 +17,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace CheckYourEligibility.Services
 {
@@ -100,6 +102,7 @@ namespace CheckYourEligibility.Services
                     if (checkResult == CheckEligibilityStatus.parentNotFound)
                     {
                         checkResult = await DWP_Check(result);
+
                     }
                 }
                 else if (!result.NASSNumber.IsNullOrEmpty())
@@ -109,6 +112,11 @@ namespace CheckYourEligibility.Services
                 result.Status = checkResult;
                 result.Updated = DateTime.UtcNow;
                 var updates = await _db.SaveChangesAsync();
+                if (checkResult != CheckEligibilityStatus.DwpError)
+                {
+                    var key = string.IsNullOrEmpty(result.NINumber)?result.NASSNumber:result.NINumber;
+                    HashCheckResult(result.DateOfBirth.ToString("d"), result.LastName, result.Type, key, checkResult);
+                }
                 return result.Status;
             }
             return null;
@@ -206,6 +214,28 @@ namespace CheckYourEligibility.Services
             return _mapper.Map<List<ApplicationResponse>>(results);
         }
 
+        private async void HashCheckResult(string dateOfBirth, string lastName, CheckEligibilityType type, string? key, CheckEligibilityStatus checkResult)
+        {
+            var hash = GetHash($"{lastName}{key}{dateOfBirth}{type}");
+            var item = new EligibilityCheckHash()
+            {
+                EligibilityCheckHashID = Guid.NewGuid().ToString(),
+                Hash = hash,
+                Type = type,
+                Outcome = checkResult,
+                TimeStamp = DateTime.UtcNow
+            };
+            await _db.EligibilityCheckHashes.AddAsync(item);
+            await _db.SaveChangesAsync();
+        }
+
+        private string GetHash(string input)
+        {
+            var inputBytes = Encoding.UTF8.GetBytes(input);
+            var inputHash = SHA256.HashData(inputBytes);
+            return Convert.ToHexString(inputHash);
+        }
+
         private string GetReference()
         {
             var unique = false;
@@ -278,7 +308,8 @@ namespace CheckYourEligibility.Services
                 }
                 else
                 {
-                    checkResult = CheckEligibilityStatus.queuedForProcessing;
+                    _logger.LogError($"DwpError unknown Response status code:-{result.StatusCode}.");
+                    checkResult = CheckEligibilityStatus.DwpError;
                 }
             }
 

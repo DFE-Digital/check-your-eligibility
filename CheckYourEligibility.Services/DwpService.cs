@@ -3,14 +3,11 @@ using CheckYourEligibility.Domain.Enums;
 using CheckYourEligibility.Domain.Requests.DWP;
 using CheckYourEligibility.Domain.Responses.DWP;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using System;
 using System.Net;
-using System.Net.Http.Json;
 using System.Text;
 
 namespace CheckYourEligibility.Services
@@ -99,14 +96,14 @@ namespace CheckYourEligibility.Services
                     else
                     {
                         _logger.LogInformation($"Get Citizen failed. uri:-{_httpClient.BaseAddress}{uri} Response:- {response.StatusCode} content:-{JsonConvert.SerializeObject(requestBody)}");
-                        return CheckEligibilityStatus.queuedForProcessing.ToString();
+                        return CheckEligibilityStatus.DwpError.ToString();
                     }
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex,$"Get Citizen failed. uri:-{_httpClient.BaseAddress}{uri} content:-{JsonConvert.SerializeObject(requestBody)}");
-                return CheckEligibilityStatus.queuedForProcessing.ToString();
+                return CheckEligibilityStatus.DwpError.ToString();
             }
             
         }
