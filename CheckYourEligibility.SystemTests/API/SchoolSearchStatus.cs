@@ -22,7 +22,7 @@ namespace CheckYourEligibility.SystemTests.API
             // Deserialize the response into a model
             var deserializedResponse = JsonConvert.DeserializeObject<SchoolSearchStatusModel>(jsonResponse);
 
-            Assert.IsNotEmpty(deserializedResponse.Data); // Check that we got some data back
+            Assert.That(deserializedResponse?.Data, !Is.Empty); // Check that we got some data back
 
 
             var firstSchool = deserializedResponse.Data[0];
@@ -42,7 +42,7 @@ namespace CheckYourEligibility.SystemTests.API
             Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.NotFound));
 
             var deserializedResponse = JsonConvert.DeserializeObject<SchoolSearchStatusModel>(jsonResponse);
-            Assert.IsEmpty(deserializedResponse.Data);
+            Assert.That(deserializedResponse?.Data, !Is.Empty);
 
         }
 
@@ -57,7 +57,7 @@ namespace CheckYourEligibility.SystemTests.API
             Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
 
             var deserializedResponse = JsonConvert.DeserializeObject<SchoolSearchStatusModel>(jsonResponse);
-            Assert.IsNotEmpty(deserializedResponse.Data);
+            Assert.That(deserializedResponse?.Data, !Is.Empty);
             Assert.That(deserializedResponse.Data.Count, Is.AtMost(20), "The data list should contain a maximum of 20 records.");
 
         }
@@ -85,7 +85,7 @@ namespace CheckYourEligibility.SystemTests.API
             Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
 
             var deserializedResponse = JsonConvert.DeserializeObject<SchoolSearchStatusModel>(jsonResponse);
-            Assert.IsNotEmpty(deserializedResponse.Data);
+            Assert.That(deserializedResponse?.Data, !Is.Empty);
             var firstSchool = deserializedResponse.Data[0];
             Assert.That(firstSchool.name, Is.EqualTo("Hinde House 2-16 Academy"));
             Assert.That(firstSchool.id, Is.EqualTo(139856));

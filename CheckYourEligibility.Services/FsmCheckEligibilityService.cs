@@ -61,6 +61,7 @@ namespace CheckYourEligibility.Services
             var item = _mapper.Map<EligibilityCheck>(data);
             try
             {
+                LogApiEvent(this.GetType().Name, data, item,"Posting check start.");
                 item.EligibilityCheckID = Guid.NewGuid().ToString();
                 item.Created = DateTime.UtcNow;
                 item.Updated = DateTime.UtcNow;
