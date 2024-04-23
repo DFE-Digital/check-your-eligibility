@@ -25,7 +25,7 @@ namespace CheckYourEligibility.Services
             return sf.GetMethod().Name;
         }
 
-        protected void LogApiEvent<t1, t2>(string className, t1 data, t2 response, [CallerMemberName] string name = "")
+        protected void LogApiEvent<t1, t2>(string className, t1 data, t2 response, [CallerMemberName] string name = "", string message = "")
         {
 
             var guid = Guid.NewGuid().ToString();
