@@ -5,6 +5,7 @@ using CheckYourEligibility.Services.Interfaces;
 using FeatureManagement.Domain.Validation;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
+using static System.Net.WebRequestMethods;
 using StatusResponse = CheckYourEligibility.Domain.Responses.StatusResponse;
 using StatusValue = CheckYourEligibility.Domain.Responses.StatusValue;
 
@@ -23,6 +24,12 @@ namespace CheckYourEligibility.WebApp.Controllers
             _service = Guard.Against.Null(service);
         }
 
+        /// <summary>
+        /// Posts a FSM Eligibility Check to the processing queue
+        /// </summary>
+        /// <param name="CheckEligibilityRequest"></param>
+        /// <remarks>If the check has already been submitted, then the stored Hash is returned</remarks>
+        /// <links cref="https://stackoverflow.com/questions/61896978/asp-net-core-swaggerresponseexample-not-outputting-specified-example"/>
         [ProducesResponseType(typeof(CheckEligibilityResponse), (int)HttpStatusCode.Accepted)]
         [ProducesResponseType((int)HttpStatusCode.BadRequest)]
         [HttpPost]
@@ -48,7 +55,7 @@ namespace CheckYourEligibility.WebApp.Controllers
                 Links = new CheckEligibilityResponseLinks {
                     Get_EligibilityCheck = $"{Domain.Constants.FSMLinks.GetLink}{id}",
                     Put_EligibilityCheckProcess = $"{Domain.Constants.FSMLinks.ProcessLink}{id}",
-                    Get_EligibilityCheckStatus = $"{Domain.Constants.FSMLinks.ProcessLink}{id}/Status"
+                    Get_EligibilityCheckStatus = $"{Domain.Constants.FSMLinks.GetLink}{id}/Status"
                 }
             }) { StatusCode = StatusCodes.Status202Accepted };
         }
