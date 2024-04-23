@@ -10,19 +10,24 @@ using CheckYourEligibility.Domain.Requests;
 using CheckYourEligibility.Domain.Requests.DWP;
 using CheckYourEligibility.Domain.Responses;
 using CheckYourEligibility.Services.Interfaces;
+using Microsoft.ApplicationInsights.Channel;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Abstractions;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 
 namespace CheckYourEligibility.Services
 {
-    public class FsmCheckEligibilityService : IFsmCheckEligibility
+    public class FsmCheckEligibilityService : BaseService, IFsmCheckEligibility
     {
         const int referenceMaxValue = 99999999;
         private  readonly ILogger _logger;
@@ -34,7 +39,7 @@ namespace CheckYourEligibility.Services
         private readonly IDwpService _dwpService;
 
         public FsmCheckEligibilityService(ILoggerFactory logger, IEligibilityCheckContext dbContext, IMapper mapper, QueueServiceClient queueClientService,
-            IConfiguration configuration, IDwpService dwpService)
+            IConfiguration configuration, IDwpService dwpService) : base()
         {
             _logger = logger.CreateLogger("ServiceFsmCheckEligibility");
             _db = Guard.Against.Null(dbContext);
@@ -53,15 +58,15 @@ namespace CheckYourEligibility.Services
 
         public async Task<string> PostCheck(CheckEligibilityRequestDataFsm data)
         {
+            var item = _mapper.Map<EligibilityCheck>(data);
             try
             {
-                var item = _mapper.Map<EligibilityCheck>(data);
                 item.EligibilityCheckID = Guid.NewGuid().ToString();
                 item.Created = DateTime.UtcNow;
                 item.Updated = DateTime.UtcNow;
 
                 item.Status = CheckEligibilityStatus.queuedForProcessing;
-                item.Type = CheckEligibilityType.FreeSchoolMeals;
+                item.Type = CheckEligibilityType.FreeSchoolMeals; 
 
                 await _db.FsmCheckEligibilities.AddAsync(item);
                 await _db.SaveChangesAsync();
@@ -70,10 +75,12 @@ namespace CheckYourEligibility.Services
                     await _queueClient.SendMessageAsync(
                         JsonConvert.SerializeObject(new QueueMessageCheck() { Type = item.Type.ToString(), Guid = item.EligibilityCheckID, Url =$"{FSMLinks.ProcessLink}{item.EligibilityCheckID}" }));
                 }
+                
                 return item.EligibilityCheckID;
             }
             catch (Exception ex)
             {
+                LogApiEvent(this.GetType().Name, data, item);
                 _logger.LogError(ex, "Db post");
                 throw;
             }
@@ -114,10 +121,14 @@ namespace CheckYourEligibility.Services
                 var updates = await _db.SaveChangesAsync();
                 if (checkResult != CheckEligibilityStatus.DwpError)
                 {
-                    var key = string.IsNullOrEmpty(result.NINumber)?result.NASSNumber:result.NINumber;
+                    var key = string.IsNullOrEmpty(result.NINumber) ? result.NASSNumber : result.NINumber;
                     HashCheckResult(result.DateOfBirth.ToString("d"), result.LastName, result.Type, key, checkResult);
                 }
                 return result.Status;
+            }
+            else
+            {
+                LogApiEvent(this.GetType().Name, guid, "failed to find checkItem.");
             }
             return null;
         }
