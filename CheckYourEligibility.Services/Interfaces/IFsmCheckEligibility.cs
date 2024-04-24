@@ -13,5 +13,6 @@ namespace CheckYourEligibility.Services.Interfaces
         Task<ApplicationSave> PostApplication(ApplicationRequestData data);
         Task<ApplicationResponse?> GetApplication(string guid);
         Task<IEnumerable<ApplicationResponse>> GetApplications(ApplicationRequestSearchData model);
+        Task<ApplicationStatusUpdateResponse> UpdateApplicationStatus(string guid,ApplicationStatusData data);
     }
 }
