@@ -61,7 +61,6 @@ namespace CheckYourEligibility.Services
             var item = _mapper.Map<EligibilityCheck>(data);
             try
             {
-                LogApiEvent(this.GetType().Name, data, item,"Posting check start.");
                 item.EligibilityCheckID = Guid.NewGuid().ToString();
                 item.Created = DateTime.UtcNow;
                 item.Updated = DateTime.UtcNow;
@@ -159,22 +158,16 @@ namespace CheckYourEligibility.Services
 
                 var school = _db.Schools
                     .Include(x => x.LocalAuthority)
-                    .First(x=>x.SchoolId == data.School);
+                    .First(x => x.SchoolId == data.School);
                 item.LocalAuthorityId = school.LocalAuthorityId;
 
                 await _db.Applications.AddAsync(item);
-
-                var status = new Data.Models.ApplicationStatus() {
-                    ApplicationStatusID = Guid.NewGuid().ToString(),
-                    ApplicationID = item.ApplicationID,
-                    Type = Domain.Enums.ApplicationStatus.Open,
-                    TimeStamp = DateTime.UtcNow };
-                await _db.ApplicationStatuses.AddAsync(status);
+                await AddStatusHistory(item, Domain.Enums.ApplicationStatus.Open);
 
                 await _db.SaveChangesAsync();
 
                 var saved = _db.Applications
-                    .First(x=>x.ApplicationID == item.ApplicationID);
+                    .First(x => x.ApplicationID == item.ApplicationID);
 
                 var returnItem = _mapper.Map<ApplicationSave>(item);
 
@@ -185,6 +178,18 @@ namespace CheckYourEligibility.Services
                 _logger.LogError(ex, "Db post application");
                 throw;
             }
+        }
+
+        private async Task AddStatusHistory(Application application, Domain.Enums.ApplicationStatus applicationStatus)
+        {
+            var status = new Data.Models.ApplicationStatus()
+            {
+                ApplicationStatusID = Guid.NewGuid().ToString(),
+                ApplicationID = application.ApplicationID,
+                Type = applicationStatus,
+                TimeStamp = DateTime.UtcNow
+            };
+            await _db.ApplicationStatuses.AddAsync(status);
         }
 
         public async Task<ApplicationResponse?> GetApplication(string guid)
@@ -225,6 +230,24 @@ namespace CheckYourEligibility.Services
 
             return _mapper.Map<List<ApplicationResponse>>(results);
         }
+
+        public async Task<ApplicationStatusUpdateResponse> UpdateApplicationStatus(string guid, ApplicationStatusData data)
+        {
+            var result = await _db.Applications.FirstOrDefaultAsync(x => x.ApplicationID == guid);
+            if (result != null)
+            {
+                result.Status = data.Status;
+                await AddStatusHistory(result, result.Status.Value);
+
+                result.Updated = DateTime.UtcNow;
+                var updates = await _db.SaveChangesAsync();
+                return new ApplicationStatusUpdateResponse { Data = new ApplicationStatusDataResponse { Status = result.Status.Value.ToString()} };
+            }
+
+            return null;
+        }
+
+        #region Private
 
         private async void HashCheckResult(string dateOfBirth, string lastName, CheckEligibilityType type, string? key, CheckEligibilityStatus checkResult)
         {
@@ -338,5 +361,6 @@ namespace CheckYourEligibility.Services
             return CheckEligibilityStatus.parentNotFound;
         }
 
+        #endregion
     }
 }
