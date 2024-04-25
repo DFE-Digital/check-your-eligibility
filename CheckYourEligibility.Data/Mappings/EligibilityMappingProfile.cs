@@ -50,6 +50,7 @@ public class FsmMappingProfile : Profile
         .ForMember(dest => dest.ParentNationalAsylumSeekerServiceNumber, opt => opt.MapFrom(src => src.ParentNationalAsylumSeekerServiceNumber))
         .ForMember(x => x.ParentDateOfBirth, y => y.MapFrom(z => z.ParentDateOfBirth.ToString("dd/MM/yyyy")))
         .ForMember(x => x.ChildDateOfBirth, y => y.MapFrom(z => z.ChildDateOfBirth.ToString("dd/MM/yyyy")))
+        .ForMember(x => x.Status, y => y.MapFrom(z => z.Status.ToString()))
         .ReverseMap();
 
         CreateMap<Models.School, ApplicationResponse.ApplicationSchool>()

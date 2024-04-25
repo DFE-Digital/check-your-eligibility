@@ -385,5 +385,42 @@ namespace CheckYourEligibility.APIUnitTests
             // Assert
             response.Result.Should().BeEquivalentTo(expectedResult);
         }
+
+        [Test]
+        public void Given_InValid_guid_ApplicationStatusUpdate_Should_Return_StatusNotFound()
+        {
+            // Arrange
+            var guid = _fixture.Create<Guid>().ToString();
+            var request = _fixture.Create<ApplicationStatusUpdateRequest>();
+            _mockService.Setup(cs => cs.UpdateApplicationStatus(guid, request.Data)).Returns(Task.FromResult<ApplicationStatusUpdateResponse?>(null));
+            var expectedResult = new NotFoundResult();
+
+            // Act
+            var response = _sut.ApplicationStatusUpdate(guid,request);
+
+            // Assert
+            response.Result.Should().BeEquivalentTo(expectedResult);
+        }
+
+        [Test]
+        public void Given_Valid_guid_ApplicationStatusUpdate_Should_Return_StatusOk()
+        {
+            // Arrange
+            var guid = _fixture.Create<Guid>().ToString();
+            var request = _fixture.Create<ApplicationStatusUpdateRequest>();
+            var expectedResponse = _fixture.Create<ApplicationStatusUpdateResponse>();
+            _mockService.Setup(cs => cs.UpdateApplicationStatus(guid,request.Data)).ReturnsAsync(expectedResponse);
+            var expectedResult = new ObjectResult(new ApplicationStatusUpdateResponse
+            {
+                Data = expectedResponse.Data
+            })
+            { StatusCode = StatusCodes.Status200OK };
+
+            // Act
+            var response = _sut.ApplicationStatusUpdate(guid, request);
+
+            // Assert
+            response.Result.Should().BeEquivalentTo(expectedResult);
+        }
     }
 }
