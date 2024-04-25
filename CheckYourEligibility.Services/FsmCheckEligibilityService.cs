@@ -252,7 +252,6 @@ namespace CheckYourEligibility.Services
 
         #region Private
 
-        private async void HashCheckResult(string dateOfBirth, string lastName, CheckEligibilityType type, string? key, CheckEligibilityStatus checkResult)
         private async void HashCheckResult(string dateOfBirth, string lastName, CheckEligibilityType type, string? key, CheckEligibilityStatus checkResult, ProcessEligibilityCheckSource source)
         {
             var hash = GetHash($"{lastName}{key}{dateOfBirth}{type}");
