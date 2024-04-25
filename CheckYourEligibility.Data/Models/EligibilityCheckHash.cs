@@ -11,6 +11,7 @@ namespace CheckYourEligibility.Data.Models
     {
         public string EligibilityCheckHashID { get; set; }
         [Column(TypeName = "varchar(5000)")]
+
         public string Hash { get; set; }
         
         [Column(TypeName = "varchar(100)")]
@@ -18,6 +19,10 @@ namespace CheckYourEligibility.Data.Models
 
         public DateTime TimeStamp { get; set; }
         [Column(TypeName = "varchar(100)")]
+
         public CheckEligibilityStatus Outcome { get; set; }
+
+        [Column(TypeName = "varchar(100)")]
+        public ProcessEligibilityCheckSource Source { get; set; }
     }
 }

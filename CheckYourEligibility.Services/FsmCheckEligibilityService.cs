@@ -103,6 +103,7 @@ namespace CheckYourEligibility.Services
             var result = await _db.FsmCheckEligibilities.FirstOrDefaultAsync(x => x.EligibilityCheckID == guid);
             if (result != null)
             {
+                var source = ProcessEligibilityCheckSource.HMRC;
                 CheckEligibilityStatus checkResult = CheckEligibilityStatus.parentNotFound;
                 if (!result.NINumber.IsNullOrEmpty())
                 {
@@ -110,21 +111,23 @@ namespace CheckYourEligibility.Services
                     if (checkResult == CheckEligibilityStatus.parentNotFound)
                     {
                         checkResult = await DWP_Check(result);
-
+                        source = ProcessEligibilityCheckSource.DWP;
                     }
                 }
                 else if (!result.NASSNumber.IsNullOrEmpty())
                 {
                     checkResult = await HO_Check(result);
+                    source = ProcessEligibilityCheckSource.HO;
                 }
                 result.Status = checkResult;
                 result.Updated = DateTime.UtcNow;
-                var updates = await _db.SaveChangesAsync();
+               
                 if (checkResult != CheckEligibilityStatus.DwpError)
                 {
                     var key = string.IsNullOrEmpty(result.NINumber) ? result.NASSNumber : result.NINumber;
-                    HashCheckResult(result.DateOfBirth.ToString("d"), result.LastName, result.Type, key, checkResult);
+                    HashCheckResult(result.DateOfBirth.ToString("d"), result.LastName, result.Type, key, checkResult,source);
                 }
+                var updates = await _db.SaveChangesAsync();
                 return result.Status;
             }
             else
@@ -226,7 +229,7 @@ namespace CheckYourEligibility.Services
             return _mapper.Map<List<ApplicationResponse>>(results);
         }
 
-        private async void HashCheckResult(string dateOfBirth, string lastName, CheckEligibilityType type, string? key, CheckEligibilityStatus checkResult)
+        private async void HashCheckResult(string dateOfBirth, string lastName, CheckEligibilityType type, string? key, CheckEligibilityStatus checkResult, ProcessEligibilityCheckSource source)
         {
             var hash = GetHash($"{lastName}{key}{dateOfBirth}{type}");
             var item = new EligibilityCheckHash()
@@ -235,10 +238,10 @@ namespace CheckYourEligibility.Services
                 Hash = hash,
                 Type = type,
                 Outcome = checkResult,
-                TimeStamp = DateTime.UtcNow
+                TimeStamp = DateTime.UtcNow,
+                Source = source
             };
             await _db.EligibilityCheckHashes.AddAsync(item);
-            await _db.SaveChangesAsync();
         }
 
         private string GetHash(string input)
