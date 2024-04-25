@@ -417,6 +417,5 @@ namespace CheckYourEligibility.ServiceUnitTests
             // Assert
             response.Result.Should().NotBeEmpty();
         }
-
     }
 }
