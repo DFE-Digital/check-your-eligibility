@@ -2,9 +2,10 @@
 
 namespace CheckYourEligibility.Domain.Enums
 {
-    public enum ApplicationStatus
+    public enum ProcessEligibilityCheckSource
     {
-        Open,
-        receiving
+        HMRC,
+        DWP,
+        HO
     }
 }
