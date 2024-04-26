@@ -13,7 +13,7 @@ namespace CheckYourEligibility.SystemTests.API
 {
     public static class ApiHelper
     {
-        public static Uri BaseUri => new Uri("http://ecs-dev-as.azurewebsites.net");
+        public static Uri BaseUri => new Uri("http://ecs-test-as.azurewebsites.net");
 
         public static async Task<HttpResponseMessage> PostRequest(string endpoint, object requestBody)
         {
@@ -83,7 +83,7 @@ namespace CheckYourEligibility.SystemTests.API
             var response = await GetRequest(endpoint);
             var jsonResponse = await response.Content.ReadAsStringAsync();
             var deserializedResponse = JsonConvert.DeserializeObject<CheckEligibilityResponseModel>(jsonResponse);
-            var checkEligibilityModel = deserializedResponse?.Data?.CheckEligibility;
+           // var checkEligibilityModel = deserializedResponse?.data;
             Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
             return deserializedResponse;
         }

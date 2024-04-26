@@ -1,18 +1,11 @@
-﻿using System;
-using System.Net;
-using System.Net.Http;
-using System.Text;
-using System.Threading.Tasks;
-using Newtonsoft.Json;
-using NUnit.Framework;
-using System.Net;
-using CheckYourEligibility.SystemTests.Utilities.Models;
-using Microsoft.Playwright;
+﻿
+using CheckYourEligibility.Domain.Requests;
+
 
 namespace CheckYourEligibility.SystemTests.Utilities
 {
-    public static class CommonMethods 
-    {         
+    public static class CommonMethods
+    {
 
         public static string ExtractStringAfterLastSlash(string url)
         {
@@ -29,5 +22,33 @@ namespace CheckYourEligibility.SystemTests.Utilities
             // Return an empty string or handle the case where no '/' is found
             return string.Empty;
         }
+
+
+        public static ApplicationRequest CreateAndProcessApplicationRequest()
+        {
+            // Create an instance of ApplicationRequestData
+            ApplicationRequestData requestData = new ApplicationRequestData()
+            {
+                School = 139856,
+                ParentFirstName = "John",
+                ParentLastName = "Smith",
+                ParentDateOfBirth = "01/01/1980", // Example Date of Birth in string format (YYYY-MM-DD)
+                ChildFirstName = "Jane",
+                ChildLastName = "Smith",
+                ChildDateOfBirth = "01/01/2010",
+                ParentNationalInsuranceNumber = "AB123456C",
+            };
+
+            // Create an instance of ApplicationRequest and assign the requestData to its Data property
+            ApplicationRequest applicationRequest = new ApplicationRequest()
+            {
+                Data = requestData
+            };
+
+            // Return the populated ApplicationRequest object
+            return applicationRequest;
+        }
+
     }
+
 }

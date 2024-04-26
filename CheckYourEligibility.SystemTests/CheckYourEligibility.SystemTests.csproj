@@ -11,10 +11,9 @@
 
   <ItemGroup>
     <PackageReference Include="coverlet.collector" Version="6.0.0" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.9.0" />
     <PackageReference Include="Microsoft.Playwright.NUnit" Version="1.27.1" />
-    <PackageReference Include="NUnit" Version="3.14.0" />
-    <PackageReference Include="NUnit.Analyzers" Version="3.9.0" />
+    <PackageReference Include="NUnit" Version="4.1.0" />
     <PackageReference Include="NUnit3TestAdapter" Version="4.5.0" />
   </ItemGroup>
 
@@ -24,5 +23,19 @@
     <Using Include="System.Text.RegularExpressions" />
     <Using Include="System.Threading.Tasks" />
   </ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\CheckYourEligibility.Data\CheckYourEligibility.Data.csproj" />
+		<ProjectReference Include="..\CheckYourEligibility.Services\CheckYourEligibility.Services.csproj" />
+		<ProjectReference Include="..\CheckYourEligibility.TestBase\CheckYourEligibility.TestBase.csproj" />
+		<ProjectReference Include="..\CheckYourEligibility.Domain\CheckYourEligibility.Domain.csproj" />
+		<ProjectReference Include="..\CheckYourEligibility.TestBase\CheckYourEligibility.TestBase.csproj" />
+		<ProjectReference Include="..\CheckYourEligibility.WebApp\CheckYourEligibility.WebApp.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="Utilities\Models\Requests\" />
+	</ItemGroup>
+
 
 </Project>

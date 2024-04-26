@@ -3,13 +3,12 @@ namespace CheckYourEligibility.SystemTests.API
 {
     public class GET_FreeSchoolMealsGUIDStatus : PlaywrightTest
     {
-        private dynamic _requestBody;
 
         [Test]
-        [Ignore("Targeting live environment")]
+        // [Ignore("Targeting live environment")]
         public async Task GetRequestWithGUIDToCheckStatus()
         {
-            _requestBody = new
+            dynamic _requestBody = new
             {
                 data = new
                 {
@@ -27,10 +26,10 @@ namespace CheckYourEligibility.SystemTests.API
             Console.WriteLine($"Created GUID: {createdGuid}");
 
             // Step 2: Execute a GET request using the created GUID
-            var jsonResponse = await ApiHelper.PerformGetRequestAndStoreGUID(createdGuid);
+            var response = await ApiHelper.PerformGetRequestAndStoreGUID(createdGuid);
 
             // Access the CheckEligibilityModel from the deserialized response
-            var checkEligibilityModel = jsonResponse?.Data?.CheckEligibility;
+            var checkEligibilityModel = response.data;
 
             // Assertions to check if the response contains the same data as the request body
             Assert.That(checkEligibilityModel.nationalInsuranceNumber, Is.EqualTo(_requestBody.data.nationalInsuranceNumber));
@@ -40,7 +39,7 @@ namespace CheckYourEligibility.SystemTests.API
         }
 
         [Test]
-        [Ignore("Targeting live environment")]
+       // [Ignore("Targeting live environment")]
         public async Task GetRequest_WithInvalidGUID()
         {
             var jsonResponse = await ApiHelper.GetRequest("/FreeSchoolMeals/7df4a175-c153-43ac-87e9-4a48e4517");
