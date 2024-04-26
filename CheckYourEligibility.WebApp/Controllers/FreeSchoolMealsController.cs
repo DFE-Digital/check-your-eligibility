@@ -1,11 +1,11 @@
 ﻿using Ardalis.GuardClauses;
+using CheckYourEligibility.Domain.Exceptions;
 using CheckYourEligibility.Domain.Requests;
 using CheckYourEligibility.Domain.Responses;
 using CheckYourEligibility.Services.Interfaces;
 using FeatureManagement.Domain.Validation;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
-using static System.Net.WebRequestMethods;
 using StatusResponse = CheckYourEligibility.Domain.Responses.StatusResponse;
 using StatusValue = CheckYourEligibility.Domain.Responses.StatusValue;
 
@@ -85,15 +85,23 @@ namespace CheckYourEligibility.WebApp.Controllers
         /// <returns></returns>
         [ProducesResponseType(typeof(StatusResponse), (int)HttpStatusCode.OK)]
         [ProducesResponseType((int)HttpStatusCode.NotFound)]
+        [ProducesResponseType((int)HttpStatusCode.BadRequest)]
         [HttpPut("ProcessEligibilityCheck/{guid}")]
         public async Task<ActionResult> Process(string guid)
         {
-            var response = await _service.ProcessCheck(guid);
-            if (response == null)
+            try
             {
-                return NotFound(guid);
+                var response = await _service.ProcessCheck(guid);
+                if (response == null)
+                {
+                    return NotFound(guid);
+                }
+                return new ObjectResult(new StatusResponse() { Data = new StatusValue() { Status = response.Value.ToString() } }) { StatusCode = StatusCodes.Status200OK };
             }
-            return new ObjectResult(new StatusResponse() { Data = new StatusValue() { Status = response.Value.ToString() } }) { StatusCode = StatusCodes.Status200OK };
+            catch (ProcessCheckException)
+            {
+                return BadRequest(guid);
+            }
         }
 
         /// <summary>

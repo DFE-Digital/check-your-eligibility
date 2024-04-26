@@ -6,17 +6,21 @@ using Azure.Storage.Queues;
 using CheckYourEligibility.Data.Mappings;
 using CheckYourEligibility.Data.Models;
 using CheckYourEligibility.Domain.Enums;
+using CheckYourEligibility.Domain.Exceptions;
 using CheckYourEligibility.Domain.Requests;
 using CheckYourEligibility.Domain.Requests.DWP;
 using CheckYourEligibility.Domain.Responses;
 using CheckYourEligibility.Services;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
+using System.Globalization;
 using School = CheckYourEligibility.Data.Models.School;
 
 namespace CheckYourEligibility.ServiceUnitTests
@@ -45,6 +49,8 @@ namespace CheckYourEligibility.ServiceUnitTests
             var configForSmsApi = new Dictionary<string, string>
             {
                 {"QueueFsmCheckStandard", "notSet"},
+                {"HashCheckDays", "7"},
+
             };
             _configuration = new ConfigurationBuilder()
                 .AddInMemoryCollection(configForSmsApi)
@@ -93,6 +99,61 @@ namespace CheckYourEligibility.ServiceUnitTests
 
             // Assert
             response.Result.Should().BeOfType<ApplicationSave>();
+        }
+
+        [Test]
+        public async Task Given_PostCheck_Status_should_Come_From_Hash()
+        {
+            // Arrange
+            var request = _fixture.Create<CheckEligibilityRequestDataFsm>();
+            request.DateOfBirth = "01/02/1970";
+            request.NationalAsylumSeekerServiceNumber = null;
+
+            //Set UpValid hmrc check
+            _fakeInMemoryDb.FreeSchoolMealsHMRC.Add(new FreeSchoolMealsHMRC
+            {
+                FreeSchoolMealsHMRCID = request.NationalInsuranceNumber,
+                Surname = request.LastName,
+                DateOfBirth = DateTime.Parse(request.DateOfBirth)
+            });
+            _fakeInMemoryDb.SaveChangesAsync();
+
+            // Act
+            var response = await _sut.PostCheck(request);
+            await _sut.ProcessCheck(response);
+            var item = _fakeInMemoryDb.FsmCheckEligibilities.FirstOrDefault(x => x.EligibilityCheckID == response);
+            var hash = _sut.GetHash(item);
+
+            var hashItem = await _fakeInMemoryDb.EligibilityCheckHashes.FirstAsync(x => x.Hash == hash);
+            var responseNewPostCheck = await _sut.PostCheck(request);
+            
+            // Assert
+            _fakeInMemoryDb.EligibilityCheckHashes.Single(x => x.Hash == hash).Should().NotBeNull();
+            _fakeInMemoryDb.FsmCheckEligibilities.FirstOrDefault(x => x.EligibilityCheckID == responseNewPostCheck).Status.Should().Be(hashItem.Outcome);
+        }
+
+
+        [Test]
+        public void Given_validRequest_PostFeature_Should_Return_id_HashShouldBeCreated()
+        {
+            // Arrange
+            var request = _fixture.Create<CheckEligibilityRequestDataFsm>();
+            request.DateOfBirth = "01/02/1970";
+            request.NationalAsylumSeekerServiceNumber = null;
+            var key = string.IsNullOrEmpty(request.NationalInsuranceNumber) ? request.NationalAsylumSeekerServiceNumber : request.NationalInsuranceNumber;
+            //Set UpValid hmrc check
+            _fakeInMemoryDb.FreeSchoolMealsHMRC.Add(new FreeSchoolMealsHMRC { FreeSchoolMealsHMRCID = request.NationalInsuranceNumber,
+                Surname = request.LastName,
+                DateOfBirth = DateTime.Parse(request.DateOfBirth) });
+            _fakeInMemoryDb.SaveChangesAsync();
+
+            // Act
+            var response = _sut.PostCheck(request);
+            var process = _sut.ProcessCheck(response.Result);
+            var item = _fakeInMemoryDb.FsmCheckEligibilities.FirstOrDefault(x=>x.EligibilityCheckID == response.Result);
+            var hash = _sut.GetHash(item);
+            // Assert
+            _fakeInMemoryDb.EligibilityCheckHashes.First(x=>x.Hash == hash).Should().NotBeNull();
         }
 
         [Test]
@@ -149,6 +210,22 @@ namespace CheckYourEligibility.ServiceUnitTests
             // Assert
             response.Result.Should().BeNull();
         }
+        [Test]
+        public void Given_validRequest_StatusNot_queuedForProcessing_Process_Should_throwProcessException()
+        {
+            // Arrange
+            var item = _fixture.Create<EligibilityCheck>();
+            item.Status = CheckEligibilityStatus.eligible;
+            item.NASSNumber = string.Empty;
+            _fakeInMemoryDb.FsmCheckEligibilities.Add(item);
+            _fakeInMemoryDb.SaveChangesAsync();
+
+            // Act
+            Func<Task> act = async () => await _sut.ProcessCheck(item.EligibilityCheckID);
+
+            // Assert
+            act.Should().ThrowExactlyAsync<ProcessCheckException>();
+        }
 
         [Test]
         public void Given_validRequest_Process_Should_Return_updatedStatus_parentNotFound()
@@ -172,6 +249,7 @@ namespace CheckYourEligibility.ServiceUnitTests
         {
             // Arrange
             var item = _fixture.Create<EligibilityCheck>();
+            item.Status = CheckEligibilityStatus.queuedForProcessing;
             item.NASSNumber = string.Empty;
             _fakeInMemoryDb.FsmCheckEligibilities.Add(item);
             _fakeInMemoryDb.SaveChangesAsync();
@@ -189,6 +267,7 @@ namespace CheckYourEligibility.ServiceUnitTests
         {
             // Arrange
             var item = _fixture.Create<EligibilityCheck>();
+            item.Status = CheckEligibilityStatus.queuedForProcessing;
             item.NASSNumber = string.Empty;
             _fakeInMemoryDb.FsmCheckEligibilities.Add(item);
             _fakeInMemoryDb.SaveChangesAsync();
@@ -208,6 +287,7 @@ namespace CheckYourEligibility.ServiceUnitTests
         {
             // Arrange
             var item = _fixture.Create<EligibilityCheck>();
+            item.Status = CheckEligibilityStatus.queuedForProcessing;
             item.NASSNumber = string.Empty;
             _fakeInMemoryDb.FsmCheckEligibilities.Add(item);
             _fakeInMemoryDb.SaveChangesAsync();
@@ -227,6 +307,7 @@ namespace CheckYourEligibility.ServiceUnitTests
         {
             // Arrange
             var item = _fixture.Create<EligibilityCheck>();
+            item.Status = CheckEligibilityStatus.queuedForProcessing;
             item.NINumber = string.Empty;
             _fakeInMemoryDb.FsmCheckEligibilities.Add(item);
             _fakeInMemoryDb.SaveChangesAsync();
@@ -243,6 +324,7 @@ namespace CheckYourEligibility.ServiceUnitTests
         {
             // Arrange
             var item = _fixture.Create<EligibilityCheck>();
+            item.Status = CheckEligibilityStatus.queuedForProcessing;
             item.NASSNumber = string.Empty;
             _fakeInMemoryDb.FsmCheckEligibilities.Add(item);
             _fakeInMemoryDb.FreeSchoolMealsHMRC.Add(new FreeSchoolMealsHMRC { FreeSchoolMealsHMRCID = item.NINumber, Surname = item.LastName, DateOfBirth = item.DateOfBirth });
@@ -260,9 +342,11 @@ namespace CheckYourEligibility.ServiceUnitTests
         {
             // Arrange
             var item = _fixture.Create<EligibilityCheck>();
+            item.Status = CheckEligibilityStatus.queuedForProcessing;
             var surnamevalid = "simpson";
             item.LastName = surnamevalid;
             var surnameInvalid = "x" + surnamevalid;
+
             item.NASSNumber = string.Empty;
             _fakeInMemoryDb.FsmCheckEligibilities.Add(item);
             _fakeInMemoryDb.FreeSchoolMealsHMRC.Add(new FreeSchoolMealsHMRC { FreeSchoolMealsHMRCID = item.NINumber, Surname = surnameInvalid, DateOfBirth = item.DateOfBirth });
@@ -282,6 +366,7 @@ namespace CheckYourEligibility.ServiceUnitTests
         {
             // Arrange
             var item = _fixture.Create<EligibilityCheck>();
+            item.Status = CheckEligibilityStatus.queuedForProcessing;
             var surnamevalid = "simpson";
             item.LastName = surnamevalid;
             var surnameInvalid = surnamevalid + "x";
@@ -302,6 +387,7 @@ namespace CheckYourEligibility.ServiceUnitTests
         {
             // Arrange
             var item = _fixture.Create<EligibilityCheck>();
+            item.Status = CheckEligibilityStatus.queuedForProcessing;
             item.NINumber = string.Empty;
             _fakeInMemoryDb.FsmCheckEligibilities.Add(item);
             _fakeInMemoryDb.FreeSchoolMealsHO.Add(new FreeSchoolMealsHO { FreeSchoolMealsHOID = "123", NASS = item.NASSNumber, LastName = item.LastName, DateOfBirth = item.DateOfBirth });
