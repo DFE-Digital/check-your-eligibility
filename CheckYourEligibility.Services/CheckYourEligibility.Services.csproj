@@ -20,4 +20,8 @@
     <ProjectReference Include="..\CheckYourEligibility.Data\CheckYourEligibility.Data.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="NewFolder\" />
+  </ItemGroup>
+
 </Project>
