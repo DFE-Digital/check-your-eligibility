@@ -1,5 +1,7 @@
 using AutoFixture;
+using Azure;
 using CheckYourEligibility.Domain.Enums;
+using CheckYourEligibility.Domain.Exceptions;
 using CheckYourEligibility.Domain.Requests;
 using CheckYourEligibility.Domain.Responses;
 using CheckYourEligibility.Services.Interfaces;
@@ -10,6 +12,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NUnit.Framework.Internal;
+using System.Diagnostics;
 
 namespace CheckYourEligibility.APIUnitTests
 {
@@ -225,20 +228,20 @@ namespace CheckYourEligibility.APIUnitTests
         }
 
         [Test]
-        public void Given_Valid_guid_CheckEligibilityStatus_Should_Return_StatusOk()
+        public void Given_Valid_guid_Not_queuedForProcessing_Process_Should_Return_BadRequest()
         {
             // Arrange
             var guid = _fixture.Create<Guid>().ToString();
-            var expectedResponse = _fixture.Create<CheckEligibilityStatus?>();
-            _mockService.Setup(cs => cs.GetStatus(guid)).ReturnsAsync(expectedResponse);
-            var expectedResult = new ObjectResult(new StatusResponse() { Data = new StatusValue() { Status = expectedResponse.Value.ToString() } }) { StatusCode = StatusCodes.Status200OK };
+            _mockService.Setup(cs => cs.ProcessCheck(guid)).ThrowsAsync(new ProcessCheckException());
+            var expectedResult = new ObjectResult(guid)
+            { StatusCode = StatusCodes.Status400BadRequest };
 
             // Act
-            var response = _sut.CheckEligibilityStatus(guid);
-            
+            var response = _sut.Process(guid);
             // Assert
             response.Result.Should().BeEquivalentTo(expectedResult);
         }
+
 
         [Test]
         public void Given_InValid_guid_Process_Should_Return_StatusNotFound()
