@@ -68,6 +68,8 @@ namespace CheckYourEligibility.Services
                 if (checkHashResult != null)
                 {
                     item.Status = checkHashResult.Outcome;
+                    item.EligibilityCheckHashID = checkHashResult.EligibilityCheckHashID;
+                    item.EligibilityCheckHash = checkHashResult;
                 }
                 await _db.FsmCheckEligibilities.AddAsync(item);
                 await _db.SaveChangesAsync();
@@ -287,6 +289,7 @@ namespace CheckYourEligibility.Services
                 TimeStamp = DateTime.UtcNow,
                 Source = source
             };
+            item.EligibilityCheckHashID = HashItem.EligibilityCheckHashID;
             await _db.EligibilityCheckHashes.AddAsync(HashItem);
         }
 
