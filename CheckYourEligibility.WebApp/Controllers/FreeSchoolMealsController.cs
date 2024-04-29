@@ -49,13 +49,13 @@ namespace CheckYourEligibility.WebApp.Controllers
             {
                 return BadRequest(new MessageResponse { Data = validationResults.ToString() });
             }
-            var id = await _service.PostCheck(model.Data);
+            var response = await _service.PostCheck(model.Data);
             return new ObjectResult(new CheckEligibilityResponse() { 
-                Data = new StatusValue() { Status = Domain.Enums.CheckEligibilityStatus.queuedForProcessing.ToString() },
+                Data = new StatusValue() { Status = response.Status.ToString() },
                 Links = new CheckEligibilityResponseLinks {
-                    Get_EligibilityCheck = $"{Domain.Constants.FSMLinks.GetLink}{id}",
-                    Put_EligibilityCheckProcess = $"{Domain.Constants.FSMLinks.ProcessLink}{id}",
-                    Get_EligibilityCheckStatus = $"{Domain.Constants.FSMLinks.GetLink}{id}/Status"
+                    Get_EligibilityCheck = $"{Domain.Constants.FSMLinks.GetLink}{response.Id}",
+                    Put_EligibilityCheckProcess = $"{Domain.Constants.FSMLinks.ProcessLink}{response.Id}",
+                    Get_EligibilityCheckStatus = $"{Domain.Constants.FSMLinks.GetLink}{response.Id}/Status"
                 }
             }) { StatusCode = StatusCodes.Status202Accepted };
         }
