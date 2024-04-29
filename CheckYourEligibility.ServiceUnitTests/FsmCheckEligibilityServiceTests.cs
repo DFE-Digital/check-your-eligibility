@@ -101,7 +101,43 @@ namespace CheckYourEligibility.ServiceUnitTests
             response.Result.Should().BeOfType<ApplicationSave>();
         }
 
-        [Ignore("breaking build further investigation")]
+        [Test]
+        public async Task Given_PostCheck_HashIsOldSoNewOne_generated()
+        {
+            // Arrange
+            var request = _fixture.Create<CheckEligibilityRequestDataFsm>();
+            request.DateOfBirth = "01/02/1970";
+            request.NationalAsylumSeekerServiceNumber = null;
+
+            //Set UpValid hmrc check
+            _fakeInMemoryDb.FreeSchoolMealsHMRC.Add(new FreeSchoolMealsHMRC
+            {
+                FreeSchoolMealsHMRCID = request.NationalInsuranceNumber,
+                Surname = request.LastName,
+                DateOfBirth = DateTime.Parse(request.DateOfBirth)
+            });
+            await _fakeInMemoryDb.SaveChangesAsync();
+
+            // Act/Assert
+            var response = await _sut.PostCheck(request);
+            var baseItem = _fakeInMemoryDb.FsmCheckEligibilities.FirstOrDefault(x => x.EligibilityCheckID == response);
+            baseItem.EligibilityCheckHashID.Should().BeNull();
+            await _sut.ProcessCheck(response);
+            baseItem = _fakeInMemoryDb.FsmCheckEligibilities.Include(x => x.EligibilityCheckHash).FirstOrDefault(x => x.EligibilityCheckID == response);
+            baseItem.EligibilityCheckHash.Should().NotBeNull();
+            var BaseHash = _fakeInMemoryDb.EligibilityCheckHashes.First(x=>x.EligibilityCheckHashID == baseItem.EligibilityCheckHashID);
+
+            BaseHash.TimeStamp = BaseHash.TimeStamp.AddMonths(-12);
+            await _fakeInMemoryDb.SaveChangesAsync();
+
+            //post a second check so that New hash is used for outcome
+            var responseNewPostCheck = await _sut.PostCheck(request);
+
+            var newItem = _fakeInMemoryDb.FsmCheckEligibilities.Include(x => x.EligibilityCheckHash).FirstOrDefault(x => x.EligibilityCheckID == responseNewPostCheck);
+            newItem.EligibilityCheckHash.Should().BeNull();
+            newItem.Status.Should().Be(CheckEligibilityStatus.queuedForProcessing);
+        }
+
         [Test]
         public async Task Given_PostCheck_Status_should_Come_From_Hash()
         {
@@ -117,25 +153,28 @@ namespace CheckYourEligibility.ServiceUnitTests
                 Surname = request.LastName,
                 DateOfBirth = DateTime.Parse(request.DateOfBirth)
             });
-            _fakeInMemoryDb.SaveChangesAsync();
+            await _fakeInMemoryDb.SaveChangesAsync();
 
-            // Act
+            // Act/Assert
             var response = await _sut.PostCheck(request);
+            var baseItem = _fakeInMemoryDb.FsmCheckEligibilities.FirstOrDefault(x => x.EligibilityCheckID == response);
+            baseItem.EligibilityCheckHashID.Should().BeNull();
             await _sut.ProcessCheck(response);
-            var item = _fakeInMemoryDb.FsmCheckEligibilities.FirstOrDefault(x => x.EligibilityCheckID == response);
-            var hash = _sut.GetHash(item);
+            baseItem = _fakeInMemoryDb.FsmCheckEligibilities.Include(x=>x.EligibilityCheckHash).FirstOrDefault(x => x.EligibilityCheckID == response);
+            baseItem.EligibilityCheckHash.Should().NotBeNull();
+            var BaseHash = baseItem.EligibilityCheckHash;
 
-            var hashItem = await _fakeInMemoryDb.EligibilityCheckHashes.FirstAsync(x => x.Hash == hash);
+            //post a second check so that BaseHash is used for outcome
             var responseNewPostCheck = await _sut.PostCheck(request);
-            
-            // Assert
-            _fakeInMemoryDb.EligibilityCheckHashes.Single(x => x.Hash == hash).Should().NotBeNull();
-            _fakeInMemoryDb.FsmCheckEligibilities.FirstOrDefault(x => x.EligibilityCheckID == responseNewPostCheck).Status.Should().Be(hashItem.Outcome);
+
+            var newItem = _fakeInMemoryDb.FsmCheckEligibilities.Include(x => x.EligibilityCheckHash).FirstOrDefault(x => x.EligibilityCheckID == responseNewPostCheck);
+            newItem.EligibilityCheckHash.Should().NotBeNull();
+            newItem.Status.Should().Be(BaseHash.Outcome);
         }
 
-        [Ignore("breaking build further investigation")]
+       
         [Test]
-        public void Given_validRequest_PostFeature_Should_Return_id_HashShouldBeCreated()
+        public async Task Given_validRequest_PostFeature_Should_Return_id_HashShouldBeCreated()
         {
             // Arrange
             var request = _fixture.Create<CheckEligibilityRequestDataFsm>();
@@ -146,7 +185,7 @@ namespace CheckYourEligibility.ServiceUnitTests
             _fakeInMemoryDb.FreeSchoolMealsHMRC.Add(new FreeSchoolMealsHMRC { FreeSchoolMealsHMRCID = request.NationalInsuranceNumber,
                 Surname = request.LastName,
                 DateOfBirth = DateTime.Parse(request.DateOfBirth) });
-            _fakeInMemoryDb.SaveChangesAsync();
+            await _fakeInMemoryDb.SaveChangesAsync();
 
             // Act
             var response = _sut.PostCheck(request);
@@ -157,6 +196,7 @@ namespace CheckYourEligibility.ServiceUnitTests
             _fakeInMemoryDb.EligibilityCheckHashes.First(x=>x.Hash == hash).Should().NotBeNull();
         }
 
+        
         [Test]
         public void Given_validRequest_PostFeature_Should_Return_id()
         {
