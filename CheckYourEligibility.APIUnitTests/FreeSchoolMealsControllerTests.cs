@@ -100,7 +100,7 @@ namespace CheckYourEligibility.APIUnitTests
             request.Data.NationalInsuranceNumber = "ns738356d";
             request.Data.DateOfBirth = "01/02/1970";
             request.Data.NationalAsylumSeekerServiceNumber = string.Empty;
-            _mockService.Setup(cs => cs.PostCheck(request.Data)).ReturnsAsync(id);
+            _mockService.Setup(cs => cs.PostCheck(request.Data)).ReturnsAsync(new PostCheckResult { Id = id});
 
             var expectedResult = new ObjectResult(new StatusResponse() { Data = new StatusValue() { Status = CheckEligibilityStatus.queuedForProcessing.ToString() } }) { StatusCode = StatusCodes.Status202Accepted };
 
