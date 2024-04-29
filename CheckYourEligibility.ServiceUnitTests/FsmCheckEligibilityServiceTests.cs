@@ -123,10 +123,10 @@ namespace CheckYourEligibility.ServiceUnitTests
 
             // Act/Assert
             var response = await _sut.PostCheck(request);
-            var baseItem = _fakeInMemoryDb.FsmCheckEligibilities.FirstOrDefault(x => x.EligibilityCheckID == response);
+            var baseItem = _fakeInMemoryDb.FsmCheckEligibilities.FirstOrDefault(x => x.EligibilityCheckID == response.Id);
             baseItem.EligibilityCheckHashID.Should().BeNull();
-            await _sut.ProcessCheck(response);
-            baseItem = _fakeInMemoryDb.FsmCheckEligibilities.Include(x => x.EligibilityCheckHash).FirstOrDefault(x => x.EligibilityCheckID == response);
+            await _sut.ProcessCheck(response.Id);
+            baseItem = _fakeInMemoryDb.FsmCheckEligibilities.Include(x => x.EligibilityCheckHash).FirstOrDefault(x => x.EligibilityCheckID == response.Id);
             baseItem.EligibilityCheckHash.Should().NotBeNull();
             var BaseHash = _fakeInMemoryDb.EligibilityCheckHashes.First(x=>x.EligibilityCheckHashID == baseItem.EligibilityCheckHashID);
 
@@ -136,7 +136,7 @@ namespace CheckYourEligibility.ServiceUnitTests
             //post a second check so that New hash is used for outcome
             var responseNewPostCheck = await _sut.PostCheck(request);
 
-            var newItem = _fakeInMemoryDb.FsmCheckEligibilities.Include(x => x.EligibilityCheckHash).FirstOrDefault(x => x.EligibilityCheckID == responseNewPostCheck);
+            var newItem = _fakeInMemoryDb.FsmCheckEligibilities.Include(x => x.EligibilityCheckHash).FirstOrDefault(x => x.EligibilityCheckID == responseNewPostCheck.Id);
             newItem.EligibilityCheckHash.Should().BeNull();
             newItem.Status.Should().Be(CheckEligibilityStatus.queuedForProcessing);
         }
@@ -163,17 +163,17 @@ namespace CheckYourEligibility.ServiceUnitTests
 
             // Act/Assert
             var response = await _sut.PostCheck(request);
-            var baseItem = _fakeInMemoryDb.FsmCheckEligibilities.FirstOrDefault(x => x.EligibilityCheckID == response);
+            var baseItem = _fakeInMemoryDb.FsmCheckEligibilities.FirstOrDefault(x => x.EligibilityCheckID == response.Id);
             baseItem.EligibilityCheckHashID.Should().BeNull();
-            await _sut.ProcessCheck(response);
-            baseItem = _fakeInMemoryDb.FsmCheckEligibilities.Include(x=>x.EligibilityCheckHash).FirstOrDefault(x => x.EligibilityCheckID == response);
+            await _sut.ProcessCheck(response.Id);
+            baseItem = _fakeInMemoryDb.FsmCheckEligibilities.Include(x=>x.EligibilityCheckHash).FirstOrDefault(x => x.EligibilityCheckID == response.Id);
             baseItem.EligibilityCheckHash.Should().NotBeNull();
             var BaseHash = baseItem.EligibilityCheckHash;
 
             //post a second check so that BaseHash is used for outcome
             var responseNewPostCheck = await _sut.PostCheck(request);
 
-            var newItem = _fakeInMemoryDb.FsmCheckEligibilities.Include(x => x.EligibilityCheckHash).FirstOrDefault(x => x.EligibilityCheckID == responseNewPostCheck);
+            var newItem = _fakeInMemoryDb.FsmCheckEligibilities.Include(x => x.EligibilityCheckHash).FirstOrDefault(x => x.EligibilityCheckID == responseNewPostCheck.Id);
             newItem.EligibilityCheckHash.Should().NotBeNull();
             newItem.Status.Should().Be(BaseHash.Outcome);
         }
@@ -199,8 +199,8 @@ namespace CheckYourEligibility.ServiceUnitTests
 
             // Act
             var response = _sut.PostCheck(request);
-            var process = _sut.ProcessCheck(response.Result);
-            var item = _fakeInMemoryDb.FsmCheckEligibilities.FirstOrDefault(x=>x.EligibilityCheckID == response.Result);
+            var process = _sut.ProcessCheck(response.Result.Id);
+            var item = _fakeInMemoryDb.FsmCheckEligibilities.FirstOrDefault(x=>x.EligibilityCheckID == response.Result.Id);
             var hash = _sut.GetHash(item);
             // Assert
             _fakeInMemoryDb.EligibilityCheckHashes.First(x=>x.Hash == hash).Should().NotBeNull();
@@ -218,7 +218,7 @@ namespace CheckYourEligibility.ServiceUnitTests
             var response = _sut.PostCheck(request);
 
             // Assert
-            response.Result.Should().NotBeNullOrEmpty();
+            response.Result.Id.Should().NotBeNullOrEmpty();
         }
 
         [Test]

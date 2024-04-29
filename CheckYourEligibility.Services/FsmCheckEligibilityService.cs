@@ -53,7 +53,7 @@ namespace CheckYourEligibility.Services
             _hashCheckDays = configuration.GetValue<short>("HashCheckDays");
         }
 
-        public async Task<string> PostCheck(CheckEligibilityRequestDataFsm data)
+        public async Task<PostCheckResult> PostCheck(CheckEligibilityRequestDataFsm data)
         {
             var item = _mapper.Map<EligibilityCheck>(data);
             try
@@ -82,7 +82,7 @@ namespace CheckYourEligibility.Services
                     }
                 }
 
-                return item.EligibilityCheckID;
+                return new PostCheckResult { Id = item.EligibilityCheckID, Status = item.Status };
             }
             catch (Exception ex)
             {
