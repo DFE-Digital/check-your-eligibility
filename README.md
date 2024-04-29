@@ -11,6 +11,7 @@ Add-Migration idxReference -project CheckYourEligibility.Data.Migrations
 Add-Migration applicationStatus -project CheckYourEligibility.Data.Migrations
 Add-Migration checkHash -project CheckYourEligibility.Data.Migrations
 Add-Migration checkHashSource -project CheckYourEligibility.Data.Migrations
+Add-Migration checkHashResult -project CheckYourEligibility.Data.Migrations
 
 
 --Run Latest migration
