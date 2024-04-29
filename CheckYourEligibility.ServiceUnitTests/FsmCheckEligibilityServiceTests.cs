@@ -187,6 +187,10 @@ namespace CheckYourEligibility.ServiceUnitTests
                 DateOfBirth = DateTime.Parse(request.DateOfBirth) });
             await _fakeInMemoryDb.SaveChangesAsync();
 
+            _moqDwpService.Setup(x => x.GetCitizen(It.IsAny<CitizenMatchRequest>())).ReturnsAsync(Guid.NewGuid().ToString());
+            var result = new StatusCodeResult(StatusCodes.Status200OK);
+            _moqDwpService.Setup(x => x.CheckForBenefit(It.IsAny<string>())).ReturnsAsync(result);
+
             // Act
             var response = _sut.PostCheck(request);
             var process = _sut.ProcessCheck(response.Result);
