@@ -95,7 +95,7 @@ namespace CheckYourEligibility.Services
         {
             var age = DateTime.UtcNow.AddDays(-_hashCheckDays);
             var hash = GetHash(item);
-            return  _db.EligibilityCheckHashes.SingleOrDefault(x => x.Hash == hash && x.TimeStamp >= age);
+            return  _db.EligibilityCheckHashes.FirstOrDefault(x => x.Hash == hash && x.TimeStamp >= age);
         }
 
         public async Task<CheckEligibilityStatus?> GetStatus(string guid)
