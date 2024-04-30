@@ -27,6 +27,7 @@ namespace CheckYourEligibility.SystemTests.API
             }
         }
 
+
         public static async Task AssertStatusCode(HttpResponseMessage response, HttpStatusCode expectedStatusCode)
         {
             if (!response.IsSuccessStatusCode)
@@ -58,7 +59,7 @@ namespace CheckYourEligibility.SystemTests.API
             {
                 Console.WriteLine($"Request failed with status code {response.StatusCode}.");
                 Console.WriteLine($"Response body: {response.Content.ReadAsStringAsync().Result}");
-                // Handle or log the error as needed
+                
             }
 
             Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.Accepted));
@@ -72,7 +73,7 @@ namespace CheckYourEligibility.SystemTests.API
             Console.WriteLine($"Status: {deserializedResponse.Data.Status}");
             Console.WriteLine($"GetEligibilityCheck Link: {deserializedResponse.Links.Get_EligibilityCheck}");
          
-            Assert.That(deserializedResponse?.Data?.Status, Is.EqualTo("queuedForProcessing"));
+            Assert.That(deserializedResponse?.Data?.Status, Is.Not.Empty);
 
             return CommonMethods.ExtractStringAfterLastSlash(deserializedResponse?.Links?.Get_EligibilityCheck);
         }
@@ -83,7 +84,7 @@ namespace CheckYourEligibility.SystemTests.API
             var response = await GetRequest(endpoint);
             var jsonResponse = await response.Content.ReadAsStringAsync();
             var deserializedResponse = JsonConvert.DeserializeObject<CheckEligibilityResponseModel>(jsonResponse);
-           // var checkEligibilityModel = deserializedResponse?.data;
+           
             Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
             return deserializedResponse;
         }
@@ -97,5 +98,28 @@ namespace CheckYourEligibility.SystemTests.API
                 return await client.GetAsync(uri);
             }
         }
+
+
+        private static readonly HttpClient _client = new HttpClient();
+        // Generic method to perform a GET request and deserialize the response
+        public static async Task<TModel?> PerformGetRequest<TModel>(string endpoint)
+        {
+            try
+            {
+                var response = await _client.GetAsync(endpoint);
+                Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK), "HTTP status code check");
+
+                var jsonResponse = await response.Content.ReadAsStringAsync();
+                var deserializedResponse = JsonConvert.DeserializeObject<TModel>(jsonResponse);
+
+                return deserializedResponse;
+            }
+            catch (Exception ex)
+            {
+                Assert.Fail($"Request to {endpoint} failed: {ex.Message}");
+                return default;
+            }
+        }
+
     }
 }

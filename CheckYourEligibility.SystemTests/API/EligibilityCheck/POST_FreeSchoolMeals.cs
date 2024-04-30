@@ -1,7 +1,7 @@
 ﻿using System.Net;
 using Microsoft.Playwright;
 
-namespace CheckYourEligibility.SystemTests.API
+namespace CheckYourEligibility.SystemTests.API.EligibilityCheck
 {
 
     public class POST_FreeSchoolMeals : PlaywrightTest
@@ -20,7 +20,6 @@ namespace CheckYourEligibility.SystemTests.API
 
         [Test, Category("POST Request")]
         [Description("POST Request with valid NI")]
-      //  [Ignore("Targeting live environment")]
         public async Task PostRequestWithValidNI()
         {
             var endpoint = "/FreeSchoolMeals";
@@ -40,7 +39,6 @@ namespace CheckYourEligibility.SystemTests.API
         }
 
         [Test]
-      //  [Ignore("Targeting live environment")]
         public async Task PostRequestWithValidNASS()
         {
             var endpoint = "/FreeSchoolMeals";
@@ -51,7 +49,7 @@ namespace CheckYourEligibility.SystemTests.API
                     nationalInsuranceNumber = "",
                     lastName = "Joe",
                     dateOfBirth = "01/12/1990",
-                    nationalAsylumSeekerServiceNumber = "313"
+                    nationalAsylumSeekerServiceNumber = "123456789"
                 }
             };
 
@@ -60,7 +58,6 @@ namespace CheckYourEligibility.SystemTests.API
         }
 
         [Test, Description("POST Request with invalid NI")]
-      //  [Ignore("Targeting live environment")]
         public async Task PostRequestWithInvalidNI()
         {
             var endpoint = "/FreeSchoolMeals";
@@ -80,7 +77,6 @@ namespace CheckYourEligibility.SystemTests.API
         }
 
         [Test]
-      //  [Ignore("Targeting live environment")]
         public async Task PostRequestWithInvalidDOB()
         {
             var endpoint = "/FreeSchoolMeals";
@@ -100,7 +96,6 @@ namespace CheckYourEligibility.SystemTests.API
         }
 
         [Test]
-      //  [Ignore("Targeting live environment")]
         public async Task PostRequestWithNoNIAndNoNASS()
         {
             var endpoint = "/FreeSchoolMeals";
@@ -120,7 +115,6 @@ namespace CheckYourEligibility.SystemTests.API
         }
 
         [Test]
-       // [Ignore("Targeting live environment")]
         public async Task PostRequestWithEmptyDOB()
         {
             var endpoint = "/FreeSchoolMeals";
@@ -140,7 +134,6 @@ namespace CheckYourEligibility.SystemTests.API
         }
 
         [Test, Description("POST Request with null NI")]
-      //  [Ignore("Targeting live environment")]
         public async Task PostRequestWithNullNI()
         {
 
@@ -161,7 +154,6 @@ namespace CheckYourEligibility.SystemTests.API
         }
 
         [Test, Description("POST Request with Null NASS number")]
-      //  [Ignore("Targeting live environment")]
         public async Task PostRequestWithNullNASS()
         {
             var endpoint = "/FreeSchoolMeals";

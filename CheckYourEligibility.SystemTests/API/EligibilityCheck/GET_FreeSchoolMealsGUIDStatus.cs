@@ -1,5 +1,5 @@
 ﻿using System.Net;
-namespace CheckYourEligibility.SystemTests.API
+namespace CheckYourEligibility.SystemTests.API.EligibilityCheck
 {
     public class GET_FreeSchoolMealsGUIDStatus : PlaywrightTest
     {
@@ -39,12 +39,11 @@ namespace CheckYourEligibility.SystemTests.API
         }
 
         [Test]
-       // [Ignore("Targeting live environment")]
         public async Task GetRequest_WithInvalidGUID()
         {
             var jsonResponse = await ApiHelper.GetRequest("/FreeSchoolMeals/7df4a175-c153-43ac-87e9-4a48e4517");
             Assert.That(jsonResponse.StatusCode, Is.EqualTo(HttpStatusCode.NotFound));
         }
-     
+
     }
 }

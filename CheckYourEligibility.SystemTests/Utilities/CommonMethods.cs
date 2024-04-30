@@ -29,7 +29,7 @@ namespace CheckYourEligibility.SystemTests.Utilities
             // Create an instance of ApplicationRequestData
             ApplicationRequestData requestData = new ApplicationRequestData()
             {
-                School = 139856,
+                School = 107126,
                 ParentFirstName = "John",
                 ParentLastName = "Smith",
                 ParentDateOfBirth = "01/01/1980", // Example Date of Birth in string format (YYYY-MM-DD)
