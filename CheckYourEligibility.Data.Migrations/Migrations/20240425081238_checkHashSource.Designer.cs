@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CheckYourEligibility.Data.Migrations.Migrations
 {
     [DbContext(typeof(EligibilityCheckContext))]
-    partial class EligibilityCheckContextModelSnapshot : ModelSnapshot
+    [Migration("20240425081238_checkHashSource")]
+    partial class checkHashSource
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -123,9 +126,6 @@ namespace CheckYourEligibility.Data.Migrations.Migrations
                     b.Property<DateTime>("DateOfBirth")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("EligibilityCheckHashID")
-                        .HasColumnType("nvarchar(450)");
-
                     b.Property<string>("LastName")
                         .IsRequired()
                         .HasColumnType("varchar(100)");
@@ -148,8 +148,6 @@ namespace CheckYourEligibility.Data.Migrations.Migrations
                         .HasColumnType("datetime2");
 
                     b.HasKey("EligibilityCheckID");
-
-                    b.HasIndex("EligibilityCheckHashID");
 
                     b.ToTable("EligibilityCheck", (string)null);
                 });
@@ -308,15 +306,6 @@ namespace CheckYourEligibility.Data.Migrations.Migrations
                         .IsRequired();
 
                     b.Navigation("Application");
-                });
-
-            modelBuilder.Entity("CheckYourEligibility.Data.Models.EligibilityCheck", b =>
-                {
-                    b.HasOne("CheckYourEligibility.Data.Models.EligibilityCheckHash", "EligibilityCheckHash")
-                        .WithMany()
-                        .HasForeignKey("EligibilityCheckHashID");
-
-                    b.Navigation("EligibilityCheckHash");
                 });
 
             modelBuilder.Entity("CheckYourEligibility.Data.Models.School", b =>

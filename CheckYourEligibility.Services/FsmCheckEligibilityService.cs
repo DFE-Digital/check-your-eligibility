@@ -6,6 +6,7 @@ using Azure.Storage.Queues;
 using CheckYourEligibility.Data.Models;
 using CheckYourEligibility.Domain.Constants;
 using CheckYourEligibility.Domain.Enums;
+using CheckYourEligibility.Domain.Exceptions;
 using CheckYourEligibility.Domain.Requests;
 using CheckYourEligibility.Domain.Requests.DWP;
 using CheckYourEligibility.Domain.Responses;
@@ -16,13 +17,12 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using System.Security.Cryptography;
 using System.Text;
 
 namespace CheckYourEligibility.Services
 {
-    public class FsmCheckEligibilityService : IFsmCheckEligibility
+    public partial class FsmCheckEligibilityService : BaseService, IFsmCheckEligibility
     {
         const int referenceMaxValue = 99999999;
         private  readonly ILogger _logger;
@@ -32,9 +32,10 @@ namespace CheckYourEligibility.Services
         private const int SurnameCheckCharachters = 3;
         private static Random randomNumber;
         private readonly IDwpService _dwpService;
+        private readonly int _hashCheckDays;
 
         public FsmCheckEligibilityService(ILoggerFactory logger, IEligibilityCheckContext dbContext, IMapper mapper, QueueServiceClient queueClientService,
-            IConfiguration configuration, IDwpService dwpService)
+            IConfiguration configuration, IDwpService dwpService) : base()
         {
             _logger = logger.CreateLogger("ServiceFsmCheckEligibility");
             _db = Guard.Against.Null(dbContext);
@@ -49,34 +50,52 @@ namespace CheckYourEligibility.Services
             {
                randomNumber = new Random(referenceMaxValue);
             }
+            _hashCheckDays = configuration.GetValue<short>("HashCheckDays");
         }
 
-        public async Task<string> PostCheck(CheckEligibilityRequestDataFsm data)
+        public async Task<PostCheckResult> PostCheck(CheckEligibilityRequestDataFsm data)
         {
+            var item = _mapper.Map<EligibilityCheck>(data);
             try
             {
-                var item = _mapper.Map<EligibilityCheck>(data);
                 item.EligibilityCheckID = Guid.NewGuid().ToString();
                 item.Created = DateTime.UtcNow;
                 item.Updated = DateTime.UtcNow;
 
                 item.Status = CheckEligibilityStatus.queuedForProcessing;
                 item.Type = CheckEligibilityType.FreeSchoolMeals;
-
+                var checkHashResult = CheckHashResult(item);
+                if (checkHashResult != null)
+                {
+                    item.Status = checkHashResult.Outcome;
+                    item.EligibilityCheckHashID = checkHashResult.EligibilityCheckHashID;
+                    item.EligibilityCheckHash = checkHashResult;
+                }
                 await _db.FsmCheckEligibilities.AddAsync(item);
                 await _db.SaveChangesAsync();
-                if (_queueClient != null)
+                if (checkHashResult == null)
                 {
-                    await _queueClient.SendMessageAsync(
-                        JsonConvert.SerializeObject(new QueueMessageCheck() { Type = item.Type.ToString(), Guid = item.EligibilityCheckID, Url =$"{FSMLinks.ProcessLink}{item.EligibilityCheckID}" }));
+                    if (_queueClient != null)
+                    {
+                        await _queueClient.SendMessageAsync(
+                            JsonConvert.SerializeObject(new QueueMessageCheck() { Type = item.Type.ToString(), Guid = item.EligibilityCheckID, Url = $"{FSMLinks.ProcessLink}{item.EligibilityCheckID}" }));
+                    }
                 }
-                return item.EligibilityCheckID;
+
+                return new PostCheckResult { Id = item.EligibilityCheckID, Status = item.Status };
             }
             catch (Exception ex)
             {
+                LogApiEvent(this.GetType().Name, data, item);
                 _logger.LogError(ex, "Db post");
                 throw;
             }
+        }
+        private EligibilityCheckHash? CheckHashResult(EligibilityCheck item)
+        {
+            var age = DateTime.UtcNow.AddDays(-_hashCheckDays);
+            var hash = GetHash(item);
+            return  _db.EligibilityCheckHashes.SingleOrDefault(x => x.Hash == hash && x.TimeStamp >= age);
         }
 
         public async Task<CheckEligibilityStatus?> GetStatus(string guid)
@@ -95,6 +114,12 @@ namespace CheckYourEligibility.Services
             var result = await _db.FsmCheckEligibilities.FirstOrDefaultAsync(x => x.EligibilityCheckID == guid);
             if (result != null)
             {
+                if (result.Status != CheckEligibilityStatus.queuedForProcessing)
+                {
+                    LogApiEvent(this.GetType().Name, guid, "CheckItem not queuedForProcessing.");
+                    throw new ProcessCheckException("CheckItem not queuedForProcessing.");
+                }
+                var source = ProcessEligibilityCheckSource.HMRC;
                 CheckEligibilityStatus checkResult = CheckEligibilityStatus.parentNotFound;
                 if (!result.NINumber.IsNullOrEmpty())
                 {
@@ -102,22 +127,27 @@ namespace CheckYourEligibility.Services
                     if (checkResult == CheckEligibilityStatus.parentNotFound)
                     {
                         checkResult = await DWP_Check(result);
-
+                        source = ProcessEligibilityCheckSource.DWP;
                     }
                 }
                 else if (!result.NASSNumber.IsNullOrEmpty())
                 {
                     checkResult = await HO_Check(result);
+                    source = ProcessEligibilityCheckSource.HO;
                 }
                 result.Status = checkResult;
                 result.Updated = DateTime.UtcNow;
-                var updates = await _db.SaveChangesAsync();
+               
                 if (checkResult != CheckEligibilityStatus.DwpError)
                 {
-                    var key = string.IsNullOrEmpty(result.NINumber)?result.NASSNumber:result.NINumber;
-                    HashCheckResult(result.DateOfBirth.ToString("d"), result.LastName, result.Type, key, checkResult);
+                    HashCheckResult(result, checkResult, source);
                 }
+                var updates = await _db.SaveChangesAsync();
                 return result.Status;
+            }
+            else
+            {
+                LogApiEvent(this.GetType().Name, guid, "failed to find checkItem.");
             }
             return null;
         }
@@ -147,22 +177,16 @@ namespace CheckYourEligibility.Services
 
                 var school = _db.Schools
                     .Include(x => x.LocalAuthority)
-                    .First(x=>x.SchoolId == data.School);
+                    .First(x => x.SchoolId == data.School);
                 item.LocalAuthorityId = school.LocalAuthorityId;
 
                 await _db.Applications.AddAsync(item);
-
-                var status = new Data.Models.ApplicationStatus() {
-                    ApplicationStatusID = Guid.NewGuid().ToString(),
-                    ApplicationID = item.ApplicationID,
-                    Type = Domain.Enums.ApplicationStatus.Open,
-                    TimeStamp = DateTime.UtcNow };
-                await _db.ApplicationStatuses.AddAsync(status);
+                await AddStatusHistory(item, Domain.Enums.ApplicationStatus.Open);
 
                 await _db.SaveChangesAsync();
 
                 var saved = _db.Applications
-                    .First(x=>x.ApplicationID == item.ApplicationID);
+                    .First(x => x.ApplicationID == item.ApplicationID);
 
                 var returnItem = _mapper.Map<ApplicationSave>(item);
 
@@ -173,6 +197,18 @@ namespace CheckYourEligibility.Services
                 _logger.LogError(ex, "Db post application");
                 throw;
             }
+        }
+
+        private async Task AddStatusHistory(Application application, Domain.Enums.ApplicationStatus applicationStatus)
+        {
+            var status = new Data.Models.ApplicationStatus()
+            {
+                ApplicationStatusID = Guid.NewGuid().ToString(),
+                ApplicationID = application.ApplicationID,
+                Type = applicationStatus,
+                TimeStamp = DateTime.UtcNow
+            };
+            await _db.ApplicationStatuses.AddAsync(status);
         }
 
         public async Task<ApplicationResponse?> GetApplication(string guid)
@@ -214,27 +250,49 @@ namespace CheckYourEligibility.Services
             return _mapper.Map<List<ApplicationResponse>>(results);
         }
 
-        private async void HashCheckResult(string dateOfBirth, string lastName, CheckEligibilityType type, string? key, CheckEligibilityStatus checkResult)
+        public async Task<ApplicationStatusUpdateResponse> UpdateApplicationStatus(string guid, ApplicationStatusData data)
         {
-            var hash = GetHash($"{lastName}{key}{dateOfBirth}{type}");
-            var item = new EligibilityCheckHash()
+            var result = await _db.Applications.FirstOrDefaultAsync(x => x.ApplicationID == guid);
+            if (result != null)
             {
-                EligibilityCheckHashID = Guid.NewGuid().ToString(),
-                Hash = hash,
-                Type = type,
-                Outcome = checkResult,
-                TimeStamp = DateTime.UtcNow
-            };
-            await _db.EligibilityCheckHashes.AddAsync(item);
-            await _db.SaveChangesAsync();
+                result.Status = data.Status;
+                await AddStatusHistory(result, result.Status.Value);
+
+                result.Updated = DateTime.UtcNow;
+                var updates = await _db.SaveChangesAsync();
+                return new ApplicationStatusUpdateResponse { Data = new ApplicationStatusDataResponse { Status = result.Status.Value.ToString()} };
+            }
+
+            return null;
         }
 
-        private string GetHash(string input)
+        public string GetHash(EligibilityCheck item)
         {
+            var key  = string.IsNullOrEmpty(item.NINumber) ? item.NASSNumber : item.NINumber;
+            var input = $"{item.LastName}{key}{item.DateOfBirth.ToString("d")}{item.Type}";
             var inputBytes = Encoding.UTF8.GetBytes(input);
             var inputHash = SHA256.HashData(inputBytes);
             return Convert.ToHexString(inputHash);
         }
+
+        #region Private
+
+        private async void HashCheckResult(EligibilityCheck item, CheckEligibilityStatus checkResult, ProcessEligibilityCheckSource source)
+        {
+            var hash = GetHash(item);
+            var HashItem = new EligibilityCheckHash()
+            {
+                EligibilityCheckHashID = Guid.NewGuid().ToString(),
+                Hash = hash,
+                Type = item.Type,
+                Outcome = checkResult,
+                TimeStamp = DateTime.UtcNow,
+                Source = source
+            };
+            item.EligibilityCheckHashID = HashItem.EligibilityCheckHashID;
+            await _db.EligibilityCheckHashes.AddAsync(HashItem);
+        }
+
 
         private string GetReference()
         {
@@ -326,5 +384,6 @@ namespace CheckYourEligibility.Services
             return CheckEligibilityStatus.parentNotFound;
         }
 
+        #endregion
     }
 }

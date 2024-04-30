@@ -32,6 +32,10 @@ namespace CheckYourEligibility.Data.Models
 
         public DateTime DateOfBirth { get; set; }
 
-       
+        public  string? EligibilityCheckHashID { get; set; }
+
+        public virtual EligibilityCheckHash? EligibilityCheckHash { get; set; }
+
+
     }
 }
