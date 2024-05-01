@@ -3,6 +3,7 @@ using CheckYourEligibility.Domain.Constants;
 using CheckYourEligibility.Domain.Responses;
 using CheckYourEligibility.Services.CsvImport;
 using CheckYourEligibility.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using System.Net;
@@ -11,6 +12,7 @@ namespace CheckYourEligibility.WebApp.Controllers
 {
     [ApiController]
     [Route("[controller]")]
+    [Authorize]
     public class AdministrationController : Controller
     {
         private readonly ILogger<AdministrationController> _logger;

@@ -5,6 +5,8 @@ using Microsoft.Extensions.Azure;
 using Azure.Identity;
 using Azure.Security.KeyVault.Secrets;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using System.Text;
 
 namespace CheckYourEligibility.WebApp
 {
@@ -16,19 +18,18 @@ namespace CheckYourEligibility.WebApp
             if (!Environment.GetEnvironmentVariable("KEY_VAULT_NAME").IsNullOrEmpty())
             {
                 var keyVault = GetAzureKeyVault();
-
                 connectionString = keyVault.GetSecret("ConnectionString").Value.Value;
             }
-            
+
             services.AddDbContext<IEligibilityCheckContext, EligibilityCheckContext>(options =>
                options.UseSqlServer(
                    connectionString,
-                   x=>x.MigrationsAssembly("CheckYourEligibility.Data.Migrations"))
+                   x => x.MigrationsAssembly("CheckYourEligibility.Data.Migrations"))
                // **** note adding this back in will have undesired effects on updates 
                //.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
                );
             services.AddDatabaseDeveloperPageExceptionFilter();
-          
+
             return services;
         }
 
@@ -40,7 +41,7 @@ namespace CheckYourEligibility.WebApp
                 var keyVault = GetAzureKeyVault();
                 connectionString = keyVault.GetSecret("QueueConnectionString").Value.Value;
             }
-            
+
             services.AddAzureClients(builder =>
             {
                 builder.AddQueueServiceClient(connectionString);
@@ -59,11 +60,30 @@ namespace CheckYourEligibility.WebApp
         }
 
         public static IServiceCollection AddExternalServices(this IServiceCollection services, IConfiguration configuration)
-        {           
+        {
             services.AddHttpClient<IDwpService, DwpService>(client =>
             {
-                client.BaseAddress = new Uri(configuration["DWPBaseUrl"]);              
+                client.BaseAddress = new Uri(configuration["DWPBaseUrl"]);
             });
+            return services;
+        }
+
+        public static IServiceCollection AddAuthorization(this IServiceCollection services, IConfiguration configuration)
+        {
+            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer(options =>
+                    {
+                        options.TokenValidationParameters = new TokenValidationParameters
+                        {
+                            ValidateIssuer = true,
+                            ValidateAudience = true,
+                            ValidateLifetime = true,
+                            ValidateIssuerSigningKey = true,
+                            ValidIssuer = configuration["Jwt:Issuer"],
+                            ValidAudience = configuration["Jwt:Issuer"],
+                            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Jwt:Key"]))
+                        };
+                    });
             return services;
         }
 
