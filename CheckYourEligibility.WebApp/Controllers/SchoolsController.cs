@@ -1,6 +1,7 @@
 ﻿using Ardalis.GuardClauses;
 using CheckYourEligibility.Domain.Responses;
 using CheckYourEligibility.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
 
@@ -8,6 +9,7 @@ namespace CheckYourEligibility.WebApp.Controllers
 {
     [ApiController]
     [Route("[controller]")]
+    [Authorize]
     public class SchoolsController : Controller
     {
         private readonly ILogger<SchoolsController> _logger;
