@@ -7,6 +7,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="NewFolder\**" />
+    <EmbeddedResource Remove="NewFolder\**" />
+    <None Remove="NewFolder\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Ardalis.GuardClauses" Version="4.5.0" />
     <PackageReference Include="Azure.Identity" Version="1.11.2" />
     <PackageReference Include="Azure.Storage.Queues" Version="12.17.1" />
@@ -18,10 +24,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\CheckYourEligibility.Data\CheckYourEligibility.Data.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="NewFolder\" />
   </ItemGroup>
 
 </Project>
