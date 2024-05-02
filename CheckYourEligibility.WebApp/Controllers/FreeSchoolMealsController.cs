@@ -4,8 +4,10 @@ using CheckYourEligibility.Domain.Requests;
 using CheckYourEligibility.Domain.Responses;
 using CheckYourEligibility.Services.Interfaces;
 using FeatureManagement.Domain.Validation;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
+using System.Security.Claims;
 using StatusResponse = CheckYourEligibility.Domain.Responses.StatusResponse;
 using StatusValue = CheckYourEligibility.Domain.Responses.StatusValue;
 
@@ -13,10 +15,12 @@ namespace CheckYourEligibility.WebApp.Controllers
 {
     [ApiController]
     [Route("[controller]")]
+    [Authorize]
     public class FreeSchoolMealsController : Controller
     {
         private readonly ILogger<FreeSchoolMealsController> _logger;
         private readonly IFsmCheckEligibility _service;
+        
 
         public FreeSchoolMealsController(ILogger<FreeSchoolMealsController> logger, IFsmCheckEligibility service)
         {
@@ -35,6 +39,10 @@ namespace CheckYourEligibility.WebApp.Controllers
         [HttpPost]
         public async Task<ActionResult> CheckEligibility([FromBody] CheckEligibilityRequest model)
         {
+            if (HttpContext != null)
+            {
+                var currentUser = HttpContext.User;
+            }
             if (model == null || model.Data == null)
             {
                 return BadRequest(new MessageResponse { Data = "Invalid CheckEligibilityRequest, data is required." });
