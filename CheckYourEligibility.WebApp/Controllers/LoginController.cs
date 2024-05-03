@@ -27,13 +27,13 @@ namespace CheckYourEligibility.WebApp.Controllers
 
             if (user != null)
             {
-                var tokenString = GenerateJSONWebToken(user);
-                response = Ok(new { token = tokenString });
+                var tokenString = GenerateJSONWebToken(user, out var expires);
+                response = Ok(new JwtAuthResponse{ Token = tokenString, Expires = expires });
             }
 
             return response;
         }
-        private string GenerateJSONWebToken(UserModel userInfo)
+        private string GenerateJSONWebToken(UserModel userInfo, out DateTime  expires)
         {
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]));
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
@@ -45,12 +45,13 @@ namespace CheckYourEligibility.WebApp.Controllers
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };
 
+            expires = DateTime.Now.AddMinutes(120);
             var token = new JwtSecurityToken(_config["Jwt:Issuer"],
               _config["Jwt:Issuer"],
               claims,
-              expires: DateTime.Now.AddMinutes(120),
+              expires: expires,
               signingCredentials: credentials);
-
+           
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
