@@ -34,13 +34,13 @@ namespace CheckYourEligibility.Services
         public async Task CleanUpEligibilityChecks()
         {
             var checkDate = DateTime.UtcNow.AddDays(-_configuration.GetValue<int>($"DataCleanseDaysSoftCheck_Status_{CheckEligibilityStatus.eligible}"));
-            var items = _db.FsmCheckEligibilities.Where(x => x.Created <= checkDate);
-            _db.FsmCheckEligibilities.RemoveRange(items);
+            var items = _db.CheckEligibilities.Where(x => x.Created <= checkDate);
+            _db.CheckEligibilities.RemoveRange(items);
             await _db.SaveChangesAsync();
 
             checkDate = DateTime.UtcNow.AddDays(-_configuration.GetValue<int>($"DataCleanseDaysSoftCheck_Status_{CheckEligibilityStatus.parentNotFound}"));
-            items = _db.FsmCheckEligibilities.Where(x => x.Created <= checkDate);
-            _db.FsmCheckEligibilities.RemoveRange(items);
+            items = _db.CheckEligibilities.Where(x => x.Created <= checkDate);
+            _db.CheckEligibilities.RemoveRange(items);
             await _db.SaveChangesAsync();
         }
 
