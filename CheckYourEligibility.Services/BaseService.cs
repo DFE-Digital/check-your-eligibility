@@ -38,7 +38,8 @@ namespace CheckYourEligibility.Services
                         {"Class", className},
                          {"Method", name},
                          {"Data", jsonString},
-                    {"Response", responseData}
+                         {"Response", responseData},
+                         {"Message", message}
                 });
         }
 
