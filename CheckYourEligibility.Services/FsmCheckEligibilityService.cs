@@ -71,7 +71,7 @@ namespace CheckYourEligibility.Services
                     item.EligibilityCheckHashID = checkHashResult.EligibilityCheckHashID;
                     item.EligibilityCheckHash = checkHashResult;
                 }
-                await _db.FsmCheckEligibilities.AddAsync(item);
+                await _db.CheckEligibilities.AddAsync(item);
                 await _db.SaveChangesAsync();
                 if (checkHashResult == null)
                 {
@@ -100,7 +100,7 @@ namespace CheckYourEligibility.Services
 
         public async Task<CheckEligibilityStatus?> GetStatus(string guid)
         {
-            var result = await _db.FsmCheckEligibilities.FirstOrDefaultAsync(x=> x.EligibilityCheckID == guid);
+            var result = await _db.CheckEligibilities.FirstOrDefaultAsync(x=> x.EligibilityCheckID == guid);
             if (result != null)
             {
                // var x = await _dwpService.GetStatus(guid);
@@ -111,7 +111,7 @@ namespace CheckYourEligibility.Services
 
         public async Task<CheckEligibilityStatus?> ProcessCheck(string guid)
         {         
-            var result = await _db.FsmCheckEligibilities.FirstOrDefaultAsync(x => x.EligibilityCheckID == guid);
+            var result = await _db.CheckEligibilities.FirstOrDefaultAsync(x => x.EligibilityCheckID == guid);
             if (result != null)
             {
                 if (result.Status != CheckEligibilityStatus.queuedForProcessing)
@@ -154,7 +154,7 @@ namespace CheckYourEligibility.Services
 
         public async Task<CheckEligibilityItemFsm?> GetItem(string guid)
         {
-            var result = await _db.FsmCheckEligibilities.FirstOrDefaultAsync(x => x.EligibilityCheckID == guid);
+            var result = await _db.CheckEligibilities.FirstOrDefaultAsync(x => x.EligibilityCheckID == guid);
             if (result != null)
             {
                 var item = _mapper.Map<CheckEligibilityItemFsm>(result);

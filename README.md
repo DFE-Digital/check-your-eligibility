@@ -13,7 +13,6 @@ Add-Migration checkHash -project CheckYourEligibility.Data.Migrations
 Add-Migration checkHashSource -project CheckYourEligibility.Data.Migrations
 Add-Migration checkHashResult -project CheckYourEligibility.Data.Migrations
 
-
 --Run Latest migration
 update-database -project CheckYourEligibility.Data.Migrations
 
