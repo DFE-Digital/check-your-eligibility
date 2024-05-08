@@ -13,4 +13,6 @@ namespace CheckYourEligibility.Domain.Requests
     {
         public ApplicationStatus   Status { get; set; }
     }
+
+   
 }
