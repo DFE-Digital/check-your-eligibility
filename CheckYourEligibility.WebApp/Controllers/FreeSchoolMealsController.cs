@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
 using System.Security.Claims;
-using StatusResponse = CheckYourEligibility.Domain.Responses.StatusResponse;
+using CheckEligibilityStatusResponse = CheckYourEligibility.Domain.Responses.CheckEligibilityStatusResponse;
 using StatusValue = CheckYourEligibility.Domain.Responses.StatusValue;
 
 namespace CheckYourEligibility.WebApp.Controllers
@@ -73,7 +73,7 @@ namespace CheckYourEligibility.WebApp.Controllers
         /// </summary>
         /// <param name="guid"></param>
         /// <returns></returns>
-        [ProducesResponseType(typeof(StatusResponse), (int)HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(CheckEligibilityStatusResponse), (int)HttpStatusCode.OK)]
         [ProducesResponseType((int)HttpStatusCode.NotFound)]
         [HttpGet("{guid}/Status")]
         public async Task<ActionResult> CheckEligibilityStatus(string guid)
@@ -83,7 +83,30 @@ namespace CheckYourEligibility.WebApp.Controllers
             {
                 return NotFound(guid);
             }
-            return new ObjectResult(new StatusResponse() { Data = new StatusValue() { Status = response.Value.ToString() } }) { StatusCode = StatusCodes.Status200OK };
+            return new ObjectResult(new CheckEligibilityStatusResponse() { Data = new StatusValue() { Status = response.Value.ToString() } }) { StatusCode = StatusCodes.Status200OK };
+        }
+
+        /// <summary>
+        /// Updates an Eligibility check status
+        /// </summary>
+        /// <param name="model"></param>
+        /// <returns></returns>
+        [ProducesResponseType(typeof(CheckEligibilityStatusResponse), (int)HttpStatusCode.OK)]
+        [ProducesResponseType((int)HttpStatusCode.NotFound)]
+        [HttpPatch("{guid}/Status")]
+        public async Task<ActionResult> EligibilityCheckStatusUpdate(string guid, [FromBody] EligibilityStatusUpdateRequest model)
+        {
+            var response = await _service.UpdateEligibilityCheckStatus(guid, model.Data);
+            if (response == null)
+            {
+                return NotFound();
+            }
+
+            return new ObjectResult(new CheckEligibilityStatusResponse
+            {
+                Data = response.Data
+            })
+            { StatusCode = StatusCodes.Status200OK };
         }
 
         /// <summary>
@@ -91,7 +114,9 @@ namespace CheckYourEligibility.WebApp.Controllers
         /// </summary>
         /// <param name="guid"></param>
         /// <returns></returns>
-        [ProducesResponseType(typeof(StatusResponse), (int)HttpStatusCode.OK)]
+        /// <remarks>If a dependent service, ie DWP fails then the status is not updated</remarks>
+        [ProducesResponseType(typeof(CheckEligibilityStatusResponse), (int)HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(CheckEligibilityStatusResponse), (int)HttpStatusCode.ServiceUnavailable)]
         [ProducesResponseType((int)HttpStatusCode.NotFound)]
         [ProducesResponseType((int)HttpStatusCode.BadRequest)]
         [HttpPut("ProcessEligibilityCheck/{guid}")]
@@ -104,7 +129,15 @@ namespace CheckYourEligibility.WebApp.Controllers
                 {
                     return NotFound(guid);
                 }
-                return new ObjectResult(new StatusResponse() { Data = new StatusValue() { Status = response.Value.ToString() } }) { StatusCode = StatusCodes.Status200OK };
+                if (response.Value == Domain.Enums.CheckEligibilityStatus.queuedForProcessing)
+                {
+                    return new ObjectResult(new CheckEligibilityStatusResponse() { Data = new StatusValue() { Status = response.Value.ToString() } }) { StatusCode = StatusCodes.Status503ServiceUnavailable };
+                }
+                else
+                {
+                    return new ObjectResult(new CheckEligibilityStatusResponse() { Data = new StatusValue() { Status = response.Value.ToString() } }) { StatusCode = StatusCodes.Status200OK };
+                }
+                
             }
             catch (ProcessCheckException)
             {
@@ -138,6 +171,7 @@ namespace CheckYourEligibility.WebApp.Controllers
             })
             { StatusCode = StatusCodes.Status200OK };
         }
+               
 
         /// <summary>
         /// Posts an application
@@ -249,5 +283,6 @@ namespace CheckYourEligibility.WebApp.Controllers
             })
             { StatusCode = StatusCodes.Status200OK };
         }
+
     }
  }
