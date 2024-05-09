@@ -102,7 +102,7 @@ namespace CheckYourEligibility.APIUnitTests
             request.Data.NationalAsylumSeekerServiceNumber = string.Empty;
             _mockService.Setup(cs => cs.PostCheck(request.Data)).ReturnsAsync(new PostCheckResult { Id = id});
 
-            var expectedResult = new ObjectResult(new StatusResponse() { Data = new StatusValue() { Status = CheckEligibilityStatus.queuedForProcessing.ToString() } }) { StatusCode = StatusCodes.Status202Accepted };
+            var expectedResult = new ObjectResult(new CheckEligibilityStatusResponse() { Data = new StatusValue() { Status = CheckEligibilityStatus.queuedForProcessing.ToString() } }) { StatusCode = StatusCodes.Status202Accepted };
 
             // Act
             var response = _sut.CheckEligibility(request);
@@ -268,7 +268,24 @@ namespace CheckYourEligibility.APIUnitTests
             var expectedResponse = CheckEligibilityStatus.parentNotFound;
             _mockService.Setup(cs => cs.ProcessCheck(guid)).ReturnsAsync(expectedResponse);
             expectedResponse = CheckEligibilityStatus.parentNotFound;
-            var expectedResult = new ObjectResult(new StatusResponse() { Data = new StatusValue() { Status = expectedResponse.ToString() } }) { StatusCode = StatusCodes.Status200OK };
+            var expectedResult = new ObjectResult(new CheckEligibilityStatusResponse() { Data = new StatusValue() { Status = expectedResponse.ToString() } }) { StatusCode = StatusCodes.Status200OK };
+
+            // Act
+            var response = _sut.Process(guid);
+
+            // Assert
+            response.Result.Should().BeEquivalentTo(expectedResult);
+        }
+
+        [Test]
+        public void Given_DWPError_Process_Should_Return_queuedForProcessing()
+        {
+            // Arrange
+            var guid = _fixture.Create<Guid>().ToString();
+            var expectedResponse = CheckEligibilityStatus.queuedForProcessing;
+            _mockService.Setup(cs => cs.ProcessCheck(guid)).ReturnsAsync(expectedResponse);
+            expectedResponse = CheckEligibilityStatus.queuedForProcessing;
+            var expectedResult = new ObjectResult(new CheckEligibilityStatusResponse() { Data = new StatusValue() { Status = expectedResponse.ToString() } }) { StatusCode = StatusCodes.Status503ServiceUnavailable };
 
             // Act
             var response = _sut.Process(guid);
@@ -413,6 +430,43 @@ namespace CheckYourEligibility.APIUnitTests
             var request = _fixture.Create<ApplicationStatusUpdateRequest>();
             var expectedResponse = _fixture.Create<ApplicationStatusUpdateResponse>();
             _mockService.Setup(cs => cs.UpdateApplicationStatus(guid,request.Data)).ReturnsAsync(expectedResponse);
+            var expectedResult = new ObjectResult(new ApplicationStatusUpdateResponse
+            {
+                Data = expectedResponse.Data
+            })
+            { StatusCode = StatusCodes.Status200OK };
+
+            // Act
+            var response = _sut.ApplicationStatusUpdate(guid, request);
+
+            // Assert
+            response.Result.Should().BeEquivalentTo(expectedResult);
+        }
+
+        [Test]
+        public void Given_InValid_guid_CheckEligibilityStatusUpdate_Should_Return_StatusNotFound()
+        {
+            // Arrange
+            var guid = _fixture.Create<Guid>().ToString();
+            var request = _fixture.Create<EligibilityStatusUpdateRequest>();
+            _mockService.Setup(cs => cs.UpdateEligibilityCheckStatus(guid, request.Data)).Returns(Task.FromResult<CheckEligibilityStatusResponse?>(null));
+            var expectedResult = new NotFoundResult();
+
+            // Act
+            var response = _sut.EligibilityCheckStatusUpdate(guid, request);
+
+            // Assert
+            response.Result.Should().BeEquivalentTo(expectedResult);
+        }
+
+        [Test]
+        public void Given_Valid_guid_CheckEligibilityStatusUpdate_Should_Return_StatusOk()
+        {
+            // Arrange
+            var guid = _fixture.Create<Guid>().ToString();
+            var request = _fixture.Create<ApplicationStatusUpdateRequest>();
+            var expectedResponse = _fixture.Create<ApplicationStatusUpdateResponse>();
+            _mockService.Setup(cs => cs.UpdateApplicationStatus(guid, request.Data)).ReturnsAsync(expectedResponse);
             var expectedResult = new ObjectResult(new ApplicationStatusUpdateResponse
             {
                 Data = expectedResponse.Data
