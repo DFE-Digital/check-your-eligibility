@@ -284,6 +284,7 @@ namespace CheckYourEligibility.ServiceUnitTests
             // Arrange
             var item = _fixture.Create<EligibilityCheck>();
             item.NASSNumber = string.Empty;
+            item.Status = CheckEligibilityStatus.queuedForProcessing;
             _fakeInMemoryDb.CheckEligibilities.Add(item);
             await _fakeInMemoryDb.SaveChangesAsync();
             _moqDwpService.Setup(x => x.GetCitizen(It.IsAny<CitizenMatchRequest>())).ReturnsAsync(CheckEligibilityStatus.parentNotFound.ToString());
@@ -360,7 +361,7 @@ namespace CheckYourEligibility.ServiceUnitTests
             var item = _fixture.Create<EligibilityCheck>();
             item.Status = CheckEligibilityStatus.queuedForProcessing;
             item.NASSNumber = string.Empty;
-            _fakeInMemoryDb.FsmCheckEligibilities.Add(item);
+            _fakeInMemoryDb.CheckEligibilities.Add(item);
             await _fakeInMemoryDb.SaveChangesAsync();
             _moqDwpService.Setup(x => x.GetCitizen(It.IsAny<CitizenMatchRequest>())).ReturnsAsync(CheckEligibilityStatus.DwpError.ToString());
             var result = new StatusCodeResult(StatusCodes.Status500InternalServerError);
@@ -559,7 +560,7 @@ namespace CheckYourEligibility.ServiceUnitTests
         {
             // Arrange
             var item = _fixture.Create<EligibilityCheck>();
-            _fakeInMemoryDb.FsmCheckEligibilities.Add(item);
+            _fakeInMemoryDb.CheckEligibilities.Add(item);
             await _fakeInMemoryDb.SaveChangesAsync();
 
             var requestUpdateStatus = _fixture.Create<EligibilityCheckStatusData>();
