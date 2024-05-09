@@ -78,7 +78,9 @@ namespace CheckYourEligibility.Services
                     if (_queueClient != null)
                     {
                         await _queueClient.SendMessageAsync(
-                            JsonConvert.SerializeObject(new QueueMessageCheck() { Type = item.Type.ToString(), Guid = item.EligibilityCheckID, Url = $"{FSMLinks.ProcessLink}{item.EligibilityCheckID}" }));
+                            JsonConvert.SerializeObject(new QueueMessageCheck() { Type = item.Type.ToString(), Guid = item.EligibilityCheckID,
+                                ProcessUrl = $"{FSMLinks.ProcessLink}{item.EligibilityCheckID}",
+                                SetStatusUrl = $"{FSMLinks.GetLink}{item.EligibilityCheckID}/status"}));
                     }
                 }
 
