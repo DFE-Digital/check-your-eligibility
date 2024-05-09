@@ -284,6 +284,7 @@ namespace CheckYourEligibility.ServiceUnitTests
             // Arrange
             var item = _fixture.Create<EligibilityCheck>();
             item.NASSNumber = string.Empty;
+            item.Status = CheckEligibilityStatus.queuedForProcessing;
             _fakeInMemoryDb.CheckEligibilities.Add(item);
             await _fakeInMemoryDb.SaveChangesAsync();
             _moqDwpService.Setup(x => x.GetCitizen(It.IsAny<CitizenMatchRequest>())).ReturnsAsync(CheckEligibilityStatus.parentNotFound.ToString());
