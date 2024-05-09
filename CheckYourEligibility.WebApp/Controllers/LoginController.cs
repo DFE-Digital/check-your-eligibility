@@ -45,7 +45,7 @@ namespace CheckYourEligibility.WebApp.Controllers
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };
 
-            expires = DateTime.Now.AddMinutes(820);
+            expires = DateTime.Now.AddMinutes(120);
             var token = new JwtSecurityToken(_config["Jwt:Issuer"],
               _config["Jwt:Issuer"],
               claims,

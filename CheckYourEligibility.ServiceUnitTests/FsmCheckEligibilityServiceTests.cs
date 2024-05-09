@@ -123,10 +123,10 @@ namespace CheckYourEligibility.ServiceUnitTests
 
             // Act/Assert
             var response = await _sut.PostCheck(request);
-            var baseItem = _fakeInMemoryDb.FsmCheckEligibilities.FirstOrDefault(x => x.EligibilityCheckID == response.Id);
+            var baseItem = _fakeInMemoryDb.CheckEligibilities.FirstOrDefault(x => x.EligibilityCheckID == response.Id);
             baseItem.EligibilityCheckHashID.Should().BeNull();
             await _sut.ProcessCheck(response.Id);
-            baseItem = _fakeInMemoryDb.FsmCheckEligibilities.Include(x => x.EligibilityCheckHash).FirstOrDefault(x => x.EligibilityCheckID == response.Id);
+            baseItem = _fakeInMemoryDb.CheckEligibilities.Include(x => x.EligibilityCheckHash).FirstOrDefault(x => x.EligibilityCheckID == response.Id);
             baseItem.EligibilityCheckHash.Should().NotBeNull();
             var BaseHash = _fakeInMemoryDb.EligibilityCheckHashes.First(x=>x.EligibilityCheckHashID == baseItem.EligibilityCheckHashID);
 
@@ -136,7 +136,7 @@ namespace CheckYourEligibility.ServiceUnitTests
             //post a second check so that New hash is used for outcome
             var responseNewPostCheck = await _sut.PostCheck(request);
 
-            var newItem = _fakeInMemoryDb.FsmCheckEligibilities.Include(x => x.EligibilityCheckHash).FirstOrDefault(x => x.EligibilityCheckID == responseNewPostCheck.Id);
+            var newItem = _fakeInMemoryDb.CheckEligibilities.Include(x => x.EligibilityCheckHash).FirstOrDefault(x => x.EligibilityCheckID == responseNewPostCheck.Id);
             newItem.EligibilityCheckHash.Should().BeNull();
             newItem.Status.Should().Be(CheckEligibilityStatus.queuedForProcessing);
         }
@@ -163,17 +163,17 @@ namespace CheckYourEligibility.ServiceUnitTests
 
             // Act/Assert
             var response = await _sut.PostCheck(request);
-            var baseItem = _fakeInMemoryDb.FsmCheckEligibilities.FirstOrDefault(x => x.EligibilityCheckID == response.Id);
+            var baseItem = _fakeInMemoryDb.CheckEligibilities.FirstOrDefault(x => x.EligibilityCheckID == response.Id);
             baseItem.EligibilityCheckHashID.Should().BeNull();
             await _sut.ProcessCheck(response.Id);
-            baseItem = _fakeInMemoryDb.FsmCheckEligibilities.Include(x=>x.EligibilityCheckHash).FirstOrDefault(x => x.EligibilityCheckID == response.Id);
+            baseItem = _fakeInMemoryDb.CheckEligibilities.Include(x=>x.EligibilityCheckHash).FirstOrDefault(x => x.EligibilityCheckID == response.Id);
             baseItem.EligibilityCheckHash.Should().NotBeNull();
             var BaseHash = baseItem.EligibilityCheckHash;
 
             //post a second check so that BaseHash is used for outcome
             var responseNewPostCheck = await _sut.PostCheck(request);
 
-            var newItem = _fakeInMemoryDb.FsmCheckEligibilities.Include(x => x.EligibilityCheckHash).FirstOrDefault(x => x.EligibilityCheckID == responseNewPostCheck.Id);
+            var newItem = _fakeInMemoryDb.CheckEligibilities.Include(x => x.EligibilityCheckHash).FirstOrDefault(x => x.EligibilityCheckID == responseNewPostCheck.Id);
             newItem.EligibilityCheckHash.Should().NotBeNull();
             newItem.Status.Should().Be(BaseHash.Outcome);
         }
@@ -200,7 +200,7 @@ namespace CheckYourEligibility.ServiceUnitTests
             // Act
             var response = _sut.PostCheck(request);
             var process = _sut.ProcessCheck(response.Result.Id);
-            var item = _fakeInMemoryDb.FsmCheckEligibilities.FirstOrDefault(x=>x.EligibilityCheckID == response.Result.Id);
+            var item = _fakeInMemoryDb.CheckEligibilities.FirstOrDefault(x=>x.EligibilityCheckID == response.Result.Id);
             var hash = _sut.GetHash(item);
             // Assert
             _fakeInMemoryDb.EligibilityCheckHashes.First(x=>x.Hash == hash).Should().NotBeNull();
@@ -239,7 +239,7 @@ namespace CheckYourEligibility.ServiceUnitTests
         {
             // Arrange
             var item = _fixture.Create<EligibilityCheck>();
-            _fakeInMemoryDb.FsmCheckEligibilities.Add(item);
+            _fakeInMemoryDb.CheckEligibilities.Add(item);
             _fakeInMemoryDb.SaveChangesAsync();
 
             // Act
@@ -268,7 +268,7 @@ namespace CheckYourEligibility.ServiceUnitTests
             var item = _fixture.Create<EligibilityCheck>();
             item.Status = CheckEligibilityStatus.eligible;
             item.NASSNumber = string.Empty;
-            _fakeInMemoryDb.FsmCheckEligibilities.Add(item);
+            _fakeInMemoryDb.CheckEligibilities.Add(item);
             _fakeInMemoryDb.SaveChangesAsync();
 
             // Act
@@ -284,9 +284,7 @@ namespace CheckYourEligibility.ServiceUnitTests
             // Arrange
             var item = _fixture.Create<EligibilityCheck>();
             item.NASSNumber = string.Empty;
-            item.Status = CheckEligibilityStatus.queuedForProcessing;
-
-            _fakeInMemoryDb.FsmCheckEligibilities.Add(item);
+            _fakeInMemoryDb.CheckEligibilities.Add(item);
             await _fakeInMemoryDb.SaveChangesAsync();
             _moqDwpService.Setup(x => x.GetCitizen(It.IsAny<CitizenMatchRequest>())).ReturnsAsync(CheckEligibilityStatus.parentNotFound.ToString());
 
@@ -304,7 +302,7 @@ namespace CheckYourEligibility.ServiceUnitTests
             var item = _fixture.Create<EligibilityCheck>();
             item.Status = CheckEligibilityStatus.queuedForProcessing;
             item.NASSNumber = string.Empty;
-            _fakeInMemoryDb.FsmCheckEligibilities.Add(item);
+            _fakeInMemoryDb.CheckEligibilities.Add(item);
             _fakeInMemoryDb.SaveChangesAsync();
             _moqDwpService.Setup(x => x.GetCitizen(It.IsAny<CitizenMatchRequest>())).ReturnsAsync(CheckEligibilityStatus.parentNotFound.ToString());
 
@@ -322,7 +320,7 @@ namespace CheckYourEligibility.ServiceUnitTests
             var item = _fixture.Create<EligibilityCheck>();
             item.Status = CheckEligibilityStatus.queuedForProcessing;
             item.NASSNumber = string.Empty;
-            _fakeInMemoryDb.FsmCheckEligibilities.Add(item);
+            _fakeInMemoryDb.CheckEligibilities.Add(item);
             _fakeInMemoryDb.SaveChangesAsync();
             _moqDwpService.Setup(x => x.GetCitizen(It.IsAny<CitizenMatchRequest>())).ReturnsAsync(Guid.NewGuid().ToString());
             var result = new StatusCodeResult(StatusCodes.Status200OK);
@@ -342,7 +340,7 @@ namespace CheckYourEligibility.ServiceUnitTests
             var item = _fixture.Create<EligibilityCheck>();
             item.Status = CheckEligibilityStatus.queuedForProcessing;
             item.NASSNumber = string.Empty;
-            _fakeInMemoryDb.FsmCheckEligibilities.Add(item);
+            _fakeInMemoryDb.CheckEligibilities.Add(item);
             _fakeInMemoryDb.SaveChangesAsync();
             _moqDwpService.Setup(x => x.GetCitizen(It.IsAny<CitizenMatchRequest>())).ReturnsAsync(Guid.NewGuid().ToString());
             var result = new StatusCodeResult(StatusCodes.Status404NotFound);
@@ -381,7 +379,7 @@ namespace CheckYourEligibility.ServiceUnitTests
             var item = _fixture.Create<EligibilityCheck>();
             item.Status = CheckEligibilityStatus.queuedForProcessing;
             item.NINumber = string.Empty;
-            _fakeInMemoryDb.FsmCheckEligibilities.Add(item);
+            _fakeInMemoryDb.CheckEligibilities.Add(item);
             _fakeInMemoryDb.SaveChangesAsync();
 
             // Act
@@ -398,7 +396,7 @@ namespace CheckYourEligibility.ServiceUnitTests
             var item = _fixture.Create<EligibilityCheck>();
             item.Status = CheckEligibilityStatus.queuedForProcessing;
             item.NASSNumber = string.Empty;
-            _fakeInMemoryDb.FsmCheckEligibilities.Add(item);
+            _fakeInMemoryDb.CheckEligibilities.Add(item);
             _fakeInMemoryDb.FreeSchoolMealsHMRC.Add(new FreeSchoolMealsHMRC { FreeSchoolMealsHMRCID = item.NINumber, Surname = item.LastName, DateOfBirth = item.DateOfBirth });
             _fakeInMemoryDb.SaveChangesAsync();
 
@@ -420,7 +418,7 @@ namespace CheckYourEligibility.ServiceUnitTests
             var surnameInvalid = "x" + surnamevalid;
 
             item.NASSNumber = string.Empty;
-            _fakeInMemoryDb.FsmCheckEligibilities.Add(item);
+            _fakeInMemoryDb.CheckEligibilities.Add(item);
             _fakeInMemoryDb.FreeSchoolMealsHMRC.Add(new FreeSchoolMealsHMRC { FreeSchoolMealsHMRCID = item.NINumber, Surname = surnameInvalid, DateOfBirth = item.DateOfBirth });
             _fakeInMemoryDb.SaveChangesAsync();
 
@@ -443,7 +441,7 @@ namespace CheckYourEligibility.ServiceUnitTests
             item.LastName = surnamevalid;
             var surnameInvalid = surnamevalid + "x";
             item.NASSNumber = string.Empty;
-            _fakeInMemoryDb.FsmCheckEligibilities.Add(item);
+            _fakeInMemoryDb.CheckEligibilities.Add(item);
             _fakeInMemoryDb.FreeSchoolMealsHMRC.Add(new FreeSchoolMealsHMRC { FreeSchoolMealsHMRCID = item.NINumber, Surname = surnameInvalid, DateOfBirth = item.DateOfBirth });
             _fakeInMemoryDb.SaveChangesAsync();
 
@@ -461,7 +459,7 @@ namespace CheckYourEligibility.ServiceUnitTests
             var item = _fixture.Create<EligibilityCheck>();
             item.Status = CheckEligibilityStatus.queuedForProcessing;
             item.NINumber = string.Empty;
-            _fakeInMemoryDb.FsmCheckEligibilities.Add(item);
+            _fakeInMemoryDb.CheckEligibilities.Add(item);
             _fakeInMemoryDb.FreeSchoolMealsHO.Add(new FreeSchoolMealsHO { FreeSchoolMealsHOID = "123", NASS = item.NASSNumber, LastName = item.LastName, DateOfBirth = item.DateOfBirth });
             _fakeInMemoryDb.SaveChangesAsync();
 
@@ -490,7 +488,7 @@ namespace CheckYourEligibility.ServiceUnitTests
         {
             // Arrange
             var item = _fixture.Create<EligibilityCheck>();
-            _fakeInMemoryDb.FsmCheckEligibilities.Add(item);
+            _fakeInMemoryDb.CheckEligibilities.Add(item);
             _fakeInMemoryDb.SaveChangesAsync();
 
             // Act

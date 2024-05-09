@@ -11,7 +11,7 @@ public class EligibilityCheckContext : DbContext, IEligibilityCheckContext
     {
     }
 
-    public virtual  DbSet<EligibilityCheck> FsmCheckEligibilities { get; set; }
+    public virtual  DbSet<EligibilityCheck> CheckEligibilities { get; set; }
     public virtual DbSet<FreeSchoolMealsHMRC> FreeSchoolMealsHMRC { get; set; }
     public virtual DbSet<FreeSchoolMealsHO> FreeSchoolMealsHO { get; set; }
     public virtual DbSet<School> Schools { get; set; }
