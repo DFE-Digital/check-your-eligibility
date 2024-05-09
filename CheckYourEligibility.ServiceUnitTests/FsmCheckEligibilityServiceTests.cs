@@ -279,20 +279,20 @@ namespace CheckYourEligibility.ServiceUnitTests
         }
 
         [Test]
-        public void Given_validRequest_Process_Should_Return_updatedStatus_parentNotFound()
+        public async Task Given_validRequest_Process_Should_Return_updatedStatus_parentNotFound()
         {
             // Arrange
             var item = _fixture.Create<EligibilityCheck>();
             item.NASSNumber = string.Empty;
             _fakeInMemoryDb.CheckEligibilities.Add(item);
-            _fakeInMemoryDb.SaveChangesAsync();
+            await _fakeInMemoryDb.SaveChangesAsync();
             _moqDwpService.Setup(x => x.GetCitizen(It.IsAny<CitizenMatchRequest>())).ReturnsAsync(CheckEligibilityStatus.parentNotFound.ToString());
 
             // Act
-            var response = _sut.ProcessCheck(item.EligibilityCheckID);
+            var response = await _sut.ProcessCheck(item.EligibilityCheckID);
 
             // Assert
-            response.Result.Should().Be(CheckEligibilityStatus.parentNotFound);
+            response.Should().Be(CheckEligibilityStatus.parentNotFound);
         }
 
         [Test]
@@ -351,6 +351,25 @@ namespace CheckYourEligibility.ServiceUnitTests
 
             // Assert
             response.Result.Should().Be(CheckEligibilityStatus.notEligible);
+        }
+
+        [Test]
+        public async Task Given_validRequest_DWP_Process_Should_Return_500_Failure_status_is_NotUpdated()
+        {
+            // Arrange
+            var item = _fixture.Create<EligibilityCheck>();
+            item.Status = CheckEligibilityStatus.queuedForProcessing;
+            item.NASSNumber = string.Empty;
+            _fakeInMemoryDb.FsmCheckEligibilities.Add(item);
+            await _fakeInMemoryDb.SaveChangesAsync();
+            _moqDwpService.Setup(x => x.GetCitizen(It.IsAny<CitizenMatchRequest>())).ReturnsAsync(CheckEligibilityStatus.DwpError.ToString());
+            var result = new StatusCodeResult(StatusCodes.Status500InternalServerError);
+
+            // Act
+            var response = await _sut.ProcessCheck(item.EligibilityCheckID);
+
+            // Assert
+            response.Should().Be(CheckEligibilityStatus.queuedForProcessing);
         }
 
         [Test]
@@ -519,6 +538,38 @@ namespace CheckYourEligibility.ServiceUnitTests
             // Assert
             applicationStatusUpdate.Should().BeOfType<ApplicationStatusUpdateResponse>();
             applicationStatusUpdate.Data.Status.Should().BeEquivalentTo(requestUpdateStatus.Data.Status.ToString());
+        }
+
+        [Test]
+        public void Given_InValidRequest_UpdateEligibilityCheckStatus_Should_Return_null()
+        {
+            // Arrange
+            var guid = _fixture.Create<Guid>().ToString();
+            var request = _fixture.Create<EligibilityStatusUpdateRequest>();
+
+            // Act
+            var response = _sut.UpdateEligibilityCheckStatus(guid, request.Data);
+
+            // Assert
+            response.Result.Should().BeNull();
+        }
+
+        [Test]
+        public async Task Given_ValidRequest_UpdateEligibilityCheckStatus_Should_Return_UpdatedStatus()
+        {
+            // Arrange
+            var item = _fixture.Create<EligibilityCheck>();
+            _fakeInMemoryDb.FsmCheckEligibilities.Add(item);
+            await _fakeInMemoryDb.SaveChangesAsync();
+
+            var requestUpdateStatus = _fixture.Create<EligibilityCheckStatusData>();
+
+            // Act
+            var statusUpdate = await _sut.UpdateEligibilityCheckStatus(item.EligibilityCheckID, requestUpdateStatus);
+
+            // Assert
+            statusUpdate.Should().BeOfType<CheckEligibilityStatusResponse>();
+            statusUpdate.Data.Status.Should().BeEquivalentTo(requestUpdateStatus.Status.ToString());
         }
 
 

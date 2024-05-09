@@ -103,7 +103,6 @@ namespace CheckYourEligibility.Services
             var result = await _db.CheckEligibilities.FirstOrDefaultAsync(x=> x.EligibilityCheckID == guid);
             if (result != null)
             {
-               // var x = await _dwpService.GetStatus(guid);
                 return result.Status;
             }
             return null;
@@ -117,7 +116,7 @@ namespace CheckYourEligibility.Services
                 if (result.Status != CheckEligibilityStatus.queuedForProcessing)
                 {
                     LogApiEvent(this.GetType().Name, guid, "CheckItem not queuedForProcessing.");
-                    throw new ProcessCheckException("CheckItem not queuedForProcessing.");
+                    throw new ProcessCheckException($"Error checkItem {guid} not queuedForProcessing.");
                 }
                 var source = ProcessEligibilityCheckSource.HMRC;
                 CheckEligibilityStatus checkResult = CheckEligibilityStatus.parentNotFound;
@@ -138,11 +137,18 @@ namespace CheckYourEligibility.Services
                 result.Status = checkResult;
                 result.Updated = DateTime.UtcNow;
                
-                if (checkResult != CheckEligibilityStatus.DwpError)
+                if (checkResult == CheckEligibilityStatus.DwpError)
+                {
+                    // Revert status back and do not save changes
+                    result.Status = CheckEligibilityStatus.queuedForProcessing;
+                    LogApiEvent(this.GetType().Name, guid, "Dwp Error", "There has been an error calling DWP");
+                }
+                else
                 {
                     HashCheckResult(result, checkResult, source);
+                    var updates = await _db.SaveChangesAsync();
                 }
-                var updates = await _db.SaveChangesAsync();
+                
                 return result.Status;
             }
             else
@@ -273,6 +279,20 @@ namespace CheckYourEligibility.Services
             var inputBytes = Encoding.UTF8.GetBytes(input);
             var inputHash = SHA256.HashData(inputBytes);
             return Convert.ToHexString(inputHash);
+        }
+
+        public async Task<CheckEligibilityStatusResponse> UpdateEligibilityCheckStatus(string guid, EligibilityCheckStatusData data)
+        {
+            var result = await _db.FsmCheckEligibilities.FirstOrDefaultAsync(x => x.EligibilityCheckID == guid);
+            if (result != null)
+            {
+                result.Status = data.Status;
+                result.Updated = DateTime.UtcNow;
+                var updates = await _db.SaveChangesAsync();
+                return new CheckEligibilityStatusResponse { Data = new Domain.Responses.StatusValue { Status = result.Status.ToString() } };
+            }
+
+            return null;
         }
 
         #region Private
