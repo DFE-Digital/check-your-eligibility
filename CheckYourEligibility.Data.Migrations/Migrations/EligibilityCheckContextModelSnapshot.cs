@@ -86,7 +86,7 @@ namespace CheckYourEligibility.Data.Migrations.Migrations
                     b.HasIndex(new[] { "Reference" }, "idx_Reference")
                         .IsUnique();
 
-                    b.ToTable("Applications");
+                    b.ToTable("Applications", (string)null);
                 });
 
             modelBuilder.Entity("CheckYourEligibility.Data.Models.ApplicationStatus", b =>
@@ -109,7 +109,7 @@ namespace CheckYourEligibility.Data.Migrations.Migrations
 
                     b.HasIndex("ApplicationID");
 
-                    b.ToTable("ApplicationStatuses");
+                    b.ToTable("ApplicationStatuses", (string)null);
                 });
 
             modelBuilder.Entity("CheckYourEligibility.Data.Models.EligibilityCheck", b =>
@@ -182,7 +182,7 @@ namespace CheckYourEligibility.Data.Migrations.Migrations
 
                     b.HasIndex(new[] { "Hash" }, "idx_EligibilityCheckHash");
 
-                    b.ToTable("EligibilityCheckHashes");
+                    b.ToTable("EligibilityCheckHashes", (string)null);
                 });
 
             modelBuilder.Entity("CheckYourEligibility.Data.Models.FreeSchoolMealsHMRC", b =>
@@ -202,7 +202,7 @@ namespace CheckYourEligibility.Data.Migrations.Migrations
 
                     b.HasKey("FreeSchoolMealsHMRCID");
 
-                    b.ToTable("FreeSchoolMealsHMRC");
+                    b.ToTable("FreeSchoolMealsHMRC", (string)null);
                 });
 
             modelBuilder.Entity("CheckYourEligibility.Data.Models.FreeSchoolMealsHO", b =>
@@ -223,7 +223,7 @@ namespace CheckYourEligibility.Data.Migrations.Migrations
 
                     b.HasKey("FreeSchoolMealsHOID");
 
-                    b.ToTable("FreeSchoolMealsHO");
+                    b.ToTable("FreeSchoolMealsHO", (string)null);
                 });
 
             modelBuilder.Entity("CheckYourEligibility.Data.Models.LocalAuthority", b =>
@@ -240,7 +240,7 @@ namespace CheckYourEligibility.Data.Migrations.Migrations
 
                     b.HasKey("LocalAuthorityId");
 
-                    b.ToTable("LocalAuthorities");
+                    b.ToTable("LocalAuthorities", (string)null);
                 });
 
             modelBuilder.Entity("CheckYourEligibility.Data.Models.School", b =>
@@ -285,7 +285,7 @@ namespace CheckYourEligibility.Data.Migrations.Migrations
 
                     b.HasIndex("LocalAuthorityId");
 
-                    b.ToTable("Schools");
+                    b.ToTable("Schools", (string)null);
                 });
 
             modelBuilder.Entity("CheckYourEligibility.Data.Models.Application", b =>
