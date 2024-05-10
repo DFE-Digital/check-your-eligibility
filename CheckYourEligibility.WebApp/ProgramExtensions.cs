@@ -14,12 +14,7 @@ namespace CheckYourEligibility.WebApp
     {
         public static IServiceCollection AddDatabase(this IServiceCollection services, IConfiguration configuration)
         {
-            var connectionString = configuration.GetConnectionString("EligibilityCheck");
-            if (!Environment.GetEnvironmentVariable("KEY_VAULT_NAME").IsNullOrEmpty())
-            {
-                var keyVault = GetAzureKeyVault();
-                connectionString = keyVault.GetSecret("ConnectionString").Value.Value;
-            }
+            var connectionString = configuration.GetValue<string>("ConnectionString");
 
             services.AddDbContext<IEligibilityCheckContext, EligibilityCheckContext>(options =>
                options.UseSqlServer(
@@ -35,13 +30,7 @@ namespace CheckYourEligibility.WebApp
 
         public static IServiceCollection AddAzureClients(this IServiceCollection services, IConfiguration configuration)
         {
-            var connectionString = configuration.GetValue<string>("AzureWebJobsStorage");
-            if (!Environment.GetEnvironmentVariable("KEY_VAULT_NAME").IsNullOrEmpty())
-            {
-                var keyVault = GetAzureKeyVault();
-                connectionString = keyVault.GetSecret("QueueConnectionString").Value.Value;
-            }
-
+            var connectionString = configuration.GetValue<string>("QueueConnectionString");
             services.AddAzureClients(builder =>
             {
                 builder.AddQueueServiceClient(connectionString);
@@ -86,14 +75,6 @@ namespace CheckYourEligibility.WebApp
                         };
                     });
             return services;
-        }
-
-        private static SecretClient GetAzureKeyVault()
-        {
-            var keyVaultName = Environment.GetEnvironmentVariable("KEY_VAULT_NAME");
-            var kvUri = $"https://{keyVaultName}.vault.azure.net";
-
-            return new SecretClient(new Uri(kvUri), new DefaultAzureCredential());
         }
     }
 }
