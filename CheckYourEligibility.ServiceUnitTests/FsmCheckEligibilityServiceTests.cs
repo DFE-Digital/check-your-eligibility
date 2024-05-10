@@ -80,28 +80,6 @@ namespace CheckYourEligibility.ServiceUnitTests
         }
 
         [Test]
-        public void Given_validRequest_PostApplication_Should_Return_ApplicationSaveFsm()
-        {
-            // Arrange
-            var request = _fixture.Create<ApplicationRequestData>();
-            request.ParentDateOfBirth = "01/02/1970";
-            request.ChildDateOfBirth = "01/02/2007";
-            var la = _fixture.Create<LocalAuthority>();
-            var school = _fixture.Create<School>();
-            school.LocalAuthorityId = la.LocalAuthorityId;
-            request.School = school.SchoolId;
-            _fakeInMemoryDb.LocalAuthorities.Add(la);
-            _fakeInMemoryDb.Schools.Add(school);
-            _fakeInMemoryDb.SaveChangesAsync();
-
-            // Act
-            var response = _sut.PostApplication(request);
-
-            // Assert
-            response.Result.Should().BeOfType<ApplicationSave>();
-        }
-
-        [Test]
         public async Task Given_PostCheck_HashIsOldSoNewOne_generated()
         {
             // Arrange
@@ -500,48 +478,6 @@ namespace CheckYourEligibility.ServiceUnitTests
         }
 
         [Test]
-        public void Given_InValidRequest_UpdateApplicationStatus_Should_Return_null()
-        {
-            // Arrange
-            var guid = _fixture.Create<Guid>().ToString();
-            var request = _fixture.Create<ApplicationStatusUpdateRequest>();
-
-            // Act
-            var response = _sut.UpdateApplicationStatus(guid, request.Data);
-
-            // Assert
-            response.Result.Should().BeNull();
-        }
-
-        [Test]
-        public async Task Given_ValidRequest_UpdateApplicationStatus_Should_Return_UpdatedStatus()
-        {
-            // Arrange
-            var request = _fixture.Create<ApplicationRequestData>();
-            request.ParentDateOfBirth = "01/02/1970";
-            request.ChildDateOfBirth = "01/02/2007";
-            var la = _fixture.Create<LocalAuthority>();
-            var school = _fixture.Create<School>();
-            school.LocalAuthorityId = la.LocalAuthorityId;
-            request.School = school.SchoolId;
-            _fakeInMemoryDb.LocalAuthorities.Add(la);
-            _fakeInMemoryDb.Schools.Add(school);
-            await _fakeInMemoryDb.SaveChangesAsync();
-
-            var requestUpdateStatus = _fixture.Create<ApplicationStatusUpdateRequest>();
-
-            // Act
-            var response = _sut.PostApplication(request);
-
-            // Act
-            var applicationStatusUpdate = await _sut.UpdateApplicationStatus(response.Result.Id, requestUpdateStatus.Data);
-
-            // Assert
-            applicationStatusUpdate.Should().BeOfType<ApplicationStatusUpdateResponse>();
-            applicationStatusUpdate.Data.Status.Should().BeEquivalentTo(requestUpdateStatus.Data.Status.ToString());
-        }
-
-        [Test]
         public void Given_InValidRequest_UpdateEligibilityCheckStatus_Should_Return_null()
         {
             // Arrange
@@ -571,83 +507,6 @@ namespace CheckYourEligibility.ServiceUnitTests
             // Assert
             statusUpdate.Should().BeOfType<CheckEligibilityStatusResponse>();
             statusUpdate.Data.Status.Should().BeEquivalentTo(requestUpdateStatus.Status.ToString());
-        }
-
-
-        [Test]
-        public void Given_InValidRequest_GetApplication_Should_Return_null()
-        {
-            // Arrange
-            var request = _fixture.Create<Guid>().ToString();
-
-            // Act
-            var response = _sut.GetApplication(request);
-
-            // Assert
-            response.Result.Should().BeNull();
-        }
-
-        [Test]
-        public async Task Given_ValidRequest_GetApplication_Should_Return_Item()
-        {
-            // Arrange
-            var request = _fixture.Create<ApplicationRequestData>();
-            request.ParentDateOfBirth = "01/02/1970";
-            request.ChildDateOfBirth = "01/02/2007";
-            var la = _fixture.Create<LocalAuthority>();
-            var school = _fixture.Create<School>();
-            school.LocalAuthorityId = la.LocalAuthorityId;
-            request.School = school.SchoolId;
-            _fakeInMemoryDb.LocalAuthorities.Add(la);
-            _fakeInMemoryDb.Schools.Add(school);
-            await _fakeInMemoryDb.SaveChangesAsync();
-            
-            var postApplicationResponse =await _sut.PostApplication(request);
-
-            // Act
-            var response = _sut.GetApplication(postApplicationResponse.Id);
-
-            // Assert
-            response.Result.Should().BeOfType<Domain.Responses.ApplicationResponse>();
-        }
-
-        [Test]
-        public void Given_NoResults_GetApplications_Should_Return_null()
-        {
-            // Arrange
-            var request = _fixture.Create<ApplicationRequestSearchData>();
-
-            // Act
-            var response = _sut.GetApplications(request);
-
-            // Assert
-            response.Result.Should().BeEmpty();
-        }
-
-        [Test]
-        public async Task Given_ValidRequest_GetApplications_Should_Return_results()
-        {
-            // Arrange
-            var request = _fixture.Create<ApplicationRequestData>();
-            request.ParentDateOfBirth = "01/02/1970";
-            request.ChildDateOfBirth = "01/02/2007";
-            var la = _fixture.Create<LocalAuthority>();
-            var school = _fixture.Create<School>();
-            school.LocalAuthorityId = la.LocalAuthorityId;
-            request.School = school.SchoolId;
-            _fakeInMemoryDb.LocalAuthorities.Add(la);
-            _fakeInMemoryDb.Schools.Add(school);
-            await _fakeInMemoryDb.SaveChangesAsync();
-
-            await _sut.PostApplication(request);
-
-            var requestSearch = new ApplicationRequestSearchData() { School = school.SchoolId };
-
-            // Act
-            var response = _sut.GetApplications(requestSearch);
-
-            // Assert
-            response.Result.Should().NotBeEmpty();
         }
     }
 }

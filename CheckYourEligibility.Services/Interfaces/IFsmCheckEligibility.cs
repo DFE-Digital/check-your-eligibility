@@ -10,10 +10,6 @@ namespace CheckYourEligibility.Services.Interfaces
         Task<CheckEligibilityStatus?> GetStatus(string guid);
         Task<PostCheckResult> PostCheck(CheckEligibilityRequestDataFsm data);
         Task<CheckEligibilityStatus?> ProcessCheck(string guid);
-        Task<ApplicationSave> PostApplication(ApplicationRequestData data);
-        Task<ApplicationResponse?> GetApplication(string guid);
-        Task<IEnumerable<ApplicationResponse>> GetApplications(ApplicationRequestSearchData model);
-        Task<ApplicationStatusUpdateResponse> UpdateApplicationStatus(string guid,ApplicationStatusData data);
         Task<CheckEligibilityStatusResponse> UpdateEligibilityCheckStatus(string guid, EligibilityCheckStatusData data);
     }
 }
