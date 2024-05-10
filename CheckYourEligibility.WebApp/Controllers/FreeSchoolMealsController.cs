@@ -19,13 +19,15 @@ namespace CheckYourEligibility.WebApp.Controllers
     public class FreeSchoolMealsController : Controller
     {
         private readonly ILogger<FreeSchoolMealsController> _logger;
-        private readonly IFsmCheckEligibility _service;
-        
+        private readonly IFsmCheckEligibility _checkService;
+        private readonly IFsmApplication _applicationService;
 
-        public FreeSchoolMealsController(ILogger<FreeSchoolMealsController> logger, IFsmCheckEligibility service)
+
+        public FreeSchoolMealsController(ILogger<FreeSchoolMealsController> logger, IFsmCheckEligibility checkService, IFsmApplication applicationService)
         {
             _logger = Guard.Against.Null(logger);
-            _service = Guard.Against.Null(service);
+            _checkService = Guard.Against.Null(checkService);
+            _applicationService = Guard.Against.Null(applicationService);
         }
 
         /// <summary>
@@ -57,7 +59,7 @@ namespace CheckYourEligibility.WebApp.Controllers
             {
                 return BadRequest(new MessageResponse { Data = validationResults.ToString() });
             }
-            var response = await _service.PostCheck(model.Data);
+            var response = await _checkService.PostCheck(model.Data);
             return new ObjectResult(new CheckEligibilityResponse() { 
                 Data = new StatusValue() { Status = response.Status.ToString() },
                 Links = new CheckEligibilityResponseLinks {
@@ -78,7 +80,7 @@ namespace CheckYourEligibility.WebApp.Controllers
         [HttpGet("{guid}/Status")]
         public async Task<ActionResult> CheckEligibilityStatus(string guid)
         {
-            var response = await _service.GetStatus(guid);
+            var response = await _checkService.GetStatus(guid);
             if (response == null)
             {
                 return NotFound(guid);
@@ -96,7 +98,7 @@ namespace CheckYourEligibility.WebApp.Controllers
         [HttpPatch("{guid}/Status")]
         public async Task<ActionResult> EligibilityCheckStatusUpdate(string guid, [FromBody] EligibilityStatusUpdateRequest model)
         {
-            var response = await _service.UpdateEligibilityCheckStatus(guid, model.Data);
+            var response = await _checkService.UpdateEligibilityCheckStatus(guid, model.Data);
             if (response == null)
             {
                 return NotFound();
@@ -124,7 +126,7 @@ namespace CheckYourEligibility.WebApp.Controllers
         {
             try
             {
-                var response = await _service.ProcessCheck(guid);
+                var response = await _checkService.ProcessCheck(guid);
                 if (response == null)
                 {
                     return NotFound(guid);
@@ -155,7 +157,7 @@ namespace CheckYourEligibility.WebApp.Controllers
         [HttpGet("{guid}")]
         public async Task<ActionResult> EligibilityCheck(string guid)
         {
-            var response = await _service.GetItem(guid);
+            var response = await _checkService.GetItem(guid);
             if (response == null)
             {
                 return NotFound(guid);
@@ -198,7 +200,7 @@ namespace CheckYourEligibility.WebApp.Controllers
                 return BadRequest(new MessageResponse { Data = validationResults.ToString() });
             }
 
-            var response = await _service.PostApplication(model.Data);
+            var response = await _applicationService.PostApplication(model.Data);
 
             return new ObjectResult(new ApplicationSaveItemResponse
             {
@@ -221,7 +223,7 @@ namespace CheckYourEligibility.WebApp.Controllers
         [HttpGet("Application/{guid}")]
         public async Task<ActionResult> Application(string guid)
         {
-            var response = await _service.GetApplication(guid);
+            var response = await _applicationService.GetApplication(guid);
             if (response == null)
             {
                 return NotFound(guid);
@@ -248,7 +250,7 @@ namespace CheckYourEligibility.WebApp.Controllers
         [HttpPost("Application/Search")]
         public async Task<ActionResult> ApplicationSearch([FromBody] ApplicationRequestSearch model)
         {
-            var response = await _service.GetApplications(model.Data);
+            var response = await _applicationService.GetApplications(model.Data);
             if (response == null | !response.Any())
             {
                 return NoContent();
@@ -271,7 +273,7 @@ namespace CheckYourEligibility.WebApp.Controllers
         [HttpPatch("Application/{guid}")]
         public async Task<ActionResult> ApplicationStatusUpdate(string guid, [FromBody] ApplicationStatusUpdateRequest model)
         {
-            var response = await _service.UpdateApplicationStatus(guid, model.Data);
+            var response = await _applicationService.UpdateApplicationStatus(guid, model.Data);
             if (response == null)
             {
                 return NotFound();

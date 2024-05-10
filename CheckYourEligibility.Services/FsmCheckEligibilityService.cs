@@ -30,7 +30,7 @@ namespace CheckYourEligibility.Services
         protected readonly IMapper _mapper;
         private readonly QueueClient _queueClient;
         private const int SurnameCheckCharachters = 3;
-        private static Random randomNumber;
+     
         private readonly IDwpService _dwpService;
         private readonly int _hashCheckDays;
 
@@ -46,10 +46,7 @@ namespace CheckYourEligibility.Services
             {
                 _queueClient = queueClientService.GetQueueClient(queName);
             }
-            if (randomNumber == null)
-            {
-               randomNumber = new Random(referenceMaxValue);
-            }
+
             _hashCheckDays = configuration.GetValue<short>("HashCheckDays");
         }
 
@@ -171,109 +168,6 @@ namespace CheckYourEligibility.Services
             return null;
         }
 
-        public async Task<ApplicationSave> PostApplication(ApplicationRequestData data)
-        {
-            try
-            {
-                var item = _mapper.Map<Application>(data);
-                item.ApplicationID = Guid.NewGuid().ToString();
-                item.Reference = GetReference();
-                item.Created = DateTime.UtcNow;
-                item.Updated = DateTime.UtcNow;
-                item.Type = CheckEligibilityType.ApplcicationFsm;
-                item.Status = Domain.Enums.ApplicationStatus.Open;
-
-                var school = _db.Schools
-                    .Include(x => x.LocalAuthority)
-                    .First(x => x.SchoolId == data.School);
-                item.LocalAuthorityId = school.LocalAuthorityId;
-
-                await _db.Applications.AddAsync(item);
-                await AddStatusHistory(item, Domain.Enums.ApplicationStatus.Open);
-
-                await _db.SaveChangesAsync();
-
-                var saved = _db.Applications
-                    .First(x => x.ApplicationID == item.ApplicationID);
-
-                var returnItem = _mapper.Map<ApplicationSave>(item);
-
-                return returnItem;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Db post application");
-                throw;
-            }
-        }
-
-        private async Task AddStatusHistory(Application application, Domain.Enums.ApplicationStatus applicationStatus)
-        {
-            var status = new Data.Models.ApplicationStatus()
-            {
-                ApplicationStatusID = Guid.NewGuid().ToString(),
-                ApplicationID = application.ApplicationID,
-                Type = applicationStatus,
-                TimeStamp = DateTime.UtcNow
-            };
-            await _db.ApplicationStatuses.AddAsync(status);
-        }
-
-        public async Task<ApplicationResponse?> GetApplication(string guid)
-        {
-            var result = await _db.Applications
-                .Include(x => x.Statuses)
-                .Include(x => x.School)
-                .ThenInclude(x => x.LocalAuthority)
-                .FirstOrDefaultAsync(x => x.ApplicationID == guid);
-            if (result != null)
-            {
-                var item = _mapper.Map<ApplicationResponse>(result);
-                return item;
-            }
-
-            return null;
-        }
-
-        public async Task<IEnumerable<ApplicationResponse>> GetApplications(ApplicationRequestSearchData model)
-        {
-            var results = _db.Applications
-               .Include(x => x.Statuses)
-               .Include(x => x.School)
-               .ThenInclude(x => x.LocalAuthority)
-               .Where(x => x.Type == CheckEligibilityType.ApplcicationFsm);
-
-            if (model.School != null) {
-                results = results.Where(x => x.SchoolId == model.School);
-            }
-            if (model.localAuthority != null)
-            {
-                results = results.Where(x => x.LocalAuthorityId == model.localAuthority);
-            }
-            if (model.Status != null)
-            {
-                results = results.Where(x => x.Status == model.Status);
-            }
-
-            return _mapper.Map<List<ApplicationResponse>>(results);
-        }
-
-        public async Task<ApplicationStatusUpdateResponse> UpdateApplicationStatus(string guid, ApplicationStatusData data)
-        {
-            var result = await _db.Applications.FirstOrDefaultAsync(x => x.ApplicationID == guid);
-            if (result != null)
-            {
-                result.Status = data.Status;
-                await AddStatusHistory(result, result.Status.Value);
-
-                result.Updated = DateTime.UtcNow;
-                var updates = await _db.SaveChangesAsync();
-                return new ApplicationStatusUpdateResponse { Data = new ApplicationStatusDataResponse { Status = result.Status.Value.ToString()} };
-            }
-
-            return null;
-        }
-
         public string GetHash(EligibilityCheck item)
         {
             var key  = string.IsNullOrEmpty(item.NINumber) ? item.NASSNumber : item.NINumber;
@@ -313,20 +207,6 @@ namespace CheckYourEligibility.Services
             };
             item.EligibilityCheckHashID = HashItem.EligibilityCheckHashID;
             await _db.EligibilityCheckHashes.AddAsync(HashItem);
-        }
-
-
-        private string GetReference()
-        {
-            var unique = false;
-            string nextReference = string.Empty;
-            while (!unique)
-            {
-                nextReference = randomNumber.Next(1, referenceMaxValue).ToString();
-                unique = _db.Applications.FirstOrDefault(x => x.Reference == nextReference) == null;
-            }
-
-            return nextReference;
         }
 
         private async Task<CheckEligibilityStatus> HO_Check(EligibilityCheck data)

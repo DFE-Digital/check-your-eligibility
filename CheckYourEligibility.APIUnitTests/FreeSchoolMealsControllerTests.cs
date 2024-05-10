@@ -18,35 +18,38 @@ namespace CheckYourEligibility.APIUnitTests
 {
     public class FreeSchoolMealsControllerTests : TestBase.TestBase
     {
-        private Mock<IFsmCheckEligibility> _mockService;
+        private Mock<IFsmCheckEligibility> _mockCheckService;
+        private Mock<IFsmApplication> _mockApplicationService;
         private ILogger<FreeSchoolMealsController> _mockLogger;
         private FreeSchoolMealsController _sut;
 
         [SetUp]
         public void Setup()
         {
-            _mockService = new Mock<IFsmCheckEligibility>(MockBehavior.Strict);
+            _mockCheckService = new Mock<IFsmCheckEligibility>(MockBehavior.Strict);
+            _mockApplicationService = new Mock<IFsmApplication>(MockBehavior.Strict);
             _mockLogger = Mock.Of<ILogger<FreeSchoolMealsController>>();
-            _sut = new FreeSchoolMealsController(_mockLogger, _mockService.Object);
+            _sut = new FreeSchoolMealsController(_mockLogger, _mockCheckService.Object, _mockApplicationService.Object);
         }
 
         [TearDown]
         public void Teardown()
         {
-            _mockService.VerifyAll();
+            _mockCheckService.VerifyAll();
         }
 
         [Test]
         public void Constructor_throws_argumentNullException_when_service_is_null()
         {
             // Arrange
-            IFsmCheckEligibility service = null;
+            IFsmCheckEligibility checkService = null;
+            IFsmApplication applicationService = null;
 
             // Act
-            Action act = () => new FreeSchoolMealsController(_mockLogger, service);
+            Action act = () => new FreeSchoolMealsController(_mockLogger, checkService, applicationService);
 
             // Assert
-            act.Should().ThrowExactly<ArgumentNullException>().And.Message.Should().EndWithEquivalentOf("Value cannot be null. (Parameter 'service')");
+            act.Should().ThrowExactly<ArgumentNullException>().And.Message.Should().EndWithEquivalentOf("Value cannot be null. (Parameter 'checkService')");
         }
 
         [Test]
@@ -59,7 +62,7 @@ namespace CheckYourEligibility.APIUnitTests
             request.Data.ParentDateOfBirth = "01/02/1970";
             request.Data.ChildDateOfBirth = "01/02/1970";
             request.Data.ParentNationalAsylumSeekerServiceNumber = string.Empty;
-            _mockService.Setup(cs => cs.PostApplication(request.Data)).ReturnsAsync(applicationFsm);
+            _mockApplicationService.Setup(cs => cs.PostApplication(request.Data)).ReturnsAsync(applicationFsm);
 
             var expectedResult = new ObjectResult(new ApplicationSaveItemResponse
             {
@@ -100,7 +103,7 @@ namespace CheckYourEligibility.APIUnitTests
             request.Data.NationalInsuranceNumber = "ns738356d";
             request.Data.DateOfBirth = "01/02/1970";
             request.Data.NationalAsylumSeekerServiceNumber = string.Empty;
-            _mockService.Setup(cs => cs.PostCheck(request.Data)).ReturnsAsync(new PostCheckResult { Id = id});
+            _mockCheckService.Setup(cs => cs.PostCheck(request.Data)).ReturnsAsync(new PostCheckResult { Id = id});
 
             var expectedResult = new ObjectResult(new CheckEligibilityStatusResponse() { Data = new StatusValue() { Status = CheckEligibilityStatus.queuedForProcessing.ToString() } }) { StatusCode = StatusCodes.Status202Accepted };
 
@@ -216,7 +219,7 @@ namespace CheckYourEligibility.APIUnitTests
         {
             // Arrange
             var guid = _fixture.Create<Guid>().ToString();
-            _mockService.Setup(cs => cs.GetStatus(guid)).Returns(Task.FromResult<CheckEligibilityStatus?>(null));
+            _mockCheckService.Setup(cs => cs.GetStatus(guid)).Returns(Task.FromResult<CheckEligibilityStatus?>(null));
             var expectedResult = new ObjectResult(guid)
             { StatusCode = StatusCodes.Status404NotFound };
 
@@ -232,7 +235,7 @@ namespace CheckYourEligibility.APIUnitTests
         {
             // Arrange
             var guid = _fixture.Create<Guid>().ToString();
-            _mockService.Setup(cs => cs.ProcessCheck(guid)).ThrowsAsync(new ProcessCheckException());
+            _mockCheckService.Setup(cs => cs.ProcessCheck(guid)).ThrowsAsync(new ProcessCheckException());
             var expectedResult = new ObjectResult(guid)
             { StatusCode = StatusCodes.Status400BadRequest };
 
@@ -248,7 +251,7 @@ namespace CheckYourEligibility.APIUnitTests
         {
             // Arrange
             var guid = _fixture.Create<Guid>().ToString();
-            _mockService.Setup(cs => cs.ProcessCheck(guid)).Returns(Task.FromResult<CheckEligibilityStatus?>(null));
+            _mockCheckService.Setup(cs => cs.ProcessCheck(guid)).Returns(Task.FromResult<CheckEligibilityStatus?>(null));
             var expectedResult = new ObjectResult(guid)
             { StatusCode = StatusCodes.Status404NotFound };
 
@@ -266,7 +269,7 @@ namespace CheckYourEligibility.APIUnitTests
             // Arrange
             var guid = _fixture.Create<Guid>().ToString();
             var expectedResponse = CheckEligibilityStatus.parentNotFound;
-            _mockService.Setup(cs => cs.ProcessCheck(guid)).ReturnsAsync(expectedResponse);
+            _mockCheckService.Setup(cs => cs.ProcessCheck(guid)).ReturnsAsync(expectedResponse);
             expectedResponse = CheckEligibilityStatus.parentNotFound;
             var expectedResult = new ObjectResult(new CheckEligibilityStatusResponse() { Data = new StatusValue() { Status = expectedResponse.ToString() } }) { StatusCode = StatusCodes.Status200OK };
 
@@ -283,7 +286,7 @@ namespace CheckYourEligibility.APIUnitTests
             // Arrange
             var guid = _fixture.Create<Guid>().ToString();
             var expectedResponse = CheckEligibilityStatus.queuedForProcessing;
-            _mockService.Setup(cs => cs.ProcessCheck(guid)).ReturnsAsync(expectedResponse);
+            _mockCheckService.Setup(cs => cs.ProcessCheck(guid)).ReturnsAsync(expectedResponse);
             expectedResponse = CheckEligibilityStatus.queuedForProcessing;
             var expectedResult = new ObjectResult(new CheckEligibilityStatusResponse() { Data = new StatusValue() { Status = expectedResponse.ToString() } }) { StatusCode = StatusCodes.Status503ServiceUnavailable };
 
@@ -299,7 +302,7 @@ namespace CheckYourEligibility.APIUnitTests
         {
             // Arrange
             var guid = _fixture.Create<Guid>().ToString();
-            _mockService.Setup(cs => cs.GetItem(guid)).Returns(Task.FromResult<CheckEligibilityItemFsm?>(null));
+            _mockCheckService.Setup(cs => cs.GetItem(guid)).Returns(Task.FromResult<CheckEligibilityItemFsm?>(null));
             var expectedResult = new ObjectResult(guid)
             { StatusCode = StatusCodes.Status404NotFound };
 
@@ -316,7 +319,7 @@ namespace CheckYourEligibility.APIUnitTests
             // Arrange
             var guid = _fixture.Create<Guid>().ToString();
             var expectedResponse = _fixture.Create<CheckEligibilityItemFsm>();
-            _mockService.Setup(cs => cs.GetItem(guid)).ReturnsAsync(expectedResponse);
+            _mockCheckService.Setup(cs => cs.GetItem(guid)).ReturnsAsync(expectedResponse);
             var expectedResult = new ObjectResult(new CheckEligibilityItemResponse()
             {
                 Data = expectedResponse,
@@ -340,7 +343,7 @@ namespace CheckYourEligibility.APIUnitTests
         {
             // Arrange
             var guid = _fixture.Create<Guid>().ToString();
-            _mockService.Setup(cs => cs.GetApplication(guid)).Returns(Task.FromResult<ApplicationResponse?>(null));
+            _mockApplicationService.Setup(cs => cs.GetApplication(guid)).Returns(Task.FromResult<ApplicationResponse?>(null));
             var expectedResult = new ObjectResult(guid)
             { StatusCode = StatusCodes.Status404NotFound };
 
@@ -357,7 +360,7 @@ namespace CheckYourEligibility.APIUnitTests
             // Arrange
             var guid = _fixture.Create<Guid>().ToString();
             var expectedResponse = _fixture.Create<ApplicationResponse>();
-            _mockService.Setup(cs => cs.GetApplication(guid)).ReturnsAsync(expectedResponse);
+            _mockApplicationService.Setup(cs => cs.GetApplication(guid)).ReturnsAsync(expectedResponse);
             var expectedResult = new ObjectResult(new ApplicationItemResponse
             {
                 Data = expectedResponse,
@@ -380,7 +383,7 @@ namespace CheckYourEligibility.APIUnitTests
         {
             // Arrange
             var model = _fixture.Create<ApplicationRequestSearch>();
-            _mockService.Setup(cs => cs.GetApplications(model.Data)).ReturnsAsync(new List<ApplicationResponse>());
+            _mockApplicationService.Setup(cs => cs.GetApplications(model.Data)).ReturnsAsync(new List<ApplicationResponse>());
             var expectedResult = new NoContentResult();
             
             // Act
@@ -396,7 +399,7 @@ namespace CheckYourEligibility.APIUnitTests
             // Arrange
             var model = _fixture.Create<ApplicationRequestSearch>();
             var expectedResponse = _fixture.CreateMany<ApplicationResponse>();
-            _mockService.Setup(cs => cs.GetApplications(model.Data)).ReturnsAsync(expectedResponse);
+            _mockApplicationService.Setup(cs => cs.GetApplications(model.Data)).ReturnsAsync(expectedResponse);
             var expectedResult = new ObjectResult(new ApplicationSearchResponse { Data = expectedResponse }){ StatusCode = StatusCodes.Status200OK };
 
             // Act
@@ -412,7 +415,7 @@ namespace CheckYourEligibility.APIUnitTests
             // Arrange
             var guid = _fixture.Create<Guid>().ToString();
             var request = _fixture.Create<ApplicationStatusUpdateRequest>();
-            _mockService.Setup(cs => cs.UpdateApplicationStatus(guid, request.Data)).Returns(Task.FromResult<ApplicationStatusUpdateResponse?>(null));
+            _mockApplicationService.Setup(cs => cs.UpdateApplicationStatus(guid, request.Data)).Returns(Task.FromResult<ApplicationStatusUpdateResponse?>(null));
             var expectedResult = new NotFoundResult();
 
             // Act
@@ -429,7 +432,7 @@ namespace CheckYourEligibility.APIUnitTests
             var guid = _fixture.Create<Guid>().ToString();
             var request = _fixture.Create<ApplicationStatusUpdateRequest>();
             var expectedResponse = _fixture.Create<ApplicationStatusUpdateResponse>();
-            _mockService.Setup(cs => cs.UpdateApplicationStatus(guid,request.Data)).ReturnsAsync(expectedResponse);
+            _mockApplicationService.Setup(cs => cs.UpdateApplicationStatus(guid,request.Data)).ReturnsAsync(expectedResponse);
             var expectedResult = new ObjectResult(new ApplicationStatusUpdateResponse
             {
                 Data = expectedResponse.Data
@@ -449,7 +452,7 @@ namespace CheckYourEligibility.APIUnitTests
             // Arrange
             var guid = _fixture.Create<Guid>().ToString();
             var request = _fixture.Create<EligibilityStatusUpdateRequest>();
-            _mockService.Setup(cs => cs.UpdateEligibilityCheckStatus(guid, request.Data)).Returns(Task.FromResult<CheckEligibilityStatusResponse?>(null));
+            _mockCheckService.Setup(cs => cs.UpdateEligibilityCheckStatus(guid, request.Data)).Returns(Task.FromResult<CheckEligibilityStatusResponse?>(null));
             var expectedResult = new NotFoundResult();
 
             // Act
@@ -466,7 +469,7 @@ namespace CheckYourEligibility.APIUnitTests
             var guid = _fixture.Create<Guid>().ToString();
             var request = _fixture.Create<ApplicationStatusUpdateRequest>();
             var expectedResponse = _fixture.Create<ApplicationStatusUpdateResponse>();
-            _mockService.Setup(cs => cs.UpdateApplicationStatus(guid, request.Data)).ReturnsAsync(expectedResponse);
+            _mockApplicationService.Setup(cs => cs.UpdateApplicationStatus(guid, request.Data)).ReturnsAsync(expectedResponse);
             var expectedResult = new ObjectResult(new ApplicationStatusUpdateResponse
             {
                 Data = expectedResponse.Data

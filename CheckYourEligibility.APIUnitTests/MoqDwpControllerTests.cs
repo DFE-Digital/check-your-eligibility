@@ -41,13 +41,14 @@ namespace CheckYourEligibility.APIUnitTests
         public void Constructor_throws_argumentNullException_when_service_is_null()
         {
             // Arrange
-            IFsmCheckEligibility service = null;
+            IFsmCheckEligibility checkService = null;
+            IFsmApplication applicationService = null;
 
             // Act
-            Action act = () => new FreeSchoolMealsController(_mockLogger, service);
+            Action act = () => new FreeSchoolMealsController(_mockLogger, checkService, applicationService);
 
             // Assert
-            act.Should().ThrowExactly<ArgumentNullException>().And.Message.Should().EndWithEquivalentOf("Value cannot be null. (Parameter 'service')");
+            act.Should().ThrowExactly<ArgumentNullException>().And.Message.Should().EndWithEquivalentOf("Value cannot be null. (Parameter 'checkService')");
         }
 
         [Test]
