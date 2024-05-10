@@ -54,6 +54,7 @@ namespace CheckYourEligibility.WebApp
         {
 
             services.AddTransient<IFsmCheckEligibility, FsmCheckEligibilityService>();
+            services.AddTransient<IFsmApplication, FsmApplicationService>();
             services.AddTransient<IAdministration, AdministrationService>();
             services.AddTransient<ISchoolsSearch, SchoolSearchService>();
             return services;
