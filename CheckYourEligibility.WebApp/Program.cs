@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Azure;
 using Microsoft.OpenApi.Models;
 using System.Text.Json.Serialization;
+using Azure.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -30,6 +31,14 @@ builder.Services.AddSwaggerGen(c =>
     var filePath = Path.Combine(System.AppContext.BaseDirectory, "CheckYourEligibility.WebApp.xml");
     c.IncludeXmlComments(filePath);
 });
+
+if (Environment.GetEnvironmentVariable("KEY_VAULT_NAME")!=null)
+{
+    var keyVaultName = Environment.GetEnvironmentVariable("KEY_VAULT_NAME");
+    var kvUri = $"https://{keyVaultName}.vault.azure.net";
+
+    builder.Configuration.AddAzureKeyVault(new Uri(kvUri), new DefaultAzureCredential());
+}
 
 builder.Services.AddDatabase(builder.Configuration);
 builder.Services.AddAzureClients(builder.Configuration);
