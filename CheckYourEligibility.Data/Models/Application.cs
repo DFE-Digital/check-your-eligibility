@@ -51,5 +51,8 @@ namespace CheckYourEligibility.Data.Models
         public virtual IEnumerable<ApplicationStatus>  Statuses { get; set; }
         [Column(TypeName = "varchar(100)")]
         public Domain.Enums.ApplicationStatus? Status { get; set; }
+
+        public virtual User User { get; set; }
+        public string? UserId { get; set; }
     }
 }

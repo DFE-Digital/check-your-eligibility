@@ -11,6 +11,7 @@ public interface IEligibilityCheckContext
     DbSet<Application> Applications { get; set; }
     DbSet<ApplicationStatus> ApplicationStatuses { get; set; }
     DbSet<EligibilityCheckHash> EligibilityCheckHashes { get; set; }
+    DbSet<User> Users { get; set; }
 
     Task<int> SaveChangesAsync();
 }

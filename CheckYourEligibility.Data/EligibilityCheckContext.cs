@@ -19,6 +19,7 @@ public class EligibilityCheckContext : DbContext, IEligibilityCheckContext
     public virtual DbSet<Application> Applications { get; set; }
     public virtual DbSet<CheckYourEligibility.Data.Models.ApplicationStatus> ApplicationStatuses { get; set; }
     public virtual DbSet<EligibilityCheckHash> EligibilityCheckHashes { get; set; }
+    public virtual DbSet<User> Users { get; set; }
 
 
     public Task<int> SaveChangesAsync()
@@ -51,6 +52,9 @@ public class EligibilityCheckContext : DbContext, IEligibilityCheckContext
 
         modelBuilder.Entity<EligibilityCheckHash>()
            .HasIndex(b => b.Hash, "idx_EligibilityCheckHash");
+
+        modelBuilder.Entity<User>()
+           .HasIndex(p => new { p.Email, p.Reference }).IsUnique();
 
     }
 

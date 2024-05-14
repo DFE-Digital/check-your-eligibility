@@ -1,4 +1,6 @@
-﻿namespace CheckYourEligibility.Domain.Responses
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace CheckYourEligibility.Domain.Responses
 {
     public class ApplicationResponse
     {
@@ -14,6 +16,7 @@
         public string ChildLastName { get; set; }
         public string ChildDateOfBirth { get; set; }
         public string Status { get; set; }
+        public ApplicationUser User { get; set; }
 
         public class ApplicationSchool
         {
@@ -27,6 +30,15 @@
                 public int Id { get; set; }
                 public string Name { get; set; }
             }
+        }
+
+        public class ApplicationUser
+        {
+            public string UserID { get; set; }
+
+            public string Email { get; set; }
+
+            public string Reference { get; set; }
         }
     }
 }

@@ -1,14 +1,9 @@
 // Ignore Spelling: Levenshtein
 
 using AutoFixture;
-using AutoMapper;
-using CheckYourEligibility.Data.Mappings;
-using CheckYourEligibility.Data.Models;
-using CheckYourEligibility.Domain.Responses;
 using CheckYourEligibility.Services;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace CheckYourEligibility.ServiceUnitTests
