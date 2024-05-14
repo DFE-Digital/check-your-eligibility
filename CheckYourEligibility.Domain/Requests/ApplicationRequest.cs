@@ -17,5 +17,6 @@ namespace CheckYourEligibility.Domain.Requests
         public string ChildFirstName { get; set; }
         public string ChildLastName { get; set; }
         public string ChildDateOfBirth { get; set; }
+        public string? UserId { get; set; }
     }
 }

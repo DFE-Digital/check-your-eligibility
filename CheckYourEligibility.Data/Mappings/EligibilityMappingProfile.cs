@@ -62,6 +62,13 @@ public class FsmMappingProfile : Profile
              .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.LocalAuthorityId))
              .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.LaName))
              .ReverseMap();
-       
+
+        
+        CreateMap<User, UserData>()
+        .ReverseMap();
+
+        CreateMap<User, ApplicationResponse.ApplicationUser>()
+            .ReverseMap();
+
     }
 }
