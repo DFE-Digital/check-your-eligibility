@@ -2,25 +2,15 @@
 
 using AutoFixture;
 using AutoMapper;
-using Azure.Storage.Queues;
 using CheckYourEligibility.Data.Mappings;
 using CheckYourEligibility.Data.Models;
-using CheckYourEligibility.Domain.Enums;
-using CheckYourEligibility.Domain.Exceptions;
 using CheckYourEligibility.Domain.Requests;
-using CheckYourEligibility.Domain.Requests.DWP;
 using CheckYourEligibility.Domain.Responses;
 using CheckYourEligibility.Services;
 using FluentAssertions;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
-using Moq;
-using System.Globalization;
 using School = CheckYourEligibility.Data.Models.School;
 
 namespace CheckYourEligibility.ServiceUnitTests
@@ -215,6 +205,32 @@ namespace CheckYourEligibility.ServiceUnitTests
 
             // Assert
             response.Result.Should().NotBeEmpty();
+        }
+
+        [Test]
+        public void Given_Application_WithUserReturnNewUser()
+        {
+            // Arrange
+            var request = _fixture.Create<ApplicationRequestData>();
+            request.ParentDateOfBirth = "01/02/1970";
+            request.ChildDateOfBirth = "01/02/2007";
+            var la = _fixture.Create<LocalAuthority>();
+            var school = _fixture.Create<School>();
+            school.LocalAuthorityId = la.LocalAuthorityId;
+            request.School = school.SchoolId;
+            _fakeInMemoryDb.LocalAuthorities.Add(la);
+            _fakeInMemoryDb.Schools.Add(school);
+            var user = _fixture.Create<User>();
+            _fakeInMemoryDb.Users.Add(user);
+            request.UserId = user.UserID;
+            _fakeInMemoryDb.SaveChangesAsync();
+            var appResponse = _sut.PostApplication(request);
+
+            // Act
+            var response = _sut.GetApplication(appResponse.Result.Id);
+
+            // Assert
+            response.Result.User.UserID.Should().BeEquivalentTo(user.UserID);
         }
     }
 }

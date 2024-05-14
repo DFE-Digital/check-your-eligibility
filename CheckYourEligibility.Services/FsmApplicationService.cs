@@ -88,6 +88,7 @@ namespace CheckYourEligibility.Services
                 .Include(x => x.Statuses)
                 .Include(x => x.School)
                 .ThenInclude(x => x.LocalAuthority)
+                .Include(x => x.User)
                 .FirstOrDefaultAsync(x => x.ApplicationID == guid);
             if (result != null)
             {
@@ -104,6 +105,7 @@ namespace CheckYourEligibility.Services
                .Include(x => x.Statuses)
                .Include(x => x.School)
                .ThenInclude(x => x.LocalAuthority)
+               .Include(x => x.User)
                .Where(x => x.Type == CheckEligibilityType.ApplcicationFsm);
 
             if (model.School != null)
