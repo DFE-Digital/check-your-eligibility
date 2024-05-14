@@ -60,7 +60,7 @@ namespace CheckYourEligibility.WebApp.Controllers
             UserModel user = null;
 
             //Validate the User Credentials
-            if (login.Username == _config["Jwt:EcsUiUserName"] && login.Password == _config["Jwt:EcsUiUserPassword"])
+            if (login.Username == _config["Jwt:UiUserName"] && login.Password == _config["Jwt:UiUserPassword"])
             {
                 user = new UserModel { Username = login.Username, EmailAddress = login.EmailAddress };
             }
