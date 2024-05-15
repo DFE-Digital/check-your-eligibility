@@ -6,6 +6,7 @@ using CheckYourEligibility.Services.Interfaces;
 using FeatureManagement.Domain.Validation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Azure;
 using System.Net;
 using System.Security.Claims;
 using CheckEligibilityStatusResponse = CheckYourEligibility.Domain.Responses.CheckEligibilityStatusResponse;
@@ -13,17 +14,22 @@ using StatusValue = CheckYourEligibility.Domain.Responses.StatusValue;
 
 namespace CheckYourEligibility.WebApp.Controllers
 {
+
+
+
     [ApiController]
     [Route("[controller]")]
     [Authorize]
-    public class FreeSchoolMealsController : Controller
+    public class FreeSchoolMealsController : BaseController
     {
-        private readonly ILogger<FreeSchoolMealsController> _logger;
         private readonly IFsmCheckEligibility _checkService;
         private readonly IFsmApplication _applicationService;
+        
+        private readonly ILogger<FreeSchoolMealsController> _logger;
 
 
-        public FreeSchoolMealsController(ILogger<FreeSchoolMealsController> logger, IFsmCheckEligibility checkService, IFsmApplication applicationService)
+        public FreeSchoolMealsController(ILogger<FreeSchoolMealsController> logger, IFsmCheckEligibility checkService, IFsmApplication applicationService, IAudit audit)
+            : base( audit)
         {
             _logger = Guard.Against.Null(logger);
             _checkService = Guard.Against.Null(checkService);
@@ -41,10 +47,7 @@ namespace CheckYourEligibility.WebApp.Controllers
         [HttpPost]
         public async Task<ActionResult> CheckEligibility([FromBody] CheckEligibilityRequest model)
         {
-            if (HttpContext != null)
-            {
-                var currentUser = HttpContext.User;
-            }
+
             if (model == null || model.Data == null)
             {
                 return BadRequest(new MessageResponse { Data = "Invalid CheckEligibilityRequest, data is required." });
@@ -59,16 +62,25 @@ namespace CheckYourEligibility.WebApp.Controllers
             {
                 return BadRequest(new MessageResponse { Data = validationResults.ToString() });
             }
+
             var response = await _checkService.PostCheck(model.Data);
-            return new ObjectResult(new CheckEligibilityResponse() { 
+
+            await Audit(Domain.Enums.AuditType.Check, response.Id);
+
+            return new ObjectResult(new CheckEligibilityResponse()
+            {
                 Data = new StatusValue() { Status = response.Status.ToString() },
-                Links = new CheckEligibilityResponseLinks {
+                Links = new CheckEligibilityResponseLinks
+                {
                     Get_EligibilityCheck = $"{Domain.Constants.FSMLinks.GetLink}{response.Id}",
                     Put_EligibilityCheckProcess = $"{Domain.Constants.FSMLinks.ProcessLink}{response.Id}",
                     Get_EligibilityCheckStatus = $"{Domain.Constants.FSMLinks.GetLink}{response.Id}/Status"
                 }
-            }) { StatusCode = StatusCodes.Status202Accepted };
+            })
+            { StatusCode = StatusCodes.Status202Accepted };
         }
+
+        
 
         /// <summary>
         /// Gets an FSM an Eligibility Check status
