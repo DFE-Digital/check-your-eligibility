@@ -43,9 +43,10 @@ namespace CheckYourEligibility.APIUnitTests
             // Arrange
             IFsmCheckEligibility checkService = null;
             IFsmApplication applicationService = null;
+            IAudit auditService = null;
 
             // Act
-            Action act = () => new FreeSchoolMealsController(_mockLogger, checkService, applicationService);
+            Action act = () => new FreeSchoolMealsController(_mockLogger, checkService, applicationService, auditService);
 
             // Assert
             act.Should().ThrowExactly<ArgumentNullException>().And.Message.Should().EndWithEquivalentOf("Value cannot be null. (Parameter 'checkService')");

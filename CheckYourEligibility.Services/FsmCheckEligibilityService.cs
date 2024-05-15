@@ -24,7 +24,6 @@ namespace CheckYourEligibility.Services
 {
     public partial class FsmCheckEligibilityService : BaseService, IFsmCheckEligibility
     {
-        const int referenceMaxValue = 99999999;
         private  readonly ILogger _logger;
         private readonly IEligibilityCheckContext _db;
         protected readonly IMapper _mapper;

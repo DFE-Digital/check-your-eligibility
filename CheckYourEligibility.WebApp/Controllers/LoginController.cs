@@ -1,4 +1,5 @@
-﻿using CheckYourEligibility.Domain;
+﻿using Azure.Core;
+using CheckYourEligibility.Domain;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
@@ -29,6 +30,7 @@ namespace CheckYourEligibility.WebApp.Controllers
             {
                 var tokenString = GenerateJSONWebToken(user, out var expires);
                 response = Ok(new JwtAuthResponse{ Token = tokenString, Expires = expires });
+                Console.WriteLine(tokenString);
             }
 
             return response;

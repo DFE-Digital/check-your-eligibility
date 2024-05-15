@@ -3,7 +3,6 @@
 using Microsoft.ApplicationInsights;
 using Newtonsoft.Json;
 using System.Diagnostics;
-using System.Net.Http.Headers;
 using System.Runtime.CompilerServices;
 
 namespace CheckYourEligibility.Services
