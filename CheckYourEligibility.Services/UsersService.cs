@@ -1,13 +1,10 @@
 ﻿using Ardalis.GuardClauses;
 using AutoMapper;
 using CheckYourEligibility.Data.Models;
-using CheckYourEligibility.Domain.Enums;
 using CheckYourEligibility.Domain.Requests;
-using CheckYourEligibility.Domain.Responses;
 using CheckYourEligibility.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace CheckYourEligibility.Services
 {

@@ -20,6 +20,7 @@ namespace CheckYourEligibility.APIUnitTests
     {
         private Mock<IFsmCheckEligibility> _mockCheckService;
         private Mock<IFsmApplication> _mockApplicationService;
+        private Mock<IAudit> _mockAuditService;
         private ILogger<FreeSchoolMealsController> _mockLogger;
         private FreeSchoolMealsController _sut;
 
@@ -28,8 +29,9 @@ namespace CheckYourEligibility.APIUnitTests
         {
             _mockCheckService = new Mock<IFsmCheckEligibility>(MockBehavior.Strict);
             _mockApplicationService = new Mock<IFsmApplication>(MockBehavior.Strict);
+            _mockAuditService = new Mock<IAudit>(MockBehavior.Strict);
             _mockLogger = Mock.Of<ILogger<FreeSchoolMealsController>>();
-            _sut = new FreeSchoolMealsController(_mockLogger, _mockCheckService.Object, _mockApplicationService.Object);
+            _sut = new FreeSchoolMealsController(_mockLogger, _mockCheckService.Object, _mockApplicationService.Object, _mockAuditService.Object);
         }
 
         [TearDown]
@@ -44,9 +46,10 @@ namespace CheckYourEligibility.APIUnitTests
             // Arrange
             IFsmCheckEligibility checkService = null;
             IFsmApplication applicationService = null;
+            IAudit auditService = null;
 
             // Act
-            Action act = () => new FreeSchoolMealsController(_mockLogger, checkService, applicationService);
+            Action act = () => new FreeSchoolMealsController(_mockLogger, checkService, applicationService, auditService);
 
             // Assert
             act.Should().ThrowExactly<ArgumentNullException>().And.Message.Should().EndWithEquivalentOf("Value cannot be null. (Parameter 'checkService')");

@@ -70,5 +70,8 @@ public class FsmMappingProfile : Profile
         CreateMap<User, ApplicationResponse.ApplicationUser>()
             .ReverseMap();
 
+        CreateMap<Audit, AuditData>()
+       .ReverseMap();
+
     }
 }

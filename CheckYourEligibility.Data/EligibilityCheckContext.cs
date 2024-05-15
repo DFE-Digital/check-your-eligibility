@@ -20,6 +20,7 @@ public class EligibilityCheckContext : DbContext, IEligibilityCheckContext
     public virtual DbSet<CheckYourEligibility.Data.Models.ApplicationStatus> ApplicationStatuses { get; set; }
     public virtual DbSet<EligibilityCheckHash> EligibilityCheckHashes { get; set; }
     public virtual DbSet<User> Users { get; set; }
+    public virtual DbSet<Audit> Audits { get; set; }
 
 
     public Task<int> SaveChangesAsync()
