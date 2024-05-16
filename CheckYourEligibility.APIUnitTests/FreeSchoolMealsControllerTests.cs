@@ -107,6 +107,7 @@ namespace CheckYourEligibility.APIUnitTests
             request.Data.DateOfBirth = "01/02/1970";
             request.Data.NationalAsylumSeekerServiceNumber = string.Empty;
             _mockCheckService.Setup(cs => cs.PostCheck(request.Data)).ReturnsAsync(new PostCheckResult { Id = id});
+            _mockAuditService.Setup(x => x.AuditAdd(It.IsAny<AuditData>())).ReturnsAsync("");
 
             var expectedResult = new ObjectResult(new CheckEligibilityStatusResponse() { Data = new StatusValue() { Status = CheckEligibilityStatus.queuedForProcessing.ToString() } }) { StatusCode = StatusCodes.Status202Accepted };
 
@@ -238,7 +239,7 @@ namespace CheckYourEligibility.APIUnitTests
         {
             // Arrange
             var guid = _fixture.Create<Guid>().ToString();
-            _mockCheckService.Setup(cs => cs.ProcessCheck(guid)).ThrowsAsync(new ProcessCheckException());
+            _mockCheckService.Setup(cs => cs.ProcessCheck(guid, It.IsAny<AuditData>())).ThrowsAsync(new ProcessCheckException());
             var expectedResult = new ObjectResult(guid)
             { StatusCode = StatusCodes.Status400BadRequest };
 
@@ -254,7 +255,7 @@ namespace CheckYourEligibility.APIUnitTests
         {
             // Arrange
             var guid = _fixture.Create<Guid>().ToString();
-            _mockCheckService.Setup(cs => cs.ProcessCheck(guid)).Returns(Task.FromResult<CheckEligibilityStatus?>(null));
+            _mockCheckService.Setup(cs => cs.ProcessCheck(guid, It.IsAny<AuditData>())).Returns(Task.FromResult<CheckEligibilityStatus?>(null));
             var expectedResult = new ObjectResult(guid)
             { StatusCode = StatusCodes.Status404NotFound };
 
@@ -272,9 +273,10 @@ namespace CheckYourEligibility.APIUnitTests
             // Arrange
             var guid = _fixture.Create<Guid>().ToString();
             var expectedResponse = CheckEligibilityStatus.parentNotFound;
-            _mockCheckService.Setup(cs => cs.ProcessCheck(guid)).ReturnsAsync(expectedResponse);
+            _mockCheckService.Setup(cs => cs.ProcessCheck(guid, It.IsAny<AuditData>())).ReturnsAsync(expectedResponse);
             expectedResponse = CheckEligibilityStatus.parentNotFound;
             var expectedResult = new ObjectResult(new CheckEligibilityStatusResponse() { Data = new StatusValue() { Status = expectedResponse.ToString() } }) { StatusCode = StatusCodes.Status200OK };
+            _mockAuditService.Setup(x => x.AuditAdd(It.IsAny<AuditData>())).ReturnsAsync("");
 
             // Act
             var response = _sut.Process(guid);
@@ -289,7 +291,8 @@ namespace CheckYourEligibility.APIUnitTests
             // Arrange
             var guid = _fixture.Create<Guid>().ToString();
             var expectedResponse = CheckEligibilityStatus.queuedForProcessing;
-            _mockCheckService.Setup(cs => cs.ProcessCheck(guid)).ReturnsAsync(expectedResponse);
+            _mockCheckService.Setup(cs => cs.ProcessCheck(guid, It.IsAny<AuditData>())).ReturnsAsync(expectedResponse);
+            _mockAuditService.Setup(cs => cs.AuditAdd(It.IsAny<AuditData>())).ReturnsAsync(Guid.NewGuid().ToString());
             expectedResponse = CheckEligibilityStatus.queuedForProcessing;
             var expectedResult = new ObjectResult(new CheckEligibilityStatusResponse() { Data = new StatusValue() { Status = expectedResponse.ToString() } }) { StatusCode = StatusCodes.Status503ServiceUnavailable };
 
