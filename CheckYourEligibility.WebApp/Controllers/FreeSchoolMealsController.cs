@@ -47,7 +47,6 @@ namespace CheckYourEligibility.WebApp.Controllers
         [HttpPost]
         public async Task<ActionResult> CheckEligibility([FromBody] CheckEligibilityRequest model)
         {
-
             if (model == null || model.Data == null)
             {
                 return BadRequest(new MessageResponse { Data = "Invalid CheckEligibilityRequest, data is required." });
@@ -65,7 +64,7 @@ namespace CheckYourEligibility.WebApp.Controllers
 
             var response = await _checkService.PostCheck(model.Data);
 
-            await Audit(Domain.Enums.AuditType.Check, response.Id);
+            await AuditAdd(Domain.Enums.AuditType.Check, response.Id);
 
             return new ObjectResult(new CheckEligibilityResponse()
             {
@@ -138,11 +137,15 @@ namespace CheckYourEligibility.WebApp.Controllers
         {
             try
             {
-                var response = await _checkService.ProcessCheck(guid);
+                var auditItemTemplate = AuditDataGet(Domain.Enums.AuditType.Check, string.Empty);
+                var response = await _checkService.ProcessCheck(guid, auditItemTemplate);
                 if (response == null)
                 {
                     return NotFound(guid);
                 }
+
+                await AuditAdd(Domain.Enums.AuditType.Check, guid);
+
                 if (response.Value == Domain.Enums.CheckEligibilityStatus.queuedForProcessing)
                 {
                     return new ObjectResult(new CheckEligibilityStatusResponse() { Data = new StatusValue() { Status = response.Value.ToString() } }) { StatusCode = StatusCodes.Status503ServiceUnavailable };

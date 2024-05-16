@@ -10,6 +10,7 @@ namespace CheckYourEligibility.Data.Models
     public class Audit
     {
         public string AuditID { get; set; }
+        [Column(TypeName = "varchar(100)")]
         public AuditType Type { get; set; }
         [Column(TypeName = "varchar(200)")]
         public string typeId { get; set; }

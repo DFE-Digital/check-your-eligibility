@@ -1,6 +1,7 @@
 ﻿using Ardalis.GuardClauses;
 using AutoMapper;
 using CheckYourEligibility.Data.Models;
+using CheckYourEligibility.Domain.Enums;
 using CheckYourEligibility.Domain.Requests;
 using CheckYourEligibility.Services.Interfaces;
 using Microsoft.Extensions.Logging;
@@ -41,7 +42,6 @@ namespace CheckYourEligibility.Services
             }
 
         }
-
     }
 }
 
