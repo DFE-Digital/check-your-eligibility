@@ -11,6 +11,7 @@ using CheckYourEligibility.Domain.Requests;
 using CheckYourEligibility.Domain.Requests.DWP;
 using CheckYourEligibility.Domain.Responses;
 using CheckYourEligibility.Services;
+using CheckYourEligibility.Services.Interfaces;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -30,6 +31,7 @@ namespace CheckYourEligibility.ServiceUnitTests
         private IConfiguration _configuration;
         private FsmCheckEligibilityService _sut;
         private Mock<IDwpService> _moqDwpService;
+        private Mock<IAudit> _moqAudit;
 
         [SetUp]
         public void Setup()
@@ -54,8 +56,10 @@ namespace CheckYourEligibility.ServiceUnitTests
             var webJobsConnection = "DefaultEndpointsProtocol=https;AccountName=none;AccountKey=none;EndpointSuffix=core.windows.net";
            
             _moqDwpService = new Mock<IDwpService>(MockBehavior.Strict);
+            _moqAudit = new Mock<IAudit>(MockBehavior.Strict);
 
-            _sut = new FsmCheckEligibilityService(new NullLoggerFactory(), _fakeInMemoryDb, _mapper, new QueueServiceClient(webJobsConnection), _configuration, _moqDwpService.Object);
+            _sut = new FsmCheckEligibilityService(new NullLoggerFactory(), _fakeInMemoryDb, _mapper, new QueueServiceClient(webJobsConnection),
+                _configuration, _moqDwpService.Object, _moqAudit.Object);
 
         }
 
@@ -69,7 +73,7 @@ namespace CheckYourEligibility.ServiceUnitTests
         {
             // Arrange
             // Act
-            Action act = () => new FsmCheckEligibilityService(new NullLoggerFactory(), null, _mapper, null, null,null);
+            Action act = () => new FsmCheckEligibilityService(new NullLoggerFactory(), null, _mapper, null, null,null,null);
 
             // Assert
             act.Should().ThrowExactly<ArgumentNullException>().And.Message.Should().EndWithEquivalentOf("Value cannot be null. (Parameter 'dbContext')");
@@ -94,12 +98,13 @@ namespace CheckYourEligibility.ServiceUnitTests
             _moqDwpService.Setup(x => x.GetCitizen(It.IsAny<CitizenMatchRequest>())).ReturnsAsync(Guid.NewGuid().ToString());
             var result = new StatusCodeResult(StatusCodes.Status200OK);
             _moqDwpService.Setup(x => x.CheckForBenefit(It.IsAny<string>())).ReturnsAsync(result);
+            _moqAudit.Setup(x => x.AuditAdd(It.IsAny<AuditData>())).ReturnsAsync("");
 
             // Act/Assert
             var response = await _sut.PostCheck(request);
             var baseItem = _fakeInMemoryDb.CheckEligibilities.FirstOrDefault(x => x.EligibilityCheckID == response.Id);
             baseItem.EligibilityCheckHashID.Should().BeNull();
-            await _sut.ProcessCheck(response.Id);
+            await _sut.ProcessCheck(response.Id, _fixture.Create<AuditData>());
             baseItem = _fakeInMemoryDb.CheckEligibilities.Include(x => x.EligibilityCheckHash).FirstOrDefault(x => x.EligibilityCheckID == response.Id);
             baseItem.EligibilityCheckHash.Should().NotBeNull();
             var BaseHash = _fakeInMemoryDb.EligibilityCheckHashes.First(x=>x.EligibilityCheckHashID == baseItem.EligibilityCheckHashID);
@@ -134,12 +139,14 @@ namespace CheckYourEligibility.ServiceUnitTests
             _moqDwpService.Setup(x => x.GetCitizen(It.IsAny<CitizenMatchRequest>())).ReturnsAsync(Guid.NewGuid().ToString());
             var result = new StatusCodeResult(StatusCodes.Status200OK);
             _moqDwpService.Setup(x => x.CheckForBenefit(It.IsAny<string>())).ReturnsAsync(result);
+            _moqAudit.Setup(x => x.AuditAdd(It.IsAny<AuditData>())).ReturnsAsync("");
+
 
             // Act/Assert
             var response = await _sut.PostCheck(request);
             var baseItem = _fakeInMemoryDb.CheckEligibilities.FirstOrDefault(x => x.EligibilityCheckID == response.Id);
             baseItem.EligibilityCheckHashID.Should().BeNull();
-            await _sut.ProcessCheck(response.Id);
+            await _sut.ProcessCheck(response.Id, _fixture.Create<AuditData>());
             baseItem = _fakeInMemoryDb.CheckEligibilities.Include(x=>x.EligibilityCheckHash).FirstOrDefault(x => x.EligibilityCheckID == response.Id);
             baseItem.EligibilityCheckHash.Should().NotBeNull();
             var BaseHash = baseItem.EligibilityCheckHash;
@@ -170,10 +177,11 @@ namespace CheckYourEligibility.ServiceUnitTests
             _moqDwpService.Setup(x => x.GetCitizen(It.IsAny<CitizenMatchRequest>())).ReturnsAsync(Guid.NewGuid().ToString());
             var result = new StatusCodeResult(StatusCodes.Status200OK);
             _moqDwpService.Setup(x => x.CheckForBenefit(It.IsAny<string>())).ReturnsAsync(result);
+            _moqAudit.Setup(x => x.AuditAdd(It.IsAny<AuditData>())).ReturnsAsync("");
 
             // Act
             var response = _sut.PostCheck(request);
-            var process = _sut.ProcessCheck(response.Result.Id);
+            var process = _sut.ProcessCheck(response.Result.Id, _fixture.Create<AuditData>());
             var item = _fakeInMemoryDb.CheckEligibilities.FirstOrDefault(x=>x.EligibilityCheckID == response.Result.Id);
             var hash = _sut.GetHash(item);
             // Assert
@@ -230,7 +238,7 @@ namespace CheckYourEligibility.ServiceUnitTests
             var request = _fixture.Create<Guid>().ToString();
 
             // Act
-            var response = _sut.ProcessCheck(request);
+            var response = _sut.ProcessCheck(request, _fixture.Create<AuditData>());
 
             // Assert
             response.Result.Should().BeNull();
@@ -246,7 +254,7 @@ namespace CheckYourEligibility.ServiceUnitTests
             _fakeInMemoryDb.SaveChangesAsync();
 
             // Act
-            Func<Task> act = async () => await _sut.ProcessCheck(item.EligibilityCheckID);
+            Func<Task> act = async () => await _sut.ProcessCheck(item.EligibilityCheckID, _fixture.Create<AuditData>());
 
             // Assert
             act.Should().ThrowExactlyAsync<ProcessCheckException>();
@@ -262,9 +270,10 @@ namespace CheckYourEligibility.ServiceUnitTests
             _fakeInMemoryDb.CheckEligibilities.Add(item);
             await _fakeInMemoryDb.SaveChangesAsync();
             _moqDwpService.Setup(x => x.GetCitizen(It.IsAny<CitizenMatchRequest>())).ReturnsAsync(CheckEligibilityStatus.parentNotFound.ToString());
+            _moqAudit.Setup(x => x.AuditAdd(It.IsAny<AuditData>())).ReturnsAsync("");
 
             // Act
-            var response = await _sut.ProcessCheck(item.EligibilityCheckID);
+            var response = await _sut.ProcessCheck(item.EligibilityCheckID, _fixture.Create<AuditData>());
 
             // Assert
             response.Should().Be(CheckEligibilityStatus.parentNotFound);
@@ -280,9 +289,10 @@ namespace CheckYourEligibility.ServiceUnitTests
             _fakeInMemoryDb.CheckEligibilities.Add(item);
             _fakeInMemoryDb.SaveChangesAsync();
             _moqDwpService.Setup(x => x.GetCitizen(It.IsAny<CitizenMatchRequest>())).ReturnsAsync(CheckEligibilityStatus.parentNotFound.ToString());
+            _moqAudit.Setup(x => x.AuditAdd(It.IsAny<AuditData>())).ReturnsAsync("");
 
             // Act
-            var response = _sut.ProcessCheck(item.EligibilityCheckID);
+            var response = _sut.ProcessCheck(item.EligibilityCheckID, _fixture.Create<AuditData>());
 
             // Assert
             response.Result.Should().Be(CheckEligibilityStatus.parentNotFound);
@@ -300,9 +310,11 @@ namespace CheckYourEligibility.ServiceUnitTests
             _moqDwpService.Setup(x => x.GetCitizen(It.IsAny<CitizenMatchRequest>())).ReturnsAsync(Guid.NewGuid().ToString());
             var result = new StatusCodeResult(StatusCodes.Status200OK);
             _moqDwpService.Setup(x => x.CheckForBenefit(It.IsAny<string>())).ReturnsAsync(result);
+            _moqAudit.Setup(x => x.AuditAdd(It.IsAny<AuditData>())).ReturnsAsync("");
+
 
             // Act
-            var response = _sut.ProcessCheck(item.EligibilityCheckID);
+            var response = _sut.ProcessCheck(item.EligibilityCheckID, _fixture.Create<AuditData>());
 
             // Assert
             response.Result.Should().Be(CheckEligibilityStatus.eligible);
@@ -320,9 +332,11 @@ namespace CheckYourEligibility.ServiceUnitTests
             _moqDwpService.Setup(x => x.GetCitizen(It.IsAny<CitizenMatchRequest>())).ReturnsAsync(Guid.NewGuid().ToString());
             var result = new StatusCodeResult(StatusCodes.Status404NotFound);
             _moqDwpService.Setup(x => x.CheckForBenefit(It.IsAny<string>())).ReturnsAsync(result);
+            _moqAudit.Setup(x => x.AuditAdd(It.IsAny<AuditData>())).ReturnsAsync("");
+
 
             // Act
-            var response = _sut.ProcessCheck(item.EligibilityCheckID);
+            var response = _sut.ProcessCheck(item.EligibilityCheckID, _fixture.Create<AuditData>());
 
             // Assert
             response.Result.Should().Be(CheckEligibilityStatus.notEligible);
@@ -341,7 +355,7 @@ namespace CheckYourEligibility.ServiceUnitTests
             var result = new StatusCodeResult(StatusCodes.Status500InternalServerError);
 
             // Act
-            var response = await _sut.ProcessCheck(item.EligibilityCheckID);
+            var response = await _sut.ProcessCheck(item.EligibilityCheckID, _fixture.Create<AuditData>());
 
             // Assert
             response.Should().Be(CheckEligibilityStatus.queuedForProcessing);
@@ -356,9 +370,10 @@ namespace CheckYourEligibility.ServiceUnitTests
             item.NINumber = string.Empty;
             _fakeInMemoryDb.CheckEligibilities.Add(item);
             _fakeInMemoryDb.SaveChangesAsync();
+            _moqAudit.Setup(x => x.AuditAdd(It.IsAny<AuditData>())).ReturnsAsync("");
 
             // Act
-            var response = _sut.ProcessCheck(item.EligibilityCheckID);
+            var response = _sut.ProcessCheck(item.EligibilityCheckID, _fixture.Create<AuditData>());
 
             // Assert
             response.Result.Should().Be(CheckEligibilityStatus.parentNotFound);
@@ -374,9 +389,11 @@ namespace CheckYourEligibility.ServiceUnitTests
             _fakeInMemoryDb.CheckEligibilities.Add(item);
             _fakeInMemoryDb.FreeSchoolMealsHMRC.Add(new FreeSchoolMealsHMRC { FreeSchoolMealsHMRCID = item.NINumber, Surname = item.LastName, DateOfBirth = item.DateOfBirth });
             _fakeInMemoryDb.SaveChangesAsync();
+            _moqAudit.Setup(x => x.AuditAdd(It.IsAny<AuditData>())).ReturnsAsync("");
+
 
             // Act
-            var response = _sut.ProcessCheck(item.EligibilityCheckID);
+            var response = _sut.ProcessCheck(item.EligibilityCheckID, _fixture.Create<AuditData>());
 
             // Assert
             response.Result.Should().Be(CheckEligibilityStatus.eligible);
@@ -398,9 +415,10 @@ namespace CheckYourEligibility.ServiceUnitTests
             _fakeInMemoryDb.SaveChangesAsync();
 
             _moqDwpService.Setup(x => x.GetCitizen(It.IsAny<CitizenMatchRequest>())).ReturnsAsync(CheckEligibilityStatus.parentNotFound.ToString());
+            _moqAudit.Setup(x => x.AuditAdd(It.IsAny<AuditData>())).ReturnsAsync("");
 
             // Act
-            var response = _sut.ProcessCheck(item.EligibilityCheckID);
+            var response = _sut.ProcessCheck(item.EligibilityCheckID, _fixture.Create<AuditData>());
 
             // Assert
             response.Result.Should().Be(CheckEligibilityStatus.parentNotFound);
@@ -419,9 +437,10 @@ namespace CheckYourEligibility.ServiceUnitTests
             _fakeInMemoryDb.CheckEligibilities.Add(item);
             _fakeInMemoryDb.FreeSchoolMealsHMRC.Add(new FreeSchoolMealsHMRC { FreeSchoolMealsHMRCID = item.NINumber, Surname = surnameInvalid, DateOfBirth = item.DateOfBirth });
             _fakeInMemoryDb.SaveChangesAsync();
+            _moqAudit.Setup(x => x.AuditAdd(It.IsAny<AuditData>())).ReturnsAsync("");
 
             // Act
-            var response = _sut.ProcessCheck(item.EligibilityCheckID);
+            var response = _sut.ProcessCheck(item.EligibilityCheckID, _fixture.Create<AuditData>());
 
             // Assert
             response.Result.Should().Be(CheckEligibilityStatus.eligible);
@@ -437,9 +456,10 @@ namespace CheckYourEligibility.ServiceUnitTests
             _fakeInMemoryDb.CheckEligibilities.Add(item);
             _fakeInMemoryDb.FreeSchoolMealsHO.Add(new FreeSchoolMealsHO { FreeSchoolMealsHOID = "123", NASS = item.NASSNumber, LastName = item.LastName, DateOfBirth = item.DateOfBirth });
             _fakeInMemoryDb.SaveChangesAsync();
+            _moqAudit.Setup(x => x.AuditAdd(It.IsAny<AuditData>())).ReturnsAsync("");
 
             // Act
-            var response = _sut.ProcessCheck(item.EligibilityCheckID);
+            var response = _sut.ProcessCheck(item.EligibilityCheckID, _fixture.Create<AuditData>());
 
             // Assert
             response.Result.Should().Be(CheckEligibilityStatus.eligible);

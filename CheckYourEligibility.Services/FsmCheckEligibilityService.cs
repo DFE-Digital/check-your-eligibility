@@ -27,6 +27,7 @@ namespace CheckYourEligibility.Services
         private  readonly ILogger _logger;
         private readonly IEligibilityCheckContext _db;
         protected readonly IMapper _mapper;
+        protected readonly IAudit _audit;
         private readonly QueueClient _queueClient;
         private const int SurnameCheckCharachters = 3;
      
@@ -34,12 +35,14 @@ namespace CheckYourEligibility.Services
         private readonly int _hashCheckDays;
 
         public FsmCheckEligibilityService(ILoggerFactory logger, IEligibilityCheckContext dbContext, IMapper mapper, QueueServiceClient queueClientService,
-            IConfiguration configuration, IDwpService dwpService) : base()
+            IConfiguration configuration, IDwpService dwpService, IAudit audit) : base()
         {
             _logger = logger.CreateLogger("ServiceFsmCheckEligibility");
             _db = Guard.Against.Null(dbContext);
             _mapper = Guard.Against.Null(mapper);
             _dwpService = Guard.Against.Null(dwpService);
+            _audit = Guard.Against.Null(audit);
+
             var queName = configuration.GetValue<string>("QueueFsmCheckStandard");
             if (queName != "notSet")
             {
@@ -106,7 +109,7 @@ namespace CheckYourEligibility.Services
             return null;
         }
 
-        public async Task<CheckEligibilityStatus?> ProcessCheck(string guid)
+        public async Task<CheckEligibilityStatus?> ProcessCheck(string guid, AuditData auditDataTemplate)
         {         
             var result = await _db.CheckEligibilities.FirstOrDefaultAsync(x => x.EligibilityCheckID == guid);
             if (result != null)
@@ -143,7 +146,11 @@ namespace CheckYourEligibility.Services
                 }
                 else
                 {
-                    HashCheckResult(result, checkResult, source);
+                    var hashId = await HashCheckResult(result, checkResult, source);
+                    auditDataTemplate.Type = AuditType.Hash;
+                    auditDataTemplate.typeId = hashId;
+                    await _audit.AuditAdd(auditDataTemplate);
+
                     var updates = await _db.SaveChangesAsync();
                 }
                 
@@ -192,7 +199,7 @@ namespace CheckYourEligibility.Services
 
         #region Private
 
-        private async void HashCheckResult(EligibilityCheck item, CheckEligibilityStatus checkResult, ProcessEligibilityCheckSource source)
+        private async Task<string> HashCheckResult(EligibilityCheck item, CheckEligibilityStatus checkResult, ProcessEligibilityCheckSource source)
         {
             var hash = GetHash(item);
             var HashItem = new EligibilityCheckHash()
@@ -206,6 +213,7 @@ namespace CheckYourEligibility.Services
             };
             item.EligibilityCheckHashID = HashItem.EligibilityCheckHashID;
             await _db.EligibilityCheckHashes.AddAsync(HashItem);
+            return item.EligibilityCheckHashID;
         }
 
         private async Task<CheckEligibilityStatus> HO_Check(EligibilityCheck data)
