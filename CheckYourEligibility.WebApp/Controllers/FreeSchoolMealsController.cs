@@ -7,6 +7,7 @@ using FeatureManagement.Domain.Validation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Azure;
+using System;
 using System.Net;
 using System.Security.Claims;
 using CheckEligibilityStatusResponse = CheckYourEligibility.Domain.Responses.CheckEligibilityStatusResponse;
@@ -96,6 +97,8 @@ namespace CheckYourEligibility.WebApp.Controllers
             {
                 return NotFound(guid);
             }
+            await AuditAdd(Domain.Enums.AuditType.Check, guid);
+
             return new ObjectResult(new CheckEligibilityStatusResponse() { Data = new StatusValue() { Status = response.Value.ToString() } }) { StatusCode = StatusCodes.Status200OK };
         }
 
@@ -114,6 +117,8 @@ namespace CheckYourEligibility.WebApp.Controllers
             {
                 return NotFound();
             }
+
+            await AuditAdd(Domain.Enums.AuditType.Check, guid);
 
             return new ObjectResult(new CheckEligibilityStatusResponse
             {
@@ -177,6 +182,7 @@ namespace CheckYourEligibility.WebApp.Controllers
             {
                 return NotFound(guid);
             }
+            await AuditAdd(Domain.Enums.AuditType.Check, guid);
             return new ObjectResult(new CheckEligibilityItemResponse()
             {
                 Data = response,
@@ -216,6 +222,7 @@ namespace CheckYourEligibility.WebApp.Controllers
             }
 
             var response = await _applicationService.PostApplication(model.Data);
+            await AuditAdd(Domain.Enums.AuditType.Application, response.Id);
 
             return new ObjectResult(new ApplicationSaveItemResponse
             {
@@ -243,7 +250,7 @@ namespace CheckYourEligibility.WebApp.Controllers
             {
                 return NotFound(guid);
             }
-
+            await AuditAdd(Domain.Enums.AuditType.Application, guid);
             return new ObjectResult(new ApplicationItemResponse
             {
                 Data = response,
@@ -270,7 +277,7 @@ namespace CheckYourEligibility.WebApp.Controllers
             {
                 return NoContent();
             }
-
+            await AuditAdd(Domain.Enums.AuditType.Application, string.Empty);
             return new ObjectResult(new ApplicationSearchResponse
             {
                 Data = response
@@ -293,7 +300,7 @@ namespace CheckYourEligibility.WebApp.Controllers
             {
                 return NotFound();
             }
-
+            await AuditAdd(Domain.Enums.AuditType.Application, guid);
             return new ObjectResult(new ApplicationStatusUpdateResponse
             {
                 Data = response.Data

@@ -1,4 +1,5 @@
 using CheckYourEligibility.Domain.Constants;
+using CheckYourEligibility.Domain.Requests;
 using CheckYourEligibility.Domain.Responses;
 using CheckYourEligibility.Services.Interfaces;
 using CheckYourEligibility.WebApp.Controllers;
@@ -16,13 +17,15 @@ namespace CheckYourEligibility.APIUnitTests
         private Mock<IAdministration> _mockService;
         private ILogger<AdministrationController> _mockLogger;
         private AdministrationController _sut;
+        private Mock<IAudit> _mockAuditService;
 
         [SetUp]
         public void Setup()
         {
             _mockService = new Mock<IAdministration>(MockBehavior.Strict);
             _mockLogger = Mock.Of<ILogger<AdministrationController>>();
-            _sut = new AdministrationController(_mockLogger, _mockService.Object);
+            _mockAuditService = new Mock<IAudit>(MockBehavior.Strict);
+            _sut = new AdministrationController(_mockLogger, _mockService.Object, _mockAuditService.Object);
         }
 
         [TearDown]
@@ -36,9 +39,10 @@ namespace CheckYourEligibility.APIUnitTests
         {
             // Arrange
             IAdministration service = null;
+            IAudit auditService = null;
 
             // Act
-            Action act = () => new AdministrationController(_mockLogger, service);
+            Action act = () => new AdministrationController(_mockLogger, service,auditService);
 
             // Assert
             act.Should().ThrowExactly<ArgumentNullException>().And.Message.Should().EndWithEquivalentOf("Value cannot be null. (Parameter 'service')");
@@ -49,6 +53,7 @@ namespace CheckYourEligibility.APIUnitTests
         {
             // Arrange
             _mockService.Setup(cs => cs.CleanUpEligibilityChecks()).Returns(Task.CompletedTask);
+            _mockAuditService.Setup(cs => cs.AuditAdd(It.IsAny<AuditData>())).ReturnsAsync(Guid.NewGuid().ToString());
 
             var expectedResult = new ObjectResult(new MessageResponse { Data = $"{Admin.EligibilityChecksCleanse}" }) { StatusCode = StatusCodes.Status200OK };
 
