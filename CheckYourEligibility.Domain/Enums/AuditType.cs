@@ -7,5 +7,8 @@ namespace CheckYourEligibility.Domain.Enums
         Application,
         Check,
         Hash,
+        School,
+        User,
+        Administration,
     }
 }

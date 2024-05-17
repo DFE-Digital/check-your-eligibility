@@ -43,7 +43,7 @@ namespace CheckYourEligibility.WebApp.Controllers
                 var host = HttpContext.Request.Host;
                 var path = HttpContext.Request.Path;
                 var method = HttpContext.Request.Method;
-                var auth = HttpContext.Request.Headers.Authorization;
+                var auth = HttpContext.User.Claims.FirstOrDefault(x => x.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier").Value;
                 return new AuditData { Type = type, typeId = id, url = $"{host}{path}", method = method, source = remoteIpAddress.ToString(), authentication = auth };
             }
             return new AuditData { Type = type, typeId = id, url = "Unknown", method = "Unknown", source = "Unknown", authentication = "Unknown" };

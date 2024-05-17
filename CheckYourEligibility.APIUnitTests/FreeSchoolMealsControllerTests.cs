@@ -66,6 +66,7 @@ namespace CheckYourEligibility.APIUnitTests
             request.Data.ChildDateOfBirth = "01/02/1970";
             request.Data.ParentNationalAsylumSeekerServiceNumber = string.Empty;
             _mockApplicationService.Setup(cs => cs.PostApplication(request.Data)).ReturnsAsync(applicationFsm);
+            _mockAuditService.Setup(cs => cs.AuditAdd(It.IsAny<AuditData>())).ReturnsAsync(Guid.NewGuid().ToString());
 
             var expectedResult = new ObjectResult(new ApplicationSaveItemResponse
             {
@@ -326,6 +327,7 @@ namespace CheckYourEligibility.APIUnitTests
             var guid = _fixture.Create<Guid>().ToString();
             var expectedResponse = _fixture.Create<CheckEligibilityItemFsm>();
             _mockCheckService.Setup(cs => cs.GetItem(guid)).ReturnsAsync(expectedResponse);
+            _mockAuditService.Setup(cs => cs.AuditAdd(It.IsAny<AuditData>())).ReturnsAsync(Guid.NewGuid().ToString());
             var expectedResult = new ObjectResult(new CheckEligibilityItemResponse()
             {
                 Data = expectedResponse,
@@ -366,6 +368,7 @@ namespace CheckYourEligibility.APIUnitTests
             // Arrange
             var guid = _fixture.Create<Guid>().ToString();
             var expectedResponse = _fixture.Create<ApplicationResponse>();
+            _mockAuditService.Setup(cs => cs.AuditAdd(It.IsAny<AuditData>())).ReturnsAsync(Guid.NewGuid().ToString());
             _mockApplicationService.Setup(cs => cs.GetApplication(guid)).ReturnsAsync(expectedResponse);
             var expectedResult = new ObjectResult(new ApplicationItemResponse
             {
@@ -406,6 +409,7 @@ namespace CheckYourEligibility.APIUnitTests
             var model = _fixture.Create<ApplicationRequestSearch>();
             var expectedResponse = _fixture.CreateMany<ApplicationResponse>();
             _mockApplicationService.Setup(cs => cs.GetApplications(model.Data)).ReturnsAsync(expectedResponse);
+            _mockAuditService.Setup(cs => cs.AuditAdd(It.IsAny<AuditData>())).ReturnsAsync(Guid.NewGuid().ToString());
             var expectedResult = new ObjectResult(new ApplicationSearchResponse { Data = expectedResponse }){ StatusCode = StatusCodes.Status200OK };
 
             // Act
@@ -439,6 +443,7 @@ namespace CheckYourEligibility.APIUnitTests
             var request = _fixture.Create<ApplicationStatusUpdateRequest>();
             var expectedResponse = _fixture.Create<ApplicationStatusUpdateResponse>();
             _mockApplicationService.Setup(cs => cs.UpdateApplicationStatus(guid,request.Data)).ReturnsAsync(expectedResponse);
+            _mockAuditService.Setup(cs => cs.AuditAdd(It.IsAny<AuditData>())).ReturnsAsync(Guid.NewGuid().ToString());
             var expectedResult = new ObjectResult(new ApplicationStatusUpdateResponse
             {
                 Data = expectedResponse.Data
@@ -476,6 +481,7 @@ namespace CheckYourEligibility.APIUnitTests
             var request = _fixture.Create<ApplicationStatusUpdateRequest>();
             var expectedResponse = _fixture.Create<ApplicationStatusUpdateResponse>();
             _mockApplicationService.Setup(cs => cs.UpdateApplicationStatus(guid, request.Data)).ReturnsAsync(expectedResponse);
+            _mockAuditService.Setup(cs => cs.AuditAdd(It.IsAny<AuditData>())).ReturnsAsync(Guid.NewGuid().ToString());
             var expectedResult = new ObjectResult(new ApplicationStatusUpdateResponse
             {
                 Data = expectedResponse.Data

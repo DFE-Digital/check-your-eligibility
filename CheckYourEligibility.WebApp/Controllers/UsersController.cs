@@ -12,12 +12,13 @@ namespace CheckYourEligibility.WebApp.Controllers
     [ApiController]
     [Route("[controller]")]
     [Authorize]
-    public class UsersController : Controller
+    public class UsersController : BaseController
     {
         private readonly ILogger<UsersController> _logger;
         private readonly IUsers _service;
 
-        public UsersController(ILogger<UsersController> logger, IUsers service)
+        public UsersController(ILogger<UsersController> logger, IUsers service, IAudit audit)
+            : base(audit)
         {
             _logger = Guard.Against.Null(logger);
             _service = Guard.Against.Null(service);
@@ -37,9 +38,9 @@ namespace CheckYourEligibility.WebApp.Controllers
             {
                 return BadRequest(new MessageResponse { Data = "Invalid request, data is required." });
             }
-
+            
             var response = await _service.Create(model.Data);
-
+            await AuditAdd(Domain.Enums.AuditType.User, response);
             return new ObjectResult(new UserSaveItemResponse
             {
                 Data = response
