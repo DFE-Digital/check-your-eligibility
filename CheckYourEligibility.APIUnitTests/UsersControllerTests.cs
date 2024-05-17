@@ -17,13 +17,15 @@ namespace CheckYourEligibility.APIUnitTests
         private Mock<IUsers> _mockService;
         private ILogger<UsersController> _mockLogger;
         private UsersController _sut;
+        private Mock<IAudit> _mockAuditService;
 
         [SetUp]
         public void Setup()
         {
             _mockService = new Mock<IUsers>(MockBehavior.Strict);
             _mockLogger = Mock.Of<ILogger<UsersController>>();
-            _sut = new UsersController(_mockLogger, _mockService.Object);
+            _mockAuditService = new Mock<IAudit>(MockBehavior.Strict);
+            _sut = new UsersController(_mockLogger, _mockService.Object, _mockAuditService.Object);
         }
 
         [TearDown]
@@ -37,9 +39,10 @@ namespace CheckYourEligibility.APIUnitTests
         {
             // Arrange
             IUsers service = null;
+            IAudit auditService = null;
 
             // Act
-            Action act = () => new UsersController(_mockLogger, service);
+            Action act = () => new UsersController(_mockLogger, service, auditService);
 
             // Assert
             act.Should().ThrowExactly<ArgumentNullException>().And.Message.Should().EndWithEquivalentOf("Value cannot be null. (Parameter 'service')");
@@ -52,6 +55,7 @@ namespace CheckYourEligibility.APIUnitTests
             var request = _fixture.Create<UserCreateRequest>();
             var id = _fixture.Create<Guid>().ToString();
             _mockService.Setup(cs => cs.Create(request.Data)).ReturnsAsync(id);
+            _mockAuditService.Setup(cs => cs.AuditAdd(It.IsAny<AuditData>())).ReturnsAsync(Guid.NewGuid().ToString());
 
             var expectedResult = new ObjectResult(new UserSaveItemResponse
             {

@@ -1,4 +1,5 @@
 ﻿using Ardalis.GuardClauses;
+using Azure;
 using CheckYourEligibility.Domain.Constants;
 using CheckYourEligibility.Domain.Responses;
 using CheckYourEligibility.Services.CsvImport;
@@ -13,13 +14,14 @@ namespace CheckYourEligibility.WebApp.Controllers
     [ApiController]
     [Route("[controller]")]
     [Authorize]
-    public class AdministrationController : Controller
+    public class AdministrationController : BaseController
     {
         private readonly ILogger<AdministrationController> _logger;
         private readonly IAdministration _service;
 
-        public AdministrationController(ILogger<AdministrationController> logger, IAdministration service)
-        {
+        public AdministrationController(ILogger<AdministrationController> logger, IAdministration service, IAudit audit)
+            : base(audit)
+        { 
             _logger = Guard.Against.Null(logger);
             _service = Guard.Against.Null(service);
         }
@@ -33,6 +35,7 @@ namespace CheckYourEligibility.WebApp.Controllers
         public async Task<ActionResult> CleanUpEligibilityChecks()
         {
             await _service.CleanUpEligibilityChecks();
+            await AuditAdd(Domain.Enums.AuditType.Administration, string.Empty);
             return new ObjectResult(new MessageResponse { Data = $"{Admin.EligibilityChecksCleanse}" }) { StatusCode = StatusCodes.Status200OK };
         }
 
@@ -47,6 +50,7 @@ namespace CheckYourEligibility.WebApp.Controllers
             try
             {
                 await _service.ImportEstablishments(file);
+                
             }
             catch (Exception ex)
             {
@@ -54,6 +58,7 @@ namespace CheckYourEligibility.WebApp.Controllers
                 return new ObjectResult(new MessageResponse { Data = $"{file.FileName} - {JsonConvert.SerializeObject(new EstablishmentRow())} :- {ex.Message},{ex.InnerException.Message}" }) { StatusCode = StatusCodes.Status500InternalServerError };
             }
 
+            await AuditAdd(Domain.Enums.AuditType.Administration, string.Empty);
             return new ObjectResult(new MessageResponse { Data = $"{file.FileName} - {Admin.EstablishmentFileProcessed}"}){ StatusCode = StatusCodes.Status200OK };
         }
     }
