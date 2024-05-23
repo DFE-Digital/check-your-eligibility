@@ -6,10 +6,7 @@ using CheckYourEligibility.Services.Interfaces;
 using FeatureManagement.Domain.Validation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Azure;
-using System;
 using System.Net;
-using System.Security.Claims;
 using CheckEligibilityStatusResponse = CheckYourEligibility.Domain.Responses.CheckEligibilityStatusResponse;
 using StatusValue = CheckYourEligibility.Domain.Responses.StatusValue;
 
