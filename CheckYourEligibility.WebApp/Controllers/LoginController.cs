@@ -1,4 +1,4 @@
-﻿using Azure.Core;
+﻿using Ardalis.GuardClauses;
 using CheckYourEligibility.Domain;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -14,14 +14,18 @@ namespace CheckYourEligibility.WebApp.Controllers
     public class LoginController : Controller
     {
         private IConfiguration _config;
+        private List<SystemUser> _users;
+        private readonly ILogger<LoginController> _logger;
 
-        public LoginController(IConfiguration config)
+        public LoginController(IConfiguration config, ILogger<LoginController> logger)
         {
             _config = config;
+            _users = _config.GetSection("Jwt:Users").Get<List<SystemUser>>();
+            _logger = Guard.Against.Null(logger);
         }
         [AllowAnonymous]
         [HttpPost]
-        public IActionResult Login([FromBody] UserModel login)
+        public IActionResult Login([FromBody] SystemUser login)
         {
             IActionResult response = Unauthorized();
             var user = AuthenticateUser(login);
@@ -30,19 +34,22 @@ namespace CheckYourEligibility.WebApp.Controllers
             {
                 var tokenString = GenerateJSONWebToken(user, out var expires);
                 response = Ok(new JwtAuthResponse{ Token = tokenString, Expires = expires });
-                Console.WriteLine(tokenString);
+               _logger.LogInformation($"{login.Username} authenticated");
+            }
+            else
+            {
+                _logger.LogError($"{login.Username} failed authentication");
             }
 
             return response;
         }
-        private string GenerateJSONWebToken(UserModel userInfo, out DateTime  expires)
+        private string GenerateJSONWebToken(Domain.SystemUser userInfo, out DateTime  expires)
         {
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]));
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
             var claims = new[] {
                 new Claim(JwtRegisteredClaimNames.Sub, userInfo.Username),
-                new Claim(JwtRegisteredClaimNames.Email, userInfo.EmailAddress),
                 new Claim("EcsApi", "apiCustomClaim"),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };
@@ -57,16 +64,13 @@ namespace CheckYourEligibility.WebApp.Controllers
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
-        private UserModel AuthenticateUser(UserModel login)
+        private SystemUser AuthenticateUser(SystemUser login)
         {
-            UserModel user = null;
-
             //Validate the User Credentials
-            if (login.Username == _config["Jwt:UiUserName"] && login.Password == _config["Jwt:UiUserPassword"])
-            {
-                user = new UserModel { Username = login.Username, EmailAddress = login.EmailAddress };
+            if (_users.FirstOrDefault(x=>x.Username == login.Username && x.Password == login.Password) != null) {
+                return new SystemUser { Username = login.Username };
             }
-            return user;
+            return null;
         }
     }
 }
