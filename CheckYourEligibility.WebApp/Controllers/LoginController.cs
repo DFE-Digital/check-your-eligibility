@@ -21,6 +21,10 @@ namespace CheckYourEligibility.WebApp.Controllers
         {
             _config = config;
             _users = _config.GetSection("Jwt:Users").Get<List<SystemUser>>();
+            if (logger == null)
+            {
+                throw new Exception("logger is null");
+            }
             _logger = Guard.Against.Null(logger);
         }
         [AllowAnonymous]
