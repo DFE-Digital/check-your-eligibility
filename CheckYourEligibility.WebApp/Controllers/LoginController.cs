@@ -18,15 +18,11 @@ namespace CheckYourEligibility.WebApp.Controllers
         private List<SystemUser> _users;
         private readonly ILogger<LoginController> _logger;
 
-        public LoginController(IConfiguration config)
+        public LoginController(IConfiguration config, ILogger<LoginController> logger)
         {
             _config = config;
             _users = JsonConvert.DeserializeObject<List<SystemUser>>(_config["Jwt:Users"]); 
-            //if (logger == null)
-            //{
-            //    throw new Exception("logger is null");
-            //}
-            //_logger = Guard.Against.Null(logger);
+            _logger = Guard.Against.Null(logger);
         }
         [AllowAnonymous]
         [HttpPost]
@@ -40,6 +36,10 @@ namespace CheckYourEligibility.WebApp.Controllers
                 var tokenString = GenerateJSONWebToken(user, out var expires);
                 response = Ok(new JwtAuthResponse{ Token = tokenString, Expires = expires });
                _logger.LogInformation($"{login.Username} authenticated");
+            }
+            else
+            {
+                _logger.LogError($"{login.Username} InvalidUser");
             }
 
             return response;
