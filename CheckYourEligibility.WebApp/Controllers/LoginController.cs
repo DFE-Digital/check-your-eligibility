@@ -18,7 +18,7 @@ namespace CheckYourEligibility.WebApp.Controllers
         private List<SystemUser> _users;
         private readonly ILogger<LoginController> _logger;
 
-        public LoginController(IConfiguration config, ILogger<LoginController> logger)
+        public LoginController(IConfiguration config)
         {
             _config = config;
             _users = JsonConvert.DeserializeObject<List<SystemUser>>(_config["Jwt:Users"]); 
@@ -40,10 +40,6 @@ namespace CheckYourEligibility.WebApp.Controllers
                 var tokenString = GenerateJSONWebToken(user, out var expires);
                 response = Ok(new JwtAuthResponse{ Token = tokenString, Expires = expires });
                _logger.LogInformation($"{login.Username} authenticated");
-            }
-            else
-            {
-                _logger.LogError($"{login.Username} failed authentication");
             }
 
             return response;
