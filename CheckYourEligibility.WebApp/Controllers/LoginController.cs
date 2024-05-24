@@ -22,11 +22,11 @@ namespace CheckYourEligibility.WebApp.Controllers
         {
             _config = config;
             _users = JsonConvert.DeserializeObject<List<SystemUser>>(_config["Jwt:Users"]); 
-            if (logger == null)
-            {
-                throw new Exception("logger is null");
-            }
-            _logger = Guard.Against.Null(logger);
+            //if (logger == null)
+            //{
+            //    throw new Exception("logger is null");
+            //}
+            //_logger = Guard.Against.Null(logger);
         }
         [AllowAnonymous]
         [HttpPost]
