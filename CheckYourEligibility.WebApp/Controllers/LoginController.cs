@@ -3,6 +3,7 @@ using CheckYourEligibility.Domain;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
+using Newtonsoft.Json;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -20,7 +21,12 @@ namespace CheckYourEligibility.WebApp.Controllers
         public LoginController(IConfiguration config)
         {
             _config = config;
-            _users = _config.GetSection("Jwt:Users").Get<List<SystemUser>>();
+            _users = JsonConvert.DeserializeObject<List<SystemUser>>(_config["Jwt:Users"]); 
+            //if (logger == null)
+            //{
+            //    throw new Exception("logger is null");
+            //}
+            //_logger = Guard.Against.Null(logger);
         }
         [AllowAnonymous]
         [HttpPost]
