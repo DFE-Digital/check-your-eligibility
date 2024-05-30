@@ -1,7 +1,7 @@
 
 export const validLoginRequestBody = {
-    username: 'Adnan',
-    password: 'password'
+    username: 'user',
+    password: 'pass'
 };
 
 export const validHMRCRequestBody = {
