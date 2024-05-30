@@ -250,6 +250,28 @@ namespace CheckYourEligibility.APIUnitTests
             response.Result.Should().BeEquivalentTo(expectedResult);
         }
 
+        [Test]
+        public void Given_ProcessCheckException_Validate()
+        {
+            // Arrange
+            // Act
+            var ex = new ProcessCheckException();
+
+            // Assert
+            ex.Should().BeOfType<ProcessCheckException>();
+        }
+
+        [Test]
+        public void Given_ProcessCheckException_ValidateMessage()
+        {
+            // Arrange
+            // Act
+            var ex = new ProcessCheckException("test");
+
+            // Assert
+            ex.Should().BeOfType<ProcessCheckException>();
+        }
+
 
         [Test]
         public void Given_InValid_guid_Process_Should_Return_StatusNotFound()

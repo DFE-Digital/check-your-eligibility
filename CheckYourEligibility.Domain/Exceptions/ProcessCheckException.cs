@@ -13,12 +13,5 @@ namespace CheckYourEligibility.Domain.Exceptions
             : base(message)
         {
         }
-
-        public ProcessCheckException(string message, Exception inner)
-            : base(message, inner)
-        {
-        }
     }
-
-
 }

@@ -1,13 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Diagnostics.CodeAnalysis;
 
 namespace CheckYourEligibility.Data.Models
 {
-
+    [ExcludeFromCodeCoverage(Justification = "Data Model.")]
     public class LocalAuthority
     {
         [Key]

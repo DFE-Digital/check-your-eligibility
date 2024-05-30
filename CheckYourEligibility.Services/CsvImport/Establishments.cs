@@ -1,7 +1,9 @@
 ﻿using CsvHelper.Configuration;
+using System.Diagnostics.CodeAnalysis;
 
 namespace CheckYourEligibility.Services.CsvImport
 {
+    [ExcludeFromCodeCoverage]
     public class EstablishmentRow
     {
         public int Urn { get; set; }
@@ -16,6 +18,7 @@ namespace CheckYourEligibility.Services.CsvImport
         public string Status { get; set; }
     }
 
+    [ExcludeFromCodeCoverage]
     internal sealed class EstablishmentRowMap : ClassMap<EstablishmentRow>
     {
         public EstablishmentRowMap()
