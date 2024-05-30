@@ -1,6 +1,6 @@
 
 export const validLoginRequestBody = {
-    username: 'user',
+    username: 'Adnan',
     password: 'password'
 };
 
