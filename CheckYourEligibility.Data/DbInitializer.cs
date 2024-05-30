@@ -22,8 +22,8 @@ namespace CheckYourEligibility.Data
 
                 var fsmHmrc = new FreeSchoolMealsHMRC[]
                 {
-            new FreeSchoolMealsHMRC{FreeSchoolMealsHMRCID="AB123456C",Surname="SIMPSON",DateOfBirth=DateTime.Parse("01-01-1990"),DataType = 1},
-            new FreeSchoolMealsHMRC{FreeSchoolMealsHMRCID="AC123456D",Surname="GRIFFIN",DateOfBirth=DateTime.Parse("31-12-2000"),DataType = 1},
+            new FreeSchoolMealsHMRC{FreeSchoolMealsHMRCID="AB123456C",Surname="SIMPSON",DateOfBirth=DateTime.Parse("1990-01-01"),DataType = 1},
+            new FreeSchoolMealsHMRC{FreeSchoolMealsHMRCID="AC123456D",Surname="GRIFFIN",DateOfBirth=DateTime.Parse("2000-12-31"),DataType = 1},
                 };
                 foreach (FreeSchoolMealsHMRC s in fsmHmrc)
                 {
@@ -36,8 +36,8 @@ namespace CheckYourEligibility.Data
             {
                 var fsmHo = new FreeSchoolMealsHO[]
             {
-            new FreeSchoolMealsHO{FreeSchoolMealsHOID=Guid.NewGuid().ToString(),LastName="SIMPSON",DateOfBirth=DateTime.Parse("01-01-1990"),NASS = "AB123456C"},
-            new FreeSchoolMealsHO{FreeSchoolMealsHOID=Guid.NewGuid().ToString(),LastName="GRIFFIN",DateOfBirth=DateTime.Parse("31-12-2000"),NASS = "AC123456D"},
+            new FreeSchoolMealsHO{FreeSchoolMealsHOID=Guid.NewGuid().ToString(),LastName="SIMPSON",DateOfBirth=DateTime.Parse("1990-01-01"),NASS = "AB123456C"},
+            new FreeSchoolMealsHO{FreeSchoolMealsHOID=Guid.NewGuid().ToString(),LastName="GRIFFIN",DateOfBirth=DateTime.Parse("2000-12-31"),NASS = "AC123456D"},
             };
                 foreach (FreeSchoolMealsHO s in fsmHo)
                 {
