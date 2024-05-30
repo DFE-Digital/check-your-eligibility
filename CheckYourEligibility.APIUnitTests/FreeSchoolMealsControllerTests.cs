@@ -62,8 +62,8 @@ namespace CheckYourEligibility.APIUnitTests
             var request = _fixture.Create<ApplicationRequest>();
             var applicationFsm = _fixture.Create<ApplicationSave>();
             request.Data.ParentNationalInsuranceNumber = "ns738356d";
-            request.Data.ParentDateOfBirth = "01/02/1970";
-            request.Data.ChildDateOfBirth = "01/02/1970";
+            request.Data.ParentDateOfBirth = "1970-02-01";
+            request.Data.ChildDateOfBirth = "1970-02-01";
             request.Data.ParentNationalAsylumSeekerServiceNumber = string.Empty;
             _mockApplicationService.Setup(cs => cs.PostApplication(request.Data)).ReturnsAsync(applicationFsm);
             _mockAuditService.Setup(cs => cs.AuditAdd(It.IsAny<AuditData>())).ReturnsAsync(Guid.NewGuid().ToString());
@@ -105,7 +105,7 @@ namespace CheckYourEligibility.APIUnitTests
             var request = _fixture.Create<CheckEligibilityRequest>();
             var id = _fixture.Create<string>();
             request.Data.NationalInsuranceNumber = "ns738356d";
-            request.Data.DateOfBirth = "01/02/1970";
+            request.Data.DateOfBirth = "1970-02-01";
             request.Data.NationalAsylumSeekerServiceNumber = string.Empty;
             _mockCheckService.Setup(cs => cs.PostCheck(request.Data)).ReturnsAsync(new PostCheckResult { Id = id});
             _mockAuditService.Setup(x => x.AuditAdd(It.IsAny<AuditData>())).ReturnsAsync("");
@@ -138,7 +138,7 @@ namespace CheckYourEligibility.APIUnitTests
             // Arrange
             var request = _fixture.Create<CheckEligibilityRequest>();
             request.Data.NationalInsuranceNumber = "ns738356d";
-            request.Data.DateOfBirth = "01/02/1970";
+            request.Data.DateOfBirth = "1970-02-01";
             request.Data.NationalAsylumSeekerServiceNumber = "789";
             var expectedResult = new BadRequestObjectResult(new MessageResponse { Data = Domain.Constants.ErrorMessages.FSM.NI_and_NASS });
 
@@ -155,7 +155,7 @@ namespace CheckYourEligibility.APIUnitTests
             // Arrange
             var request = _fixture.Create<CheckEligibilityRequest>();
             request.Data.NationalInsuranceNumber = string.Empty;
-            request.Data.DateOfBirth = "01/02/1970";
+            request.Data.DateOfBirth = "1970-02-01";
             request.Data.NationalAsylumSeekerServiceNumber = string.Empty;
             var expectedResult = new BadRequestObjectResult(new MessageResponse { Data = Domain.Constants.ErrorMessages.FSM.NI_or_NASS });
 
@@ -172,7 +172,7 @@ namespace CheckYourEligibility.APIUnitTests
             // Arrange
             var request = _fixture.Create<CheckEligibilityRequest>();
             request.Data.NationalInsuranceNumber = "123";
-            request.Data.DateOfBirth = "01/02/1970";
+            request.Data.DateOfBirth = "1970-02-01";
             request.Data.NationalAsylumSeekerServiceNumber = "";
             var expectedResult = new BadRequestObjectResult(new MessageResponse { Data = Domain.Constants.ErrorMessages.FSM.NI });
 
@@ -189,7 +189,7 @@ namespace CheckYourEligibility.APIUnitTests
             // Arrange
             var request = _fixture.Create<CheckEligibilityRequest>();
             request.Data.NationalInsuranceNumber = "ns738356d";
-            request.Data.DateOfBirth = "01/02/70";
+            request.Data.DateOfBirth = "1970-02-01";
             request.Data.NationalAsylumSeekerServiceNumber = "";
             var expectedResult = new BadRequestObjectResult(new MessageResponse { Data = Domain.Constants.ErrorMessages.FSM.DOB });
 
@@ -207,7 +207,7 @@ namespace CheckYourEligibility.APIUnitTests
             // Arrange
             var request = _fixture.Create<CheckEligibilityRequest>();
             request.Data.NationalInsuranceNumber = "ns738356d";
-            request.Data.DateOfBirth = "01/02/1970";
+            request.Data.DateOfBirth = "1970-02-01";
             request.Data.LastName = string.Empty;
             request.Data.NationalAsylumSeekerServiceNumber = string.Empty;
             var expectedResult = new BadRequestObjectResult(new MessageResponse { Data = Domain.Constants.ErrorMessages.FSM.LastName });

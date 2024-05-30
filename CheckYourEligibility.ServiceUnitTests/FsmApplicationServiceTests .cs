@@ -88,8 +88,8 @@ namespace CheckYourEligibility.ServiceUnitTests
         {
             // Arrange
             var request = _fixture.Create<ApplicationRequestData>();
-            request.ParentDateOfBirth = "01/02/1970";
-            request.ChildDateOfBirth = "01/02/2007";
+            request.ParentDateOfBirth = "1970-02-01";
+            request.ChildDateOfBirth = "2007-02-01";
             var la = _fixture.Create<LocalAuthority>();
             var school = _fixture.Create<School>();
             school.LocalAuthorityId = la.LocalAuthorityId;
@@ -124,8 +124,8 @@ namespace CheckYourEligibility.ServiceUnitTests
         {
             // Arrange
             var request = _fixture.Create<ApplicationRequestData>();
-            request.ParentDateOfBirth = "01/02/1970";
-            request.ChildDateOfBirth = "01/02/2007";
+            request.ParentDateOfBirth = "1970-02-01";
+            request.ChildDateOfBirth = "2007-02-01";
             var la = _fixture.Create<LocalAuthority>();
             var school = _fixture.Create<School>();
             school.LocalAuthorityId = la.LocalAuthorityId;
@@ -166,8 +166,8 @@ namespace CheckYourEligibility.ServiceUnitTests
         {
             // Arrange
             var request = _fixture.Create<ApplicationRequestData>();
-            request.ParentDateOfBirth = "01/02/1970";
-            request.ChildDateOfBirth = "01/02/2007";
+            request.ParentDateOfBirth = "1970-02-01";
+            request.ChildDateOfBirth = "2007-02-01";
             var la = _fixture.Create<LocalAuthority>();
             var school = _fixture.Create<School>();
             school.LocalAuthorityId = la.LocalAuthorityId;
@@ -203,8 +203,8 @@ namespace CheckYourEligibility.ServiceUnitTests
         {
             // Arrange
             var request = _fixture.Create<ApplicationRequestData>();
-            request.ParentDateOfBirth = "01/02/1970";
-            request.ChildDateOfBirth = "01/02/2007";
+            request.ParentDateOfBirth = "1970-02-01";
+            request.ChildDateOfBirth = "2007-02-01";
             var la = _fixture.Create<LocalAuthority>();
             var school = _fixture.Create<School>();
             school.LocalAuthorityId = la.LocalAuthorityId;
@@ -229,8 +229,8 @@ namespace CheckYourEligibility.ServiceUnitTests
         {
             // Arrange
             var request = _fixture.Create<ApplicationRequestData>();
-            request.ParentDateOfBirth = "01/02/1970";
-            request.ChildDateOfBirth = "01/02/2007";
+            request.ParentDateOfBirth = "1970-02-01";
+            request.ChildDateOfBirth = "2007-02-01";
             var la = _fixture.Create<LocalAuthority>();
             var school = _fixture.Create<School>();
             school.LocalAuthorityId = la.LocalAuthorityId;
