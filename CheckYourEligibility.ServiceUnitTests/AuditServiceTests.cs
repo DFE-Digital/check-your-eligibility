@@ -4,27 +4,26 @@ using AutoFixture;
 using AutoMapper;
 using CheckYourEligibility.Data.Mappings;
 using CheckYourEligibility.Data.Models;
+using CheckYourEligibility.Domain.Exceptions;
 using CheckYourEligibility.Domain.Requests;
 using CheckYourEligibility.Services;
+using CheckYourEligibility.Services.Interfaces;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
-using System.Linq.Expressions;
-using static System.Runtime.InteropServices.JavaScript.JSType;
-using String = System.String;
 
 namespace CheckYourEligibility.ServiceUnitTests
 {
 
 
-    public class UserServiceTestsTests : TestBase.TestBase
+    public class AuditServiceTests : TestBase.TestBase
     {
         private IEligibilityCheckContext _fakeInMemoryDb;
         private IMapper _mapper;
         private IConfiguration _configuration;
-        private UsersService _sut;
+        private AuditService _sut;
 
         [SetUp]
         public void Setup()
@@ -48,7 +47,7 @@ namespace CheckYourEligibility.ServiceUnitTests
                 .Build();
             var webJobsConnection = "DefaultEndpointsProtocol=https;AccountName=none;AccountKey=none;EndpointSuffix=core.windows.net";
          
-            _sut = new UsersService(new NullLoggerFactory(), _fakeInMemoryDb, _mapper);
+            _sut = new AuditService(new NullLoggerFactory(), _fakeInMemoryDb, _mapper);
 
         }
 
@@ -69,13 +68,13 @@ namespace CheckYourEligibility.ServiceUnitTests
         }
 
         [Test]
-        public void Given_validRequest_User_Should_Return_New_Guid()
+        public void Given_validRequest_AuditAdd_Should_Return_New_Guid()
         {
             // Arrange
-            var request = _fixture.Create<UserData>();
+            var request = _fixture.Create<AuditData>();
            
             // Act
-            var response = _sut.Create(request);
+            var response = _sut.AuditAdd(request);
 
             // Assert
             response.Result.Should().BeOfType<String>();
@@ -85,36 +84,16 @@ namespace CheckYourEligibility.ServiceUnitTests
         public void Given_DB_Add_Should_ThrowException()
         {
             // Arrange
-            var db = new Mock<IEligibilityCheckContext>(MockBehavior.Strict);
-            var svc = new UsersService(new NullLoggerFactory(), db.Object, _mapper);
-            db.Setup(x => x.Users.Add(It.IsAny<User>())).Throws(new Exception());
-            var request = _fixture.Create<UserData>();
+           var db= new Mock<IEligibilityCheckContext>(MockBehavior.Strict);
+           var svc =  new AuditService(new NullLoggerFactory(), db.Object, _mapper);
+            db.Setup(x => x.Audits.AddAsync(It.IsAny<Audit>(),  It.IsAny<CancellationToken>())).ThrowsAsync(new Exception());
+            var request = _fixture.Create<AuditData>();
 
             // Act
-            Func<Task> act = async () => await svc.Create(request);
+            Func<Task> act = async () => await svc.AuditAdd(request);
 
             // Assert
             act.Should().ThrowExactlyAsync<Exception>();
-        }
-
-        [Test]
-        public void Given_DB_Add_Should_ThrowDbUpdateException()
-        {
-            // Arrange
-            var db = new Mock<IEligibilityCheckContext>(MockBehavior.Strict);
-            var svc = new UsersService(new NullLoggerFactory(), db.Object, _mapper);
-            var ex = new DbUpdateException("",new Exception("Cannot insert duplicate key row in object 'dbo.Users' with unique index 'IX_Users_Email_Reference'."));
-           
-            db.Setup(x => x.Users.AddAsync(It.IsAny<User>(), It.IsAny<CancellationToken>())).ThrowsAsync(ex);
-            var existingUser = _fixture.Create<User>();
-          
-            var request = new UserData { Email = existingUser.Email, Reference = existingUser.Reference};
-
-            // Act
-            Func<Task> act = async () => await svc.Create(request);
-
-            // Assert
-            act.Should().ThrowExactlyAsync<DbUpdateException>();
         }
     }
 }
