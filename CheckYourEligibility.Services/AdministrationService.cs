@@ -127,9 +127,9 @@ namespace CheckYourEligibility.Services
                  .SetProperty(b => b.LocalAuthorityId, item.LocalAuthorityId)
                  .SetProperty(b => b.EstablishmentName, item.EstablishmentName)
 
-                 .SetProperty(b => b.Street, item.EstablishmentName)
-                 .SetProperty(b => b.Postcode, item.EstablishmentName)
-                 .SetProperty(b => b.County, item.EstablishmentName)
+                 .SetProperty(b => b.Street, item.Street)
+                 .SetProperty(b => b.Postcode, item.Postcode)
+                 .SetProperty(b => b.County, item.County)
                  .SetProperty(b => b.Locality, item.Locality)
                  .SetProperty(b => b.Town, item.Town));
         }
