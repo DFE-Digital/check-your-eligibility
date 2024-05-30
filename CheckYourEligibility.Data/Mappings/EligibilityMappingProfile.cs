@@ -15,7 +15,7 @@ public class FsmMappingProfile : Profile
         CreateMap<CheckEligibilityRequestDataFsm, EligibilityCheck>()
         .ForMember(dest => dest.NINumber, opt => opt.MapFrom(src => src.NationalInsuranceNumber))
         .ForMember(dest => dest.NASSNumber, opt => opt.MapFrom(src => src.NationalAsylumSeekerServiceNumber))
-        .ForMember(x => x.DateOfBirth, y => y.MapFrom(z => DateTime.ParseExact(z.DateOfBirth, "dd/MM/yyyy", CultureInfo.InvariantCulture)))
+        .ForMember(x => x.DateOfBirth, y => y.MapFrom(z => DateTime.ParseExact(z.DateOfBirth, "yyyy-MM-dd", CultureInfo.InvariantCulture)))
         .ReverseMap();
 
         CreateMap<EligibilityCheck, CheckEligibilityItemFsm>()
@@ -27,8 +27,8 @@ public class FsmMappingProfile : Profile
         CreateMap<ApplicationRequestData, Application>()
        .ForMember(dest => dest.ParentNationalInsuranceNumber, opt => opt.MapFrom(src => src.ParentNationalInsuranceNumber))
        .ForMember(dest => dest.ParentNationalAsylumSeekerServiceNumber, opt => opt.MapFrom(src => src.ParentNationalAsylumSeekerServiceNumber))
-       .ForMember(x => x.ParentDateOfBirth, y => y.MapFrom(z => DateTime.ParseExact(z.ParentDateOfBirth, "dd/MM/yyyy", CultureInfo.InvariantCulture)))
-       .ForMember(x => x.ChildDateOfBirth, y => y.MapFrom(z => DateTime.ParseExact(z.ChildDateOfBirth, "dd/MM/yyyy", CultureInfo.InvariantCulture)))
+       .ForMember(x => x.ParentDateOfBirth, y => y.MapFrom(z => DateTime.ParseExact(z.ParentDateOfBirth, "yyyy-MM-dd", CultureInfo.InvariantCulture)))
+       .ForMember(x => x.ChildDateOfBirth, y => y.MapFrom(z => DateTime.ParseExact(z.ChildDateOfBirth, "yyyy-MM-dd", CultureInfo.InvariantCulture)))
        .ForMember(dest => dest.LocalAuthorityId, opt => opt.Ignore())
        .ForMember(dest => dest.SchoolId, opt => opt.MapFrom(src => src.School))
        .ForMember(dest => dest.School, opt => opt.Ignore())

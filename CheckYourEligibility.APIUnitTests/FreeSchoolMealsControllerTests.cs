@@ -189,7 +189,7 @@ namespace CheckYourEligibility.APIUnitTests
             // Arrange
             var request = _fixture.Create<CheckEligibilityRequest>();
             request.Data.NationalInsuranceNumber = "ns738356d";
-            request.Data.DateOfBirth = "1970-02-01";
+            request.Data.DateOfBirth = "01/02/1970";
             request.Data.NationalAsylumSeekerServiceNumber = "";
             var expectedResult = new BadRequestObjectResult(new MessageResponse { Data = Domain.Constants.ErrorMessages.FSM.DOB });
 
