@@ -72,7 +72,7 @@ namespace CheckYourEligibility.Services
                     {
                         var item = _db.LocalAuthorities.FirstOrDefault(x => x.LocalAuthorityId == la.LocalAuthorityId);
                         if (item != null)
-                            SetLaData(item);
+                            SetLaData(la);
                         else
                             _db.LocalAuthorities.Add(la);
                     }
@@ -97,7 +97,7 @@ namespace CheckYourEligibility.Services
                         var item = await _db.Schools.AsNoTracking().FirstOrDefaultAsync(x => x.SchoolId == sc.SchoolId);
 
                         if (item != null)
-                            SetScoolData(item);
+                            SetScoolData(sc);
                         else
                             _db.Schools.Add(sc);
                     }
