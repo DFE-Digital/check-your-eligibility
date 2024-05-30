@@ -4,9 +4,11 @@
 
 using CheckYourEligibility.Domain.Enums;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics.CodeAnalysis;
 
 namespace CheckYourEligibility.Data.Models
 {
+    [ExcludeFromCodeCoverage(Justification = "Data Model.")]
     public class Application
     {
         public string ApplicationID { get; set; }

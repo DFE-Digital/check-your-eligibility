@@ -44,25 +44,23 @@ namespace CheckYourEligibility.Services
                 }
             }
 
-            if (queryResult.Any())
-            {
-                return queryResult.Where(x=>x.EstablishmentName.ToUpper().Contains(query.ToUpper()))
-                    .OrderBy(x => x.LevenshteinDistance)
-                    .ThenBy(x => x.EstablishmentName).Take(takeScoolResultsMax)
-                    .Select(x => new Domain.Responses.School()
-                    {
-                        Id = x.SchoolId,
-                        Name = x.EstablishmentName,
-                        Postcode = x.Postcode,
-                        Locality = x.Locality,
-                        County = x.County,
-                        Street = x.Street,
-                        Town = x.Town,
-                        La = x.LocalAuthority.LaName,
-                        Distance = x.LevenshteinDistance
-                    });
-            }
-            return null;
+
+            return queryResult.Where(x => x.EstablishmentName.ToUpper().Contains(query.ToUpper()))
+                .OrderBy(x => x.LevenshteinDistance)
+                .ThenBy(x => x.EstablishmentName).Take(takeScoolResultsMax)
+                .Select(x => new Domain.Responses.School()
+                {
+                    Id = x.SchoolId,
+                    Name = x.EstablishmentName,
+                    Postcode = x.Postcode,
+                    Locality = x.Locality,
+                    County = x.County,
+                    Street = x.Street,
+                    Town = x.Town,
+                    La = x.LocalAuthority.LaName,
+                    Distance = x.LevenshteinDistance
+                });
+
         }
     }
 }
