@@ -5,6 +5,8 @@ using CheckYourEligibility.Domain.Requests;
 using CheckYourEligibility.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using System.Diagnostics.CodeAnalysis;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace CheckYourEligibility.Services
 {
@@ -41,20 +43,26 @@ namespace CheckYourEligibility.Services
             }
             catch (DbUpdateException dbu)
             {
-                if (dbu.InnerException.Message.StartsWith($"Cannot insert duplicate key row in object 'dbo.Users' with unique index 'IX_Users_Email_Reference'."))
-                {
 
-                    var existingUser = _db.Users.First(x => x.Email == data.Email && x.Reference == data.Reference);
-                    return existingUser.UserID;
-                }
-                _logger.LogError(dbu, "Db find user");
-                throw;
+               return  GetRecord(data, dbu);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Db post user");
                 throw;
             }
+        }
+
+        [ExcludeFromCodeCoverage]
+        private string GetRecord(UserData data, DbUpdateException dbu)
+        {
+            if (dbu.InnerException.Message.StartsWith($"Cannot insert duplicate key row in object 'dbo.Users' with unique index 'IX_Users_Email_Reference'."))
+            {
+                var existingUser = _db.Users.First(x => x.Email == data.Email && x.Reference == data.Reference);
+                return existingUser.UserID;
+            }
+            _logger.LogError(dbu, "Db find user");
+            throw new Exception($"Unable to find user record");
         }
 
     }

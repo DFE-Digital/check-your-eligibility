@@ -17,6 +17,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
+using System.Diagnostics.CodeAnalysis;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -28,7 +29,7 @@ namespace CheckYourEligibility.Services
         private readonly IEligibilityCheckContext _db;
         protected readonly IMapper _mapper;
         protected readonly IAudit _audit;
-        private readonly QueueClient _queueClient;
+        private  QueueClient _queueClient;
         private const int SurnameCheckCharachters = 3;
      
         private readonly IDwpService _dwpService;
@@ -43,13 +44,18 @@ namespace CheckYourEligibility.Services
             _dwpService = Guard.Against.Null(dwpService);
             _audit = Guard.Against.Null(audit);
 
-            var queName = configuration.GetValue<string>("QueueFsmCheckStandard");
+            setQueue(configuration.GetValue<string>("QueueFsmCheckStandard"),queueClientService);
+
+             _hashCheckDays = configuration.GetValue<short>("HashCheckDays");
+        }
+
+        [ExcludeFromCodeCoverage]
+        private void setQueue(string queName, QueueServiceClient queueClientService)
+        {
             if (queName != "notSet")
             {
                 _queueClient = queueClientService.GetQueueClient(queName);
             }
-
-            _hashCheckDays = configuration.GetValue<short>("HashCheckDays");
         }
 
         public async Task<PostCheckResult> PostCheck(CheckEligibilityRequestDataFsm data)
@@ -74,13 +80,7 @@ namespace CheckYourEligibility.Services
                 await _db.SaveChangesAsync();
                 if (checkHashResult == null)
                 {
-                    if (_queueClient != null)
-                    {
-                        await _queueClient.SendMessageAsync(
-                            JsonConvert.SerializeObject(new QueueMessageCheck() { Type = item.Type.ToString(), Guid = item.EligibilityCheckID,
-                                ProcessUrl = $"{FSMLinks.ProcessLink}{item.EligibilityCheckID}",
-                                SetStatusUrl = $"{FSMLinks.GetLink}{item.EligibilityCheckID}/status"}));
-                    }
+                   await SendMessage(item);
                 }
 
                 return new PostCheckResult { Id = item.EligibilityCheckID, Status = item.Status };
@@ -92,6 +92,24 @@ namespace CheckYourEligibility.Services
                 throw;
             }
         }
+
+        [ExcludeFromCodeCoverage(Justification = "Queue is external dependency.")]
+        private async Task SendMessage(EligibilityCheck item)
+        {
+            if (_queueClient != null)
+            {
+                await _queueClient.SendMessageAsync(
+                                JsonConvert.SerializeObject(new QueueMessageCheck()
+                                {
+                                    Type = item.Type.ToString(),
+                                    Guid = item.EligibilityCheckID,
+                                    ProcessUrl = $"{FSMLinks.ProcessLink}{item.EligibilityCheckID}",
+                                    SetStatusUrl = $"{FSMLinks.GetLink}{item.EligibilityCheckID}/status"
+                                }));
+            }
+        }
+
+
         private EligibilityCheckHash? CheckHashResult(EligibilityCheck item)
         {
             var age = DateTime.UtcNow.AddDays(-_hashCheckDays);
@@ -116,7 +134,7 @@ namespace CheckYourEligibility.Services
             {
                 if (result.Status != CheckEligibilityStatus.queuedForProcessing)
                 {
-                    LogApiEvent(this.GetType().Name, guid, "CheckItem not queuedForProcessing.");
+                    LogApiEvent(this.GetType().Name, guid, $"CheckItem not queuedForProcessing. {GetCurrentMethod()}");
                     throw new ProcessCheckException($"Error checkItem {guid} not queuedForProcessing.");
                 }
                 var source = ProcessEligibilityCheckSource.HMRC;
@@ -191,7 +209,7 @@ namespace CheckYourEligibility.Services
                 result.Status = data.Status;
                 result.Updated = DateTime.UtcNow;
                 var updates = await _db.SaveChangesAsync();
-                return new CheckEligibilityStatusResponse { Data = new Domain.Responses.StatusValue { Status = result.Status.ToString() } };
+                return new CheckEligibilityStatusResponse { Data = new StatusValue { Status = result.Status.ToString() } };
             }
 
             return null;

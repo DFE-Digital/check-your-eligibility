@@ -45,7 +45,7 @@ namespace CheckYourEligibility.WebApp.Controllers
         {
             if (file == null || file.ContentType.ToLower() != "text/csv")
             {
-                return BadRequest(new MessageResponse { Data = "Csv data file is required." });
+                return BadRequest(new MessageResponse { Data = $"{Admin.CsvfileRequired}"});
             }
             try
             {
