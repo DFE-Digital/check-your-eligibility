@@ -80,6 +80,26 @@ namespace CheckYourEligibility.ServiceUnitTests
         }
 
         [Test]
+        public async Task Given_PostCheck_ExceptionRaised()
+        {
+            // Arrange
+            var request = _fixture.Create<CheckEligibilityRequestDataFsm>();
+            request.DateOfBirth = "01/02/1970";
+            request.NationalAsylumSeekerServiceNumber = null;
+
+            var db = new Mock<IEligibilityCheckContext>(MockBehavior.Strict);
+            
+            var svc = new FsmCheckEligibilityService(new NullLoggerFactory(), db.Object, _mapper, null, _configuration, _moqDwpService.Object, _moqAudit.Object);
+            db.Setup(x => x.CheckEligibilities.AddAsync(It.IsAny<EligibilityCheck>(), It.IsAny<CancellationToken>())).ThrowsAsync(new Exception());
+            
+            // Act
+            Func<Task> act = async () => await svc.PostCheck(request);
+
+            // Assert
+            act.Should().ThrowExactlyAsync<DbUpdateException>();
+        }
+
+        [Test]
         public async Task Given_PostCheck_HashIsOldSoNewOne_generated()
         {
             // Arrange
@@ -340,6 +360,28 @@ namespace CheckYourEligibility.ServiceUnitTests
 
             // Assert
             response.Result.Should().Be(CheckEligibilityStatus.notEligible);
+        }
+
+        [Test]
+        public void Given_validRequest_DWP_Process_Should_Return_checkError()
+        {
+            // Arrange
+            var item = _fixture.Create<EligibilityCheck>();
+            item.Status = CheckEligibilityStatus.queuedForProcessing;
+            item.NASSNumber = string.Empty;
+            _fakeInMemoryDb.CheckEligibilities.Add(item);
+            _fakeInMemoryDb.SaveChangesAsync();
+            _moqDwpService.Setup(x => x.GetCitizen(It.IsAny<CitizenMatchRequest>())).ReturnsAsync(Guid.NewGuid().ToString());
+            var result = new StatusCodeResult(StatusCodes.Status500InternalServerError);
+            _moqDwpService.Setup(x => x.CheckForBenefit(It.IsAny<string>())).ReturnsAsync(result);
+            _moqAudit.Setup(x => x.AuditAdd(It.IsAny<AuditData>())).ReturnsAsync("");
+
+
+            // Act
+            var response = _sut.ProcessCheck(item.EligibilityCheckID, _fixture.Create<AuditData>());
+
+            // Assert
+            response.Result.Should().Be(CheckEligibilityStatus.queuedForProcessing);
         }
 
         [Test]

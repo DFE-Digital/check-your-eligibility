@@ -3,6 +3,7 @@ using CheckYourEligibility.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Hosting;
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 
 namespace CheckYourEligibility.WebApp.Controllers
@@ -35,6 +36,7 @@ namespace CheckYourEligibility.WebApp.Controllers
         /// <param name="type"></param>
         /// <param name="id"></param>
         /// <returns></returns>
+        [ExcludeFromCodeCoverage(Justification = "Context")]
         protected AuditData? AuditDataGet(Domain.Enums.AuditType type, string id)
         {
             if (HttpContext != null)
