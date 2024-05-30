@@ -7,9 +7,11 @@ using Azure.Security.KeyVault.Secrets;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using System.Text;
+using System.Diagnostics.CodeAnalysis;
 
 namespace CheckYourEligibility.WebApp
 {
+    [ExcludeFromCodeCoverage(Justification = "extension of program")]
     public static class ProgramExtensions
     {
         public static IServiceCollection AddDatabase(this IServiceCollection services, IConfiguration configuration)
