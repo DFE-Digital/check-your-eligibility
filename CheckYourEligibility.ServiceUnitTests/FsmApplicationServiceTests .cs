@@ -11,6 +11,7 @@ using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
+using Moq;
 using School = CheckYourEligibility.Data.Models.School;
 
 namespace CheckYourEligibility.ServiceUnitTests
@@ -64,6 +65,22 @@ namespace CheckYourEligibility.ServiceUnitTests
 
             // Assert
             act.Should().ThrowExactly<ArgumentNullException>().And.Message.Should().EndWithEquivalentOf("Value cannot be null. (Parameter 'dbContext')");
+        }
+
+        [Test]
+        public void Given_DB_Add_Should_ThrowException()
+        {
+            // Arrange
+            var db = new Mock<IEligibilityCheckContext>(MockBehavior.Strict);
+            var svc = new FsmApplicationService(new NullLoggerFactory(), db.Object, _mapper);
+            db.Setup(x => x.Applications.AddAsync(It.IsAny<Application>(), It.IsAny<CancellationToken>())).ThrowsAsync(new Exception());
+            var request = _fixture.Create<ApplicationRequestData>();
+
+            // Act
+            Func<Task> act = async () => await svc.PostApplication(request);
+
+            // Assert
+            act.Should().ThrowExactlyAsync<Exception>();
         }
 
         [Test]

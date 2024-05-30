@@ -140,15 +140,6 @@ namespace CheckYourEligibility.Services
             return null;
         }
 
-        public string GetHash(EligibilityCheck item)
-        {
-            var key = string.IsNullOrEmpty(item.NINumber) ? item.NASSNumber : item.NINumber;
-            var input = $"{item.LastName}{key}{item.DateOfBirth.ToString("d")}{item.Type}";
-            var inputBytes = Encoding.UTF8.GetBytes(input);
-            var inputHash = SHA256.HashData(inputBytes);
-            return Convert.ToHexString(inputHash);
-        }
-
         #region Private
 
         private string GetReference()

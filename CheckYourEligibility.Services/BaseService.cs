@@ -3,6 +3,7 @@
 using Microsoft.ApplicationInsights;
 using Newtonsoft.Json;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
 namespace CheckYourEligibility.Services
@@ -42,6 +43,7 @@ namespace CheckYourEligibility.Services
                 });
         }
 
+        [ExcludeFromCodeCoverage]
         protected async Task LogApiError(HttpResponseMessage task, string method, string uri, string data)
         {
             var guid = Guid.NewGuid().ToString();
@@ -66,6 +68,7 @@ namespace CheckYourEligibility.Services
             throw new Exception($"API Failure:-{method} , your issue has been logged please use the following reference:- {guid}");
         }
 
+        [ExcludeFromCodeCoverage]
         protected async Task LogApiError(HttpResponseMessage task, string method, string uri)
         {
             var guid = Guid.NewGuid().ToString();

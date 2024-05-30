@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Text;
 
@@ -19,6 +20,7 @@ namespace CheckYourEligibility.Services
         Task<string?> GetCitizen(CitizenMatchRequest requestBody);
     }
 
+    [ExcludeFromCodeCoverage]
     public class DwpService : IDwpService
     {
         private readonly ILogger _logger;
@@ -109,6 +111,8 @@ namespace CheckYourEligibility.Services
         }
 
     }
+
+    [ExcludeFromCodeCoverage]
     public class InternalServerErrorResult : StatusCodeResult
     {
         private const int DefaultStatusCode = StatusCodes.Status500InternalServerError;
