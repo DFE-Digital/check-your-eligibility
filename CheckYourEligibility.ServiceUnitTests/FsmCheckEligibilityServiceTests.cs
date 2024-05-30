@@ -84,7 +84,7 @@ namespace CheckYourEligibility.ServiceUnitTests
         {
             // Arrange
             var request = _fixture.Create<CheckEligibilityRequestDataFsm>();
-            request.DateOfBirth = "01/02/1970";
+            request.DateOfBirth = "1970-02-01";
             request.NationalAsylumSeekerServiceNumber = null;
 
             var db = new Mock<IEligibilityCheckContext>(MockBehavior.Strict);
@@ -104,7 +104,7 @@ namespace CheckYourEligibility.ServiceUnitTests
         {
             // Arrange
             var request = _fixture.Create<CheckEligibilityRequestDataFsm>();
-            request.DateOfBirth = "01/02/1970";
+            request.DateOfBirth = "1970-02-01";
             request.NationalAsylumSeekerServiceNumber = null;
 
             //Set UpValid hmrc check
@@ -145,7 +145,7 @@ namespace CheckYourEligibility.ServiceUnitTests
         {
             // Arrange
             var request = _fixture.Create<CheckEligibilityRequestDataFsm>();
-            request.DateOfBirth = "01/02/1970";
+            request.DateOfBirth = "1970-02-01";
             request.NationalAsylumSeekerServiceNumber = null;
 
             //Set UpValid hmrc check
@@ -185,7 +185,7 @@ namespace CheckYourEligibility.ServiceUnitTests
         {
             // Arrange
             var request = _fixture.Create<CheckEligibilityRequestDataFsm>();
-            request.DateOfBirth = "01/02/1970";
+            request.DateOfBirth = "1970-02-01";
             request.NationalAsylumSeekerServiceNumber = null;
             var key = string.IsNullOrEmpty(request.NationalInsuranceNumber) ? request.NationalAsylumSeekerServiceNumber : request.NationalInsuranceNumber;
             //Set UpValid hmrc check
@@ -214,7 +214,7 @@ namespace CheckYourEligibility.ServiceUnitTests
         {
             // Arrange
             var request = _fixture.Create<CheckEligibilityRequestDataFsm>();
-            request.DateOfBirth = "01/02/1970";
+            request.DateOfBirth = "1970-02-01";
 
             // Act
             var response = _sut.PostCheck(request);
