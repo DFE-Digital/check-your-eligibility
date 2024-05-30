@@ -133,7 +133,6 @@ namespace CheckYourEligibility.Services
                  .SetProperty(b => b.Locality, item.Locality)
                  .SetProperty(b => b.Town, item.Town));
         }
-
     }
 }
 
