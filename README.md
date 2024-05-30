@@ -54,7 +54,7 @@ curl --location 'https://localhost:7117/FreeSchoolMeals' \
   "data": {
     "nationalInsuranceNumber": "AB123456C",
     "lastName": "DWPmoqEligible",
-    "dateOfBirth": "01/01/1990",
+    "dateOfBirth": "1990-01-01",
     "nationalAsylumSeekerServiceNumber": null
   }
 }'
@@ -95,7 +95,7 @@ curl --location --request GET 'https://localhost:7117/MoqDWP/v2/citizens/58ccfe3
   "data": {
     "type": "Match",
     "attributes": {
-      "dateOfBirth": "01/01/1990",
+      "dateOfBirth": "1990-01-01",
       "ninoFragment": "AB123456C",
       "lastName": "DWPmoq"
     }

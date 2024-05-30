@@ -71,7 +71,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n  \"data\": {\r\n    \"nationalInsuranceNumber\": \"AB123456C\",\r\n    \"lastName\": \"SIMPSON\",\r\n    \"dateOfBirth\": \"01/01/1990\",\r\n    \"nationalAsylumSeekerServiceNumber\": null\r\n  }\r\n}"
+					"raw": "{\r\n  \"data\": {\r\n    \"nationalInsuranceNumber\": \"AB123456C\",\r\n    \"lastName\": \"SIMPSON\",\r\n    \"dateOfBirth\": \"1990-01-01\",\r\n    \"nationalAsylumSeekerServiceNumber\": null\r\n  }\r\n}"
 				},
 				"url": {
 					"raw": "https://ecs-dev-as.azurewebsites.net/FreeSchoolMeals",
@@ -104,7 +104,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n  \"data\": {\r\n    \"school\": 100000,\r\n    \"parentFirstName\": \"Tom\",\r\n    \"parentLastName\": \"Smith\",\r\n    \"parentNationalInsuranceNumber\": \"ns738356d\",\r\n    \"parentNationalAsylumSeekerServiceNumber\": \"\",\r\n    \"parentDateOfBirth\": \"01/02/1970\",\r\n    \"childFirstName\": \"Alexa\",\r\n    \"childLastName\": \"Smith\",\r\n    \"childDateOfBirth\": \"01/02/2007\"\r\n  }\r\n}"
+					"raw": "{\r\n  \"data\": {\r\n    \"school\": 100000,\r\n    \"parentFirstName\": \"Tom\",\r\n    \"parentLastName\": \"Smith\",\r\n    \"parentNationalInsuranceNumber\": \"ns738356d\",\r\n    \"parentNationalAsylumSeekerServiceNumber\": \"\",\r\n    \"parentDateOfBirth\": \"1970-02-01\",\r\n    \"childFirstName\": \"Alexa\",\r\n    \"childLastName\": \"Smith\",\r\n    \"childDateOfBirth\": \"2007-02-01\"\r\n  }\r\n}"
 				},
 				"url": {
 					"raw": "https://ecs-dev-as.azurewebsites.net/FreeSchoolMeals/application",
@@ -141,7 +141,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n  \"data\": {\r\n    \"nationalInsuranceNumber\": \"AB123456C\",\r\n    \"lastName\": \"SIMPSON\",\r\n    \"dateOfBirth\": \"01/01/1990\",\r\n    \"nationalAsylumSeekerServiceNumber\": null\r\n  }\r\n}"
+					"raw": "{\r\n  \"data\": {\r\n    \"nationalInsuranceNumber\": \"AB123456C\",\r\n    \"lastName\": \"SIMPSON\",\r\n    \"dateOfBirth\": \"1990-01-01\",\r\n    \"nationalAsylumSeekerServiceNumber\": null\r\n  }\r\n}"
 				},
 				"url": {
 					"raw": "https://ecs-dev-as.azurewebsites.net/Schools/search?query=king",
