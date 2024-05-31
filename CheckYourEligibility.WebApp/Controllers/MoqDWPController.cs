@@ -39,10 +39,7 @@ namespace CheckYourEligibility.WebApp.Controllers
         {
 
 
-            if (model?.Data?.Attributes?.DateOfBirth == MogDWPValues.validCitizenDob
-                && (model?.Data?.Attributes?.LastName == MogDWPValues.validCitizenSurnameEligible || model?.Data?.Attributes?.LastName == MogDWPValues.validCitizenSurnameNotEligible)
-                && model?.Data?.Attributes?.NinoFragment == MogDWPValues.validCitizenNino
-                )
+            if (model?.Data?.Attributes?.LastName == MogDWPValues.validCitizenSurnameEligible || model?.Data?.Attributes?.LastName == MogDWPValues.validCitizenSurnameNotEligible)
             {
                 return new ObjectResult(new DwpResponse()
                 {

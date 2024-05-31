@@ -38,14 +38,14 @@ public static class MogDWPValues
     {
         public static string validUniversalBenefitType = "universal_credit";
         public static string validCitizenEligibleGuid = "58ccfe37-7e43-4682-a412-19ec663ca556";
-        public static string validCitizenSurnameEligible = "DWPmoqEligible";
+        public static string validCitizenSurnameEligible = "Smith";
         public static string validCitizenNotEligibleGuid = "48ccfe37-7e43-4682-a412-19ec663ca556";
-        public static string validCitizenSurnameNotEligible = "DWPmoqNotEligible";
+        public static string validCitizenSurnameNotEligible = "Jones";
         public static string validCitizenDob = "1990-01-01";
         public static string validCitizenNino = "AB123456C";
     }
 
-Using a valid check will enforce a valid result changing the surname to 'DWPmoqNotEligible' follows a different path
+Using a valid check will enforce a valid result changing the surname to 'Jones' follows a different path
 
 curl --location 'https://localhost:7117/FreeSchoolMeals' \
 --header 'accept: text/plain' \
@@ -53,7 +53,7 @@ curl --location 'https://localhost:7117/FreeSchoolMeals' \
 --data '{
   "data": {
     "nationalInsuranceNumber": "AB123456C",
-    "lastName": "DWPmoqEligible",
+    "lastName": "Smith",
     "dateOfBirth": "1990-01-01",
     "nationalAsylumSeekerServiceNumber": null
   }
@@ -76,7 +76,7 @@ curl --location 'https://localhost:7117/MoqDWP/v2/citizens' \
     "attributes": {
       "dateOfBirth": "1990-01-01",
       "ninoFragment": "AB123456C",
-      "lastName": "DWPmoqEligible"
+      "lastName": "Smith"
     }
   }
 }'
