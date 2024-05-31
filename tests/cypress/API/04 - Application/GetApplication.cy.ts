@@ -13,10 +13,10 @@ describe('GET eligibility soft check by Guid', () => {
             parentLastName: 'Simpson',
             parentNationalInsuranceNumber: '',
             parentNationalAsylumSeekerServiceNumber: 'AB123456C',
-            parentDateOfBirth: '01/01/1985',
+            parentDateOfBirth: '1985-01-01',
             childFirstName: 'Jane',
             childLastName: 'Simpson',
-            childDateOfBirth: '01/01/2005'
+            childDateOfBirth: '2005-01-01'
         }
     };
     it('Verify 200 Success response is returned with valid guid', () => {

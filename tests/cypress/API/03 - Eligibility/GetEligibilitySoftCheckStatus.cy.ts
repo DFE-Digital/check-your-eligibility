@@ -9,7 +9,7 @@ describe('GET eligibility soft check  Status ', () => {
     data: {
         nationalInsuranceNumber: '',
         lastName: 'Simpson',
-        dateOfBirth: '01/01/1990',
+        dateOfBirth: '1990-01-01',
         nationalAsylumSeekerServiceNumber: 'AB123456C'
     }
 };
@@ -34,7 +34,7 @@ describe('Verify Eligibility Check Statuses', () => {
     data: {
         nationalInsuranceNumber: '',
         lastName: 'Jacob',
-        dateOfBirth: '01/01/1990',
+        dateOfBirth: '1990-01-01',
         nationalAsylumSeekerServiceNumber: 'AB123456C'
     }
 };
