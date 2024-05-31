@@ -69,13 +69,13 @@ stages:
       environment: DEVELOPMENT
       strategy:
         runOnce:
-          deploy:
+          preDeploy:
             steps:
             - task: DownloadPipelineArtifact@2
               inputs:
                 buildType: 'current'
                 targetPath: '$(Pipeline.Workspace)'
-                  
+
             - task: AzureCLI@2
               displayName: 'Run Migrations'
               env:
@@ -88,7 +88,8 @@ stages:
                   az account show
                   dotnet tool install --global dotnet-ef
                   dotnet ef database update --project $(Build.SourcesDirectory)/CheckYourEligibility.Data.Migrations/CheckYourEligibility.Data.Migrations.csproj -s $(Build.SourcesDirectory)/CheckYourEligibility.WebApp
-      
+          deploy:
+            steps:
             - task: AzureRmWebAppDeployment@4
               inputs:
                 ConnectionType: 'AzureRM'
@@ -96,6 +97,7 @@ stages:
                 appType: 'webApp'
                 WebAppName: 'ecs-dev-as'
                 packageForLinux: '$(Pipeline.Workspace)/checkYourEligibilityAPI/CheckYourEligibility.WebApp.zip'
+
   - stage: DeployAppTest
     displayName: Deploy App Test
     jobs:
@@ -107,25 +109,27 @@ stages:
       environment: TEST
       strategy:
         runOnce:
+          preDeploy:
+            steps:
+            - task: DownloadPipelineArtifact@2
+              inputs:
+                buildType: 'current'
+                targetPath: '$(Pipeline.Workspace)'
+
+            - task: AzureCLI@2
+              displayName: 'Run Migrations'
+              env:
+                KEY_VAULT_NAME: ecs-test-kv
+              inputs:
+                azureSubscription: 's203t.azdo.deployment'
+                scriptType: 'ps'
+                scriptLocation: 'inlineScript'
+                inlineScript: |
+                  az account show
+                  dotnet tool install --global dotnet-ef
+                  dotnet ef database update --project $(Build.SourcesDirectory)/CheckYourEligibility.Data.Migrations/CheckYourEligibility.Data.Migrations.csproj -s $(Build.SourcesDirectory)/CheckYourEligibility.WebApp
           deploy:
             steps:
-              - task: DownloadPipelineArtifact@2
-                inputs:
-                  buildType: 'current'
-                  targetPath: '$(Pipeline.Workspace)'
-    
-              - task: AzureCLI@2
-                displayName: 'Run Migrations'
-                env:
-                  KEY_VAULT_NAME: ecs-test-kv
-                inputs:
-                  azureSubscription: 's203t.azdo.deployment'
-                  scriptType: 'ps'
-                  scriptLocation: 'inlineScript'
-                  inlineScript: |
-                    az account show
-                    dotnet tool install --global dotnet-ef
-                    dotnet ef database update --project $(Build.SourcesDirectory)/CheckYourEligibility.Data.Migrations/CheckYourEligibility.Data.Migrations.csproj -s $(Build.SourcesDirectory)/CheckYourEligibility.WebApp
               - task: AzureRmWebAppDeployment@4
                 inputs:
                   ConnectionType: 'AzureRM'
