@@ -21,7 +21,7 @@ public class FsmMappingProfile : Profile
         CreateMap<EligibilityCheck, CheckEligibilityItemFsm>()
         .ForMember(dest => dest.NationalInsuranceNumber, opt => opt.MapFrom(src => src.NINumber))
         .ForMember(dest => dest.NationalAsylumSeekerServiceNumber, opt => opt.MapFrom(src => src.NASSNumber))
-        .ForMember(x => x.DateOfBirth, y => y.MapFrom(z => z.DateOfBirth.ToString("dd/MM/yyyy")))
+        .ForMember(x => x.DateOfBirth, y => y.MapFrom(z => z.DateOfBirth.ToString("yyyy-MM-dd")))
         .ReverseMap();
 
         CreateMap<ApplicationRequestData, Application>()
@@ -38,8 +38,8 @@ public class FsmMappingProfile : Profile
         .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.ApplicationID))
         .ForMember(dest => dest.ParentNationalInsuranceNumber, opt => opt.MapFrom(src => src.ParentNationalInsuranceNumber))
         .ForMember(dest => dest.ParentNationalAsylumSeekerServiceNumber, opt => opt.MapFrom(src => src.ParentNationalAsylumSeekerServiceNumber))
-        .ForMember(x => x.ParentDateOfBirth, y => y.MapFrom(z => z.ParentDateOfBirth.ToString("dd/MM/yyyy")))
-        .ForMember(x => x.ChildDateOfBirth, y => y.MapFrom(z => z.ChildDateOfBirth.ToString("dd/MM/yyyy")))
+        .ForMember(x => x.ParentDateOfBirth, y => y.MapFrom(z => z.ParentDateOfBirth.ToString("yyyy-MM-dd")))
+        .ForMember(x => x.ChildDateOfBirth, y => y.MapFrom(z => z.ChildDateOfBirth.ToString("yyyy-MM-dd")))
         .ForMember(dest => dest.LocalAuthority, opt => opt.MapFrom(src => src.LocalAuthorityId))
         .ForMember(dest => dest.School, opt => opt.MapFrom(src => src.SchoolId))
         .ReverseMap();
@@ -48,8 +48,8 @@ public class FsmMappingProfile : Profile
         .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.ApplicationID))
         .ForMember(dest => dest.ParentNationalInsuranceNumber, opt => opt.MapFrom(src => src.ParentNationalInsuranceNumber))
         .ForMember(dest => dest.ParentNationalAsylumSeekerServiceNumber, opt => opt.MapFrom(src => src.ParentNationalAsylumSeekerServiceNumber))
-        .ForMember(x => x.ParentDateOfBirth, y => y.MapFrom(z => z.ParentDateOfBirth.ToString("dd/MM/yyyy")))
-        .ForMember(x => x.ChildDateOfBirth, y => y.MapFrom(z => z.ChildDateOfBirth.ToString("dd/MM/yyyy")))
+        .ForMember(x => x.ParentDateOfBirth, y => y.MapFrom(z => z.ParentDateOfBirth.ToString("yyyy-MM-dd")))
+        .ForMember(x => x.ChildDateOfBirth, y => y.MapFrom(z => z.ChildDateOfBirth.ToString("yyyy-MM-dd")))
         .ForMember(x => x.Status, y => y.MapFrom(z => z.Status.ToString()))
         .ReverseMap();
 
