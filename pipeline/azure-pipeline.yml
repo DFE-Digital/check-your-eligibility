@@ -26,14 +26,14 @@ stages:
         inputs:
           restoreSolution: '$(solution)'
           
-      - task: Bash@3
+      - task: CmdLine@2
         displayName: 'Build migrations bundle'
         inputs:
-          targetType: 'inline'
           script: |
             dotnet tool install --global dotnet-ef --version 8.0.4
-            dotnet ef migrations bundle --self-contained -r windows-x64 --project CheckYourEligibility.WebApp/CheckYourEligibility.WebApp.csproj
-            move efbundle.exe $(Build.ArtifactStagingDirectory)
+            dotnet ef migrations bundle --verbose --self-contained -r windows-x64 --project CheckYourEligibility.WebApp/CheckYourEligibility.WebApp.csproj
+            mv efbundle.exe $(Build.ArtifactStagingDirectory)
+            
       - task: VSBuild@1
         inputs:
           solution: '$(solution)'
