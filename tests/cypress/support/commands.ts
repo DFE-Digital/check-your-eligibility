@@ -15,6 +15,8 @@ declare namespace Cypress {
     verifyTotalElements(totalElements: number, expectedTotalElements: number): Chainable<void>;
     verifySchoolSearchResponse(response: any, expectedData: any): Chainable<void>;
     verifyApplicationSearchResponse(response: any, expectedDataArray: any[]): Chainable<void>;
+    form_request(method: string, url: string, formData: FormData, headers: { [key: string]: string }, done: (xhr: XMLHttpRequest) => void): void;
+  
 
   }
 }
@@ -312,4 +314,22 @@ Cypress.Commands.add('verifyApplicationSearchResponse', (response, expectedDataA
   expect(expectedData).to.have.property('status', expectedData.status);
   expect(expectedData).to.have.property('user', expectedData.user);
 
+});
+
+// Ensure you import necessary Cypress types for better TypeScript support
+/// <reference types="cypress" />
+
+Cypress.Commands.add('form_request', (method: string, url: string, formData: FormData, headers: { [key: string]: string }, done: (xhr: XMLHttpRequest) => void) => {
+  const xhr = new XMLHttpRequest();
+  xhr.open(method, url);
+  Object.keys(headers).forEach(key => {
+      xhr.setRequestHeader(key, headers[key]);
+  });
+  xhr.onload = function () {
+      done(xhr);
+  };
+  xhr.onerror = function () {
+      done(xhr);
+  };
+  xhr.send(formData);
 });
