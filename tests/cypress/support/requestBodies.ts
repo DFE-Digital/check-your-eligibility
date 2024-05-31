@@ -1,7 +1,7 @@
 
 export const validLoginRequestBody = {
-    username: 'user',
-    password: 'pass'
+    username: Cypress.env('JWT_USERNAME'),
+    password: Cypress.env('JWT_PASSWORD')
 };
 
 export const validHMRCRequestBody = {
