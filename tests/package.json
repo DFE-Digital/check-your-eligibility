@@ -5,5 +5,8 @@
     "cypress": "^13.8.1",
     "cypress-plugin-api": "^2.11.1",
     "typescript": "^5.4.5"
+  },
+  "scripts": {
+    "e2e:chrome": "cypress run --browser chrome"
   }
 }

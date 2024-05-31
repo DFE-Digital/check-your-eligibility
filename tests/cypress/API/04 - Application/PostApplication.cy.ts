@@ -9,10 +9,10 @@ describe('Verify POST application responses', () => {
             parentLastName: 'Simpson',
             parentNationalInsuranceNumber: '',
             parentNationalAsylumSeekerServiceNumber: 'AB123456C',
-            parentDateOfBirth: '01/01/1985',
+            parentDateOfBirth: '1985-01-01',
             childFirstName: 'Jane',
             childLastName: 'Simpson',
-            childDateOfBirth: '01/01/2005'
+            childDateOfBirth: '2005-01-01'
         }
     };
 
@@ -55,10 +55,10 @@ describe('Verify invalid application request responses', () => {
             parentLastName: 'Simpson',
             parentNationalInsuranceNumber: '',
             parentNationalAsylumSeekerServiceNumber: 'AB123456C',
-            parentDateOfBirth: '01/01/1985',
+            parentDateOfBirth: '1985-01-01',
             childFirstName: 'Jane',
             childLastName: 'Simpson',
-            childDateOfBirth: '01/01/2005'
+            childDateOfBirth: '2005-01-01'
         }
     };
 
@@ -92,7 +92,7 @@ describe('Verify invalid application request responses', () => {
             cy.apiRequest('POST', 'FreeSchoolMeals/Application', invalidApplicationInvalidChildDOBRequestBody, token).then((response) => {
                 // Assert the status and statusText
                 cy.verifyApiResponseCode(response, 400);
-                expect(response.body).to.have.property('data', "Child Date of birth is required:- (dd/mm/yyyy)");
+                expect(response.body).to.have.property('data', "Child Date of birth is required:- (yyyy-mm-dd)");
             });
         });
     });

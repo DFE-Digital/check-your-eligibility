@@ -1,14 +1,14 @@
 
 export const validLoginRequestBody = {
-    username: 'user',
-    password: 'pass'
+    username: Cypress.env('JWT_USERNAME'),
+    password: Cypress.env('JWT_PASSWORD')
 };
 
 export const validHMRCRequestBody = {
     data: {
         nationalInsuranceNumber: 'AB123456C',
         lastName: 'Smith',
-        dateOfBirth: '01/01/2000',
+        dateOfBirth: '2000-01-01',
         nationalAsylumSeekerServiceNumber: ''
     }
 };
@@ -17,7 +17,7 @@ export const validHomeOfficeRequestBody = {
     data: {
         nationalInsuranceNumber: '',
         lastName: 'Simpson',
-        dateOfBirth: '01/01/1990',
+        dateOfBirth: '1990-01-01',
         nationalAsylumSeekerServiceNumber: 'AB123456C'
     }
 };
