@@ -45,6 +45,18 @@ stages:
         inputs:
           codeCoverageTool: 'Cobertura'
           summaryFileLocation: '$(build.ArtifactStagingDirectory)/Test/Results/**/*.xml'
+          
+
+      - task: AzureCLI@2
+        displayName: 'Run Migrations'
+        inputs:
+          scriptType: 'ps'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            cd CheckYourEligibility.WebApp
+            dotnet tool install --global dotnet-ef
+            dotnet ef migrations bundle --self-contained -r win-x64
+            move efbundle.exe $(Build.ArtifactStagingDirectory)/checkYourEligibilityAPI
 
       - task: DotNetCoreCLI@2
         inputs:
@@ -52,13 +64,6 @@ stages:
           publishWebProjects: True
           arguments: '--configuration $(BuildConfiguration) --output $(Build.ArtifactStagingDirectory)'
           zipAfterPublish: True
-    
-      - task: AzureCLI@2
-        displayName: 'Run Migrations'
-        inlineScript: |
-          dotnet tool install --global dotnet-ef
-          dotnet ef migrations bundle --self-contained -r win-x64
-          move efbundle.exe $(Build.ArtifactStagingDirectory)'
 
       - task: PublishPipelineArtifact@1
         inputs:
