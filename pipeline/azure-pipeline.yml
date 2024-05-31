@@ -25,7 +25,15 @@ stages:
       - task: NuGetCommand@2
         inputs:
           restoreSolution: '$(solution)'
-
+          
+      - task: Bash@3
+        displayName: 'Build migrations bundle'
+        inputs:
+          targetType: 'inline'
+          script: |
+            dotnet tool install --global dotnet-ef --version 8.0.4
+            dotnet ef migrations bundle --self-contained -r windows-x64 --project CheckYourEligibility.WebApp\CheckYourEligibility.WebApp.csproj
+            move efbundle.exe $(Build.ArtifactStagingDirectory)
       - task: VSBuild@1
         inputs:
           solution: '$(solution)'
@@ -45,18 +53,6 @@ stages:
         inputs:
           codeCoverageTool: 'Cobertura'
           summaryFileLocation: '$(build.ArtifactStagingDirectory)/Test/Results/**/*.xml'
-          
-
-      - task: AzureCLI@2
-        displayName: 'Run Migrations'
-        inputs:
-          scriptType: 'ps'
-          scriptLocation: 'inlineScript'
-          inlineScript: |
-            cd CheckYourEligibility.WebApp
-            dotnet tool install --global dotnet-ef
-            dotnet ef migrations bundle --self-contained -r win-x64
-            move efbundle.exe $(Build.ArtifactStagingDirectory)/checkYourEligibilityAPI
 
       - task: DotNetCoreCLI@2
         inputs:
@@ -97,7 +93,7 @@ stages:
                 scriptType: 'ps'
                 scriptLocation: 'inlineScript'
                 inlineScript: |
-                  efbundle.exe
+                  $(Pipeline.Workspace)/checkYourEligibilityAPI/efbundle.exe
           deploy:
             steps:
             - task: AzureRmWebAppDeployment@4
