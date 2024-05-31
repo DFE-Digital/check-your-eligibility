@@ -9,7 +9,7 @@ describe('Post Eligibility Check - Valid Requests', () => {
     data: {
       nationalInsuranceNumber: 'AB123456C',
       lastName: 'Smith',
-      dateOfBirth: '01/01/2000',
+      dateOfBirth: '2000-01-01',
       nationalAsylumSeekerServiceNumber: ''
     }
   };
@@ -18,7 +18,7 @@ describe('Post Eligibility Check - Valid Requests', () => {
     data: {
       nationalInsuranceNumber: '',
       lastName: 'Simpson',
-      dateOfBirth: '01/01/1990',
+      dateOfBirth: '1990-01-01',
       nationalAsylumSeekerServiceNumber: 'AB123456C'
     }
   };
@@ -55,7 +55,7 @@ describe('Post Eligibility Check - Invalid Requests', () => {
       data: {
         nationalInsuranceNumber: 'AAG123456C',
         lastName: 'Smith',
-        dateOfBirth: '01/01/2000',
+        dateOfBirth: '2000-01-01',
         nationalAsylumSeekerServiceNumber: ''
       }
     };
@@ -79,7 +79,7 @@ describe('Post Eligibility Check - Invalid Requests', () => {
     getandVerifyBearerToken('api/Login', validLoginRequestBody).then((token) => {
       cy.apiRequest('POST', 'FreeSchoolMeals', InvalidDOBRequestBody, token).then((response) => {
         cy.verifyApiResponseCode(response, 400)
-        expect(response.body).to.have.property('data', 'Date of birth is required:- (dd/mm/yyyy)');
+        expect(response.body).to.have.property('data', 'Date of birth is required:- (yyyy-mm-dd)');
       });
     });
   });
@@ -89,7 +89,7 @@ describe('Post Eligibility Check - Invalid Requests', () => {
       data: {
         nationalInsuranceNumber: 'AB123456C',
         lastName: '',
-        dateOfBirth: '01/01/2000',
+        dateOfBirth: '2000-01-01',
         nationalAsylumSeekerServiceNumber: ''
       }
     };
@@ -106,7 +106,7 @@ describe('Post Eligibility Check - Invalid Requests', () => {
       data: {
         nationalInsuranceNumber: '',
         lastName: 'Smith',
-        dateOfBirth: '01/01/1990',
+        dateOfBirth: '1990-01-01',
         nationalAsylumSeekerServiceNumber: ''
       }
     };

@@ -31,10 +31,10 @@ describe('Search Application', () => {
           parentLastName: "Simpson",
           parentNationalInsuranceNumber: "AB123456C",
           parentNationalAsylumSeekerServiceNumber: "",
-          parentDateOfBirth: "01/01/1985",
+          parentDateOfBirth: "1985-01-01",
           childFirstName: "Tom",
           childLastName: "sdf",
-          childDateOfBirth: "01/01/2001",
+          childDateOfBirth: "2001-01-01",
           status: "Open",
           user: null
         }
