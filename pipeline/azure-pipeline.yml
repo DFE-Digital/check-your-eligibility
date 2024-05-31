@@ -33,7 +33,7 @@ stages:
             dotnet tool install --global dotnet-ef --version 8.0.4
             dotnet ef migrations bundle --verbose --self-contained -r win-x86 --project CheckYourEligibility.WebApp/CheckYourEligibility.WebApp.csproj
             mv efbundle.exe $(Build.ArtifactStagingDirectory)
-            
+
       - task: VSBuild@1
         inputs:
           solution: '$(solution)'
