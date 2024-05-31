@@ -83,7 +83,6 @@ stages:
               inputs:
                 buildType: 'current'
                 targetPath: '$(Pipeline.Workspace)'
-
             - task: AzureCLI@2
               displayName: 'Run Migrations'
               env:
@@ -121,7 +120,6 @@ stages:
               inputs:
                 buildType: 'current'
                 targetPath: '$(Pipeline.Workspace)'
-
             - task: AzureCLI@2
               displayName: 'Run Migrations'
               env:
@@ -131,15 +129,13 @@ stages:
                 scriptType: 'ps'
                 scriptLocation: 'inlineScript'
                 inlineScript: |
-                  az account show
-                  dotnet tool install --global dotnet-ef
-                  dotnet ef database update --project $(Build.SourcesDirectory)/CheckYourEligibility.Data.Migrations/CheckYourEligibility.Data.Migrations.csproj -s $(Build.SourcesDirectory)/CheckYourEligibility.WebApp
+                  $(Pipeline.Workspace)/checkYourEligibilityAPI/efbundle.exe
           deploy:
             steps:
-              - task: AzureRmWebAppDeployment@4
-                inputs:
-                  ConnectionType: 'AzureRM'
-                  azureSubscription: 's203t.azdo.deployment'
-                  appType: 'webApp'
-                  WebAppName: 'ecs-test-as'
-                  packageForLinux: '$(Pipeline.Workspace)/checkYourEligibilityAPI/CheckYourEligibility.WebApp.zip'
+            - task: AzureRmWebAppDeployment@4
+              inputs:
+                ConnectionType: 'AzureRM'
+                azureSubscription: 's203t.azdo.deployment'
+                appType: 'webApp'
+                WebAppName: 'ecs-test-as'
+                packageForLinux: '$(Pipeline.Workspace)/checkYourEligibilityAPI/CheckYourEligibility.WebApp.zip'
