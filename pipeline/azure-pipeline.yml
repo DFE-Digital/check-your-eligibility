@@ -52,6 +52,13 @@ stages:
           publishWebProjects: True
           arguments: '--configuration $(BuildConfiguration) --output $(Build.ArtifactStagingDirectory)'
           zipAfterPublish: True
+    
+      - task: AzureCLI@2
+        displayName: 'Run Migrations'
+        inlineScript: |
+          dotnet tool install --global dotnet-ef
+          dotnet ef migrations bundle --self-contained -r win-x64
+          move efbundle.exe $(Build.ArtifactStagingDirectory)'
 
       - task: PublishPipelineArtifact@1
         inputs:
@@ -85,9 +92,7 @@ stages:
                 scriptType: 'ps'
                 scriptLocation: 'inlineScript'
                 inlineScript: |
-                  az account show
-                  dotnet tool install --global dotnet-ef
-                  dotnet ef database update --project $(Build.SourcesDirectory)/CheckYourEligibility.Data.Migrations/CheckYourEligibility.Data.Migrations.csproj -s $(Build.SourcesDirectory)/CheckYourEligibility.WebApp
+                  efbundle.exe
           deploy:
             steps:
             - task: AzureRmWebAppDeployment@4
