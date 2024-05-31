@@ -93,6 +93,7 @@ stages:
                 scriptLocation: 'inlineScript'
                 inlineScript: |
                   $(Pipeline.Workspace)/checkYourEligibilityAPI/efbundle.exe
+                  
           deploy:
             steps:
             - task: AzureRmWebAppDeployment@4
@@ -130,6 +131,7 @@ stages:
                 scriptLocation: 'inlineScript'
                 inlineScript: |
                   $(Pipeline.Workspace)/checkYourEligibilityAPI/efbundle.exe
+                  
           deploy:
             steps:
             - task: AzureRmWebAppDeployment@4
