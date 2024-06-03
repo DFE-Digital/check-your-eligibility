@@ -34,13 +34,15 @@ steps:
    script: |
     cd tests
     ls
+    cat package.json
     npm run combine:reports
-    ls
 
-- task: Bash@3
+- task: PublishTestResults@2
   condition: always()
   displayName: 'Publish test results'
   inputs:
-   targetType: inline
-   script: |
-    ls
+   testResultsFiles: '**/combined-report.xml'
+   searchFolder: 'tests'
+  #  targetType: inline
+  #  script: |
+  #   ls
