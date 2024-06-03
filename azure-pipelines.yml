@@ -33,7 +33,9 @@ steps:
    targetType: inline
    script: |
     cd tests
+    ls
     npm run combine:reports
+    ls
 
 - task: Bash@3
   condition: always()
