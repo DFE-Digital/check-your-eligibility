@@ -4,7 +4,7 @@ import { validLoginRequestBody } from '../../support/requestBodies';
 describe('Verify POST application responses', () => {
     const baseApplicationRequestBody = {
         data: {
-            school: 107126,
+            school: 100020,
             parentFirstName: 'Homer',
             parentLastName: 'Simpson',
             parentNationalInsuranceNumber: '',

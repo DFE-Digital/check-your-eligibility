@@ -8,7 +8,7 @@ import { validLoginRequestBody  } from '../../support/requestBodies';
 describe('GET eligibility soft check by Guid', () => {
     const ValidApplicationRequestBody = {
         data: {
-            school: 107126,
+            school: 100020,
             parentFirstName: 'Homer',
             parentLastName: 'Simpson',
             parentNationalInsuranceNumber: '',

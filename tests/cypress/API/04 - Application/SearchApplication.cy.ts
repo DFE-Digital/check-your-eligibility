@@ -9,8 +9,8 @@ describe('Search Application', () => {
 
     const body = {
         data: {
-            "localAuthority": 896,
-            "school": 111510,
+            "localAuthority": 202,
+            "school": 100020,
             "status": "Open"
         }
     }
@@ -20,11 +20,11 @@ describe('Search Application', () => {
           id: "bf96e60e-2030-4682-9742-0bd97787d6e2",
           reference: "62719512",
           school: {
-            id: 111510,
-            name: "Hinderton School",
+            id: 100020,
+            name: "Primrose Hill School",
             localAuthority: {
-              id: 896,
-              name: "Cheshire West and Chester"
+              id: 202,
+              name: "Camden"
             }
           },
           parentFirstName: "Homer",
