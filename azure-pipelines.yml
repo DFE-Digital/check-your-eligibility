@@ -24,8 +24,8 @@ steps:
     export CYPRESS_API_HOST="https://ecs-test-as.azurewebsites.net"
     export CYPRESS_JWT_USERNAME=$(JWT_USERNAME)
     export CYPRESS_JWT_PASSWORD="$(JWT_PASSWORD)"
-    echo CYPRESS_JWT_USERNAME
-    echo CYPRESS_JWT_PASSWORD
+    echo $CYPRESS_JWT_USERNAME
+    echo $CYPRESS_JWT_PASSWORD
     npm run e2e:chrome
 
 - task: Bash@3
