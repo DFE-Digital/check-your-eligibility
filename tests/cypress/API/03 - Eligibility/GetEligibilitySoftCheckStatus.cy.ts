@@ -1,19 +1,16 @@
 // /FreeSchoolMeals/{guid
 import { getandVerifyBearerToken } from '../../support/apiHelpers';
-import { validLoginRequestBody, validHomeOfficeRequestBody} from '../../support/requestBodies';
+import { validLoginRequestBody } from '../../support/requestBodies';
 
-
-describe('GET eligibility soft check  Status ', () => {
-
-  const validHomeOfficeRequestBody = {
-    data: {
-        nationalInsuranceNumber: '',
-        lastName: 'Simpson',
-        dateOfBirth: '1990-01-01',
-        nationalAsylumSeekerServiceNumber: 'AB123456C'
-    }
+const validHomeOfficeRequestBody = {
+  data: {
+    nationalInsuranceNumber: '',
+    lastName: 'Bloggs',
+    dateOfBirth: '2000-01-01',
+    nationalAsylumSeekerServiceNumber: 'AB123456C'
+  }
 };
-
+describe('GET eligibility soft check  Status ', () => {
   it('Verify 200 Success response is returned with valid guid', () => {
     cy.createEligibilityCheckAndGetStatus('api/Login', validLoginRequestBody, 'FreeSchoolMeals', validHomeOfficeRequestBody);
   });
@@ -32,12 +29,12 @@ describe('GET eligibility soft check  Status ', () => {
 describe('Verify Eligibility Check Statuses', () => {
   const NotEligibleHomeOfficeRequestBody = {
     data: {
-        nationalInsuranceNumber: '',
-        lastName: 'Jacob',
-        dateOfBirth: '1990-01-01',
-        nationalAsylumSeekerServiceNumber: 'AB123456C'
+      nationalInsuranceNumber: '',
+      lastName: 'Jacob',
+      dateOfBirth: '1990-01-01',
+      nationalAsylumSeekerServiceNumber: 'AB123456C'
     }
-};
+  };
   it('Verify Eligible status is returned', () => {
     cy.createEligibilityCheckAndGetStatus('api/Login', validLoginRequestBody, 'FreeSchoolMeals', validHomeOfficeRequestBody)
     cy.get('@status').then((status: any) => {
@@ -46,7 +43,6 @@ describe('Verify Eligibility Check Statuses', () => {
   })
 
   it('Verify parentNotFound status is returned', () => {
-   
     cy.createEligibilityCheckAndGetStatus('api/Login', validLoginRequestBody, 'FreeSchoolMeals', NotEligibleHomeOfficeRequestBody)
     cy.get('@status').then((status: any) => {
       expect(status).to.equal('parentNotFound')
