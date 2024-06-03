@@ -11,6 +11,8 @@ export const getandVerifyBearerToken = (url: string, requestBody: any): Cypress.
     return cy.apiRequest('POST', url, requestBody).then((response) => {
         expect(response.status).to.equal(200);
         expect(response.body).to.have.property('token');
+        expect(response.body).to.have.property('expires')
+        
         return response.body.token;
     });
 };

@@ -4,18 +4,18 @@ import { validLoginRequestBody } from '../../support/requestBodies';
 describe('Verify School Search', () => {
 
   const expectedSchoolData = {
-    id: 139856,
-    name: "Hinde House 2-16 Academy",
-    postcode: "S5 6AG",
-    street: "Shiregreen Lane",
-    locality: "",
-    town: "Sheffield",
-    county: "South Yorkshire",
-    la: "Sheffield",
-    distance: 0.5416666666666666
+    "id": 100020,
+    "name": "Primrose Hill School",
+    "postcode": "NW1 8JL",
+    "street": "Princess Road",
+    "locality": "",
+    "town": "London",
+    "county": "",
+    "la": "Camden",
+    "distance": 0.0
 
   };
-  const searchCriteria = 'hinde house';
+  const searchCriteria = 'Primrose Hill School';
 
 
   it('Verify 200 OK and Bearer Token Is Returned when Valid Credentials are used', () => {

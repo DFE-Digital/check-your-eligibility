@@ -20,11 +20,11 @@ describe('Update Application Status', () => {
           id: "bf96e60e-2030-4682-9742-0bd97787d6e2",
           reference: "62719512",
           school: {
-            id: 111510,
-            name: "Hinderton School",
+            id: 100020,
+            name: "Primrose Hill School",
             localAuthority: {
-              id: 896,
-              name: "Cheshire West and Chester"
+              id: 202,
+              name: "Camden"
             }
           },
           parentFirstName: "Homer",
@@ -33,7 +33,7 @@ describe('Update Application Status', () => {
           parentNationalAsylumSeekerServiceNumber: "",
           parentDateOfBirth: "1985-01-01",
           childFirstName: "Tom",
-          childLastName: "sdf",
+          childLastName: "Bloggs",
           childDateOfBirth: "2001-01-01",
           status: "Open",
           user: null
