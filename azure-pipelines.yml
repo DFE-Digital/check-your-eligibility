@@ -33,8 +33,6 @@ steps:
    targetType: inline
    script: |
     cd tests
-    ls
-    cat package.json
     npm run combine:reports
 
 - task: Bash@3
