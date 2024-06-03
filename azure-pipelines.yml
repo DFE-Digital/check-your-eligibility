@@ -10,9 +10,11 @@ steps:
   inputs:
    targetType: inline
    script: |
+     ls
      yarn set version berry
      yarn set version 2.x
      cd tests
+     ls
      yarn install
 
 - task: Bash@3
