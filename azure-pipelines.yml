@@ -21,4 +21,5 @@ steps:
    targetType: inline
    script: |
     cd tests
+    export CYPRESS_API_HOST="https://ecs-dev-as.azurewebsites.net"
     npm run e2e:chrome
