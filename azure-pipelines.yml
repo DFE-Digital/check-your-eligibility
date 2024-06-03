@@ -21,4 +21,4 @@ steps:
    targetType: inline
    script: |
     cd tests
-    npm e2e:chrome
+    npm run e2e:chrome
