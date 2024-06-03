@@ -27,6 +27,7 @@ steps:
     npm run e2e:chrome
 
 - task: Bash@3
+  condition: always()
   displayName: 'Generate report'
   inputs:
    targetType: inline
@@ -35,6 +36,7 @@ steps:
     npm run combine:reports
 
 - task: Bash@3
+  condition: always()
   displayName: 'Publish test results'
   inputs:
    targetType: inline
