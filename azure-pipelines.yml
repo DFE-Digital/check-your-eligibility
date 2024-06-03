@@ -45,6 +45,3 @@ steps:
   inputs:
    testResultsFiles: '**/combined-report.xml'
    searchFolder: 'tests'
-  #  targetType: inline
-  #  script: |
-  #   ls
