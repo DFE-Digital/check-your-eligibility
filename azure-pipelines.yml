@@ -11,11 +11,9 @@ steps:
    targetType: inline
    script: |
      ls
-     yarn set version berry
-     yarn set version 2.x
      cd tests
      ls
-     yarn install
+     npm install
 
 - task: Bash@3
   displayName: 'run cypress tests'
@@ -23,4 +21,4 @@ steps:
    targetType: inline
    script: |
     cd tests
-    yarn e2e:chrome
+    npm e2e:chrome
