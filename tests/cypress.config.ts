@@ -14,5 +14,9 @@ export default defineConfig({
     baseUrl: process.env.CYPRESS_API_HOST,
     viewportWidth: 1600,
     viewportHeight: 1800,
-  },
+    },
+    reporter: "junit",
+    reporterOptions: {
+        mochaFile: "results/my-test-output-[hash].xml",
+    }
 });
