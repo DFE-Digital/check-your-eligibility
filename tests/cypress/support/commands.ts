@@ -1,4 +1,6 @@
 // cypress/support/commands.ts
+/// <reference types="cypress" />
+
 declare namespace Cypress {
   interface Chainable<Subject = any> {
     saveBearerToken(): Chainable<any>;
@@ -15,6 +17,9 @@ declare namespace Cypress {
     verifyTotalElements(totalElements: number, expectedTotalElements: number): Chainable<void>;
     verifySchoolSearchResponse(response: any, expectedData: any): Chainable<void>;
     verifyApplicationSearchResponse(response: any, expectedDataArray: any[]): Chainable<void>;
+    form_request(method: string, url: string, formData: FormData, token: string, done: (response: XMLHttpRequest) => void): Chainable<void>;
+
+  
 
   }
 }
@@ -198,7 +203,6 @@ Cypress.Commands.add('verifyPostApplicationResponse', (response, requestData) =>
   expect(responseLinks).to.have.property('get_Application');
 });
 
-// cypress/support/commands.ts
 
 Cypress.Commands.add('verifyGetApplicationResponse', (response, expectedData) => {
   expectedData = expectedData.data
@@ -290,8 +294,6 @@ Cypress.Commands.add('verifyApplicationSearchResponse', (response, expectedDataA
   // Ensure the response data is an array
   expect(responseData).to.be.an('array');
 
-  // Iterate through the response array and verify each item
-
   const expectedData = expectedDataArray[0];
   expect(expectedData).to.have.property('id', expectedData.id);
   expect(expectedData).to.have.property('reference', expectedData.reference);
@@ -312,4 +314,22 @@ Cypress.Commands.add('verifyApplicationSearchResponse', (response, expectedDataA
   expect(expectedData).to.have.property('status', expectedData.status);
   expect(expectedData).to.have.property('user', expectedData.user);
 
+});
+
+Cypress.Commands.add('form_request', (method: string, url: string, formData: FormData, token: string, done: (response: XMLHttpRequest) => void) => {
+  const xhr = new XMLHttpRequest();
+  xhr.open(method, url);
+
+  // Set the Authorization header
+  xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+
+  xhr.onload = function () {
+    done(xhr);
+  };
+
+  xhr.onerror = function () {
+    done(xhr);
+  };
+
+  xhr.send(formData);
 });

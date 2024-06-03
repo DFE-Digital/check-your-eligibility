@@ -1,38 +1,33 @@
 import { getandVerifyBearerToken } from '../../support/apiHelpers';
 import { validLoginRequestBody } from '../../support/requestBodies';
 
-const filePath = 'cypress/fixtures/GIASDataSubset.csv';
+describe('Testing the API', function () {
+    it('Receives valid FormData and processes the information correctly', function () {
+        // Declarations
+        const fileName = 'GIASDataSubset.csv'; // File name including extension
+        const method = 'POST';
+        const url = Cypress.config('baseUrl') + '/importEstablishments';
+        const fileType = 'text/csv'; // CSV file type     
+        const expectedAnswer = '{"data":"GIASDataSubset.csv - Establishment File Processed."}';
 
-describe('Import School Data', () => {
 
-    it('Verify 200 response is returned when a valid file is uploaded', () => {
-        getandVerifyBearerToken('api/Login', validLoginRequestBody).then((token) => {
-            cy.fixture('GIASDataSubset.csv').then(fileContent => {
-                const formData = new FormData();
-                const blob = new Blob([fileContent], { type: 'text/csv' });
-                formData.append('file', blob, 'GIASDataSubset.csv');
+        // Get file from fixtures as binary
+        cy.fixture(fileName, 'binary').then((excelBin: string) => {
+            // File in binary format gets converted to blob so it can be sent as Form data
+            const blob = Cypress.Blob.binaryStringToBlob(excelBin, fileType);
 
-                const expectedResponseProperty = 'data';
-                const expectedResponseValue = 'GIASDataSubset.csv - Establishment File Processed.';
-                cy.api({
-                    method: 'POST',
-                    url: 'importEstablishments',
-                    body: formData,
-                    headers: {
-                        'Content-Type': 'multipart/form-data',
-                        'Authorization': `Bearer ${token}`
-                    }
-                    
-                }).then(response => {
-                    
+            // Build up the form
+            const formData = new FormData();
+            formData.set('file', blob, fileName); // Adding a file to the form
+
+            // Get Bearer token
+            getandVerifyBearerToken('/api/Login', validLoginRequestBody).then((token: string) => {
+                // Perform the request
+                cy.form_request(method, url, formData, token, (response: XMLHttpRequest) => {
                     expect(response.status).to.eq(200);
-                    cy.log(response.body.data)
-                    // Verify the response property and its value
-                    expect(response.body).to.have.property(expectedResponseProperty, expectedResponseValue);
+                    expect(expectedAnswer).to.eq(response.response);
                 });
             });
-        })
-
+        });
     });
-
-})
+});
