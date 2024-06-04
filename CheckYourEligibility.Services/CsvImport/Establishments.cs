@@ -19,7 +19,7 @@ namespace CheckYourEligibility.Services.CsvImport
     }
 
     [ExcludeFromCodeCoverage]
-    internal sealed class EstablishmentRowMap : ClassMap<EstablishmentRow>
+    public class EstablishmentRowMap : ClassMap<EstablishmentRow>
     {
         public EstablishmentRowMap()
         {
