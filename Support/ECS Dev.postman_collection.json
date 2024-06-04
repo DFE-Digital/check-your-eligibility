@@ -25,10 +25,10 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n  \"username\": \"ecsUiUser\",\r\n  \"emailAddress\": \"ecsUi@education.gov.uk\",\r\n  \"password\": \"QgX{P1*eB94lQy&\"\r\n}"
+					"raw": "{\r\n  \"username\": \"{username}\",\r\n  \"emailAddress\": \"ecsUi@education.gov.uk\",\r\n  \"password\": \"{password}\"\r\n}"
 				},
 				"url": {
-					"raw": "https://ecs-dev-as.azurewebsites.net/api/Login",
+					"raw": "{api_host}/api/Login",
 					"protocol": "https",
 					"host": [
 						"ecs-dev-as",
@@ -74,7 +74,7 @@
 					"raw": "{\r\n  \"data\": {\r\n    \"nationalInsuranceNumber\": \"AB123456C\",\r\n    \"lastName\": \"SIMPSON\",\r\n    \"dateOfBirth\": \"1990-01-01\",\r\n    \"nationalAsylumSeekerServiceNumber\": null\r\n  }\r\n}"
 				},
 				"url": {
-					"raw": "https://ecs-dev-as.azurewebsites.net/FreeSchoolMeals",
+					"raw": "{api_host}/FreeSchoolMeals",
 					"protocol": "https",
 					"host": [
 						"ecs-dev-as",
@@ -107,7 +107,7 @@
 					"raw": "{\r\n  \"data\": {\r\n    \"school\": 100000,\r\n    \"parentFirstName\": \"Tom\",\r\n    \"parentLastName\": \"Smith\",\r\n    \"parentNationalInsuranceNumber\": \"ns738356d\",\r\n    \"parentNationalAsylumSeekerServiceNumber\": \"\",\r\n    \"parentDateOfBirth\": \"1970-02-01\",\r\n    \"childFirstName\": \"Alexa\",\r\n    \"childLastName\": \"Smith\",\r\n    \"childDateOfBirth\": \"2007-02-01\"\r\n  }\r\n}"
 				},
 				"url": {
-					"raw": "https://ecs-dev-as.azurewebsites.net/FreeSchoolMeals/application",
+					"raw": "{api_host}/FreeSchoolMeals/application",
 					"protocol": "https",
 					"host": [
 						"ecs-dev-as",
@@ -144,7 +144,7 @@
 					"raw": "{\r\n  \"data\": {\r\n    \"nationalInsuranceNumber\": \"AB123456C\",\r\n    \"lastName\": \"SIMPSON\",\r\n    \"dateOfBirth\": \"1990-01-01\",\r\n    \"nationalAsylumSeekerServiceNumber\": null\r\n  }\r\n}"
 				},
 				"url": {
-					"raw": "https://ecs-dev-as.azurewebsites.net/Schools/search?query=king",
+					"raw": "{api_host}/Schools/search?query=king",
 					"protocol": "https",
 					"host": [
 						"ecs-dev-as",
@@ -187,7 +187,7 @@
 					]
 				},
 				"url": {
-					"raw": "https://ecs-dev-as.azurewebsites.net/importEstablishments",
+					"raw": "{api_host}/importEstablishments",
 					"protocol": "https",
 					"host": [
 						"ecs-dev-as",
@@ -207,7 +207,7 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "https://ecs-dev-as.azurewebsites.net/freeSchoolMeals/8303f326-602e-451f-b83f-39dc1dd3ed99",
+					"raw": "{api_host}/freeSchoolMeals/8303f326-602e-451f-b83f-39dc1dd3ed99",
 					"protocol": "https",
 					"host": [
 						"ecs-dev-as",
@@ -243,7 +243,7 @@
 					"\r",
 					"\r",
 					"const echoPostRequest = {\r",
-					"  url: 'https://ecs-dev-as.azurewebsites.net/api/Login',\r",
+					"  url: '{api_host}/api/Login',\r",
 					"  method: 'POST',\r",
 					"  header: 'Content-Type:application/Json',\r",
 					"  body: {\r",
@@ -251,9 +251,9 @@
 					"    raw: JSON.stringify(\r",
 					"        \r",
 					"        \t{\r",
-					"  \"username\": \"ecsUiUser\",\r",
+					"  \"username\": \"{username}\",\r",
 					"  \"emailAddress\": \"ecsUi@education.gov.uk\",\r",
-					"  \"password\": \"QgX{P1*eB94lQy&\"\r",
+					"  \"password\": \"{password}\"\r",
 					"}\r",
 					"        )\r",
 					"  }\r",
