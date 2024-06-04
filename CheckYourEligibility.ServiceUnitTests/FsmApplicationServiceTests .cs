@@ -165,6 +165,10 @@ namespace CheckYourEligibility.ServiceUnitTests
         public async Task Given_ValidRequest_GetApplication_Should_Return_Item()
         {
             // Arrange
+            _fakeInMemoryDb.Applications.RemoveRange(_fakeInMemoryDb.Applications);
+            _fakeInMemoryDb.Schools.RemoveRange(_fakeInMemoryDb.Schools);
+            _fakeInMemoryDb.LocalAuthorities.RemoveRange(_fakeInMemoryDb.LocalAuthorities);
+            _fakeInMemoryDb.SaveChanges();
             var request = _fixture.Create<ApplicationRequestData>();
             request.ParentDateOfBirth = "1970-02-01";
             request.ChildDateOfBirth = "2007-02-01";
