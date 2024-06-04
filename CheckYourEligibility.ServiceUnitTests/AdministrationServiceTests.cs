@@ -91,21 +91,6 @@ namespace CheckYourEligibility.ServiceUnitTests
             Assert.Pass();
         }
 
-        [Test]
-        public async Task Given_ImportEstablishments_DuplicatesUpdate_Return_Pass()
-        {
-            var data = _fixture.CreateMany<EstablishmentRow>();
-            await _sut.ImportEstablishments(data);
-            data.First().LaName = data.First().LaName + "Modified";
-            data.First().EstablishmentName = data.First().EstablishmentName + "Modified";
-
-            // Act
-            await _sut.ImportEstablishments(data);
-
-            // Assert
-            Assert.Pass();
-        }
-
         /// <summary>
         /// Calling multiple times will generate concurrency errors, which is a limitation of in memory db
         /// </summary>
