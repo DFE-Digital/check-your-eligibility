@@ -1,6 +1,7 @@
 // Ignore Spelling: Levenshtein
 
 using AutoFixture;
+using CheckYourEligibility.Data.Models;
 using CheckYourEligibility.Services;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
@@ -14,7 +15,7 @@ namespace CheckYourEligibility.ServiceUnitTests
     {
         private IEligibilityCheckContext _fakeInMemoryDb;
         private SchoolSearchService _sut;
-        private Data.Models.School school;
+        private School school;
 
         [SetUp]
         public void Setup()
@@ -26,9 +27,9 @@ namespace CheckYourEligibility.ServiceUnitTests
             _fakeInMemoryDb = new EligibilityCheckContext(options);
             if (!_fakeInMemoryDb.Schools.Any())
             {
-                school = _fixture.Create<Data.Models.School>();
+                school = _fixture.Create<School>();
                 _fakeInMemoryDb.Schools.Add(school);
-                _fakeInMemoryDb.SaveChangesAsync();
+                _fakeInMemoryDb.SaveChanges();
             }
            
             _sut = new SchoolSearchService(new NullLoggerFactory(), _fakeInMemoryDb);
@@ -52,17 +53,16 @@ namespace CheckYourEligibility.ServiceUnitTests
         }
 
         [Test]
-        public void Given_Search_Should_Return_ExpectedResult()
+        public async Task Given_Search_Should_Return_ExpectedResult()
         {
             // Arrange
-            var expectedResult = _fakeInMemoryDb.Schools.FirstOrDefault();
-
+            var expectedResult = school;
             // Act
-            var response = _sut.Search(expectedResult.EstablishmentName);
+            var response = await _sut.Search(expectedResult.EstablishmentName);
 
             // Assert
 
-            response.Result.FirstOrDefault().Name.Should().BeEquivalentTo(expectedResult.EstablishmentName);
+            response.FirstOrDefault().Name.Should().BeEquivalentTo(expectedResult.EstablishmentName);
         }
     }
 }

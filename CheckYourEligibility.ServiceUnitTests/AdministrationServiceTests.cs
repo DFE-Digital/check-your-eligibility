@@ -1,9 +1,12 @@
 // Ignore Spelling: Levenshtein
 
+using AutoFixture;
 using AutoMapper;
 using Azure.Core;
 using CheckYourEligibility.Data.Mappings;
+using CheckYourEligibility.Data.Models;
 using CheckYourEligibility.Services;
+using CheckYourEligibility.Services.CsvImport;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
@@ -79,49 +82,30 @@ namespace CheckYourEligibility.ServiceUnitTests
         [Test]
         public void Given_ImportEstablishments_Should_Return_Pass()
         {
-            // Arrange
-            var content = Properties.Resources.small_gis;
-            var fileName = "test.pdf";
-            var stream = new MemoryStream();
-            var writer = new StreamWriter(stream);
-            writer.Write(content);
-            writer.Flush();
-            stream.Position = 0;
-
-            //create FormFile with desired data
-            IFormFile file = new FormFile(stream, 0, stream.Length, "id_from_form", fileName);
-
+            var data = _fixture.CreateMany<EstablishmentRow>();
 
             // Act
-            _sut.ImportEstablishments(file);
+            _sut.ImportEstablishments(data);
 
             // Assert
             Assert.Pass();
         }
 
         [Test]
-        public void Given_ImportEstablishments_BadContentShould_Return_Fail()
+        public async Task Given_ImportEstablishments_DuplicatesUpdate_Return_Pass()
         {
-            // Arrange
-            var content = "BadContent";
-            var fileName = "test.pdf";
-            var stream = new MemoryStream();
-            var writer = new StreamWriter(stream);
-            writer.Write(content);
-            writer.Flush();
-            stream.Position = 0;
-
-            //create FormFile with desired data
-            IFormFile file = new FormFile(stream, 0, stream.Length, "id_from_form", fileName);
+            var data = _fixture.CreateMany<EstablishmentRow>();
+            await _sut.ImportEstablishments(data);
+            data.First().LaName = data.First().LaName + "Modified";
+            data.First().EstablishmentName = data.First().EstablishmentName + "Modified";
 
             // Act
-            Func<Task> act = async () => await _sut.ImportEstablishments(file);
+            await _sut.ImportEstablishments(data);
 
             // Assert
-            act.Should().ThrowExactlyAsync<Exception>();
+            Assert.Pass();
         }
 
-        
         /// <summary>
         /// Calling multiple times will generate concurrency errors, which is a limitation of in memory db
         /// </summary>
@@ -130,22 +114,27 @@ namespace CheckYourEligibility.ServiceUnitTests
         public async Task Given_ImportEstablishments_DuplicatesShould_Return_Pass()
         {
             // Arrange
-            var content = Properties.Resources.small_gis;
-            var fileName = "test.xls";
-            var stream = new MemoryStream();
-            var writer = new StreamWriter(stream);
-            writer.Write(content);
-            writer.Flush();
-            stream.Position = 0;
-
-            //create FormFile with desired data
-            IFormFile file = new FormFile(stream, 0, stream.Length, "id_from_form", fileName);
+            var data = _fixture.CreateMany<EstablishmentRow>();
 
             // Act
-            await _sut.ImportEstablishments(file);
+            await _sut.ImportEstablishments(data);
 
             // Assert
             Assert.Pass();
         }
+
+        [Test]
+        public void Given_ImportHomeOfficeData_Should_Return_Pass()
+        {
+            // Arrange
+            var data = _fixture.CreateMany<FreeSchoolMealsHO>();
+
+            // Act
+            _sut.ImportHomeOfficeData(data);
+
+            // Assert
+            Assert.Pass();
+        }
+
     }
 }

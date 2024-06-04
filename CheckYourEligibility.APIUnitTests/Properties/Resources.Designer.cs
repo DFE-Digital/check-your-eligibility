@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace CheckYourEligibility.ServiceUnitTests.Properties {
+namespace CheckYourEligibility.APIUnitTests.Properties {
     using System;
     
     
@@ -39,7 +39,7 @@ namespace CheckYourEligibility.ServiceUnitTests.Properties {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("CheckYourEligibility.ServiceUnitTests.Properties.Resources", typeof(Resources).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("CheckYourEligibility.APIUnitTests.Properties.Resources", typeof(Resources).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -61,20 +61,39 @@ namespace CheckYourEligibility.ServiceUnitTests.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to URN,LA (code),LA (name),EstablishmentNumber,EstablishmentName,TypeOfEstablishment (code),TypeOfEstablishment (name),EstablishmentTypeGroup (code),EstablishmentTypeGroup (name),EstablishmentStatus (code),EstablishmentStatus (name),ReasonEstablishmentOpened (code),ReasonEstablishmentOpened (name),OpenDate,ReasonEstablishmentClosed (code),ReasonEstablishmentClosed (name),CloseDate,PhaseOfEducation (code),PhaseOfEducation (name),StatutoryLowAge,StatutoryHighAge,Boarders (code),Boarders (name),NurseryProvision ( [rest of string was truncated]&quot;;.
+        ///   Looks up a localized string similar to 19000001,19760509,Charlton
+        ///19000002,19760509,Cohen
+        ///19000003,19760509,Moore
+        ///19000004,19760509,Wilson
+        ///19000005,19760509,Ball
+        ///19000006,19760509,Stiles
+        ///19000007,19760509,Charlton
+        ///19000008,19760509,Peters
+        ///19000009,19760509,Hunt
+        ///19000010,19760509,Hurst
+        ///19000011,19760509,Banks
+        ///19000012,19760509,Hottges
+        ///19000013,19760509,Schulz
+        ///19000014,19760509,Weber
+        ///19000015,19760509,Schnellinger
+        ///19000016,19760509,Beckenbauer
+        ///19000017,19760509,Haller
+        ///19000018,19760509,Overath
+        ///19000019,19760509,Emmerich
+        ///19000020 [rest of string was truncated]&quot;;.
         /// </summary>
-        internal static string small_gis {
+        internal static string HO_Data_small {
             get {
-                return ResourceManager.GetString("small_gis", resourceCulture);
+                return ResourceManager.GetString("HO Data small", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to URN,LA (code),LA (name),EstablishmentNumber,EstablishmentName,TypeOfEstablishment (code),TypeOfEstablishment (name),EstablishmentTypeGroup (code),EstablishmentTypeGroup (name),EstablishmentStatus (code),EstablishmentStatus (name),ReasonEstablishmentOpened (code),ReasonEstablishmentOpened (name),OpenDate,ReasonEstablishmentClosed (code),ReasonEstablishmentClosed (name),CloseDate,PhaseOfEducation (code),PhaseOfEducation (name),StatutoryLowAge,StatutoryHighAge,Boarders (code),Boarders (name),NurseryProvision ( [rest of string was truncated]&quot;;.
         /// </summary>
-        internal static string small_gis_modified {
+        internal static string small_gis {
             get {
-                return ResourceManager.GetString("small_gis_modified", resourceCulture);
+                return ResourceManager.GetString("small_gis", resourceCulture);
             }
         }
     }

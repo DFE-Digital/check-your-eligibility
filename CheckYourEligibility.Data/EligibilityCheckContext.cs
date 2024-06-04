@@ -2,7 +2,9 @@
 
 using CheckYourEligibility.Data.Models;
 using CheckYourEligibility.Domain.Enums;
+using EFCore.BulkExtensions;
 using Microsoft.EntityFrameworkCore;
+using System;
 using System.Reflection.Metadata;
 
 public class EligibilityCheckContext : DbContext, IEligibilityCheckContext
@@ -59,4 +61,16 @@ public class EligibilityCheckContext : DbContext, IEligibilityCheckContext
 
     }
 
+    public void BulkInsert_FreeSchoolMealsHO(IEnumerable<FreeSchoolMealsHO> data)
+    {
+        using var transaction = base.Database.BeginTransaction();
+        this.Truncate<FreeSchoolMealsHO>();
+        this.BulkInsert(data);
+        transaction.Commit();
+    }
+
+    int IEligibilityCheckContext.SaveChanges()
+    {
+       return base.SaveChanges();
+    }
 }

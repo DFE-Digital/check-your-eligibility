@@ -1,7 +1,8 @@
-using Azure.Core;
+using CheckYourEligibility.Data.Models;
 using CheckYourEligibility.Domain.Constants;
 using CheckYourEligibility.Domain.Requests;
 using CheckYourEligibility.Domain.Responses;
+using CheckYourEligibility.Services.CsvImport;
 using CheckYourEligibility.Services.Interfaces;
 using CheckYourEligibility.WebApp.Controllers;
 using FluentAssertions;
@@ -9,6 +10,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Moq;
+using Newtonsoft.Json;
 using NUnit.Framework.Internal;
 
 namespace CheckYourEligibility.APIUnitTests
@@ -69,52 +71,10 @@ namespace CheckYourEligibility.APIUnitTests
         public void Given_ImportEstablishments_Should_Return_Status200OK()
         {
             // Arrange
-            _mockService.Setup(cs => cs.ImportEstablishments(It.IsAny<IFormFile>())).Returns(Task.CompletedTask);
+            _mockService.Setup(cs => cs.ImportEstablishments(It.IsAny<IEnumerable<EstablishmentRow>>())).Returns(Task.CompletedTask);
             _mockAuditService.Setup(cs => cs.AuditAdd(It.IsAny<AuditData>())).ReturnsAsync(Guid.NewGuid().ToString());
 
-            var content = "SomeContent";
-            var fileName = "test.csv";
-            var stream = new MemoryStream();
-            var writer = new StreamWriter(stream);
-            writer.Write(content);
-            writer.Flush();
-            stream.Position = 0;
-
-            //create FormFile with desired data
-            var file = new FormFile(stream, 0, stream.Length, fileName, fileName)
-            {
-                Headers = new HeaderDictionary(),
-                ContentType = "text/csv"
-            }; 
-            var expectedResult = new ObjectResult(new MessageResponse { Data = $"{file.FileName} - {Admin.EstablishmentFileProcessed}" }) { StatusCode = StatusCodes.Status200OK };
-
-            // Act
-            var response = _sut.ImportEstablishments(file);
-
-            // Assert
-            response.Result.Should().BeEquivalentTo(expectedResult);
-        }
-
-        [Test]
-        public void Given_ImportEstablishments_Should_Return_Status400BadRequestOK()
-        {
-            // Arrange
-            var expectedResult = new ObjectResult(new MessageResponse { Data = $"{Admin.CsvfileRequired}" }) { StatusCode = StatusCodes.Status400BadRequest };
-
-            // Act
-            var response = _sut.ImportEstablishments(null);
-
-            // Assert
-            response.Result.Should().BeEquivalentTo(expectedResult);
-        }
-
-        [Test]
-        public void Given_ImportEstablishments_Should_ThrowException()
-        {
-            // Arrange
-            _mockService.Setup(cs => cs.ImportEstablishments(It.IsAny<IFormFile>())).Throws(new Exception());
-
-            var content = "SomeContent";
+            var content = Properties.Resources.small_gis;
             var fileName = "test.csv";
             var stream = new MemoryStream();
             var writer = new StreamWriter(stream);
@@ -130,12 +90,180 @@ namespace CheckYourEligibility.APIUnitTests
             };
             var expectedResult = new ObjectResult(new MessageResponse { Data = $"{file.FileName} - {Admin.EstablishmentFileProcessed}" }) { StatusCode = StatusCodes.Status200OK };
 
-
             // Act
-            Func<Task> act = async () => await _sut.ImportEstablishments(file);
+            var response = _sut.ImportEstablishments(file);
 
             // Assert
-            act.Should().ThrowExactlyAsync<Exception>();
+            response.Result.Should().BeEquivalentTo(expectedResult);
+        }
+
+
+        [Test]
+        public void Given_ImportEstablishments_Should_Return_Status400BadRequest()
+        {
+            // Arrange
+            var expectedResult = new ObjectResult(new MessageResponse { Data = $"{Admin.CsvfileRequired}" }) { StatusCode = StatusCodes.Status400BadRequest };
+
+            // Act
+            var response = _sut.ImportEstablishments(null);
+
+            // Assert
+            response.Result.Should().BeEquivalentTo(expectedResult);
+        }
+
+        [Test]
+        public void Given_ImportEstablishments_Should_Return_Status400BadData()
+        {
+            // Arrange
+            var content = "SomeContent";
+            var fileName = "test.csv";
+            var stream = new MemoryStream();
+            var writer = new StreamWriter(stream);
+            writer.Write(content);
+            writer.Flush();
+            stream.Position = 0;
+
+            //create FormFile with desired data
+            var file = new FormFile(stream, 0, stream.Length, fileName, fileName)
+            {
+                Headers = new HeaderDictionary(),
+                ContentType = "text/csv"
+            };
+            var ex = new InvalidDataException("Invalid file content.");
+            var expectedResult = new ObjectResult(new MessageResponse { Data = $"{file.FileName} - {JsonConvert.SerializeObject(new EstablishmentRow())} :- {ex.Message}," }) { StatusCode = StatusCodes.Status400BadRequest };
+
+            // Act
+            var response = _sut.ImportEstablishments(file);
+
+            // Assert
+            response.Result.Should().BeEquivalentTo(expectedResult);
+        }
+
+        [Test]
+        public void Given_ImportEstablishments_Should_Return_Status400BadDataNoContent()
+        {
+            // Arrange
+            var content = "";
+            var fileName = "test.csv";
+            var stream = new MemoryStream();
+            var writer = new StreamWriter(stream);
+            writer.Write(content);
+            writer.Flush();
+            stream.Position = 0;
+
+            //create FormFile with desired data
+            var file = new FormFile(stream, 0, stream.Length, fileName, fileName)
+            {
+                Headers = new HeaderDictionary(),
+                ContentType = "text/csv"
+            };
+            var ex = new InvalidDataException("Invalid file content.");
+            var expectedResult = new ObjectResult(new MessageResponse { Data = $"{file.FileName} - {JsonConvert.SerializeObject(new EstablishmentRow())} :- {ex.Message}," }) { StatusCode = StatusCodes.Status400BadRequest };
+
+            // Act
+            var response = _sut.ImportEstablishments(file);
+
+            // Assert
+            response.Result.Should().BeEquivalentTo(expectedResult);
+        }
+
+        [Test]
+        public void Given_HomeOfficeData_Should_Return_Status200OK()
+        {
+            // Arrange
+            _mockService.Setup(cs => cs.ImportHomeOfficeData(It.IsAny<IEnumerable<FreeSchoolMealsHO>>())).Returns(Task.CompletedTask);
+            _mockAuditService.Setup(cs => cs.AuditAdd(It.IsAny<AuditData>())).ReturnsAsync(Guid.NewGuid().ToString());
+
+            var content = Properties.Resources.HO_Data_small; ;
+            var fileName = "test.csv";
+            var stream = new MemoryStream();
+            var writer = new StreamWriter(stream);
+            writer.Write(content);
+            writer.Flush();
+            stream.Position = 0;
+
+            //create FormFile with desired data
+            var file = new FormFile(stream, 0, stream.Length, fileName, fileName)
+            {
+                Headers = new HeaderDictionary(),
+                ContentType = "text/csv"
+            };
+            var expectedResult = new ObjectResult(new MessageResponse { Data = $"{file.FileName} - {Admin.HomeOfficeFileProcessed}" }) { StatusCode = StatusCodes.Status200OK };
+
+            // Act
+            var response = _sut.ImportFsmHomeOfficeData(file);
+
+            // Assert
+            response.Result.Should().BeEquivalentTo(expectedResult);
+        }
+
+        [Test]
+        public void Given_HomeOfficeData_Should_Return_Status400BadRequest()
+        {
+            // Arrange
+            var expectedResult = new ObjectResult(new MessageResponse { Data = $"{Admin.CsvfileRequired}" }) { StatusCode = StatusCodes.Status400BadRequest };
+
+            // Act
+            var response = _sut.ImportFsmHomeOfficeData(null);
+
+            // Assert
+            response.Result.Should().BeEquivalentTo(expectedResult);
+        }
+
+        [Test]
+        public void Given_HomeOfficeData_Should_Return_Status400BadData()
+        {
+            // Arrange
+            var content = "SomeContent";
+            var fileName = "test.csv";
+            var stream = new MemoryStream();
+            var writer = new StreamWriter(stream);
+            writer.Write(content);
+            writer.Flush();
+            stream.Position = 0;
+
+            //create FormFile with desired data
+            var file = new FormFile(stream, 0, stream.Length, fileName, fileName)
+            {
+                Headers = new HeaderDictionary(),
+                ContentType = "text/csv"
+            };
+            var ex = new InvalidDataException("String '' was not recognized as a valid DateTime.");
+            var expectedResult = new ObjectResult(new MessageResponse { Data = $"{file.FileName} - {JsonConvert.SerializeObject(new HomeOfficeRow())} :- {ex.Message}," }) { StatusCode = StatusCodes.Status400BadRequest };
+
+            // Act
+            var response =  _sut.ImportFsmHomeOfficeData(file);
+
+            // Assert
+            response.Result.Should().BeEquivalentTo(expectedResult);
+        }
+
+        [Test]
+        public void Given_HomeOfficeData_Should_Return_Status400BadDataNoContent()
+        {
+            // Arrange
+            var content = "";
+            var fileName = "test.csv";
+            var stream = new MemoryStream();
+            var writer = new StreamWriter(stream);
+            writer.Write(content);
+            writer.Flush();
+            stream.Position = 0;
+
+            //create FormFile with desired data
+            var file = new FormFile(stream, 0, stream.Length, fileName, fileName)
+            {
+                Headers = new HeaderDictionary(),
+                ContentType = "text/csv"
+            };
+            var ex = new InvalidDataException("Invalid file content.");
+            var expectedResult = new ObjectResult(new MessageResponse { Data = $"{file.FileName} - {JsonConvert.SerializeObject(new HomeOfficeRow())} :- {ex.Message}," }) { StatusCode = StatusCodes.Status400BadRequest };
+
+            // Act
+            var response = _sut.ImportFsmHomeOfficeData(file);
+
+            // Assert
+            response.Result.Should().BeEquivalentTo(expectedResult);
         }
     }
 }

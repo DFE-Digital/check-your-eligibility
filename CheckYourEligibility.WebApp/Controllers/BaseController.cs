@@ -1,10 +1,7 @@
 ﻿using CheckYourEligibility.Domain.Requests;
 using CheckYourEligibility.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Hosting;
-using System;
 using System.Diagnostics.CodeAnalysis;
-using System.IO;
 
 namespace CheckYourEligibility.WebApp.Controllers
 {
