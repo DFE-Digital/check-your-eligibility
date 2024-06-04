@@ -66,6 +66,7 @@ stages:
           targetPath: '$(Build.ArtifactStagingDirectory)' 
           artifactName: 'checkYourEligibilityAPI'
 
+  
   - stage: DeployAppDev
     displayName: Deploy App Dev
     jobs:
@@ -141,3 +142,44 @@ stages:
                 appType: 'webApp'
                 WebAppName: 'ecs-test-as'
                 packageForLinux: '$(Pipeline.Workspace)/checkYourEligibilityAPI/CheckYourEligibility.WebApp.zip'
+              
+  - stage: RunCypressTests
+    displayName: Run Cypress Tests
+    jobs:
+    - job: 'SetUpCypress'
+      displayName: 'SetUpTests'
+      pool:
+        vmImage: ubuntu-latest
+      steps:
+      - task: Bash@3
+        inputs:
+          targetType: inline
+          script: |
+           cd tests
+           npm install
+      - task: Bash@3
+        displayName: 'RunTests'
+        inputs:
+         targetType: inline
+         script: |
+          cd tests
+          export CYPRESS_API_HOST="https://ecs-test-as.azurewebsites.net"
+          export CYPRESS_JWT_USERNAME=$(JWT_USERNAME)
+          export CYPRESS_JWT_PASSWORD="$(JWT_PASSWORD)"
+          npm run e2e:chrome
+
+      - task: Bash@3
+        condition: always()
+        displayName: 'Generate report'
+        inputs:
+         targetType: inline
+         script: |
+          cd tests
+          npm run combine:reports
+
+      - task: PublishTestResults@2
+        condition: always()
+        displayName: 'Publish test results'
+        inputs:
+         testResultsFiles: '**/combined-report.xml'
+         searchFolder: 'tests'
