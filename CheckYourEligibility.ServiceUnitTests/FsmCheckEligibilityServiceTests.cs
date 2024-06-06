@@ -203,7 +203,7 @@ namespace CheckYourEligibility.ServiceUnitTests
             var response = _sut.PostCheck(request);
             var process = _sut.ProcessCheck(response.Result.Id, _fixture.Create<AuditData>());
             var item = _fakeInMemoryDb.CheckEligibilities.FirstOrDefault(x=>x.EligibilityCheckID == response.Result.Id);
-            var hash = _sut.GetHash(item);
+            var hash = FsmCheckEligibilityService.GetHash(item);
             // Assert
             _fakeInMemoryDb.EligibilityCheckHashes.First(x=>x.Hash == hash).Should().NotBeNull();
         }
