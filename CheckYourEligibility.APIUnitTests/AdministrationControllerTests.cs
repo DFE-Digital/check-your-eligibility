@@ -265,5 +265,105 @@ namespace CheckYourEligibility.APIUnitTests
             // Assert
             response.Result.Should().BeEquivalentTo(expectedResult);
         }
+
+
+        [Test]
+        public void Given_ImportFsmHMRCData_Should_Return_Status200OK()
+        {
+            // Arrange
+            _mockService.Setup(cs => cs.ImportHMRCData(It.IsAny<IEnumerable<FreeSchoolMealsHMRC>>())).Returns(Task.CompletedTask);
+            _mockAuditService.Setup(cs => cs.AuditAdd(It.IsAny<AuditData>())).ReturnsAsync(Guid.NewGuid().ToString());
+
+            var content = Properties.Resources.exampleHMRC; ;
+            var fileName = "test.xml";
+            var stream = new MemoryStream();
+            var writer = new StreamWriter(stream);
+            writer.Write(content);
+            writer.Flush();
+            stream.Position = 0;
+
+            //create FormFile with desired data
+            var file = new FormFile(stream, 0, stream.Length, fileName, fileName)
+            {
+                Headers = new HeaderDictionary(),
+                ContentType = "text/xml"
+            };
+            var expectedResult = new ObjectResult(new MessageResponse { Data = $"{file.FileName} - {Admin.HMRCFileProcessed}" }) { StatusCode = StatusCodes.Status200OK };
+
+            // Act
+            var response = _sut.ImportFsmHMRCData(file);
+
+            // Assert
+            response.Result.Should().BeEquivalentTo(expectedResult);
+        }
+
+        [Test]
+        public void Given_ImportFsmHMRCData_Should_Return_Status400BadRequest()
+        {
+            // Arrange
+            var expectedResult = new ObjectResult(new MessageResponse { Data = $"{Admin.XmlfileRequired}" }) { StatusCode = StatusCodes.Status400BadRequest };
+
+            // Act
+            var response = _sut.ImportFsmHMRCData(null);
+
+            // Assert
+            response.Result.Should().BeEquivalentTo(expectedResult);
+        }
+
+        [Test]
+        public void Given_ImportFsmHMRCData_Should_Return_Status400BadData()
+        {
+            // Arrange
+            var content = "SomeContent";
+            var fileName = "test.xml";
+            var stream = new MemoryStream();
+            var writer = new StreamWriter(stream);
+            writer.Write(content);
+            writer.Flush();
+            stream.Position = 0;
+
+            //create FormFile with desired data
+            var file = new FormFile(stream, 0, stream.Length, fileName, fileName)
+            {
+                Headers = new HeaderDictionary(),
+                ContentType = "text/xml"
+            };
+            var ex = new Exception("Data at the root level is invalid. Line 1, position 1.");
+            var expectedResult = new ObjectResult(new MessageResponse { Data = $"{file.FileName} - {JsonConvert.SerializeObject(new FreeSchoolMealsHMRC())} :- {ex.Message}," }) { StatusCode = StatusCodes.Status400BadRequest };
+
+            // Act
+            var response = _sut.ImportFsmHMRCData(file);
+
+            // Assert
+            response.Result.Should().BeEquivalentTo(expectedResult);
+        }
+
+        [Test]
+        public void Given_ImportFsmHMRCData_Should_Return_Status400BadDataNoContent()
+        {
+            // Arrange
+            var content = Properties.Resources.exampleHMRC_empty;
+            var fileName = "test.xml";
+            var stream = new MemoryStream();
+            var writer = new StreamWriter(stream);
+            writer.Write(content);
+            writer.Flush();
+            stream.Position = 0;
+
+            //create FormFile with desired data
+            var file = new FormFile(stream, 0, stream.Length, fileName, fileName)
+            {
+                Headers = new HeaderDictionary(),
+                ContentType = "text/xml"
+            };
+            var ex = new InvalidDataException("Invalid file no content.");
+            var expectedResult = new ObjectResult(new MessageResponse { Data = $"{file.FileName} - {JsonConvert.SerializeObject(new FreeSchoolMealsHMRC())} :- {ex.Message}," }) { StatusCode = StatusCodes.Status400BadRequest };
+
+            // Act
+            var response = _sut.ImportFsmHMRCData(file);
+
+            // Assert
+            response.Result.Should().BeEquivalentTo(expectedResult);
+        }
     }
 }

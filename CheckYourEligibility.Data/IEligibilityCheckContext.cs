@@ -17,4 +17,5 @@ public interface IEligibilityCheckContext
     void BulkInsert_FreeSchoolMealsHO(IEnumerable<FreeSchoolMealsHO> data);
     Task<int> SaveChangesAsync();
     int SaveChanges();
+    void BulkInsert_FreeSchoolMealsHMRC(IEnumerable<FreeSchoolMealsHMRC> data);
 }

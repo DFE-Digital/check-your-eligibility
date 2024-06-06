@@ -61,6 +61,34 @@ namespace CheckYourEligibility.APIUnitTests.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to &lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+        ///&lt;FreeSchoolMealsHMRC xsi:schemaLocation=&quot;http://www.govtalk.gov.uk/Education/FreeSchoolMeals-200705&quot; xmlns:n1=&quot;http://www.govtalk.gov.uk/Education/FreeSchoolMeals-200705&quot; xmlns=&quot;http://www.govtalk.gov.uk/Education/FreeSchoolMeals-200705&quot; xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;&gt;
+        ///    &lt;Header&gt;
+        ///        &lt;OriginatingSystemID&gt;FS&lt;/OriginatingSystemID&gt;
+        ///        &lt;ReceivingSystemID&gt;DE&lt;/ReceivingSystemID&gt;
+        ///        &lt;CreationDate&gt;20240221&lt;/CreationDate&gt; &lt;!-- yyyymmd [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string exampleHMRC {
+            get {
+                return ResourceManager.GetString("exampleHMRC", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+        ///&lt;FreeSchoolMealsHMRC xsi:schemaLocation=&quot;http://www.govtalk.gov.uk/Education/FreeSchoolMeals-200705&quot; xmlns:n1=&quot;http://www.govtalk.gov.uk/Education/FreeSchoolMeals-200705&quot; xmlns=&quot;http://www.govtalk.gov.uk/Education/FreeSchoolMeals-200705&quot; xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;&gt;
+        ///    &lt;Header&gt;
+        ///        &lt;OriginatingSystemID&gt;FS&lt;/OriginatingSystemID&gt;
+        ///        &lt;ReceivingSystemID&gt;DE&lt;/ReceivingSystemID&gt;
+        ///        &lt;CreationDate&gt;20240221&lt;/CreationDate&gt; &lt;!-- yyyymmd [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string exampleHMRC_empty {
+            get {
+                return ResourceManager.GetString("exampleHMRC_empty", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to 19000001,19760509,Charlton
         ///19000002,19760509,Cohen
         ///19000003,19760509,Moore
