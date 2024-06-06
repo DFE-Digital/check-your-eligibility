@@ -8,7 +8,9 @@ using CheckYourEligibility.Domain.Requests;
 using CheckYourEligibility.Domain.Responses;
 using CheckYourEligibility.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using NetTopologySuite.Index.HPRtree;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -21,17 +23,16 @@ namespace CheckYourEligibility.Services
         private readonly IEligibilityCheckContext _db;
         protected readonly IMapper _mapper;
         private static Random randomNumber;
+        private readonly int _hashCheckDays;
 
-        public FsmApplicationService(ILoggerFactory logger, IEligibilityCheckContext dbContext, IMapper mapper) : base()
+        public FsmApplicationService(ILoggerFactory logger, IEligibilityCheckContext dbContext, IMapper mapper, IConfiguration configuration) : base()
         {
             _logger = logger.CreateLogger("ServiceFsmCheckEligibility");
             _db = Guard.Against.Null(dbContext);
             _mapper = Guard.Against.Null(mapper);
 
-            if (randomNumber == null)
-            {
-                randomNumber = new Random(referenceMaxValue);
-            }
+            randomNumber ??= new Random(referenceMaxValue);
+            _hashCheckDays = configuration.GetValue<short>("HashCheckDays");
         }
 
         public async Task<ApplicationSave> PostApplication(ApplicationRequestData data)
@@ -41,6 +42,7 @@ namespace CheckYourEligibility.Services
                 var item = _mapper.Map<Application>(data);
                 item.ApplicationID = Guid.NewGuid().ToString();
                 item.Reference = GetReference();
+                item.EligibilityCheckHashID = GetHash(item); 
                 item.Created = DateTime.UtcNow;
                 item.Updated = DateTime.UtcNow;
                 item.Type = CheckEligibilityType.ApplcicationFsm;
@@ -68,6 +70,25 @@ namespace CheckYourEligibility.Services
                 _logger.LogError(ex, "Db post application");
                 throw;
             }
+        }
+
+        private string? GetHash(Application data)
+        {
+            var age = DateTime.UtcNow.AddDays(-_hashCheckDays);
+            var hash = FsmCheckEligibilityService.GetHash(new EligibilityCheck
+            {
+                DateOfBirth = data.ParentDateOfBirth,
+                NASSNumber = data.ParentNationalAsylumSeekerServiceNumber,
+                NINumber = data.ParentNationalInsuranceNumber,
+                LastName = data.ParentLastName,
+                Type = CheckEligibilityType.FreeSchoolMeals
+            });
+            var hashItem = _db.EligibilityCheckHashes.FirstOrDefault(x => x.Hash == hash && x.TimeStamp >= age);
+            if (hashItem != null)
+            {
+                return hashItem.EligibilityCheckHashID;
+            }
+            return null;
         }
 
         private async Task AddStatusHistory(Application application, Domain.Enums.ApplicationStatus applicationStatus)

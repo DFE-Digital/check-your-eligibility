@@ -62,7 +62,7 @@ namespace CheckYourEligibility.ServiceUnitTests
         {
             // Arrange
             // Act
-            Action act = () => new FsmApplicationService(new NullLoggerFactory(), null, _mapper);
+            Action act = () => new FsmApplicationService(new NullLoggerFactory(), null, _mapper, null);
 
             // Assert
             act.Should().ThrowExactly<ArgumentNullException>().And.Message.Should().EndWithEquivalentOf("Value cannot be null. (Parameter 'dbContext')");
