@@ -84,6 +84,11 @@ namespace CheckYourEligibility.Services
             await _db.SaveChangesAsync();
         }
 
+        public async Task ImportHMRCData(IEnumerable<FreeSchoolMealsHMRC> data)
+        {
+            _db.BulkInsert_FreeSchoolMealsHMRC(data);
+        }
+
         public async Task ImportHomeOfficeData(IEnumerable<FreeSchoolMealsHO> data)
         {
             _db.BulkInsert_FreeSchoolMealsHO(data);
