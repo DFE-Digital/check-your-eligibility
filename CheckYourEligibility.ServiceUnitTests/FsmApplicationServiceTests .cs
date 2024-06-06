@@ -47,7 +47,7 @@ namespace CheckYourEligibility.ServiceUnitTests
                 .Build();
             var webJobsConnection = "DefaultEndpointsProtocol=https;AccountName=none;AccountKey=none;EndpointSuffix=core.windows.net";
          
-            _sut = new FsmApplicationService(new NullLoggerFactory(), _fakeInMemoryDb, _mapper);
+            _sut = new FsmApplicationService(new NullLoggerFactory(), _fakeInMemoryDb, _mapper, _configuration);
 
         }
 
@@ -61,7 +61,7 @@ namespace CheckYourEligibility.ServiceUnitTests
         {
             // Arrange
             // Act
-            Action act = () => new FsmApplicationService(new NullLoggerFactory(), null, _mapper);
+            Action act = () => new FsmApplicationService(new NullLoggerFactory(), null, _mapper, _configuration);
 
             // Assert
             act.Should().ThrowExactly<ArgumentNullException>().And.Message.Should().EndWithEquivalentOf("Value cannot be null. (Parameter 'dbContext')");
@@ -72,7 +72,7 @@ namespace CheckYourEligibility.ServiceUnitTests
         {
             // Arrange
             var db = new Mock<IEligibilityCheckContext>(MockBehavior.Strict);
-            var svc = new FsmApplicationService(new NullLoggerFactory(), db.Object, _mapper);
+            var svc = new FsmApplicationService(new NullLoggerFactory(), db.Object, _mapper, _configuration);
             db.Setup(x => x.Applications.AddAsync(It.IsAny<Application>(), It.IsAny<CancellationToken>())).ThrowsAsync(new Exception());
             var request = _fixture.Create<ApplicationRequestData>();
 
