@@ -10,14 +10,14 @@ file [CheckYourEligibility.WebApp/appsettings.json](appsettings.json), name the 
 in the same folder. Update the values in this new file as needed. This file should not be committed, nor will it with our .gitignore.
 
 #### Credentials
-You can get the credentials through following the instructions in [https://github.com/DFE-Digital/check-your-eligibility-infrastructure](check-your-eligibility-infrastructure). 
+You can get the credentials through following the instructions in [Check-your-eligibility-infrastructure](https://github.com/DFE-Digital/check-your-eligibility-infrastructure). 
 Otherwise, just ask your Lead Developer or fellow colleague.
 
 ### Queue
 There is a Azure Storage Queue part of the whole flow, which triggers a logic app. You can either ignore that part of the application, mock it, or connect to the dev queue. Credentials in keyvault.
 
 ## JWT authenticate your request
-Each request needs to be authenticated with a JWT token. YOu get this token bu calling `/api/Login` with the following object:
+Each request needs to be authenticated with a JWT token. YOu get this token by calling `/api/Login` with the following object:
 `
 {
     "username": "",
