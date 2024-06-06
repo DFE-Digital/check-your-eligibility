@@ -90,6 +90,12 @@ Add-Migration checkHashResult -project CheckYourEligibility.Data.Migrations
 Add-Migration UserCreate -project CheckYourEligibility.Data.Migrations
 Add-Migration Audit -project CheckYourEligibility.Data.Migrations
 Add-Migration AuditTypeColumn -project CheckYourEligibility.Data.Migrations
+Add-Migration ApplicationHash -project CheckYourEligibility.Data.Migrations
+
+
+## Update db to latest migration
+update-database  -project CheckYourEligibility.Data.Migrations
+
 
 ### List Migrations
 Get-Migration

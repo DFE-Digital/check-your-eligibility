@@ -45,8 +45,7 @@ namespace CheckYourEligibility.Services
             _audit = Guard.Against.Null(audit);
 
             setQueue(configuration.GetValue<string>("QueueFsmCheckStandard"),queueClientService);
-
-             _hashCheckDays = configuration.GetValue<short>("HashCheckDays");
+            _hashCheckDays = configuration.GetValue<short>("HashCheckDays");
         }
 
         [ExcludeFromCodeCoverage]
@@ -192,7 +191,7 @@ namespace CheckYourEligibility.Services
             return null;
         }
 
-        public string GetHash(EligibilityCheck item)
+        public  static string GetHash(EligibilityCheck item)
         {
             var key  = string.IsNullOrEmpty(item.NINumber) ? item.NASSNumber : item.NINumber;
             var input = $"{item.LastName}{key}{item.DateOfBirth.ToString("d")}{item.Type}";
