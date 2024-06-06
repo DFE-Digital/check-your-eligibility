@@ -1,6 +1,7 @@
 pr:
   branches:
-    exclude: 'none'
+    exclude:
+      - none
 
 pool:
   name: Azure Pipelines
