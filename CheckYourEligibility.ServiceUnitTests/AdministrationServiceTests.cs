@@ -121,5 +121,18 @@ namespace CheckYourEligibility.ServiceUnitTests
             Assert.Pass();
         }
 
+        [Test]
+        public void Given_ImportHMRCData_Should_Return_Pass()
+        {
+            // Arrange
+            var data = _fixture.CreateMany<FreeSchoolMealsHMRC>();
+
+            // Act
+            _sut.ImportHMRCData(data);
+
+            // Assert
+            Assert.Pass();
+        }
+
     }
 }

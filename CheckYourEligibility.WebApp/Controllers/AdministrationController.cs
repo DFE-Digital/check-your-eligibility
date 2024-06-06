@@ -14,6 +14,12 @@ using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using System.Globalization;
 using System.Net;
+using System.Xml.Serialization;
+using CheckYourEligibility.Services.XmlImport;
+using System.Xml.Linq;
+using System.Xml;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using System.Linq;
 
 namespace CheckYourEligibility.WebApp.Controllers
 {
@@ -98,7 +104,7 @@ namespace CheckYourEligibility.WebApp.Controllers
 
 
         /// <summary>
-        /// Truncates FsmHomeOfficeData and imports a new data set
+        /// Truncates FsmHomeOfficeData and imports a new data set from CSV input
         /// </summary>
         /// <param name="file"></param>
         /// <returns></returns>
@@ -150,6 +156,62 @@ namespace CheckYourEligibility.WebApp.Controllers
             await _service.ImportHomeOfficeData(DataLoad);
             await AuditAdd(Domain.Enums.AuditType.Administration, string.Empty);
             return new ObjectResult(new MessageResponse { Data = $"{file.FileName} - {Admin.HomeOfficeFileProcessed}" }) { StatusCode = StatusCodes.Status200OK };
+        }
+
+        /// <summary>
+        /// Truncates FsmHMRCData and imports a new data set from XML input
+        /// </summary>
+        /// <param name="file"></param>
+        /// <returns></returns>
+        /// <exception cref="InvalidDataException"></exception>
+        [ProducesResponseType(typeof(int), (int)HttpStatusCode.OK)]
+        [HttpPost("/importFsmHMRCData")]
+        public async Task<ActionResult> ImportFsmHMRCData(IFormFile file)
+        {
+            List<FreeSchoolMealsHMRC> DataLoad = new();
+            if (file == null || file.ContentType.ToLower() != "text/xml")
+            {
+                return BadRequest(new MessageResponse { Data = $"{Admin.XmlfileRequired}" });
+            }
+            try
+            {
+                using var fileStream = file.OpenReadStream();
+                XElement po = XElement.Load(fileStream);
+                IEnumerable<XElement> childElements =
+                    from el in po.Elements()
+                    select el;
+                var EligiblePersons = childElements.FirstOrDefault(x => x.Name.LocalName == "EligiblePersons");
+                if (EligiblePersons != null)
+                DataLoad.AddRange(from XElement EligiblePerson in EligiblePersons.Nodes()
+                                  let elements = EligiblePerson.Elements()
+                                  let item = new FreeSchoolMealsHMRC()
+                                  {
+                                      FreeSchoolMealsHMRCID = elements.First(x => x.Name.LocalName == "NINO").Value,
+                                      DataType = Convert.ToInt32(elements.First(x => x.Name.LocalName == "DataType").Value),
+                                      Surname = elements.First(x => x.Name.LocalName == "Surname").Value,
+                                      DateOfBirth = DateTime.ParseExact(elements.First(x => x.Name.LocalName == "DateOfBirth").Value, "ddMMyyyy", CultureInfo.InvariantCulture)
+                                  }
+                                  select item);
+
+                if (DataLoad == null || DataLoad.Count == 0)
+                {
+                    throw new InvalidDataException("Invalid file no content.");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("ImportHMRCData", ex);
+                return new ObjectResult(new MessageResponse
+                {
+                    Data = $"{file.FileName} - {JsonConvert.SerializeObject(new FreeSchoolMealsHMRC())} :- {ex.Message}," +
+                    $"{ex.InnerException?.Message}"
+                })
+                { StatusCode = StatusCodes.Status400BadRequest };
+            }
+
+            await _service.ImportHMRCData(DataLoad);
+            await AuditAdd(Domain.Enums.AuditType.Administration, string.Empty);
+            return new ObjectResult(new MessageResponse { Data = $"{file.FileName} - {Admin.HMRCFileProcessed}" }) { StatusCode = StatusCodes.Status200OK };
         }
     }
 }

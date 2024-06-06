@@ -10,6 +10,7 @@ namespace CheckYourEligibility.Services.Interfaces
     {
         Task CleanUpEligibilityChecks();
         Task ImportEstablishments(IEnumerable<EstablishmentRow> data);
+        Task ImportHMRCData(IEnumerable<FreeSchoolMealsHMRC> data);
         Task ImportHomeOfficeData(IEnumerable<FreeSchoolMealsHO> data);
     }
 }
