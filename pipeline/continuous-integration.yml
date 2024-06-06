@@ -1,8 +1,3 @@
-pr:
-  branches:
-    exclude:
-      - none
-
 pool:
   name: Azure Pipelines
   vmImage: 'windows-latest'
