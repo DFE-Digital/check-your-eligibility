@@ -12,12 +12,14 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
+using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using School = CheckYourEligibility.Data.Models.School;
 
 namespace CheckYourEligibility.ServiceUnitTests
 {
 
-
+    [ExcludeFromCodeCoverage(Justification = "test")]
     public class FsmApplicationServiceTests : TestBase.TestBase
     {
         private IEligibilityCheckContext _fakeInMemoryDb;
@@ -96,7 +98,18 @@ namespace CheckYourEligibility.ServiceUnitTests
             request.School = school.SchoolId;
             _fakeInMemoryDb.LocalAuthorities.Add(la);
             _fakeInMemoryDb.Schools.Add(school);
-            _fakeInMemoryDb.SaveChangesAsync();
+            var hash = FsmCheckEligibilityService.GetHash(
+                new EligibilityCheck {LastName = request.ParentLastName,
+                NINumber = request.ParentNationalInsuranceNumber,
+                    DateOfBirth = DateTime.ParseExact(request.ParentDateOfBirth, "yyyy-MM-dd", CultureInfo.InvariantCulture),
+                Type = Domain.Enums.CheckEligibilityType.FreeSchoolMeals});
+            var hashRecord = _fixture.Create<EligibilityCheckHash>();
+            hashRecord.Hash = hash;
+            _fakeInMemoryDb.EligibilityCheckHashes.Add(hashRecord);
+
+            _fakeInMemoryDb.SaveChanges();
+
+
 
             // Act
             var response = _sut.PostApplication(request);
@@ -194,6 +207,8 @@ namespace CheckYourEligibility.ServiceUnitTests
         {
             // Arrange
             var request = _fixture.Create<ApplicationRequestSearchData>();
+            request.ParentDateOfBirth = "1990-01-01";
+            request.ChildDateOfBirth = "1990-01-01";
 
             // Act
             var response = _sut.GetApplications(request);
@@ -229,7 +244,7 @@ namespace CheckYourEligibility.ServiceUnitTests
         }
 
         [Test]
-        public void Given_Application_WithUserReturnNewUser()
+        public async Task Given_Application_WithUserReturnNewUser()
         {
             // Arrange
             var request = _fixture.Create<ApplicationRequestData>();
@@ -244,14 +259,14 @@ namespace CheckYourEligibility.ServiceUnitTests
             var user = _fixture.Create<User>();
             _fakeInMemoryDb.Users.Add(user);
             request.UserId = user.UserID;
-            _fakeInMemoryDb.SaveChangesAsync();
-            var appResponse = _sut.PostApplication(request);
+            await _fakeInMemoryDb.SaveChangesAsync();
+            var appResponse = await _sut.PostApplication(request);
 
             // Act
-            var response = _sut.GetApplication(appResponse.Result.Id);
+            var response = await _sut.GetApplication(appResponse.Id);
 
             // Assert
-            response.Result.User.UserID.Should().BeEquivalentTo(user.UserID);
+            response.User.UserID.Should().BeEquivalentTo(user.UserID);
         }
     }
 }
