@@ -37,3 +37,8 @@ stages:
           resultsFolder: '$(build.ArtifactStagingDirectory)/Test/Results'
           otherConsoleOptions: '/collect:"Code Coverage;Format=Cobertura"'  # <<<< this is the important bit
           codeCoverageEnabled: True
+
+      - task: PublishCodeCoverageResults@1
+        inputs:
+          codeCoverageTool: 'Cobertura'
+          summaryFileLocation: '$(build.ArtifactStagingDirectory)/Test/Results/**/*.xml'
