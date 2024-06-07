@@ -11,6 +11,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using NetTopologySuite.Index.HPRtree;
+using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -42,7 +43,7 @@ namespace CheckYourEligibility.Services
                 var item = _mapper.Map<Application>(data);
                 item.ApplicationID = Guid.NewGuid().ToString();
                 item.Reference = GetReference();
-                item.EligibilityCheckHashID = GetHash(item); 
+                item.EligibilityCheckHashID = GetHash(CheckEligibilityType.FreeSchoolMeals, item)?.EligibilityCheckHashID; 
                 item.Created = DateTime.UtcNow;
                 item.Updated = DateTime.UtcNow;
                 item.Type = CheckEligibilityType.ApplcicationFsm;
@@ -72,7 +73,7 @@ namespace CheckYourEligibility.Services
             }
         }
 
-        private string? GetHash(Application data)
+        private EligibilityCheckHash? GetHash(CheckEligibilityType type, Application data)
         {
             var age = DateTime.UtcNow.AddDays(-_hashCheckDays);
             var hash = FsmCheckEligibilityService.GetHash(new EligibilityCheck
@@ -81,14 +82,9 @@ namespace CheckYourEligibility.Services
                 NASSNumber = data.ParentNationalAsylumSeekerServiceNumber,
                 NINumber = data.ParentNationalInsuranceNumber,
                 LastName = data.ParentLastName,
-                Type = CheckEligibilityType.FreeSchoolMeals
+                Type = type
             });
-            var hashItem = _db.EligibilityCheckHashes.FirstOrDefault(x => x.Hash == hash && x.TimeStamp >= age);
-            if (hashItem != null)
-            {
-                return hashItem.EligibilityCheckHashID;
-            }
-            return null;
+            return _db.EligibilityCheckHashes.FirstOrDefault(x => x.Hash == hash && x.TimeStamp >= age);
         }
 
         private async Task AddStatusHistory(Application application, Domain.Enums.ApplicationStatus applicationStatus)
@@ -130,17 +126,24 @@ namespace CheckYourEligibility.Services
                .Where(x => x.Type == CheckEligibilityType.ApplcicationFsm);
 
             if (model.School != null)
-            {
                 results = results.Where(x => x.SchoolId == model.School);
-            }
             if (model.localAuthority != null)
-            {
-                results = results.Where(x => x.LocalAuthorityId == model.localAuthority);
-            }
+               results = results.Where(x => x.LocalAuthorityId == model.localAuthority);
             if (model.Status != null)
-            {
-                results = results.Where(x => x.Status == model.Status);
-            }
+              results = results.Where(x => x.Status == model.Status);
+
+            if (!string.IsNullOrEmpty(model.ParentNationalInsuranceNumber))
+                results = results.Where(x => x.ParentNationalInsuranceNumber == model.ParentNationalInsuranceNumber);
+            if (!string.IsNullOrEmpty(model.ParentLastName))
+                results = results.Where(x => x.ParentLastName == model.ParentLastName);
+            if (!string.IsNullOrEmpty(model.ParentNationalAsylumSeekerServiceNumber))
+                results = results.Where(x => x.ParentNationalAsylumSeekerServiceNumber == model.ParentNationalAsylumSeekerServiceNumber);
+            if (!string.IsNullOrEmpty(model.ParentDateOfBirth))
+                results = results.Where(x => x.ParentDateOfBirth == DateTime.ParseExact(model.ParentDateOfBirth, "yyyy-MM-dd", CultureInfo.InvariantCulture));
+            if (!string.IsNullOrEmpty(model.ChildLastName))
+                results = results.Where(x => x.ChildLastName == model.ChildLastName);
+            if (!string.IsNullOrEmpty(model.ChildDateOfBirth))
+                results = results.Where(x => x.ChildDateOfBirth == DateTime.ParseExact(model.ChildDateOfBirth, "yyyy-MM-dd", CultureInfo.InvariantCulture));
 
             return _mapper.Map<List<ApplicationResponse>>(results);
         }
