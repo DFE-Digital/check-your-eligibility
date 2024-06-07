@@ -99,6 +99,20 @@ namespace CheckYourEligibility.APIUnitTests
         }
 
         [Test]
+        public void Given_InValidRequest_Validation_Application_Should_Return_Status400BadRequest()
+        {
+            // Arrange
+            var request = _fixture.Create<ApplicationRequest>();
+            request.Data.ParentLastName = string.Empty;
+
+            // Act
+            var response = _sut.Application(request);
+
+            // Assert
+            response.Result.Should().BeOfType(typeof(BadRequestObjectResult));
+        }
+
+        [Test]
         public void Given_valid_NInumber_Request_Post_Should_Return_Status202Accepted()
         {
             // Arrange
@@ -231,6 +245,24 @@ namespace CheckYourEligibility.APIUnitTests
             // Act
             var response = _sut.CheckEligibilityStatus(guid);
             
+            // Assert
+            response.Result.Should().BeEquivalentTo(expectedResult);
+        }
+
+        [Test]
+        public void Given_Valid_guid_CheckEligibilityStatus_Should_Return_Status()
+        {
+            // Arrange
+            var guid = _fixture.Create<Guid>().ToString();
+            var status = CheckEligibilityStatus.eligible;
+            _mockCheckService.Setup(cs => cs.GetStatus(guid)).Returns(Task.FromResult<CheckEligibilityStatus?>(status));
+            _mockAuditService.Setup(cs => cs.AuditAdd(It.IsAny<AuditData>())).ReturnsAsync(Guid.NewGuid().ToString());
+            var expectedResult = new ObjectResult(new CheckEligibilityStatusResponse() { Data = new StatusValue() { Status = status.ToString() } })
+            { StatusCode = StatusCodes.Status200OK };
+
+            // Act
+            var response = _sut.CheckEligibilityStatus(guid);
+
             // Assert
             response.Result.Should().BeEquivalentTo(expectedResult);
         }
