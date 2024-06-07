@@ -17,7 +17,7 @@ Otherwise, just ask your Lead Developer or fellow colleague.
 There is a Azure Storage Queue part of the whole flow, which triggers a logic app. You can either ignore that part of the application, mock it, or connect to the dev queue. Credentials in keyvault.
 
 ## JWT authenticate your request
-Each request needs to be authenticated with a JWT token. YOu get this token by calling `/api/Login` with the following object:
+Each request needs to be authenticated with a JWT token. You get this token by calling `/api/Login` with the following object:
 `
 {
     "username": "",
