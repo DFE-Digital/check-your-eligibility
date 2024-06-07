@@ -48,7 +48,7 @@ stages:
           platform: '$(buildPlatform)'
           configuration: '$(buildConfiguration)'
           resultsFolder: '$(build.ArtifactStagingDirectory)/Test/Results'
-          otherConsoleOptions: '/collect:"Code Coverage;Format=Cobertura"'  # <<<< this is the important bit
+          otherConsoleOptions: '/collect:"Code Coverage;Format=Cobertura" /settings:"CheckYourEligibility.TestBase/.runsettings"'  # <<<< this is the important bit
           codeCoverageEnabled: True
 
       - task: PublishCodeCoverageResults@1
