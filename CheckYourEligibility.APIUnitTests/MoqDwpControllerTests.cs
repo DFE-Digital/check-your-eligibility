@@ -119,7 +119,6 @@ namespace CheckYourEligibility.APIUnitTests
         }
 
         [Test]
-
         public void Given_Valid_Request_With_Non_Eligible_GUID_Should_Return_NotFoundResult()
         {
             //Arrange
