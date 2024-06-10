@@ -78,10 +78,14 @@ namespace CheckYourEligibility.WebApp.Controllers
             {
                 return new OkResult();
             }
+            else if(Guid == MogDWPValues.validCitizenNotEligibleGuid)
+            {
+                return new NotFoundResult();
+            }
             else
             {
                 return BadRequest();
             }
         }
-        }
+    }
 }
