@@ -117,5 +117,17 @@ namespace CheckYourEligibility.APIUnitTests
             // Assert
             response.Result.Should().BeOfType(typeof(BadRequestResult));
         }
+
+        [Test]
+
+        public void Given_Valid_Request_With_Non_Eligible_GUID_Should_Return_NotFoundResult()
+        {
+            //Arrange
+            //Act
+            var response = _sut.Claim(MogDWPValues.validCitizenNotEligibleGuid, MogDWPValues.validUniversalBenefitType);
+
+            //Assert
+            response.Result.Should().BeOfType(typeof(NotFoundResult));
+        }
     }
 }
