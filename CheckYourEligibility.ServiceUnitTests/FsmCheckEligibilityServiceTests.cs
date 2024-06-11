@@ -122,8 +122,7 @@ namespace CheckYourEligibility.ServiceUnitTests
             var result = new StatusCodeResult(StatusCodes.Status200OK);
             _moqDwpService.Setup(x => x.CheckForBenefit(It.IsAny<string>())).ReturnsAsync(result);
             _moqAudit.Setup(x => x.AuditAdd(It.IsAny<AuditData>())).ReturnsAsync("");
-
-            // Act/Assert
+                        // Act/Assert
             var response = await _sut.PostCheck(request);
             var baseItem = _fakeInMemoryDb.CheckEligibilities.FirstOrDefault(x => x.EligibilityCheckID == response.Id);
             baseItem.EligibilityCheckHashID.Should().BeNull();
