@@ -62,7 +62,7 @@ If approved, the original code-creator merges the PR and deletes the branch.
 We don't commit active secrets to this repo. If we do, it is crucial to notify DM/TL/PO, rewrite git history and follow DfE processes.
 
 ## Postman scripts
-You will find a very useful collection under [Support/ECS Dev.postman_collection.json](Support/ECS Dev.postman_collection.json).
+You will find a very useful collection under [docs/ECS Dev.postman_collection.json](docs/ECS Dev.postman_collection.json).
 
 Replace `{username}`, `{password}` and `{api_host}` with appropriate values (See Setup > Config).
 
@@ -105,9 +105,22 @@ Remove-Migration -Force -project CheckYourEligibility.Data.Migrations
 ### Run specific migration
 update-database -migration BaseMigration -project CheckYourEligibility.Data.Migrations
 
-## Miscellaneous
+## Resources
+### Architecture
+![Architecture](docs/images/api-infrastructure.png)
 
-### MoqDWP
+### Data flow
+![Data flow](docs/images/api-data.png)
+
+### Data structure
+![Data structure](docs/images/api-database.png)
+
+### Deployment
+![Deployment](docs/images/api-pipeline.png)
+
+### Miscellaneous
+
+#### MoqDWP
 DWP checking:
 
 Firstly the citizen is checked using the supplied details, if found Status200OK then the GUID is returned and a check is made to see if the citizen is eligible or not.
@@ -125,7 +138,7 @@ the following are details used to force results.
         public static string validCitizenNino = "AB123456C";
     }`
 
-### CURL commands
+#### CURL commands
 
 Using a valid check will enforce a valid result changing the surname to 'Jones' follows a different path
 
@@ -183,10 +196,3 @@ the moq dwp endpoints are as follows, note the headers.
     }
   }
 }'`
-
-## Architecture
-### Data flow
-INSERT IMAGE
-
-### Endpoint usage
-INSERT IMAGE
