@@ -74,37 +74,6 @@ You need to download a CSV from [GIAS](https://get-information-schools.service.g
 
 The contents is then POSTed to `/importEstablishments`
 
-## Migrations
-
-### Run Latest migration
-`dotnet ef update-database -project CheckYourEligibility.Data.Migrations`
-
-### How to add a migration
-Add-Migration BaseMigration -project CheckYourEligibility.Data.Migrations
-Add-Migration establishmentImport -project CheckYourEligibility.Data.Migrations
-Add-Migration idxReference -project CheckYourEligibility.Data.Migrations
-Add-Migration applicationStatus -project CheckYourEligibility.Data.Migrations
-Add-Migration checkHash -project CheckYourEligibility.Data.Migrations
-Add-Migration checkHashSource -project CheckYourEligibility.Data.Migrations
-Add-Migration checkHashResult -project CheckYourEligibility.Data.Migrations
-Add-Migration UserCreate -project CheckYourEligibility.Data.Migrations
-Add-Migration Audit -project CheckYourEligibility.Data.Migrations
-Add-Migration AuditTypeColumn -project CheckYourEligibility.Data.Migrations
-Add-Migration ApplicationHash -project CheckYourEligibility.Data.Migrations
-
-
-## Update db to latest migration
-update-database  -project CheckYourEligibility.Data.Migrations
-
-
-### List Migrations
-Get-Migration
-
-Remove-Migration -Force -project CheckYourEligibility.Data.Migrations
-
-### Run specific migration
-update-database -migration BaseMigration -project CheckYourEligibility.Data.Migrations
-
 ## Resources
 ### Architecture
 ![Architecture](docs/images/api-infrastructure.png)
@@ -119,6 +88,38 @@ update-database -migration BaseMigration -project CheckYourEligibility.Data.Migr
 ![Deployment](docs/images/api-pipeline.png)
 
 ### Miscellaneous
+
+#### Migrations
+
+##### Run Latest migration
+`dotnet ef update-database -project CheckYourEligibility.Data.Migrations`
+
+##### How to add a migration
+Add-Migration BaseMigration -project CheckYourEligibility.Data.Migrations
+Add-Migration establishmentImport -project CheckYourEligibility.Data.Migrations
+Add-Migration idxReference -project CheckYourEligibility.Data.Migrations
+Add-Migration applicationStatus -project CheckYourEligibility.Data.Migrations
+Add-Migration checkHash -project CheckYourEligibility.Data.Migrations
+Add-Migration checkHashSource -project CheckYourEligibility.Data.Migrations
+Add-Migration checkHashResult -project CheckYourEligibility.Data.Migrations
+Add-Migration UserCreate -project CheckYourEligibility.Data.Migrations
+Add-Migration Audit -project CheckYourEligibility.Data.Migrations
+Add-Migration AuditTypeColumn -project CheckYourEligibility.Data.Migrations
+Add-Migration ApplicationHash -project CheckYourEligibility.Data.Migrations
+
+
+##### Update db to latest migration
+update-database  -project CheckYourEligibility.Data.Migrations
+
+
+##### List Migrations
+Get-Migration
+
+Remove-Migration -Force -project CheckYourEligibility.Data.Migrations
+
+##### Run specific migration
+update-database -migration BaseMigration -project CheckYourEligibility.Data.Migrations
+
 
 #### MoqDWP
 DWP checking:
