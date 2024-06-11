@@ -77,6 +77,7 @@ namespace CheckYourEligibility.Services
                 var item = await _db.Schools.AsNoTracking().FirstOrDefaultAsync(x => x.SchoolId == sc.SchoolId);
 
                 if (item != null)
+                    //cant cover due to memory only db
                     SetScoolData(sc);
                 else
                     _db.Schools.Add(sc);
@@ -84,6 +85,7 @@ namespace CheckYourEligibility.Services
             await _db.SaveChangesAsync();
         }
 
+        
         public async Task ImportHMRCData(IEnumerable<FreeSchoolMealsHMRC> data)
         {
             _db.BulkInsert_FreeSchoolMealsHMRC(data);
@@ -92,10 +94,9 @@ namespace CheckYourEligibility.Services
         public async Task ImportHomeOfficeData(IEnumerable<FreeSchoolMealsHO> data)
         {
             _db.BulkInsert_FreeSchoolMealsHO(data);
-
         }
 
-        [ExcludeFromCodeCoverage(Justification = "In memory db does not support execute update, direct updating causes concurrency error")]
+        
         private void SetLaData(LocalAuthority? item)
         {
             _db.LocalAuthorities.AsNoTracking().Where(b => b.LocalAuthorityId == item.LocalAuthorityId)
