@@ -123,11 +123,6 @@ namespace CheckYourEligibility.ServiceUnitTests
             _moqDwpService.Setup(x => x.CheckForBenefit(It.IsAny<string>())).ReturnsAsync(result);
             _moqAudit.Setup(x => x.AuditAdd(It.IsAny<AuditData>())).ReturnsAsync("");
 
-            //_moqHash.Setup(x => x.Exists(It.IsAny<EligibilityCheck>())).ReturnsAsync(default(EligibilityCheckHash));
-            //_moqHash.Setup(x => x.Create(
-            //    It.IsAny<EligibilityCheck>(), It.IsAny<CheckEligibilityStatus>(), It.IsAny<ProcessEligibilityCheckSource>(), It.IsAny<AuditData>()))
-            //    .ReturnsAsync("testId");
-
             // Act/Assert
             var response = await _sut.PostCheck(request);
             var baseItem = _fakeInMemoryDb.CheckEligibilities.FirstOrDefault(x => x.EligibilityCheckID == response.Id);
