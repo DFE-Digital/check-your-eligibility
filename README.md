@@ -6,11 +6,11 @@ This is a .NET 8 project - you'll need the latest .NET SDK etc to run it locally
 ### Config
 
 When you first clone the repo, you'll want to define your own config. You'll want to copy up the 
-file [CheckYourEligibility.WebApp/appsettings.json](appsettings.json), name the copy `appsettings.developmnent.json`
+file [appsettings.json](CheckYourEligibility.WebApp/appsettings.json), name the copy `appsettings.developmnent.json`
 in the same folder. Update the values in this new file as needed. This file should not be committed, nor will it with our .gitignore.
 
 #### Credentials
-You can get the credentials through following the instructions in [https://github.com/DFE-Digital/check-your-eligibility-infrastructure](check-your-eligibility-infrastructure). 
+You can get the credentials through following the instructions in [check-your-eligibility-infrastructure](https://github.com/DFE-Digital/check-your-eligibility-infrastructure).
 Otherwise, just ask your Lead Developer or fellow colleague.
 
 ### Queue
