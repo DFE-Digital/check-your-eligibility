@@ -33,20 +33,20 @@ namespace CheckYourEligibility.Services
         private const int SurnameCheckCharachters = 3;
      
         private readonly IDwpService _dwpService;
-        private readonly int _hashCheckDays;
+        private readonly IHash _hashService;
 
         public FsmCheckEligibilityService(ILoggerFactory logger, IEligibilityCheckContext dbContext, IMapper mapper, QueueServiceClient queueClientService,
-            IConfiguration configuration, IDwpService dwpService, IAudit audit) : base()
+            IConfiguration configuration, IDwpService dwpService, IAudit audit, IHash hashService) : base()
         {
             _logger = logger.CreateLogger("ServiceFsmCheckEligibility");
             _db = Guard.Against.Null(dbContext);
             _mapper = Guard.Against.Null(mapper);
             _dwpService = Guard.Against.Null(dwpService);
             _audit = Guard.Against.Null(audit);
+            _hashService = Guard.Against.Null(hashService);
 
-            setQueue(configuration.GetValue<string>("QueueFsmCheckStandard"),queueClientService);
-            _hashCheckDays = configuration.GetValue<short>("HashCheckDays");
-        }
+            setQueue(configuration.GetValue<string>("QueueFsmCheckStandard"), queueClientService);
+         }
 
         [ExcludeFromCodeCoverage]
         private void setQueue(string queName, QueueServiceClient queueClientService)
@@ -68,7 +68,7 @@ namespace CheckYourEligibility.Services
 
                 item.Status = CheckEligibilityStatus.queuedForProcessing;
                 item.Type = CheckEligibilityType.FreeSchoolMeals;
-                var checkHashResult = CheckHashResult(item);
+                var checkHashResult = await  _hashService.Exists(item);
                 if (checkHashResult != null)
                 {
                     item.Status = checkHashResult.Outcome;
@@ -109,12 +109,7 @@ namespace CheckYourEligibility.Services
         }
 
 
-        private EligibilityCheckHash? CheckHashResult(EligibilityCheck item)
-        {
-            var age = DateTime.UtcNow.AddDays(-_hashCheckDays);
-            var hash = GetHash(item);
-            return  _db.EligibilityCheckHashes.FirstOrDefault(x => x.Hash == hash && x.TimeStamp >= age);
-        }
+        
 
         public async Task<CheckEligibilityStatus?> GetStatus(string guid)
         {
@@ -163,11 +158,8 @@ namespace CheckYourEligibility.Services
                 }
                 else
                 {
-                    var hashId = await HashCheckResult(result, checkResult, source);
-                    auditDataTemplate.Type = AuditType.Hash;
-                    auditDataTemplate.typeId = hashId;
-                    await _audit.AuditAdd(auditDataTemplate);
-
+                    await _hashService.Create(result, checkResult, source, auditDataTemplate);
+                   
                     var updates = await _db.SaveChangesAsync();
                 }
                 
@@ -215,23 +207,6 @@ namespace CheckYourEligibility.Services
         }
 
         #region Private
-
-        private async Task<string> HashCheckResult(EligibilityCheck item, CheckEligibilityStatus checkResult, ProcessEligibilityCheckSource source)
-        {
-            var hash = GetHash(item);
-            var HashItem = new EligibilityCheckHash()
-            {
-                EligibilityCheckHashID = Guid.NewGuid().ToString(),
-                Hash = hash,
-                Type = item.Type,
-                Outcome = checkResult,
-                TimeStamp = DateTime.UtcNow,
-                Source = source
-            };
-            item.EligibilityCheckHashID = HashItem.EligibilityCheckHashID;
-            await _db.EligibilityCheckHashes.AddAsync(HashItem);
-            return item.EligibilityCheckHashID;
-        }
 
         private async Task<CheckEligibilityStatus> HO_Check(EligibilityCheck data)
         {
