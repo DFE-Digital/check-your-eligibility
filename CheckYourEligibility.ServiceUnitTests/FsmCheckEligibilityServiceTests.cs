@@ -32,6 +32,7 @@ namespace CheckYourEligibility.ServiceUnitTests
         private FsmCheckEligibilityService _sut;
         private Mock<IDwpService> _moqDwpService;
         private Mock<IAudit> _moqAudit;
+        private HashService _hashService;
 
         [SetUp]
         public void Setup()
@@ -57,9 +58,11 @@ namespace CheckYourEligibility.ServiceUnitTests
            
             _moqDwpService = new Mock<IDwpService>(MockBehavior.Strict);
             _moqAudit = new Mock<IAudit>(MockBehavior.Strict);
+            _hashService = new HashService(new NullLoggerFactory(), _fakeInMemoryDb, _configuration, _moqAudit.Object);
+
 
             _sut = new FsmCheckEligibilityService(new NullLoggerFactory(), _fakeInMemoryDb, _mapper, new QueueServiceClient(webJobsConnection),
-                _configuration, _moqDwpService.Object, _moqAudit.Object);
+                _configuration, _moqDwpService.Object, _moqAudit.Object, _hashService);
 
         }
 
@@ -73,7 +76,7 @@ namespace CheckYourEligibility.ServiceUnitTests
         {
             // Arrange
             // Act
-            Action act = () => new FsmCheckEligibilityService(new NullLoggerFactory(), null, _mapper, null, null,null,null);
+            Action act = () => new FsmCheckEligibilityService(new NullLoggerFactory(), null, _mapper, null, null,null,null,null);
 
             // Assert
             act.Should().ThrowExactly<ArgumentNullException>().And.Message.Should().EndWithEquivalentOf("Value cannot be null. (Parameter 'dbContext')");
@@ -89,7 +92,7 @@ namespace CheckYourEligibility.ServiceUnitTests
 
             var db = new Mock<IEligibilityCheckContext>(MockBehavior.Strict);
             
-            var svc = new FsmCheckEligibilityService(new NullLoggerFactory(), db.Object, _mapper, null, _configuration, _moqDwpService.Object, _moqAudit.Object);
+            var svc = new FsmCheckEligibilityService(new NullLoggerFactory(), db.Object, _mapper, null, _configuration, _moqDwpService.Object, _moqAudit.Object, _hashService);
             db.Setup(x => x.CheckEligibilities.AddAsync(It.IsAny<EligibilityCheck>(), It.IsAny<CancellationToken>())).ThrowsAsync(new Exception());
             
             // Act
@@ -119,6 +122,11 @@ namespace CheckYourEligibility.ServiceUnitTests
             var result = new StatusCodeResult(StatusCodes.Status200OK);
             _moqDwpService.Setup(x => x.CheckForBenefit(It.IsAny<string>())).ReturnsAsync(result);
             _moqAudit.Setup(x => x.AuditAdd(It.IsAny<AuditData>())).ReturnsAsync("");
+
+            //_moqHash.Setup(x => x.Exists(It.IsAny<EligibilityCheck>())).ReturnsAsync(default(EligibilityCheckHash));
+            //_moqHash.Setup(x => x.Create(
+            //    It.IsAny<EligibilityCheck>(), It.IsAny<CheckEligibilityStatus>(), It.IsAny<ProcessEligibilityCheckSource>(), It.IsAny<AuditData>()))
+            //    .ReturnsAsync("testId");
 
             // Act/Assert
             var response = await _sut.PostCheck(request);

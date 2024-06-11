@@ -50,6 +50,7 @@ namespace CheckYourEligibility.WebApp
             services.AddTransient<ISchoolsSearch, SchoolSearchService>();
             services.AddTransient<IUsers, UsersService>();
             services.AddTransient<IAudit, AuditService>();
+            services.AddTransient<IHash, HashService>();
             return services;
         }
 

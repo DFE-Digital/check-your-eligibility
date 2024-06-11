@@ -6,7 +6,6 @@ using CheckYourEligibility.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics.CodeAnalysis;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace CheckYourEligibility.Services
 {
