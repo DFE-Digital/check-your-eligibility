@@ -1,4 +1,5 @@
 # Check Your Eligibility API
+This repo contains the API for Eligibility Checking Engine (ECE) and the Check Free School Meals (FSM) service.
 
 ## Setup
 This is a .NET 8 project - you'll need the latest .NET SDK etc to run it locally.
