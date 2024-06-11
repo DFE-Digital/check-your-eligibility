@@ -50,6 +50,8 @@ export CYPRESS_JWT_PASSWORD="JWT user password"
 npm run e2e:chrome
 `
 
+Note, replace `export` with `set` in the above command for Windows.
+
 ## Ways of working
 ### Releasing code
 We submit PRs into `main` for functioning code. The reviewer checks that the automated tests pass, then approve.
