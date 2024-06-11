@@ -11,15 +11,13 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
-using System.Linq.Expressions;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 using String = System.String;
 
 namespace CheckYourEligibility.ServiceUnitTests
 {
 
 
-    public class UserServiceTestsTests : TestBase.TestBase
+    public class UserServiceTests : TestBase.TestBase
     {
         private IEligibilityCheckContext _fakeInMemoryDb;
         private IMapper _mapper;

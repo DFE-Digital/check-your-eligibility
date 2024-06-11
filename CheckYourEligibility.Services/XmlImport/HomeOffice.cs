@@ -4,14 +4,7 @@ using System.Xml.Serialization;
 
 namespace CheckYourEligibility.Services.XmlImport
 {
-    [ExcludeFromCodeCoverage]
-    // using System.Xml.Serialization;
-    // XmlSerializer serializer = new XmlSerializer(typeof(FreeSchoolMealsHMRC));
-    // using (StringReader reader = new StringReader(xml))
-    // {
-    //    var test = (FreeSchoolMealsHMRC)serializer.Deserialize(reader);
-    // }
-
+    [ExcludeFromCodeCoverage(Justification = "xml class")]
     [XmlRoot(ElementName = "Header")]
     public class HMRCXml
     {
@@ -35,6 +28,7 @@ namespace CheckYourEligibility.Services.XmlImport
         public int FileSequenceNumber { get; set; }
     }
 
+    [ExcludeFromCodeCoverage(Justification = "xml class")]
     [XmlRoot(ElementName = "EligiblePerson")]
     public class HMRCEligiblePerson
     {
@@ -52,6 +46,7 @@ namespace CheckYourEligibility.Services.XmlImport
         public string Surname { get; set; }
     }
 
+    [ExcludeFromCodeCoverage(Justification = "xml class")]
     [XmlRoot(ElementName = "EligiblePersons")]
     public class HMRCEligiblePersons
     {
@@ -60,6 +55,7 @@ namespace CheckYourEligibility.Services.XmlImport
         public List<HMRCEligiblePerson> EligiblePerson { get; set; }
     }
 
+    [ExcludeFromCodeCoverage(Justification = "xml class")]
     [XmlRoot(ElementName = "FreeSchoolMealsHMRC")]
     public class HMRCFreeSchoolMealsHMRC
     {
@@ -85,6 +81,4 @@ namespace CheckYourEligibility.Services.XmlImport
         [XmlText]
         public string Text { get; set; }
     }
-
-
 }
