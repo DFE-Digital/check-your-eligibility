@@ -1,4 +1,5 @@
 # Check Your Eligibility API
+This repo contains the API for Eligibility Checking Engine (ECE) and the Check Free School Meals (FSM) service.
 
 ## Setup
 This is a .NET 8 project - you'll need the latest .NET SDK etc to run it locally.
@@ -6,11 +7,11 @@ This is a .NET 8 project - you'll need the latest .NET SDK etc to run it locally
 ### Config
 
 When you first clone the repo, you'll want to define your own config. You'll want to copy up the 
-file [CheckYourEligibility.WebApp/appsettings.json](appsettings.json), name the copy `appsettings.developmnent.json`
+file [appsettings.json](CheckYourEligibility.WebApp/appsettings.json), name the copy `appsettings.developmnent.json`
 in the same folder. Update the values in this new file as needed. This file should not be committed, nor will it with our .gitignore.
 
 #### Credentials
-You can get the credentials through following the instructions in [https://github.com/DFE-Digital/check-your-eligibility-infrastructure](check-your-eligibility-infrastructure). 
+You can get the credentials through following the instructions in [check-your-eligibility-infrastructure](https://github.com/DFE-Digital/check-your-eligibility-infrastructure).
 Otherwise, just ask your Lead Developer or fellow colleague.
 
 ### Queue
@@ -50,6 +51,8 @@ export CYPRESS_JWT_PASSWORD="JWT user password"
 npm run e2e:chrome
 `
 
+Note, replace `export` with `set` in the above command for Windows.
+
 ## Ways of working
 ### Releasing code
 We submit PRs into `main` for functioning code. The reviewer checks that the automated tests pass, then approve.
@@ -62,7 +65,7 @@ If approved, the original code-creator merges the PR and deletes the branch.
 We don't commit active secrets to this repo. If we do, it is crucial to notify DM/TL/PO, rewrite git history and follow DfE processes.
 
 ## Postman scripts
-You will find a very useful collection under [Support/ECS Dev.postman_collection.json](Support/ECS Dev.postman_collection.json).
+You will find a very useful collection under [docs/ECS Dev.postman_collection.json](docs/ECS Dev.postman_collection.json).
 
 Replace `{username}`, `{password}` and `{api_host}` with appropriate values (See Setup > Config).
 
@@ -74,12 +77,27 @@ You need to download a CSV from [GIAS](https://get-information-schools.service.g
 
 The contents is then POSTed to `/importEstablishments`
 
-## Migrations
+## Resources
+### Architecture
+![Architecture](docs/images/api-infrastructure.png)
 
-### Run Latest migration
+### Data flow
+![Data flow](docs/images/api-data.png)
+
+### Data structure
+![Data structure](docs/images/api-database.png)
+
+### Deployment
+![Deployment](docs/images/api-pipeline.png)
+
+### Miscellaneous
+
+#### Migrations
+
+##### Run Latest migration
 `dotnet ef update-database -project CheckYourEligibility.Data.Migrations`
 
-### How to add a migration
+##### How to add a migration
 Add-Migration BaseMigration -project CheckYourEligibility.Data.Migrations
 Add-Migration establishmentImport -project CheckYourEligibility.Data.Migrations
 Add-Migration idxReference -project CheckYourEligibility.Data.Migrations
@@ -93,21 +111,20 @@ Add-Migration AuditTypeColumn -project CheckYourEligibility.Data.Migrations
 Add-Migration ApplicationHash -project CheckYourEligibility.Data.Migrations
 
 
-## Update db to latest migration
+##### Update db to latest migration
 update-database  -project CheckYourEligibility.Data.Migrations
 
 
-### List Migrations
+##### List Migrations
 Get-Migration
 
 Remove-Migration -Force -project CheckYourEligibility.Data.Migrations
 
-### Run specific migration
+##### Run specific migration
 update-database -migration BaseMigration -project CheckYourEligibility.Data.Migrations
 
-## Miscellaneous
 
-### MoqDWP
+#### MoqDWP
 DWP checking:
 
 Firstly the citizen is checked using the supplied details, if found Status200OK then the GUID is returned and a check is made to see if the citizen is eligible or not.
@@ -125,7 +142,7 @@ the following are details used to force results.
         public static string validCitizenNino = "AB123456C";
     }`
 
-### CURL commands
+#### CURL commands
 
 Using a valid check will enforce a valid result changing the surname to 'Jones' follows a different path
 
@@ -183,10 +200,3 @@ the moq dwp endpoints are as follows, note the headers.
     }
   }
 }'`
-
-## Architecture
-### Data flow
-INSERT IMAGE
-
-### Endpoint usage
-INSERT IMAGE
