@@ -19,6 +19,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
+using System;
 
 namespace CheckYourEligibility.ServiceUnitTests
 {
@@ -48,6 +49,7 @@ namespace CheckYourEligibility.ServiceUnitTests
             var configForSmsApi = new Dictionary<string, string>
             {
                 {"QueueFsmCheckStandard", "notSet"},
+                {"QueueFsmCheckBulk", "notSet"},
                 {"HashCheckDays", "7"},
 
             };
@@ -251,6 +253,46 @@ namespace CheckYourEligibility.ServiceUnitTests
 
             // Assert
             _ = response.Result.ToString().Should().Be(item.Status.ToString());
+        }
+
+        [Test]
+        public void Given_InValidRequest_GetBulkStatus_Should_Return_null()
+        {
+            // Arrange
+            var request = _fixture.Create<Guid>().ToString();
+
+            // Act
+            var response = _sut.GetBulkStatus(request);
+
+            // Assert
+            response.Result.Should().BeNull();
+        }
+
+        [Test]
+        public void Given_InValidRequest_GetBulkStatus_Should_Return_status()
+        {
+            // Arrange
+            var items = _fixture.CreateMany<EligibilityCheck>();
+            var guid = _fixture.Create<string>();
+            foreach (var item in items)
+            {
+                item.Group = guid;
+            }
+            _fakeInMemoryDb.CheckEligibilities.AddRange(items);
+            _fakeInMemoryDb.SaveChangesAsync();
+            var results = _fakeInMemoryDb.CheckEligibilities
+                .Where(x => x.Group == guid)
+                .GroupBy(n => n.Status)
+                .Select(n => new { Status = n.Key, ct = n.Count() });
+            var total = results.Sum(s => s.ct);
+            var completed = results.Where(a => a.Status != CheckEligibilityStatus.queuedForProcessing).Sum(s => s.ct);
+
+            // Act
+            var response = _sut.GetBulkStatus(guid);
+
+            // Assert
+            response.Result.Total.Should().Be(total);
+            response.Result.Complete.Should().Be(completed);
         }
 
         [Test]

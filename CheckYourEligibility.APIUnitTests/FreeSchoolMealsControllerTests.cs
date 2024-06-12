@@ -268,6 +268,39 @@ namespace CheckYourEligibility.APIUnitTests
         }
 
         [Test]
+        public void Given_InValid_guid_BulkUploadProgress_Should_Return_StatusNotFound()
+        {
+            // Arrange
+            var guid = _fixture.Create<Guid>().ToString();
+            _mockCheckService.Setup(cs => cs.GetBulkStatus(guid)).Returns(Task.FromResult<BulkStatus?>(null));
+            var expectedResult = new ObjectResult(guid)
+            { StatusCode = StatusCodes.Status404NotFound };
+
+            // Act
+            var response = _sut.BulkUploadProgress(guid);
+
+            // Assert
+            response.Result.Should().BeEquivalentTo(expectedResult);
+        }
+
+        [Test]
+        public void Given_Valid_guid_BulkUploadProgress_Should_Return_Status()
+        {
+            // Arrange
+            var guid = _fixture.Create<Guid>().ToString();
+            var status = new BulkStatus();
+            _mockCheckService.Setup(cs => cs.GetBulkStatus(guid)).Returns(Task.FromResult<BulkStatus?>(status));
+            var expectedResult = new ObjectResult(new CheckEligibilityBulkStatusResponse() { Data = status })
+            { StatusCode = StatusCodes.Status200OK };
+
+            // Act
+            var response = _sut.BulkUploadProgress(guid);
+
+            // Assert
+            response.Result.Should().BeEquivalentTo(expectedResult);
+        }
+
+        [Test]
         public void Given_Valid_guid_Not_queuedForProcessing_Process_Should_Return_BadRequest()
         {
             // Arrange
