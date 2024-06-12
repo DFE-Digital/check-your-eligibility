@@ -13,5 +13,7 @@
         public string DateOfBirth { get; set; }
 
         public string? NationalAsylumSeekerServiceNumber { get; set; }
+
+        public string? Group { get; set; }
     }
 }
