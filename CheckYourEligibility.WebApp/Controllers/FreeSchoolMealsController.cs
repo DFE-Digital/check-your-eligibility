@@ -99,6 +99,26 @@ namespace CheckYourEligibility.WebApp.Controllers
             return new ObjectResult(new CheckEligibilityStatusResponse() { Data = new StatusValue() { Status = response.Value.ToString() } }) { StatusCode = StatusCodes.Status200OK };
         }
 
+
+        /// <summary>
+        /// Bulk Upload status
+        /// </summary>
+        /// <param name="guid"></param>
+        /// <returns></returns>
+        [ProducesResponseType(typeof(CheckEligibilityBulkStatusResponse), (int)HttpStatusCode.OK)]
+        [ProducesResponseType((int)HttpStatusCode.NotFound)]
+        [HttpGet("BulkUpload/CheckProgress/{guid}")]
+        public async Task<ActionResult> BulkUploadProgress(string guid)
+        {
+            var response = await _checkService.GetBulkStatus(guid);
+            if (response == null)
+            {
+                return NotFound(guid);
+            }
+
+            return new ObjectResult(new CheckEligibilityBulkStatusResponse() { Data = response }) { StatusCode = StatusCodes.Status200OK };
+        }
+
         /// <summary>
         /// Updates an Eligibility check status
         /// </summary>
