@@ -20,6 +20,7 @@ using Newtonsoft.Json;
 using System.Diagnostics.CodeAnalysis;
 using System.Security.Cryptography;
 using System.Text;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace CheckYourEligibility.Services
 {
@@ -29,7 +30,8 @@ namespace CheckYourEligibility.Services
         private readonly IEligibilityCheckContext _db;
         protected readonly IMapper _mapper;
         protected readonly IAudit _audit;
-        private  QueueClient _queueClient;
+        private  QueueClient _queueClientStandard;
+        private QueueClient _queueClientBulk;
         private const int SurnameCheckCharachters = 3;
      
         private readonly IDwpService _dwpService;
@@ -45,15 +47,25 @@ namespace CheckYourEligibility.Services
             _audit = Guard.Against.Null(audit);
             _hashService = Guard.Against.Null(hashService);
 
-            setQueue(configuration.GetValue<string>("QueueFsmCheckStandard"), queueClientService);
-         }
+            setQueueStandard(configuration.GetValue<string>("QueueFsmCheckStandard"), queueClientService);
+            setQueueBulk(configuration.GetValue<string>("QueueFsmCheckBulk"), queueClientService);
+        }
 
         [ExcludeFromCodeCoverage]
-        private void setQueue(string queName, QueueServiceClient queueClientService)
+        private void setQueueStandard(string queName, QueueServiceClient queueClientService)
         {
             if (queName != "notSet")
             {
-                _queueClient = queueClientService.GetQueueClient(queName);
+                _queueClientStandard = queueClientService.GetQueueClient(queName);
+            }
+        }
+
+        [ExcludeFromCodeCoverage]
+        private void setQueueBulk(string queName, QueueServiceClient queueClientService)
+        {
+            if (queName != "notSet")
+            {
+                _queueClientBulk = queueClientService.GetQueueClient(queName);
             }
         }
 
@@ -95,9 +107,22 @@ namespace CheckYourEligibility.Services
         [ExcludeFromCodeCoverage(Justification = "Queue is external dependency.")]
         private async Task SendMessage(EligibilityCheck item)
         {
-            if (_queueClient != null)
+            if (_queueClientStandard != null)
             {
-                await _queueClient.SendMessageAsync(
+                if (item.Group.IsNullOrEmpty())
+                {
+                    await _queueClientStandard.SendMessageAsync(
+                                    JsonConvert.SerializeObject(new QueueMessageCheck()
+                                    {
+                                        Type = item.Type.ToString(),
+                                        Guid = item.EligibilityCheckID,
+                                        ProcessUrl = $"{FSMLinks.ProcessLink}{item.EligibilityCheckID}",
+                                        SetStatusUrl = $"{FSMLinks.GetLink}{item.EligibilityCheckID}/status"
+                                    }));
+                }
+                else
+                {
+                    await _queueClientBulk.SendMessageAsync(
                                 JsonConvert.SerializeObject(new QueueMessageCheck()
                                 {
                                     Type = item.Type.ToString(),
@@ -105,10 +130,9 @@ namespace CheckYourEligibility.Services
                                     ProcessUrl = $"{FSMLinks.ProcessLink}{item.EligibilityCheckID}",
                                     SetStatusUrl = $"{FSMLinks.GetLink}{item.EligibilityCheckID}/status"
                                 }));
+                }
             }
         }
-
-
         
 
         public async Task<CheckEligibilityStatus?> GetStatus(string guid)
@@ -206,6 +230,19 @@ namespace CheckYourEligibility.Services
             return null;
         }
 
+        public async Task<BulkStatus?> GetBulkStatus(string guid)
+        {
+            var results = _db.CheckEligibilities
+                .Where(x => x.Group == guid)
+                .GroupBy(n=> n.Status)
+                .Select(n=> new {Status = n.Key, ct = n.Count()});
+            if (results.Any())
+            {
+                return new BulkStatus {Total = results.Sum(s => s.ct), Complete = results.Where(a => a.Status != CheckEligibilityStatus.queuedForProcessing).Sum(s => s.ct) };
+            }
+            return null;
+        }
+
         #region Private
 
         private async Task<CheckEligibilityStatus> HO_Check(EligibilityCheck data)
@@ -284,7 +321,6 @@ namespace CheckYourEligibility.Services
             };
             return CheckEligibilityStatus.parentNotFound;
         }
-
         #endregion
     }
 }
