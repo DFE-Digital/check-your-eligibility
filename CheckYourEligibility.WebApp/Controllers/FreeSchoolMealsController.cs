@@ -102,6 +102,8 @@ namespace CheckYourEligibility.WebApp.Controllers
             var validationResultsItems = new StringBuilder();
             foreach (var item in model.Data)
             {
+                item.NationalInsuranceNumber = item.NationalInsuranceNumber?.ToUpper();
+                item.NationalAsylumSeekerServiceNumber = item.NationalAsylumSeekerServiceNumber?.ToUpper();
                 var validationResults = validator.Validate(item);
                 if (!validationResults.IsValid)
                 {
@@ -133,7 +135,6 @@ namespace CheckYourEligibility.WebApp.Controllers
             })
             { StatusCode = StatusCodes.Status202Accepted };
         }
-
 
 
         /// <summary>
