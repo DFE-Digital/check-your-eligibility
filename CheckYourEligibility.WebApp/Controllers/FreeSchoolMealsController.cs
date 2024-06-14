@@ -4,9 +4,12 @@ using CheckYourEligibility.Domain.Requests;
 using CheckYourEligibility.Domain.Responses;
 using CheckYourEligibility.Services.Interfaces;
 using FeatureManagement.Domain.Validation;
+using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
+using System.Text;
+using static System.Net.WebRequestMethods;
 using CheckEligibilityStatusResponse = CheckYourEligibility.Domain.Responses.CheckEligibilityStatusResponse;
 using StatusValue = CheckYourEligibility.Domain.Responses.StatusValue;
 
@@ -53,7 +56,7 @@ namespace CheckYourEligibility.WebApp.Controllers
             model.Data.NationalAsylumSeekerServiceNumber = model.Data.NationalAsylumSeekerServiceNumber?.ToUpper();
 
             var validator = new CheckEligibilityRequestDataValidator();
-            var validationResults = validator.Validate(model);
+            var validationResults = validator.Validate(model.Data);
 
             if (!validationResults.IsValid)
             {
@@ -77,7 +80,61 @@ namespace CheckYourEligibility.WebApp.Controllers
             { StatusCode = StatusCodes.Status202Accepted };
         }
 
-        
+
+        /// <summary>
+        /// Posts Bulk  FSM Eligibility Check to the processing queue
+        /// </summary>
+        /// <param name="CheckEligibilityRequest"></param>
+        /// <remarks>If the check has already been submitted, then the stored Hash is returned</remarks>
+        /// <links cref="https://stackoverflow.com/questions/61896978/asp-net-core-swaggerresponseexample-not-outputting-specified-example"/>
+        [ProducesResponseType(typeof(CheckEligibilityResponse), (int)HttpStatusCode.Accepted)]
+        [ProducesResponseType((int)HttpStatusCode.BadRequest)]
+        [HttpPost("Bulk")]
+        public async Task<ActionResult> CheckEligibilityBulk([FromBody] CheckEligibilityRequestBulk model)
+        {
+            if (model == null || model.Data == null)
+            {
+                return BadRequest(new MessageResponse { Data = "Invalid CheckEligibilityRequest, data is required." });
+            }
+
+            var validator = new CheckEligibilityRequestDataValidator();
+            var inc = 1;
+            var validationResultsItems = new StringBuilder();
+            foreach (var item in model.Data)
+            {
+                var validationResults = validator.Validate(item);
+                if (!validationResults.IsValid)
+                {
+                    validationResultsItems.AppendLine($"Item:-{inc}, {validationResults.ToString()}");
+                }
+            }
+            
+
+            if (validationResultsItems.Length > 0 )
+            {
+                return BadRequest(new MessageResponse { Data = validationResultsItems.ToString() });
+            }
+
+            var groupId = Guid.NewGuid().ToString();
+            foreach (var item in model.Data)
+            {
+                await _checkService.PostCheck(item, groupId);
+                await AuditAdd(Domain.Enums.AuditType.BulkCheck, groupId);
+            }
+           
+
+            return new ObjectResult(new CheckEligibilityResponseBulk()
+            {
+                Data = new StatusValue() { Status = $"{Domain.Constants.Messages.Processing}" },
+                Links = new CheckEligibilityResponseBulkLinks
+                {
+                    Get_Progress_Check = $"{Domain.Constants.FSMLinks.ProcessBulkLink}{groupId}"
+                }
+            })
+            { StatusCode = StatusCodes.Status202Accepted };
+        }
+
+
 
         /// <summary>
         /// Gets an FSM an Eligibility Check status
