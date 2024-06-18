@@ -69,11 +69,12 @@ namespace CheckYourEligibility.Services
             }
         }
 
-        public async Task<PostCheckResult> PostCheck(CheckEligibilityRequestDataFsm data)
+        public async Task<PostCheckResult> PostCheck(CheckEligibilityRequestDataFsm data, string? group = null)
         {
             var item = _mapper.Map<EligibilityCheck>(data);
             try
             {
+                item.Group = group;
                 item.EligibilityCheckID = Guid.NewGuid().ToString();
                 item.Created = DateTime.UtcNow;
                 item.Updated = DateTime.UtcNow;
