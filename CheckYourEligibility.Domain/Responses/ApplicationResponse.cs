@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using CheckYourEligibility.Domain.Enums;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace CheckYourEligibility.Domain.Responses
 {
@@ -17,6 +18,8 @@ namespace CheckYourEligibility.Domain.Responses
         public string ChildDateOfBirth { get; set; }
         public string Status { get; set; }
         public ApplicationUser User { get; set; }
+
+        public ApplicationHash? CheckOutcome { get; set; }
 
         public class ApplicationSchool
         {
@@ -39,6 +42,11 @@ namespace CheckYourEligibility.Domain.Responses
             public string Email { get; set; }
 
             public string Reference { get; set; }
+        }
+
+        public class ApplicationHash
+        {
+            public string? Outcome { get; set; }
         }
     }
 }
