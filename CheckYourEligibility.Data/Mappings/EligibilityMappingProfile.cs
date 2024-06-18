@@ -4,6 +4,7 @@ using CheckYourEligibility.Domain.Requests;
 using CheckYourEligibility.Domain.Responses;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
+using static CheckYourEligibility.Domain.Responses.ApplicationResponse;
 
 namespace CheckYourEligibility.Data.Mappings;
 
@@ -72,6 +73,9 @@ public class FsmMappingProfile : Profile
 
         CreateMap<Audit, AuditData>()
        .ReverseMap();
+
+        CreateMap<EligibilityCheckHash, ApplicationHash>()
+                .ReverseMap();
 
     }
 }
