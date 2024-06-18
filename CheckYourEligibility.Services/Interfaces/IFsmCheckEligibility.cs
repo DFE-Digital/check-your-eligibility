@@ -9,7 +9,7 @@ namespace CheckYourEligibility.Services.Interfaces
         Task<BulkStatus?> GetBulkStatus(string guid);
         Task<CheckEligibilityItemFsm?> GetItem(string guid);
         Task<CheckEligibilityStatus?> GetStatus(string guid);
-        Task<PostCheckResult> PostCheck(CheckEligibilityRequestDataFsm data);
+        Task<PostCheckResult> PostCheck(CheckEligibilityRequestDataFsm data, string? groupId = null);
         Task<CheckEligibilityStatus?> ProcessCheck(string guid, AuditData? auditItem);
         Task<CheckEligibilityStatusResponse> UpdateEligibilityCheckStatus(string guid, EligibilityCheckStatusData data);
     }

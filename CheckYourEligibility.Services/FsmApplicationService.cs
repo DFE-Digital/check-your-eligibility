@@ -106,10 +106,12 @@ namespace CheckYourEligibility.Services
                 .Include(x => x.School)
                 .ThenInclude(x => x.LocalAuthority)
                 .Include(x => x.User)
+                .Include(x => x.EligibilityCheckHash)
                 .FirstOrDefaultAsync(x => x.ApplicationID == guid);
             if (result != null)
             {
                 var item = _mapper.Map<ApplicationResponse>(result);
+                item.CheckOutcome = new ApplicationResponse.ApplicationHash { Outcome = result.EligibilityCheckHash?.Outcome.ToString()};
                 return item;
             }
 

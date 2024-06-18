@@ -13,7 +13,10 @@
         public string DateOfBirth { get; set; }
 
         public string? NationalAsylumSeekerServiceNumber { get; set; }
+    }
 
-        public string? Group { get; set; }
+    public class CheckEligibilityRequestBulk
+    {
+        public IEnumerable<CheckEligibilityRequestDataFsm> Data { get; set; }
     }
 }

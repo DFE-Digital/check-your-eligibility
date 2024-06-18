@@ -7,4 +7,10 @@ namespace CheckYourEligibility.Domain.Responses
         public StatusValue Data { get; set; }
         public CheckEligibilityResponseLinks Links { get; set; }
     }
+
+    public class CheckEligibilityResponseBulk
+    {
+        public StatusValue Data { get; set; }
+        public CheckEligibilityResponseBulkLinks Links { get; set; }
+    }
 }
