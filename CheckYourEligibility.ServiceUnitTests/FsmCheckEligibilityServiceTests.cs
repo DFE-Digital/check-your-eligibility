@@ -183,7 +183,6 @@ namespace CheckYourEligibility.ServiceUnitTests
             newItem.Status.Should().Be(BaseHash.Outcome);
         }
 
-       
         [Test]
         public async Task Given_validRequest_PostFeature_Should_Return_id_HashShouldBeCreated()
         {
@@ -212,7 +211,36 @@ namespace CheckYourEligibility.ServiceUnitTests
             _fakeInMemoryDb.EligibilityCheckHashes.First(x=>x.Hash == hash).Should().NotBeNull();
         }
 
-        
+
+        [Test]
+        public async Task Given_PostBulk_Should_Complete()
+        {
+            // Arrange
+            var request = _fixture.Create<CheckEligibilityRequestDataFsm>();
+            request.DateOfBirth = "1970-02-01";
+            request.NationalAsylumSeekerServiceNumber = null;
+            var key = string.IsNullOrEmpty(request.NationalInsuranceNumber) ? request.NationalAsylumSeekerServiceNumber : request.NationalInsuranceNumber;
+            //Set UpValid hmrc check
+            _fakeInMemoryDb.FreeSchoolMealsHMRC.Add(new FreeSchoolMealsHMRC
+            {
+                FreeSchoolMealsHMRCID = request.NationalInsuranceNumber,
+                Surname = request.LastName,
+                DateOfBirth = DateTime.Parse(request.DateOfBirth)
+            });
+            await _fakeInMemoryDb.SaveChangesAsync();
+
+            _moqDwpService.Setup(x => x.GetCitizen(It.IsAny<CitizenMatchRequest>())).ReturnsAsync(Guid.NewGuid().ToString());
+            var result = new StatusCodeResult(StatusCodes.Status200OK);
+            _moqDwpService.Setup(x => x.CheckForBenefit(It.IsAny<string>())).ReturnsAsync(result);
+            _moqAudit.Setup(x => x.AuditAdd(It.IsAny<AuditData>())).ReturnsAsync("");
+
+
+            // Act
+            var response = _sut.PostCheck(new List<CheckEligibilityRequestDataFsm>(){request}, Guid.NewGuid().ToString());
+            Assert.Pass();
+        }
+
+
         [Test]
         public void Given_validRequest_PostFeature_Should_Return_id()
         {

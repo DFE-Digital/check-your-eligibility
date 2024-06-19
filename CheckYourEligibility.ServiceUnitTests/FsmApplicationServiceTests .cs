@@ -7,6 +7,7 @@ using CheckYourEligibility.Data.Models;
 using CheckYourEligibility.Domain.Requests;
 using CheckYourEligibility.Domain.Responses;
 using CheckYourEligibility.Services;
+using EFCore.BulkExtensions;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -247,6 +248,12 @@ namespace CheckYourEligibility.ServiceUnitTests
         public async Task Given_Application_WithUserReturnNewUser()
         {
             // Arrange
+            _fakeInMemoryDb.Applications.RemoveRange(_fakeInMemoryDb.Applications);
+            _fakeInMemoryDb.Schools.RemoveRange(_fakeInMemoryDb.Schools);
+            _fakeInMemoryDb.LocalAuthorities.RemoveRange(_fakeInMemoryDb.LocalAuthorities);
+            _fakeInMemoryDb.Users.RemoveRange(_fakeInMemoryDb.Users);
+            _fakeInMemoryDb.SaveChanges();
+
             var request = _fixture.Create<ApplicationRequestData>();
             request.ParentDateOfBirth = "1970-02-01";
             request.ChildDateOfBirth = "2007-02-01";
