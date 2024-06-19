@@ -69,6 +69,14 @@ namespace CheckYourEligibility.Services
             }
         }
 
+        public async Task PostCheck(IEnumerable<CheckEligibilityRequestDataFsm> data, string groupId)
+        {
+            foreach (var item in data)
+            {
+                await PostCheck(item, groupId);
+            }
+        }
+
         public async Task<PostCheckResult> PostCheck(CheckEligibilityRequestDataFsm data, string? group = null)
         {
             var item = _mapper.Map<EligibilityCheck>(data);
