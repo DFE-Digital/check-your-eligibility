@@ -134,8 +134,8 @@ namespace CheckYourEligibility.APIUnitTests
             requestItem.NationalInsuranceNumber = "ns738356d";
             requestItem.DateOfBirth = "1970-02-01";
             requestItem.NationalAsylumSeekerServiceNumber = string.Empty;
-
-            _mockCheckService.Setup(cs => cs.PostCheck(It.IsAny<CheckEligibilityRequestDataFsm>(), It.IsAny<string>())).ReturnsAsync(It.IsAny<PostCheckResult>());
+                        
+            _mockCheckService.Setup(cs => cs.PostCheck(It.IsAny<IEnumerable<CheckEligibilityRequestDataFsm>>(), It.IsAny<string>())).Returns(Task.CompletedTask);
             _mockAuditService.Setup(x => x.AuditAdd(It.IsAny<AuditData>())).ReturnsAsync("");
 
             // Act
