@@ -82,12 +82,11 @@ namespace CheckYourEligibility.WebApp.Controllers
         }
 
 
-        /// <summary>
-        /// Posts Bulk  FSM Eligibility Check to the processing queue
-        /// </summary>
-        /// <param name="CheckEligibilityRequest"></param>
-        /// <remarks>If the check has already been submitted, then the stored Hash is returned</remarks>
-        /// <links cref="https://stackoverflow.com/questions/61896978/asp-net-core-swaggerresponseexample-not-outputting-specified-example"/>
+       /// <summary>
+       /// Posts the array of checks
+       /// </summary>
+       /// <param name="model"></param>
+       /// <returns></returns>
         [ProducesResponseType(typeof(CheckEligibilityResponse), (int)HttpStatusCode.Accepted)]
         [ProducesResponseType((int)HttpStatusCode.BadRequest)]
         [HttpPost("Bulk")]
@@ -119,13 +118,7 @@ namespace CheckYourEligibility.WebApp.Controllers
             }
 
             var groupId = Guid.NewGuid().ToString();
-            //await _checkService.PostCheck(model.Data, groupId);
-            //await AuditAdd(Domain.Enums.AuditType.BulkCheck, groupId);
-
-            foreach (var item in model.Data)
-            {
-                await _checkService.PostCheck(item, groupId);
-            }
+            await _checkService.PostCheck(model.Data, groupId);
             await AuditAdd(Domain.Enums.AuditType.BulkCheck, groupId);
 
             return new ObjectResult(new CheckEligibilityResponseBulk()
