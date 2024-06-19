@@ -7,6 +7,7 @@ using FeatureManagement.Domain.Validation;
 using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using NetTopologySuite.Index.HPRtree;
 using System.Net;
 using System.Text;
 using static System.Net.WebRequestMethods;
@@ -118,12 +119,14 @@ namespace CheckYourEligibility.WebApp.Controllers
             }
 
             var groupId = Guid.NewGuid().ToString();
+            //await _checkService.PostCheck(model.Data, groupId);
+            //await AuditAdd(Domain.Enums.AuditType.BulkCheck, groupId);
+
             foreach (var item in model.Data)
             {
                 await _checkService.PostCheck(item, groupId);
-                await AuditAdd(Domain.Enums.AuditType.BulkCheck, groupId);
             }
-           
+            await AuditAdd(Domain.Enums.AuditType.BulkCheck, groupId);
 
             return new ObjectResult(new CheckEligibilityResponseBulk()
             {
