@@ -216,6 +216,17 @@ namespace CheckYourEligibility.Services
             return null;
         }
 
+        public async Task<IEnumerable<CheckEligibilityItemFsm>> GetBulkCheckResults(string guid)
+        {
+            var resultList =  _db.CheckEligibilities.Where(x => x.Group == guid);
+            if (resultList != null && resultList.Any())
+            {
+                var items = _mapper.Map<List<CheckEligibilityItemFsm>>(resultList);
+                return items;
+            }
+            return null;
+        }
+
         public  static string GetHash(EligibilityCheck item)
         {
             var key  = string.IsNullOrEmpty(item.NINumber) ? item.NASSNumber : item.NINumber;
@@ -330,6 +341,8 @@ namespace CheckYourEligibility.Services
             };
             return CheckEligibilityStatus.parentNotFound;
         }
+
+        
         #endregion
     }
 }

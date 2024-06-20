@@ -7,17 +7,13 @@ using FeatureManagement.Domain.Validation;
 using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using NetTopologySuite.Index.HPRtree;
 using System.Net;
 using System.Text;
-using static System.Net.WebRequestMethods;
 using CheckEligibilityStatusResponse = CheckYourEligibility.Domain.Responses.CheckEligibilityStatusResponse;
 using StatusValue = CheckYourEligibility.Domain.Responses.StatusValue;
 
 namespace CheckYourEligibility.WebApp.Controllers
 {
-
-
 
     [ApiController]
     [Route("[controller]")]
@@ -126,10 +122,59 @@ namespace CheckYourEligibility.WebApp.Controllers
                 Data = new StatusValue() { Status = $"{Domain.Constants.Messages.Processing}" },
                 Links = new CheckEligibilityResponseBulkLinks
                 {
-                    Get_Progress_Check = $"{Domain.Constants.FSMLinks.ProcessBulkLink}{groupId}"
+                    Get_Progress_Check = $"{Domain.Constants.FSMLinks.BulkCheckLink}{groupId}{Domain.Constants.FSMLinks.BulkCheckProgress}",
+                    Get_BulkCheck_Results = $"{Domain.Constants.FSMLinks.BulkCheckLink}{groupId}{Domain.Constants.FSMLinks.BulkCheckResults}"
                 }
             })
             { StatusCode = StatusCodes.Status202Accepted };
+        }
+
+        /// <summary>
+        /// Bulk Upload status
+        /// </summary>
+        /// <param name="guid"></param>
+        /// <returns></returns>
+        [ProducesResponseType(typeof(CheckEligibilityBulkStatusResponse), (int)HttpStatusCode.OK)]
+        [ProducesResponseType((int)HttpStatusCode.NotFound)]
+        [HttpGet("Bulk/{guid}/CheckProgress")]
+        public async Task<ActionResult> BulkUploadProgress(string guid)
+        {
+            var response = await _checkService.GetBulkStatus(guid);
+            if (response == null)
+            {
+                return NotFound(guid);
+            }
+
+            return new ObjectResult(new CheckEligibilityBulkStatusResponse()
+            {
+                Data = response,
+                Links = new BulkCheckResponseLinks()
+                { Get_BulkCheck_Results = $"{Domain.Constants.FSMLinks.BulkCheckLink}{guid}{Domain.Constants.FSMLinks.BulkCheckResults}" }
+            })
+            { StatusCode = StatusCodes.Status200OK };
+        }
+
+        /// <summary>
+        /// Loads results of bulk loads given a group Id
+        /// </summary>
+        /// <param name="guid"></param>
+        /// <returns></returns>
+        [ProducesResponseType(typeof(CheckEligibilityBulkResponse), (int)HttpStatusCode.OK)]
+        [ProducesResponseType((int)HttpStatusCode.NotFound)]
+        [HttpGet("Bulk/{guid}/Results")]
+        public async Task<ActionResult> BulkUploadResults(string guid)
+        {
+            var response = await _checkService.GetBulkCheckResults(guid);
+            if (response == null)
+            {
+                return NotFound(guid);
+            }
+            await AuditAdd(Domain.Enums.AuditType.CheckBulkResults, guid);
+            return new ObjectResult(new CheckEligibilityBulkResponse()
+            {
+                Data = response
+            })
+            { StatusCode = StatusCodes.Status200OK };
         }
 
 
@@ -154,24 +199,7 @@ namespace CheckYourEligibility.WebApp.Controllers
         }
 
 
-        /// <summary>
-        /// Bulk Upload status
-        /// </summary>
-        /// <param name="guid"></param>
-        /// <returns></returns>
-        [ProducesResponseType(typeof(CheckEligibilityBulkStatusResponse), (int)HttpStatusCode.OK)]
-        [ProducesResponseType((int)HttpStatusCode.NotFound)]
-        [HttpGet("BulkUpload/CheckProgress/{guid}")]
-        public async Task<ActionResult> BulkUploadProgress(string guid)
-        {
-            var response = await _checkService.GetBulkStatus(guid);
-            if (response == null)
-            {
-                return NotFound(guid);
-            }
-
-            return new ObjectResult(new CheckEligibilityBulkStatusResponse() { Data = response }) { StatusCode = StatusCodes.Status200OK };
-        }
+        
 
         /// <summary>
         /// Updates an Eligibility check status
