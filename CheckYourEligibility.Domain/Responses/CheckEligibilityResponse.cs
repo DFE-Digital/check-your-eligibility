@@ -13,4 +13,10 @@ namespace CheckYourEligibility.Domain.Responses
         public StatusValue Data { get; set; }
         public CheckEligibilityResponseBulkLinks Links { get; set; }
     }
+
+    public class CheckEligibilityResponseBulkLinks
+    {
+        public string Get_Progress_Check { get; set; }
+        public string Get_BulkCheck_Results { get; set; }
+    }
 }
