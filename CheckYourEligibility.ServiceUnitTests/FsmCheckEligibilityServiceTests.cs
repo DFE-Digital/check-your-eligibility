@@ -608,6 +608,36 @@ namespace CheckYourEligibility.ServiceUnitTests
         }
 
         [Test]
+        public void Given_InValidRequest_GetBulkCheckResults_Should_Return_null()
+        {
+            // Arrange
+            var request = _fixture.Create<Guid>().ToString();
+
+            // Act
+            var response = _sut.GetBulkCheckResults(request);
+
+            // Assert
+            response.Result.Should().BeNull();
+        }
+
+        [Test]
+        public void Given_ValidRequest_GetBulkCheckResults_Should_Return_Items()
+        {
+            // Arrange
+            var groupId = Guid.NewGuid().ToString();
+            var item = _fixture.Create<EligibilityCheck>();
+            item.Group = groupId;
+            _fakeInMemoryDb.CheckEligibilities.Add(item);
+            _fakeInMemoryDb.SaveChangesAsync();
+
+            // Act
+            var response = _sut.GetBulkCheckResults(groupId);
+
+            // Assert
+            response.Result.Should().BeOfType<List<CheckEligibilityItemFsm>>();
+        }
+
+        [Test]
         public void Given_InValidRequest_UpdateEligibilityCheckStatus_Should_Return_null()
         {
             // Arrange

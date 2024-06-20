@@ -340,11 +340,53 @@ namespace CheckYourEligibility.APIUnitTests
             var guid = _fixture.Create<Guid>().ToString();
             var status = new BulkStatus();
             _mockCheckService.Setup(cs => cs.GetBulkStatus(guid)).Returns(Task.FromResult<BulkStatus?>(status));
-            var expectedResult = new ObjectResult(new CheckEligibilityBulkStatusResponse() { Data = status })
+            var expectedResult = new ObjectResult(new CheckEligibilityBulkStatusResponse()
+            {
+                Data = status,
+                Links = new BulkCheckResponseLinks()
+                { Get_BulkCheck_Results = $"{Domain.Constants.FSMLinks.BulkCheckLink}{guid}{Domain.Constants.FSMLinks.BulkCheckResults}" }
+            })
             { StatusCode = StatusCodes.Status200OK };
 
             // Act
             var response = _sut.BulkUploadProgress(guid);
+
+            // Assert
+            response.Result.Should().BeEquivalentTo(expectedResult);
+        }
+
+        [Test]
+        public void Given_InValid_guid_BulkUploadResults_Should_Return_StatusNotFound()
+        {
+            // Arrange
+            var guid = _fixture.Create<Guid>().ToString();
+            _mockCheckService.Setup(cs => cs.GetBulkCheckResults(guid)).Returns(Task.FromResult<IEnumerable<CheckEligibilityItemFsm>>(null));
+            var expectedResult = new ObjectResult(guid)
+            { StatusCode = StatusCodes.Status404NotFound };
+
+            // Act
+            var response = _sut.BulkUploadResults(guid);
+
+            // Assert
+            response.Result.Should().BeEquivalentTo(expectedResult);
+        }
+
+        [Test]
+        public void Given_Valid_guid_BulkUploadResults_Should_Return_Results()
+        {
+            // Arrange
+            var guid = _fixture.Create<Guid>().ToString();
+            var resultItems = _fixture.CreateMany<CheckEligibilityItemFsm>();
+            _mockCheckService.Setup(cs => cs.GetBulkCheckResults(guid)).Returns(Task.FromResult(resultItems));
+            _mockAuditService.Setup(cs => cs.AuditAdd(It.IsAny<AuditData>())).ReturnsAsync(Guid.NewGuid().ToString());
+            var expectedResult = new ObjectResult(new CheckEligibilityBulkResponse()
+            {
+                Data = resultItems
+            })
+            { StatusCode = StatusCodes.Status200OK };
+
+            // Act
+            var response = _sut.BulkUploadResults(guid);
 
             // Assert
             response.Result.Should().BeEquivalentTo(expectedResult);

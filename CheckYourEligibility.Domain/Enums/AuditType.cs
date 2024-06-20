@@ -10,6 +10,7 @@ namespace CheckYourEligibility.Domain.Enums
         School,
         User,
         Administration,
-        BulkCheck
+        BulkCheck,
+        CheckBulkResults,
     }
 }
