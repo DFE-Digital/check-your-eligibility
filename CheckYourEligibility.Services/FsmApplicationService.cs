@@ -36,7 +36,7 @@ namespace CheckYourEligibility.Services
             _hashCheckDays = configuration.GetValue<short>("HashCheckDays");
         }
 
-        public async Task<ApplicationSave> PostApplication(ApplicationRequestData data)
+        public async Task<ApplicationResponse> PostApplication(ApplicationRequestData data)
         {
             try
             {
@@ -62,9 +62,7 @@ namespace CheckYourEligibility.Services
                 var saved = _db.Applications
                     .First(x => x.ApplicationID == item.ApplicationID);
 
-                var returnItem = _mapper.Map<ApplicationSave>(item);
-
-                return returnItem;
+                return await GetApplication(saved.ApplicationID);
             }
             catch (Exception ex)
             {
