@@ -103,6 +103,8 @@ Cypress.Commands.add('verifyGetEligibilityCheckResponseData', (response, request
   expect(responseData).to.have.property('nationalAsylumSeekerServiceNumber', requestData.data.nationalAsylumSeekerServiceNumber);
   expect(responseData).to.have.property('status');
   expect(responseData).to.have.property('created');
+  expect(responseData).to.have.property('group');
+  
 
   // Verify links properties
   expect(responseLinks).to.have.property('get_EligibilityCheck');
