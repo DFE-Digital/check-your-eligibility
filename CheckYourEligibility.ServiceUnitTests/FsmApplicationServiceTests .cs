@@ -116,7 +116,7 @@ namespace CheckYourEligibility.ServiceUnitTests
             var response = _sut.PostApplication(request);
 
             // Assert
-            response.Result.Should().BeOfType<ApplicationSave>();
+            response.Result.Should().BeOfType<ApplicationResponse>();
         }
        
         [Test]
