@@ -35,16 +35,6 @@ public class FsmMappingProfile : Profile
        .ForMember(dest => dest.School, opt => opt.Ignore())
        .ReverseMap();
 
-        CreateMap<Application, ApplicationSave>()
-        .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.ApplicationID))
-        .ForMember(dest => dest.ParentNationalInsuranceNumber, opt => opt.MapFrom(src => src.ParentNationalInsuranceNumber))
-        .ForMember(dest => dest.ParentNationalAsylumSeekerServiceNumber, opt => opt.MapFrom(src => src.ParentNationalAsylumSeekerServiceNumber))
-        .ForMember(x => x.ParentDateOfBirth, y => y.MapFrom(z => z.ParentDateOfBirth.ToString("yyyy-MM-dd")))
-        .ForMember(x => x.ChildDateOfBirth, y => y.MapFrom(z => z.ChildDateOfBirth.ToString("yyyy-MM-dd")))
-        .ForMember(dest => dest.LocalAuthority, opt => opt.MapFrom(src => src.LocalAuthorityId))
-        .ForMember(dest => dest.School, opt => opt.MapFrom(src => src.SchoolId))
-        .ReverseMap();
-
         CreateMap<Application, ApplicationResponse>()
         .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.ApplicationID))
         .ForMember(dest => dest.ParentNationalInsuranceNumber, opt => opt.MapFrom(src => src.ParentNationalInsuranceNumber))

@@ -2,7 +2,7 @@
 {
     public class ApplicationSaveItemResponse
     {
-        public ApplicationSave Data { get; set; }
+        public ApplicationResponse Data { get; set; }
         public ApplicationResponseLinks Links { get; set; }
     }
 }

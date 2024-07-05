@@ -61,7 +61,7 @@ namespace CheckYourEligibility.APIUnitTests
         {
             // Arrange
             var request = _fixture.Create<ApplicationRequest>();
-            var applicationFsm = _fixture.Create<ApplicationSave>();
+            var applicationFsm = _fixture.Create<ApplicationResponse>();
             request.Data.ParentNationalInsuranceNumber = "ns738356d";
             request.Data.ParentDateOfBirth = "1970-02-01";
             request.Data.ChildDateOfBirth = "1970-02-01";
