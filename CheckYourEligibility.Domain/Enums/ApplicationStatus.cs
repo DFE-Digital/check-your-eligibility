@@ -5,6 +5,8 @@ namespace CheckYourEligibility.Domain.Enums
     public enum ApplicationStatus
     {
         Open,
-        receiving
+        receiving,
+        DocumentNeeded,
+        PendingApproval
     }
 }
