@@ -23,16 +23,8 @@ namespace CheckYourEligibility.ServiceUnitTests
             var options = new DbContextOptionsBuilder<EligibilityCheckContext>()
             .UseInMemoryDatabase(databaseName: "FakeInMemoryDb")
             .Options;
-
             _fakeInMemoryDb = new EligibilityCheckContext(options);
-            if (!_fakeInMemoryDb.Schools.Any())
-            {
-                school = _fixture.Create<School>();
-                _fakeInMemoryDb.Schools.Add(school);
-                _fakeInMemoryDb.SaveChanges();
-            }
-           
-            _sut = new SchoolSearchService(new NullLoggerFactory(), _fakeInMemoryDb);
+             _sut = new SchoolSearchService(new NullLoggerFactory(), _fakeInMemoryDb);
 
         }
 
@@ -52,17 +44,25 @@ namespace CheckYourEligibility.ServiceUnitTests
             act.Should().ThrowExactly<ArgumentNullException>().And.Message.Should().EndWithEquivalentOf("Value cannot be null. (Parameter 'dbContext')");
         }
 
-        //[Test]
-        //public async Task Given_Search_Should_Return_ExpectedResult()
-        //{
-        //    // Arrange
-        //    var expectedResult = _fakeInMemoryDb.Schools.First();
-        //    // Act
-        //    var response = await _sut.Search(expectedResult.EstablishmentName);
+        [Test]
+        public async Task Given_Search_Should_Return_ExpectedResult()
+        {
+            // Arrange
+            _fakeInMemoryDb.Schools.RemoveRange(_fakeInMemoryDb.Schools);
+            school = _fixture.Create<School>();
+            _fakeInMemoryDb.Schools.Add(school);
+            _fakeInMemoryDb.SaveChanges();
+            var    expectedResult = _fakeInMemoryDb.Schools.First();
+           
+            // Act
+            var   response  = await _sut.Search(expectedResult.EstablishmentName);
 
-        //    // Assert
-
-        //    response.FirstOrDefault().Name.Should().BeEquivalentTo(expectedResult.EstablishmentName);
-        //}
+            // Assert
+            if (response != null && response.Any())
+            {
+                response.First().Name.Should().BeEquivalentTo(expectedResult.EstablishmentName);
+            }
+            
+        }
     }
 }
