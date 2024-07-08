@@ -7,6 +7,7 @@ using Microsoft.Extensions.Azure;
 using Microsoft.OpenApi.Models;
 using System.Text.Json.Serialization;
 using Azure.Identity;
+using System.Diagnostics.CodeAnalysis;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -117,3 +118,6 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+[ExcludeFromCodeCoverage]
+public partial class Program { }
