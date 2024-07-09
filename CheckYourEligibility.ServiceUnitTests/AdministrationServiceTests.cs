@@ -83,7 +83,11 @@ namespace CheckYourEligibility.ServiceUnitTests
         [Test]
         public void Given_ImportEstablishments_Should_Return_Pass()
         {
-            var data = _fixture.CreateMany<EstablishmentRow>();
+            var data = _fixture.CreateMany<EstablishmentRow>().ToList();
+            //Make a duplicate la
+            var existingLa = data.First();
+            _fakeInMemoryDb.LocalAuthorities.Add(new LocalAuthority { LocalAuthorityId = existingLa.LaCode, LaName = existingLa.LaName });
+            _fakeInMemoryDb.SaveChanges();
 
             // Act
             _sut.ImportEstablishments(data);
