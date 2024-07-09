@@ -85,8 +85,14 @@ namespace CheckYourEligibility.Services
                 var item = await _db.Schools.AsNoTracking().FirstOrDefaultAsync(x => x.SchoolId == sc.SchoolId);
 
                 if (item != null)
-                    //cant cover due to memory only db
-                    SetScoolData(sc);
+                    try
+                    {
+                        SetScoolData(sc);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError("db error", ex);
+                    }
                 else
                     _db.Schools.Add(sc);
             }
