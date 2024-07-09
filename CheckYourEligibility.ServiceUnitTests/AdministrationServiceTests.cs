@@ -85,8 +85,16 @@ namespace CheckYourEligibility.ServiceUnitTests
         {
             var data = _fixture.CreateMany<EstablishmentRow>().ToList();
             //Make a duplicate la
-            var existingLa = data.First();
-            _fakeInMemoryDb.LocalAuthorities.Add(new LocalAuthority { LocalAuthorityId = existingLa.LaCode, LaName = existingLa.LaName });
+            var existingData = data.First();
+            var la = new LocalAuthority
+            {
+                LocalAuthorityId = existingData.LaCode,
+                LaName = existingData.LaName
+            };
+            _fakeInMemoryDb.LocalAuthorities.Add(la);
+            _fakeInMemoryDb.Schools.Add(new School { SchoolId =  existingData.Urn, EstablishmentName = existingData.EstablishmentName, LocalAuthority = la,
+                County = existingData.County, Postcode = existingData.Postcode, Locality = existingData.Locality, Street = existingData.Street,Town = existingData.Town, StatusOpen = true });
+
             _fakeInMemoryDb.SaveChanges();
 
             // Act
