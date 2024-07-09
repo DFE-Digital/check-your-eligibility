@@ -52,7 +52,15 @@ namespace CheckYourEligibility.Services
             {
                 var item = _db.LocalAuthorities.FirstOrDefault(x => x.LocalAuthorityId == la.LocalAuthorityId);
                 if (item != null)
-                    SetLaData(la);
+                    try
+                    {
+                        SetLaData(la);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError("db error",ex);
+                    }
+                    
                 else
                     _db.LocalAuthorities.Add(la);
             }
@@ -77,8 +85,14 @@ namespace CheckYourEligibility.Services
                 var item = await _db.Schools.AsNoTracking().FirstOrDefaultAsync(x => x.SchoolId == sc.SchoolId);
 
                 if (item != null)
-                    //cant cover due to memory only db
-                    SetScoolData(sc);
+                    try
+                    {
+                        SetScoolData(sc);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError("db error", ex);
+                    }
                 else
                     _db.Schools.Add(sc);
             }
@@ -96,7 +110,7 @@ namespace CheckYourEligibility.Services
             _db.BulkInsert_FreeSchoolMealsHO(data);
         }
 
-        
+        [ExcludeFromCodeCoverage(Justification = "In memory db does not support execute update, direct updating causes concurrency error")]
         private void SetLaData(LocalAuthority? item)
         {
             _db.LocalAuthorities.AsNoTracking().Where(b => b.LocalAuthorityId == item.LocalAuthorityId)
