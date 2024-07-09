@@ -26,8 +26,8 @@ namespace CheckYourEligibility.Services
             }
         }
 
-        [ExcludeFromCodeCoverage(Justification = "Tests seem to fail when part of a full run, work when run individually  not sure why")]
-        public async Task<IEnumerable<Domain.Responses.School>?> Search(string query)
+        [ExcludeFromCodeCoverage(Justification = "memory only db breaks test in full run, works fine run locally")]
+          public async Task<IEnumerable<Domain.Responses.School>?> Search(string query)
         {
             var results = new List<Domain.Responses.School>();
             var queryResult = new List<School>();
