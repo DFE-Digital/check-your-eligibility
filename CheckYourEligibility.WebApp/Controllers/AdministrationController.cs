@@ -1,25 +1,19 @@
 ﻿// Ignore Spelling: Fsm
 
 using Ardalis.GuardClauses;
-using Azure;
 using CheckYourEligibility.Data.Models;
 using CheckYourEligibility.Domain.Constants;
 using CheckYourEligibility.Domain.Responses;
 using CheckYourEligibility.Services.CsvImport;
 using CheckYourEligibility.Services.Interfaces;
-using CsvHelper.Configuration;
 using CsvHelper;
+using CsvHelper.Configuration;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using System.Globalization;
 using System.Net;
-using System.Xml.Serialization;
-using CheckYourEligibility.Services.XmlImport;
 using System.Xml.Linq;
-using System.Xml;
-using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using System.Linq;
 
 namespace CheckYourEligibility.WebApp.Controllers
 {
