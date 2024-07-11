@@ -37,6 +37,9 @@ namespace CheckYourEligibility.Data.Models
         public  string? EligibilityCheckHashID { get; set; }
 
         public virtual EligibilityCheckHash? EligibilityCheckHash { get; set; }
+
         public string? Group { get; set; }
+
+        public int? Sequence { get; set; }
     }
 }

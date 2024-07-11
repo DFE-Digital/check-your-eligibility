@@ -13,6 +13,7 @@
         public string DateOfBirth { get; set; }
 
         public string? NationalAsylumSeekerServiceNumber { get; set; }
+        public int? Sequence { get; set; }
     }
 
     public class CheckEligibilityRequestBulk
