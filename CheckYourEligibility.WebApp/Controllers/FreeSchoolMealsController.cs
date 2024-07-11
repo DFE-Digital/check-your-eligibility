@@ -94,17 +94,19 @@ namespace CheckYourEligibility.WebApp.Controllers
             }
 
             var validator = new CheckEligibilityRequestDataValidator();
-            var inc = 1;
+            var sequence = 1;
             var validationResultsItems = new StringBuilder();
             foreach (var item in model.Data)
             {
                 item.NationalInsuranceNumber = item.NationalInsuranceNumber?.ToUpper();
                 item.NationalAsylumSeekerServiceNumber = item.NationalAsylumSeekerServiceNumber?.ToUpper();
+                item.Sequence = sequence;
                 var validationResults = validator.Validate(item);
                 if (!validationResults.IsValid)
                 {
-                    validationResultsItems.AppendLine($"Item:-{inc}, {validationResults.ToString()}");
+                    validationResultsItems.AppendLine($"Item:-{sequence}, {validationResults.ToString()}");
                 }
+                sequence++;
             }
             
 

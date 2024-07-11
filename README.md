@@ -110,7 +110,7 @@ Add-Migration Audit -project CheckYourEligibility.Data.Migrations
 Add-Migration AuditTypeColumn -project CheckYourEligibility.Data.Migrations
 Add-Migration ApplicationHash -project CheckYourEligibility.Data.Migrations
 Add-Migration BulkUpload -project CheckYourEligibility.Data.Migrations
-
+Add-Migration BulkUploadItemSequence -project CheckYourEligibility.Data.Migrations
 
 ##### Update db to latest migration
 update-database  -project CheckYourEligibility.Data.Migrations

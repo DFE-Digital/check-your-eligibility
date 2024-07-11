@@ -71,6 +71,7 @@ namespace CheckYourEligibility.Services
 
         public async Task PostCheck(IEnumerable<CheckEligibilityRequestDataFsm> data, string groupId)
         {
+            
             foreach (var item in data)
             {
                 await PostCheck(item, groupId);
@@ -218,7 +219,9 @@ namespace CheckYourEligibility.Services
 
         public async Task<IEnumerable<CheckEligibilityItemFsm>> GetBulkCheckResults(string guid)
         {
-            var resultList =  _db.CheckEligibilities.Where(x => x.Group == guid);
+            var resultList =  _db.CheckEligibilities
+                .Where(x => x.Group == guid)
+                .OrderBy(x=>x.Sequence);
             if (resultList != null && resultList.Any())
             {
                 var items = _mapper.Map<List<CheckEligibilityItemFsm>>(resultList);
