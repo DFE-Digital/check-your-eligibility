@@ -22,5 +22,6 @@ namespace CheckYourEligibility.Domain.Requests
         public string? ParentDateOfBirth { get; set; }
         public string? ChildLastName { get; set; }
         public string? ChildDateOfBirth { get; set; }
+        public string? Reference { get; set; }
     }
 }
