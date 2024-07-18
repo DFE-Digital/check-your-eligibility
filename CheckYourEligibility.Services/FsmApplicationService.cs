@@ -144,6 +144,8 @@ namespace CheckYourEligibility.Services
                 results = results.Where(x => x.ChildLastName == model.ChildLastName);
             if (!string.IsNullOrEmpty(model.ChildDateOfBirth))
                 results = results.Where(x => x.ChildDateOfBirth == DateTime.ParseExact(model.ChildDateOfBirth, "yyyy-MM-dd", CultureInfo.InvariantCulture));
+            if (!string.IsNullOrEmpty(model.Reference))
+                results = results.Where(x => x.Reference == model.Reference);
 
             return _mapper.Map<List<ApplicationResponse>>(results);
         }
