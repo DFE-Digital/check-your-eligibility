@@ -201,3 +201,11 @@ the moq dwp endpoints are as follows, note the headers.
     }
   }
 }'`
+
+## SQL
+delete all data
+
+delete [dbo].[ApplicationStatuses]
+delete [dbo].Applications
+delete EligibilityCheck
+delete EligibilityCheckHashes
