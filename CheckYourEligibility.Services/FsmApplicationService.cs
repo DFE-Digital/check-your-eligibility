@@ -79,7 +79,7 @@ namespace CheckYourEligibility.Services
                 DateOfBirth = data.ParentDateOfBirth,
                 NASSNumber = data.ParentNationalAsylumSeekerServiceNumber,
                 NINumber = data.ParentNationalInsuranceNumber,
-                LastName = data.ParentLastName,
+                LastName = data.ParentLastName.ToUpper(),
                 Type = type
             });
             return _db.EligibilityCheckHashes.FirstOrDefault(x => x.Hash == hash && x.TimeStamp >= age);
