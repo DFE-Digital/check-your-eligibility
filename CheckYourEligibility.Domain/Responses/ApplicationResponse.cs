@@ -18,6 +18,7 @@ namespace CheckYourEligibility.Domain.Responses
         public string ChildDateOfBirth { get; set; }
         public string Status { get; set; }
         public ApplicationUser User { get; set; }
+        public DateTime Created { get; set; }
 
         public ApplicationHash? CheckOutcome { get; set; }
 
