@@ -85,7 +85,7 @@ namespace CheckYourEligibility.Services
         private string GetHash(EligibilityCheck item)
         {
             var key = string.IsNullOrEmpty(item.NINumber) ? item.NASSNumber : item.NINumber;
-            var input = $"{item.LastName}{key}{item.DateOfBirth.ToString("d")}{item.Type}";
+            var input = $"{item.LastName.ToUpper()}{key}{item.DateOfBirth.ToString("d")}{item.Type}";
             var inputBytes = Encoding.UTF8.GetBytes(input);
             var inputHash = SHA256.HashData(inputBytes);
             return Convert.ToHexString(inputHash);
