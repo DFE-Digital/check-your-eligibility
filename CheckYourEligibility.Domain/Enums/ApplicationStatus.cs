@@ -4,10 +4,10 @@ namespace CheckYourEligibility.Domain.Enums
 {
     public enum ApplicationStatus
     {
-        Open, //Entitled
-        Receiving,//
-        DocumentNeeded,//EvidenceNeeded
-        PendingApproval,//SentForReview
+        Entitled, 
+        Receiving,
+        EvidenceNeeded,
+        SentForReview,
         ReviewedEntitled,
         ReviewedNotEntitled,
     }
