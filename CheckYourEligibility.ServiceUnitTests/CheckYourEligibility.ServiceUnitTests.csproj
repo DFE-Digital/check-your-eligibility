@@ -9,6 +9,15 @@
     <IsTestProject>true</IsTestProject>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Compile Remove="Properties\**" />
+    <Compile Remove="Resources\**" />
+    <EmbeddedResource Remove="Properties\**" />
+    <EmbeddedResource Remove="Resources\**" />
+    <None Remove="Properties\**" />
+    <None Remove="Resources\**" />
+  </ItemGroup>
+
 	<ItemGroup>
 		<PackageReference Include="FluentAssertions" Version="6.12.0" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.0.6" />
@@ -23,11 +32,6 @@
 		<ProjectReference Include="..\CheckYourEligibility.Data\CheckYourEligibility.Data.csproj" />
 		<ProjectReference Include="..\CheckYourEligibility.Services\CheckYourEligibility.Services.csproj" />
 		<ProjectReference Include="..\CheckYourEligibility.TestBase\CheckYourEligibility.TestBase.csproj" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <Folder Include="Properties\" />
-	  <Folder Include="Resources\" />
 	</ItemGroup>
 
 </Project>

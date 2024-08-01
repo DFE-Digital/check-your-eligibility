@@ -47,7 +47,7 @@ namespace CheckYourEligibility.Services
                 item.Created = DateTime.UtcNow;
                 item.Updated = DateTime.UtcNow;
                 item.Type = CheckEligibilityType.ApplcicationFsm;
-                item.Status = Domain.Enums.ApplicationStatus.Open;
+                item.Status = Domain.Enums.ApplicationStatus.Entitled;
 
                 var school = _db.Schools
                     .Include(x => x.LocalAuthority)
@@ -55,7 +55,7 @@ namespace CheckYourEligibility.Services
                 item.LocalAuthorityId = school.LocalAuthorityId;
 
                 await _db.Applications.AddAsync(item);
-                await AddStatusHistory(item, Domain.Enums.ApplicationStatus.Open);
+                await AddStatusHistory(item, Domain.Enums.ApplicationStatus.Entitled);
 
                 await _db.SaveChangesAsync();
 
