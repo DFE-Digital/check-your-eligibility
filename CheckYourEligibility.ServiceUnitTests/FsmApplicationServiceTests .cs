@@ -7,6 +7,7 @@ using CheckYourEligibility.Data.Models;
 using CheckYourEligibility.Domain.Requests;
 using CheckYourEligibility.Domain.Responses;
 using CheckYourEligibility.Services;
+using CheckYourEligibility.Services.Interfaces;
 using EFCore.BulkExtensions;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
@@ -27,6 +28,8 @@ namespace CheckYourEligibility.ServiceUnitTests
         private IMapper _mapper;
         private IConfiguration _configuration;
         private FsmApplicationService _sut;
+        private IHash _HashService;
+        private Mock<IAudit> _moqAudit;
 
         [SetUp]
         public void Setup()
@@ -49,7 +52,9 @@ namespace CheckYourEligibility.ServiceUnitTests
                 .AddInMemoryCollection(configForSmsApi)
                 .Build();
             var webJobsConnection = "DefaultEndpointsProtocol=https;AccountName=none;AccountKey=none;EndpointSuffix=core.windows.net";
-         
+
+            _moqAudit = new Mock<IAudit>(MockBehavior.Strict);
+            _HashService = new HashService(new NullLoggerFactory(), _fakeInMemoryDb, _configuration, _moqAudit.Object);
             _sut = new FsmApplicationService(new NullLoggerFactory(), _fakeInMemoryDb, _mapper, _configuration);
 
         }
@@ -87,7 +92,7 @@ namespace CheckYourEligibility.ServiceUnitTests
         }
 
         [Test]
-        public void Given_validRequest_PostApplication_Should_Return_ApplicationSaveFsm()
+        public async Task Given_validRequest_PostApplication_Should_Return_ApplicationSaveFsm()
         {
             // Arrange
             var request = _fixture.Create<ApplicationRequestData>();
@@ -99,14 +104,7 @@ namespace CheckYourEligibility.ServiceUnitTests
             request.School = school.SchoolId;
             _fakeInMemoryDb.LocalAuthorities.Add(la);
             _fakeInMemoryDb.Schools.Add(school);
-            var hash = FsmCheckEligibilityService.GetHash(
-                new EligibilityCheck {LastName = request.ParentLastName,
-                NINumber = request.ParentNationalInsuranceNumber,
-                    DateOfBirth = DateTime.ParseExact(request.ParentDateOfBirth, "yyyy-MM-dd", CultureInfo.InvariantCulture),
-                Type = Domain.Enums.CheckEligibilityType.FreeSchoolMeals});
-            var hashRecord = _fixture.Create<EligibilityCheckHash>();
-            hashRecord.Hash = hash;
-            _fakeInMemoryDb.EligibilityCheckHashes.Add(hashRecord);
+            await AddHash(request);
 
             _fakeInMemoryDb.SaveChanges();
 
@@ -146,6 +144,8 @@ namespace CheckYourEligibility.ServiceUnitTests
             request.School = school.SchoolId;
             _fakeInMemoryDb.LocalAuthorities.Add(la);
             _fakeInMemoryDb.Schools.Add(school);
+            await AddHash(request);
+
             await _fakeInMemoryDb.SaveChangesAsync();
 
             var requestUpdateStatus = _fixture.Create<ApplicationStatusUpdateRequest>();
@@ -192,6 +192,8 @@ namespace CheckYourEligibility.ServiceUnitTests
             request.School = school.SchoolId;
             _fakeInMemoryDb.LocalAuthorities.Add(la);
             _fakeInMemoryDb.Schools.Add(school);
+            await AddHash(request);
+
             await _fakeInMemoryDb.SaveChangesAsync();
             
             var postApplicationResponse =await _sut.PostApplication(request);
@@ -231,6 +233,8 @@ namespace CheckYourEligibility.ServiceUnitTests
             request.School = school.SchoolId;
             _fakeInMemoryDb.LocalAuthorities.Add(la);
             _fakeInMemoryDb.Schools.Add(school);
+            await AddHash(request);
+
             await _fakeInMemoryDb.SaveChangesAsync();
 
             await _sut.PostApplication(request);
@@ -266,7 +270,11 @@ namespace CheckYourEligibility.ServiceUnitTests
             var user = _fixture.Create<User>();
             _fakeInMemoryDb.Users.Add(user);
             request.UserId = user.UserID;
+            await AddHash(request);
+
             await _fakeInMemoryDb.SaveChangesAsync();
+
+
             var appResponse = await _sut.PostApplication(request);
 
             // Act
@@ -274,6 +282,21 @@ namespace CheckYourEligibility.ServiceUnitTests
 
             // Assert
             response.User.UserID.Should().BeEquivalentTo(user.UserID);
+        }
+
+        private async Task AddHash(ApplicationRequestData request)
+        {
+            _moqAudit.Setup(x => x.AuditAdd(It.IsAny<AuditData>())).ReturnsAsync("");
+            var dt = DateTime.ParseExact(request.ParentDateOfBirth, "yyyy-MM-dd", null, DateTimeStyles.None);
+            await _HashService.Create(new EligibilityCheck
+            {
+                Created = DateTime.Now,
+                EligibilityCheckID = Guid.NewGuid().ToString(),
+                LastName = request.ParentLastName,
+                NASSNumber = request.ParentNationalInsuranceNumber,
+                DateOfBirth = dt
+            }, Domain.Enums.CheckEligibilityStatus.eligible, Domain.Enums.ProcessEligibilityCheckSource.HO,
+            new AuditData { Type = Domain.Enums.AuditType.Check });
         }
     }
 }
