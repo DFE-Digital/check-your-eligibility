@@ -40,14 +40,29 @@ namespace CheckYourEligibility.Services
         {
             try
             {
+
                 var item = _mapper.Map<Application>(data);
+                var hashCheck = GetHash(CheckEligibilityType.FreeSchoolMeals, item);
+                if (hashCheck == null)
+                {
+                    throw new Exception("No Check found.");
+                }
                 item.ApplicationID = Guid.NewGuid().ToString();
                 item.Reference = GetReference();
-                item.EligibilityCheckHashID = GetHash(CheckEligibilityType.FreeSchoolMeals, item)?.EligibilityCheckHashID; 
+                item.EligibilityCheckHashID = hashCheck?.EligibilityCheckHashID;
                 item.Created = DateTime.UtcNow;
                 item.Updated = DateTime.UtcNow;
                 item.Type = CheckEligibilityType.ApplcicationFsm;
-                item.Status = Domain.Enums.ApplicationStatus.Entitled;
+
+                if (hashCheck.Outcome == CheckEligibilityStatus.eligible)
+                {
+                    item.Status = Domain.Enums.ApplicationStatus.Entitled;
+                }
+                else
+                {
+                    item.Status = Domain.Enums.ApplicationStatus.EvidenceNeeded;
+                }
+
 
                 var school = _db.Schools
                     .Include(x => x.LocalAuthority)
