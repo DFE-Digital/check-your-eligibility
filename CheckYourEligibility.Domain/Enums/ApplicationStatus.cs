@@ -8,7 +8,7 @@ namespace CheckYourEligibility.Domain.Enums
     {
         [Description("Entitled")]
         Entitled,
-        [Description("Receiving Entitlemen")]
+        [Description("Receiving Entitlement")]
         Receiving,
         [Description("Evidence Needed")]
         EvidenceNeeded,
