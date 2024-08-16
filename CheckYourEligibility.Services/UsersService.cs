@@ -55,13 +55,12 @@ namespace CheckYourEligibility.Services
         [ExcludeFromCodeCoverage]
         private string GetRecord(UserData data, DbUpdateException dbu)
         {
-            if (dbu.InnerException.Message.StartsWith($"Cannot insert duplicate key row in object 'dbo.Users' with unique index 'IX_Users_Email_Reference'."))
-            {
+
+            //if (dbu.InnerException.Message.StartsWith($"Cannot insert duplicate key row in object 'dbo.Users' with unique index 'IX_Users_Email_Reference'."))
+            //{
                 var existingUser = _db.Users.First(x => x.Email == data.Email && x.Reference == data.Reference);
                 return existingUser.UserID;
-            }
-            _logger.LogError(dbu, "Db find user");
-            throw new Exception($"Unable to find user record");
+            //}
         }
 
     }
