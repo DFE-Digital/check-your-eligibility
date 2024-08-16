@@ -40,27 +40,19 @@ namespace CheckYourEligibility.Services
 
                 return item.UserID;
             }
-            catch (DbUpdateException dbu)
+            catch (Exception)
             {
 
-               return  GetRecord(data, dbu);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Db post user");
-                throw;
+               return  GetRecord(data);
             }
         }
 
         [ExcludeFromCodeCoverage]
-        private string GetRecord(UserData data, DbUpdateException dbu)
+        private string GetRecord(UserData data)
         {
 
-            //if (dbu.InnerException.Message.StartsWith($"Cannot insert duplicate key row in object 'dbo.Users' with unique index 'IX_Users_Email_Reference'."))
-            //{
-                var existingUser = _db.Users.First(x => x.Email == data.Email && x.Reference == data.Reference);
-                return existingUser.UserID;
-            //}
+                var existingUser = _db.Users.FirstOrDefault(x => x.Email == data.Email && x.Reference == data.Reference);
+                return existingUser?.UserID;
         }
 
     }
