@@ -39,13 +39,13 @@ namespace CheckYourEligibility.WebApp.Controllers
         {
 
 
-            if (model?.Data?.Attributes?.LastName == MogDWPValues.validCitizenSurnameEligible || model?.Data?.Attributes?.LastName == MogDWPValues.validCitizenSurnameNotEligible)
+            if (model?.Data?.Attributes?.LastName.ToUpper() == MogDWPValues.validCitizenSurnameEligible.ToUpper() || model?.Data?.Attributes?.LastName.ToUpper() == MogDWPValues.validCitizenSurnameNotEligible.ToUpper())
             {
                 return new ObjectResult(new DwpResponse()
                 {
                     Data = new DwpResponse.DwpResponse_Data
                     {
-                        Id = model?.Data?.Attributes?.LastName == MogDWPValues.validCitizenSurnameEligible ? MogDWPValues.validCitizenEligibleGuid : MogDWPValues.validCitizenNotEligibleGuid,
+                        Id = model?.Data?.Attributes?.LastName.ToUpper() == MogDWPValues.validCitizenSurnameEligible.ToUpper() ? MogDWPValues.validCitizenEligibleGuid : MogDWPValues.validCitizenNotEligibleGuid,
                         Type = "MatchResult",
                         Attributes = new DwpResponse.DwpResponse_Attributes { MatchingScenario = "FSM" }
                     }
