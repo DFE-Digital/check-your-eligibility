@@ -30,30 +30,23 @@ namespace CheckYourEligibility.Services
         /// <returns></returns>
         public async Task<string> Create(UserData data)
         {
-            try
+
+            var existingUser = _db.Users.FirstOrDefault(x => x.Email == data.Email && x.Reference == data.Reference);
+            if (existingUser != null)
             {
-                var item = _mapper.Map<User>(data);
-                item.UserID = Guid.NewGuid().ToString();
-
-                await _db.Users.AddAsync(item);
-                await _db.SaveChangesAsync();
-
-                return item.UserID;
+                return existingUser.UserID;
             }
-            catch (Exception)
-            {
 
-               return  GetRecord(data);
-            }
+
+            var item = _mapper.Map<User>(data);
+            item.UserID = Guid.NewGuid().ToString();
+
+            await _db.Users.AddAsync(item);
+            await _db.SaveChangesAsync();
+
+            return item.UserID;
         }
 
-        [ExcludeFromCodeCoverage]
-        private string GetRecord(UserData data)
-        {
-
-                var existingUser = _db.Users.FirstOrDefault(x => x.Email == data.Email && x.Reference == data.Reference);
-                return existingUser?.UserID;
-        }
 
     }
 }
