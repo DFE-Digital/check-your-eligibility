@@ -22,8 +22,13 @@ namespace CheckYourEligibility.Services
             _db = Guard.Against.Null(dbContext);
             if (!_schools.Any())
             {
-                _schools = _db.Schools.Where(x => x.StatusOpen).Include(x => x.LocalAuthority).ToList();
+                RefreshData();
             }
+        }
+
+        public void RefreshData()
+        {
+            _schools = _db.Schools.Where(x => x.StatusOpen).Include(x => x.LocalAuthority).ToList();
         }
 
         [ExcludeFromCodeCoverage(Justification = "memory only db breaks test in full run, works fine run locally")]
