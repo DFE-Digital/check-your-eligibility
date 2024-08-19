@@ -24,12 +24,14 @@ namespace CheckYourEligibility.WebApp.Controllers
     {
         private readonly ILogger<AdministrationController> _logger;
         private readonly IAdministration _service;
+        private readonly ISchoolsSearch _schoolSearch;
 
-        public AdministrationController(ILogger<AdministrationController> logger, IAdministration service, IAudit audit)
+        public AdministrationController(ILogger<AdministrationController> logger, IAdministration service, IAudit audit, ISchoolsSearch schoolsSearch)
             : base(audit)
         { 
             _logger = Guard.Against.Null(logger);
             _service = Guard.Against.Null(service);
+            _schoolSearch = Guard.Against.Null(schoolsSearch); ;
         }
 
         /// <summary>
@@ -92,6 +94,7 @@ namespace CheckYourEligibility.WebApp.Controllers
             }
 
             await _service.ImportEstablishments(DataLoad);
+            _schoolSearch.RefreshData();
             await AuditAdd(Domain.Enums.AuditType.Administration, string.Empty);
             return new ObjectResult(new MessageResponse { Data = $"{file.FileName} - {Admin.EstablishmentFileProcessed}"}){ StatusCode = StatusCodes.Status200OK };
         }
@@ -146,7 +149,6 @@ namespace CheckYourEligibility.WebApp.Controllers
                 return new ObjectResult(new MessageResponse { Data = $"{file.FileName} - {JsonConvert.SerializeObject(new HomeOfficeRow())} :- {ex.Message}," +
                     $"{ex.InnerException?.Message}" }) { StatusCode = StatusCodes.Status400BadRequest };
             }
-
             await _service.ImportHomeOfficeData(DataLoad);
             await AuditAdd(Domain.Enums.AuditType.Administration, string.Empty);
             return new ObjectResult(new MessageResponse { Data = $"{file.FileName} - {Admin.HomeOfficeFileProcessed}" }) { StatusCode = StatusCodes.Status200OK };

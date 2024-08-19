@@ -18,6 +18,7 @@ namespace CheckYourEligibility.APIUnitTests
     public class AdministrationControllerTests : TestBase.TestBase
     {
         private Mock<IAdministration> _mockService;
+        private Mock<ISchoolsSearch> _mockSchoolService;
         private ILogger<AdministrationController> _mockLogger;
         private AdministrationController _sut;
         private Mock<IAudit> _mockAuditService;
@@ -28,7 +29,8 @@ namespace CheckYourEligibility.APIUnitTests
             _mockService = new Mock<IAdministration>(MockBehavior.Strict);
             _mockLogger = Mock.Of<ILogger<AdministrationController>>();
             _mockAuditService = new Mock<IAudit>(MockBehavior.Strict);
-            _sut = new AdministrationController(_mockLogger, _mockService.Object, _mockAuditService.Object);
+            _mockSchoolService = new Mock<ISchoolsSearch>(MockBehavior.Strict);
+            _sut = new AdministrationController(_mockLogger, _mockService.Object, _mockAuditService.Object,_mockSchoolService.Object);
         }
 
         [TearDown]
@@ -43,9 +45,10 @@ namespace CheckYourEligibility.APIUnitTests
             // Arrange
             IAdministration service = null;
             IAudit auditService = null;
+            ISchoolsSearch schoolsSearch = null;
 
             // Act
-            Action act = () => new AdministrationController(_mockLogger, service,auditService);
+            Action act = () => new AdministrationController(_mockLogger, service,auditService, schoolsSearch);
 
             // Assert
             act.Should().ThrowExactly<ArgumentNullException>().And.Message.Should().EndWithEquivalentOf("Value cannot be null. (Parameter 'service')");
@@ -73,6 +76,8 @@ namespace CheckYourEligibility.APIUnitTests
             // Arrange
             _mockService.Setup(cs => cs.ImportEstablishments(It.IsAny<IEnumerable<EstablishmentRow>>())).Returns(Task.CompletedTask);
             _mockAuditService.Setup(cs => cs.AuditAdd(It.IsAny<AuditData>())).ReturnsAsync(Guid.NewGuid().ToString());
+            _mockSchoolService.Setup(x => x.RefreshData());
+
 
             var content = Properties.Resources.small_gis;
             var fileName = "test.csv";
@@ -173,7 +178,7 @@ namespace CheckYourEligibility.APIUnitTests
             // Arrange
             _mockService.Setup(cs => cs.ImportHomeOfficeData(It.IsAny<IEnumerable<FreeSchoolMealsHO>>())).Returns(Task.CompletedTask);
             _mockAuditService.Setup(cs => cs.AuditAdd(It.IsAny<AuditData>())).ReturnsAsync(Guid.NewGuid().ToString());
-
+            
             var content = Properties.Resources.HO_Data_small; ;
             var fileName = "test.csv";
             var stream = new MemoryStream();
