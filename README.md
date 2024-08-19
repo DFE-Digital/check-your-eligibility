@@ -113,6 +113,7 @@ Add-Migration BulkUpload -project CheckYourEligibility.Data.Migrations
 Add-Migration BulkUploadItemSequence -project CheckYourEligibility.Data.Migrations
 Add-Migration UpdateStatus -project CheckYourEligibility.Data.Migrations
 Add-Migration UpdateApplicationStatus -project CheckYourEligibility.Data.Migrations
+Add-Migration UserReference -project CheckYourEligibility.Data.Migrations
 
 
 ##### Update db to latest migration

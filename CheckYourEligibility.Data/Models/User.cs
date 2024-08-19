@@ -15,7 +15,7 @@ namespace CheckYourEligibility.Data.Models
         [Column(TypeName = "varchar(200)")]
         public string Email { get; set; }
 
-        [Column(TypeName = "varchar(200)")]
+        [Column(TypeName = "varchar(1000)")]
         public string Reference { get; set; }
     }
 }
