@@ -1,5 +1,4 @@
 using AutoFixture;
-using Azure;
 using CheckYourEligibility.Domain.Enums;
 using CheckYourEligibility.Domain.Exceptions;
 using CheckYourEligibility.Domain.Requests;
@@ -12,8 +11,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NUnit.Framework.Internal;
-using System.Diagnostics;
-using System.Text.RegularExpressions;
 
 namespace CheckYourEligibility.APIUnitTests
 {
@@ -570,10 +567,16 @@ namespace CheckYourEligibility.APIUnitTests
         public void Given_InValid_ApplicationSearch_Should_Return_Status204NoContent()
         {
             // Arrange
-            var model = _fixture.Create<ApplicationRequestSearch>();
-            _mockApplicationService.Setup(cs => cs.GetApplications(model.Data)).ReturnsAsync(new List<ApplicationResponse>());
+            var searchData = _fixture.Create<ApplicationRequestSearchData>();
+            var model = new ApplicationRequestSearch
+            {
+                Data = searchData,
+                PageNumber = 1,
+                PageSize = 10
+            };
+            _mockApplicationService.Setup(cs => cs.GetApplications(It.IsAny<ApplicationRequestSearch>())).ReturnsAsync(new ApplicationSearchResponse { Data = new List<ApplicationResponse>() });
             var expectedResult = new NoContentResult();
-            
+
             // Act
             var response = _sut.ApplicationSearch(model);
 
@@ -585,11 +588,20 @@ namespace CheckYourEligibility.APIUnitTests
         public void Given_Valid_ApplicationSearch_Should_Return_StatusOk()
         {
             // Arrange
-            var model = _fixture.Create<ApplicationRequestSearch>();
+            var searchData = _fixture.Create<ApplicationRequestSearchData>();
+            var model = new ApplicationRequestSearch
+            {
+                Data = searchData,
+                PageNumber = 1,
+                PageSize = 10
+            };
             var expectedResponse = _fixture.CreateMany<ApplicationResponse>();
-            _mockApplicationService.Setup(cs => cs.GetApplications(model.Data)).ReturnsAsync(expectedResponse);
+            _mockApplicationService.Setup(cs => cs.GetApplications(It.IsAny<ApplicationRequestSearch>())).ReturnsAsync(new ApplicationSearchResponse { Data = expectedResponse });
             _mockAuditService.Setup(cs => cs.AuditAdd(It.IsAny<AuditData>())).ReturnsAsync(Guid.NewGuid().ToString());
-            var expectedResult = new ObjectResult(new ApplicationSearchResponse { Data = expectedResponse }){ StatusCode = StatusCodes.Status200OK };
+            var expectedResult = new ObjectResult(new ApplicationSearchResponse { Data = expectedResponse })
+            {
+                StatusCode = StatusCodes.Status200OK
+            };
 
             // Act
             var response = _sut.ApplicationSearch(model);
