@@ -8,7 +8,6 @@ using CheckYourEligibility.Domain.Requests;
 using CheckYourEligibility.Domain.Responses;
 using CheckYourEligibility.Services;
 using CheckYourEligibility.Services.Interfaces;
-using EFCore.BulkExtensions;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -209,15 +208,20 @@ namespace CheckYourEligibility.ServiceUnitTests
         public void Given_NoResults_GetApplications_Should_Return_null()
         {
             // Arrange
-            var request = _fixture.Create<ApplicationRequestSearchData>();
-            request.ParentDateOfBirth = "1990-01-01";
-            request.ChildDateOfBirth = "1990-01-01";
+            var requestSearch = new ApplicationRequestSearch
+            {
+                Data = new ApplicationRequestSearchData
+                {
+                    ParentDateOfBirth = "1990-01-01",
+                    ChildDateOfBirth = "1990-01-01"
+                }
+            };
 
             // Act
-            var response = _sut.GetApplications(request);
+            var response = _sut.GetApplications(requestSearch);
 
             // Assert
-            response.Result.Should().BeEmpty();
+            response.Result.Data.Should().BeEmpty();
         }
 
         [Test]
@@ -226,7 +230,7 @@ namespace CheckYourEligibility.ServiceUnitTests
             // Arrange
             var request = _fixture.Create<ApplicationRequestData>();
             request.ParentDateOfBirth = "1970-02-01";
-            request.ChildDateOfBirth = "2007-02-01";
+            request.ChildDateOfBirth = "2007-01-01";
             var la = _fixture.Create<LocalAuthority>();
             var school = _fixture.Create<School>();
             school.LocalAuthorityId = la.LocalAuthorityId;
@@ -239,13 +243,19 @@ namespace CheckYourEligibility.ServiceUnitTests
 
             await _sut.PostApplication(request);
 
-            var requestSearch = new ApplicationRequestSearchData() { School = school.SchoolId };
+            var requestSearch = new ApplicationRequestSearch
+            {
+                Data = new ApplicationRequestSearchData
+                {
+                    School = school.SchoolId
+                }
+            };
 
             // Act
-            var response = _sut.GetApplications(requestSearch);
+            var response = await _sut.GetApplications(requestSearch);
 
             // Assert
-            response.Result.Should().NotBeEmpty();
+            response.Data.Should().NotBeEmpty();
         }
 
         [Test]
@@ -282,6 +292,64 @@ namespace CheckYourEligibility.ServiceUnitTests
 
             // Assert
             response.User.UserID.Should().BeEquivalentTo(user.UserID);
+        }
+
+        [Test]
+        public async Task Given_ZeroOrNegativePageNumber_GetApplications_Should_DefaultToFirstPage()
+        {
+            // Arrange
+            var requestSearch = new ApplicationRequestSearch
+            {
+                PageNumber = 0, // Edge case: Zero page number
+                PageSize = 10,  // Valid page size
+                Data = new ApplicationRequestSearchData()
+            };
+
+            // Act
+            var response = await _sut.GetApplications(requestSearch);
+
+            // Assert
+            response.Data.Should().NotBeEmpty(); // Ensures data is returned
+            response.Data.Count().Should().BeLessOrEqualTo(10); // Ensures correct page size is respected
+        }
+
+        [Test]
+        public async Task Given_NegativePageNumber_GetApplications_Should_DefaultToFirstPage()
+        {
+            // Arrange
+            var requestSearch = new ApplicationRequestSearch
+            {
+                PageNumber = -1, // Edge case: Negative page number
+                PageSize = 10,   // Valid page size
+                Data = new ApplicationRequestSearchData()
+            };
+
+            // Act
+            var response = await _sut.GetApplications(requestSearch);
+
+            // Assert
+            response.Data.Should().NotBeEmpty(); // Ensures data is returned
+            response.Data.Count().Should().BeLessOrEqualTo(10); // Ensures correct page size is respected
+        }
+
+        [Test]
+        public async Task Given_ExcessivelyLargePageSize_GetApplications_Should_LimitToMaxPageSize()
+        {
+            // Arrange
+            var maxPageSize = 100; // Define  maximum allowable page size
+            var requestSearch = new ApplicationRequestSearch
+            {
+                PageNumber = 1,  // Valid page number
+                PageSize = 1000, // Edge case: Excessively large page size
+                Data = new ApplicationRequestSearchData()
+            };
+
+            // Act
+            var response = await _sut.GetApplications(requestSearch);
+
+            // Assert
+            response.Data.Should().NotBeEmpty(); // Ensures data is returned
+            response.Data.Count().Should().BeLessOrEqualTo(maxPageSize); // Ensures it doesn't exceed the max allowed page size
         }
 
         private async Task AddHash(ApplicationRequestData request)

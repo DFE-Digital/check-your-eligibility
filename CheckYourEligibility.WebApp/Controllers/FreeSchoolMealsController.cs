@@ -373,17 +373,19 @@ namespace CheckYourEligibility.WebApp.Controllers
         [HttpPost("Application/Search")]
         public async Task<ActionResult> ApplicationSearch([FromBody] ApplicationRequestSearch model)
         {
-            var response = await _applicationService.GetApplications(model.Data);
-            if (response == null | !response.Any())
+            var response = await _applicationService.GetApplications(model);
+
+            if (response == null || !response.Data.Any())
             {
                 return NoContent();
             }
+
             await AuditAdd(Domain.Enums.AuditType.Application, string.Empty);
-            return new ObjectResult(new ApplicationSearchResponse
+
+            return new ObjectResult(response)
             {
-                Data = response
-            })
-            { StatusCode = StatusCodes.Status200OK };
+                StatusCode = StatusCodes.Status200OK
+            };
         }
 
         /// <summary>
