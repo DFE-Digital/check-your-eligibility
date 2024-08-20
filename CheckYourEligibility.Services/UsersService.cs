@@ -31,7 +31,7 @@ namespace CheckYourEligibility.Services
         public async Task<string> Create(UserData data)
         {
 
-            var existingUser = _db.Users.FirstOrDefault(x => x.Email == data.Email && x.Reference == data.Reference);
+            var existingUser = _db.Users.FirstOrDefault(x => x.Email.ToLower() == data.Email.ToLower() && x.Reference.ToLower() == data.Reference.ToLower());
             if (existingUser != null)
             {
                 return existingUser.UserID;
