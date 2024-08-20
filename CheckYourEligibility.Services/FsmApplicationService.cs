@@ -10,10 +10,7 @@ using CheckYourEligibility.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using NetTopologySuite.Index.HPRtree;
 using System.Globalization;
-using System.Security.Cryptography;
-using System.Text;
 
 namespace CheckYourEligibility.Services
 {
@@ -131,7 +128,7 @@ namespace CheckYourEligibility.Services
             return null;
         }
 
-        public async Task<IEnumerable<ApplicationResponse>> GetApplications(ApplicationRequestSearchData model)
+        public async Task<ApplicationSearchResponse> GetApplications(ApplicationRequestSearch model)
         {
             var results = _db.Applications
                .Include(x => x.Statuses)
@@ -140,29 +137,43 @@ namespace CheckYourEligibility.Services
                .Include(x => x.User)
                .Where(x => x.Type == CheckEligibilityType.ApplcicationFsm);
 
-            if (model.School != null)
-                results = results.Where(x => x.SchoolId == model.School);
-            if (model.localAuthority != null)
-               results = results.Where(x => x.LocalAuthorityId == model.localAuthority);
-            if (model.Status != null)
-              results = results.Where(x => x.Status == model.Status);
+            if (model.Data?.School != null)
+                results = results.Where(x => x.SchoolId == model.Data.School);
+            if (model.Data?.LocalAuthority != null)
+                results = results.Where(x => x.LocalAuthorityId == model.Data.LocalAuthority);
+            if (model.Data?.Status != null)
+                results = results.Where(x => x.Status == model.Data.Status);
 
-            if (!string.IsNullOrEmpty(model.ParentNationalInsuranceNumber))
-                results = results.Where(x => x.ParentNationalInsuranceNumber == model.ParentNationalInsuranceNumber);
-            if (!string.IsNullOrEmpty(model.ParentLastName))
-                results = results.Where(x => x.ParentLastName == model.ParentLastName);
-            if (!string.IsNullOrEmpty(model.ParentNationalAsylumSeekerServiceNumber))
-                results = results.Where(x => x.ParentNationalAsylumSeekerServiceNumber == model.ParentNationalAsylumSeekerServiceNumber);
-            if (!string.IsNullOrEmpty(model.ParentDateOfBirth))
-                results = results.Where(x => x.ParentDateOfBirth == DateTime.ParseExact(model.ParentDateOfBirth, "yyyy-MM-dd", CultureInfo.InvariantCulture));
-            if (!string.IsNullOrEmpty(model.ChildLastName))
-                results = results.Where(x => x.ChildLastName == model.ChildLastName);
-            if (!string.IsNullOrEmpty(model.ChildDateOfBirth))
-                results = results.Where(x => x.ChildDateOfBirth == DateTime.ParseExact(model.ChildDateOfBirth, "yyyy-MM-dd", CultureInfo.InvariantCulture));
-            if (!string.IsNullOrEmpty(model.Reference))
-                results = results.Where(x => x.Reference == model.Reference);
+            if (!string.IsNullOrEmpty(model.Data?.ParentNationalInsuranceNumber))
+                results = results.Where(x => x.ParentNationalInsuranceNumber == model.Data.ParentNationalInsuranceNumber);
+            if (!string.IsNullOrEmpty(model.Data?.ParentLastName))
+                results = results.Where(x => x.ParentLastName == model.Data.ParentLastName);
+            if (!string.IsNullOrEmpty(model.Data?.ParentNationalAsylumSeekerServiceNumber))
+                results = results.Where(x => x.ParentNationalAsylumSeekerServiceNumber == model.Data.ParentNationalAsylumSeekerServiceNumber);
+            if (!string.IsNullOrEmpty(model.Data?.ParentDateOfBirth))
+                results = results.Where(x => x.ParentDateOfBirth == DateTime.ParseExact(model.Data.ParentDateOfBirth, "yyyy-MM-dd", CultureInfo.InvariantCulture));
+            if (!string.IsNullOrEmpty(model.Data?.ChildLastName))
+                results = results.Where(x => x.ChildLastName == model.Data.ChildLastName);
+            if (!string.IsNullOrEmpty(model.Data?.ChildDateOfBirth))
+                results = results.Where(x => x.ChildDateOfBirth == DateTime.ParseExact(model.Data.ChildDateOfBirth, "yyyy-MM-dd", CultureInfo.InvariantCulture));
+            if (!string.IsNullOrEmpty(model.Data?.Reference))
+                results = results.Where(x => x.Reference == model.Data.Reference);
+            // Calculate total records and total pages
+            int totalRecords = await results.CountAsync();
+            int totalPages = (int)Math.Ceiling((double)totalRecords / model.PageSize);
 
-            return _mapper.Map<List<ApplicationResponse>>(results);
+            // Pagination logic
+            model.PageNumber = model.PageNumber <=0 ? 1 : model.PageNumber;
+            var pagedResults = await results
+                .Skip((model.PageNumber - 1) * model.PageSize)
+                .Take(model.PageSize)
+                .ToListAsync();
+
+            // Use AutoMapper or manual mapping to map Application entities to ApplicationResponse DTOs
+            var mappedResults = _mapper.Map<IEnumerable<ApplicationResponse>>(pagedResults);
+
+            // Return paginated and mapped results
+            return new ApplicationSearchResponse { Data = mappedResults, TotalPages = totalRecords / model.PageSize };
         }
 
         public async Task<ApplicationStatusUpdateResponse> UpdateApplicationStatus(string guid, ApplicationStatusData data)
