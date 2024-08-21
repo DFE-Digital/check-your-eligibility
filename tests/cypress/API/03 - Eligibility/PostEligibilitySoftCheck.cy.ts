@@ -19,7 +19,7 @@ describe('Post Eligibility Check - Valid Requests', () => {
       nationalInsuranceNumber: '',
       lastName: 'Simpson',
       dateOfBirth: '1990-01-01',
-      nationalAsylumSeekerServiceNumber: 'AB123456C'
+      nationalAsylumSeekerServiceNumber: '240712349'
     }
   };
 

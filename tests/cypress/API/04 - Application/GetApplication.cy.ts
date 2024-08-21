@@ -10,12 +10,12 @@ describe('GET eligibility soft check by Guid', () => {
         data: {
             school: 100020,
             parentFirstName: 'Homer',
-            parentLastName: 'Simpson',
-            parentNationalInsuranceNumber: '',
-            parentNationalAsylumSeekerServiceNumber: 'AB123456C',
+            parentLastName: 'Smith',
+            parentNationalInsuranceNumber: 'AB123456C',
+            parentNationalAsylumSeekerServiceNumber: '',
             parentDateOfBirth: '1985-01-01',
             childFirstName: 'Jane',
-            childLastName: 'Simpson',
+            childLastName: 'Smith',
             childDateOfBirth: '2005-01-01'
         }
     };

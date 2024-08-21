@@ -399,3 +399,5 @@ FodyWeavers.xsd
 /CheckYourEligibility.WebApp/appsettings.Development.json
 /CheckYourEligibility.WebApp/appsettings.Development.json
 /.gitignore
+tests/cypress/cypress.env.json
+tests/cypress.env.json
