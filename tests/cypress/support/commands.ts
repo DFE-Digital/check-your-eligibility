@@ -188,13 +188,13 @@ Cypress.Commands.add('verifyPostApplicationResponse', (response, requestData) =>
 
   // Verfiy total number of elements
   const totalElements = Object.keys(responseData).length + Object.keys(responseLinks).length;
-  cy.verifyTotalElements(totalElements, 13);
+  cy.verifyTotalElements(totalElements, 16);
 
   // Assertions to verify response data matches request data
   expect(responseData).to.have.property('id');
   expect(responseData).to.have.property('reference');
-  expect(responseData).to.have.property('localAuthority');
-  expect(responseData).to.have.property('school', requestData.data.school);
+  expect(responseData.school).to.have.property('localAuthority');
+  expect(responseData).to.have.property('school');
   expect(responseData).to.have.property('parentFirstName', requestData.data.parentFirstName);
   expect(responseData).to.have.property('parentLastName', requestData.data.parentLastName);
   expect(responseData).to.have.property('parentNationalInsuranceNumber', requestData.data.parentNationalInsuranceNumber);
@@ -203,6 +203,9 @@ Cypress.Commands.add('verifyPostApplicationResponse', (response, requestData) =>
   expect(responseData).to.have.property('childFirstName', requestData.data.childFirstName);
   expect(responseData).to.have.property('childLastName', requestData.data.childLastName);
   expect(responseData).to.have.property('childDateOfBirth', requestData.data.childDateOfBirth);
+  expect(responseData).to.have.property('status');
+  expect(responseData).to.have.property('user');
+  expect(responseData).to.have.property('created');
   expect(responseLinks).to.have.property('get_Application');
 });
 
@@ -223,7 +226,7 @@ Cypress.Commands.add('verifyGetApplicationResponse', (response, expectedData) =>
     Object.keys(responseData.school).length +
     Object.keys(responseData.school.localAuthority).length +
     Object.keys(responseLinks).length;
-  cy.verifyTotalElements(totalElements, 19);
+  cy.verifyTotalElements(totalElements, 21);
 
   // Verify response data matches expected data
   expect(responseData).to.have.property('id');
@@ -244,6 +247,8 @@ Cypress.Commands.add('verifyGetApplicationResponse', (response, expectedData) =>
   expect(responseData).to.have.property('childDateOfBirth', expectedData.childDateOfBirth);
   expect(responseData).to.have.property('status');
   expect(responseData).to.have.property('user');
+  expect(responseData).to.have.property('created');
+  expect(responseData).to.have.property('checkOutcome');
 
   // Verify the links property
   expect(response.body.links).to.have.property('get_Application');
