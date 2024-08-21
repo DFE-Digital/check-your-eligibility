@@ -9,9 +9,19 @@ describe('Search Application', () => {
 
     const body = {
         data: {
-            "localAuthority": 202,
-            "school": 100020,
-            "status": "Open"
+            pageNumber: 1,
+            pageSize: 50000,
+            data: {
+            localAuthority: null,
+            school: 123456,
+            status: null,
+            parentLastName: null,
+            parentNationalInsuranceNumber: null,
+            parentNationalAsylumSeekerServiceNumber: null,
+            parentDateOfBirth: null,
+            childLastName: null,
+            childDateOfBirth: null
+            }
         }
     }
 
