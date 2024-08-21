@@ -8,15 +8,15 @@ import { validLoginRequestBody  } from '../../support/requestBodies';
 describe('GET eligibility soft check by Guid', () => {
     const ValidApplicationRequestBody = {
         data: {
-            school: 100020,
+            school: 123456,
             parentFirstName: 'Homer',
             parentLastName: 'Simpson',
-            parentNationalInsuranceNumber: '',
-            parentNationalAsylumSeekerServiceNumber: 'AB123456C',
-            parentDateOfBirth: '1985-01-01',
+            parentNationalInsuranceNumber: 'AB123456C',
+            parentNationalAsylumSeekerServiceNumber: '',
+            parentDateOfBirth: '1990-01-01',
             childFirstName: 'Jane',
-            childLastName: 'Simpson',
-            childDateOfBirth: '2005-01-01'
+            childLastName: 'Smith',
+            childDateOfBirth: '2005-01-01',
         }
     };
     it('Verify 200 Success response is returned with valid guid', () => {
@@ -24,6 +24,10 @@ describe('GET eligibility soft check by Guid', () => {
         getandVerifyBearerToken('api/Login', validLoginRequestBody).then((token) => {
             //Make post request for eligibility check
             cy.apiRequest('POST', 'FreeSchoolMeals/Application', ValidApplicationRequestBody, token).then((response) => {
+                if (response.status == 500) {
+                    cy.log('Status text:', response.statusText);
+                    cy.log('Response body', response.body);
+                }
                 cy.verifyApiResponseCode(response, 201);
                 //extract Guid
                 cy.extractGuid(response);

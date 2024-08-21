@@ -169,7 +169,7 @@ stages:
           export CYPRESS_API_HOST="$(CYPRESS_API_HOST)"
           export CYPRESS_JWT_USERNAME=$(JWT_USERNAME)
           export CYPRESS_JWT_PASSWORD="$(JWT_PASSWORD)"
-          npm run e2e:chrome
+          npm run e2e:electron
 
       - task: Bash@3
         condition: always()
