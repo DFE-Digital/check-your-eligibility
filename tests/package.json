@@ -9,7 +9,7 @@
     "typescript": "^5.4.5"
   },
   "scripts": {
-    "e2e:chrome": "cypress run --browser chrome",
+    "e2e:electron": "cypress run --browser electron",
     "combine:reports": "jrm results/combined-report.xml \"results/*.xml\""
   }
 }
