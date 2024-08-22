@@ -3,9 +3,10 @@ import { validLoginRequestBody } from '../../support/requestBodies';
 
 
 describe('Authorisation Tests', () => {
-  const invalidRequestBody = { username: 'ecsUiUser', password: 'adsadad' };
+  const invalidRequestBody = { username: 'ecsUiUser', password: '123456' };
+  
 
-  it('Verify 200 response and Bearer Token Is Returned when Valid Credentials are used', () => {    
+  it('Verify 200 response and Bearer Token Is Returned when Valid Credentials are used', () => { 
     getandVerifyBearerToken('api/Login', validLoginRequestBody).then((token) => {
     });
   });
