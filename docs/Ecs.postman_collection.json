@@ -406,7 +406,8 @@
 									"  pm.response.to.have.status(202);\r",
 									"  var jsonData = pm.response.json();\r",
 									"  console.log(jsonData.links.get_Progress_Check);\r",
-									"  pm.collectionVariables.set('checkProgressUrl', jsonData.links.get_Progress_Check)\r",
+									"  pm.collectionVariables.set('checkProgressUrl', jsonData.links.get_Progress_Check);\r",
+									"    pm.collectionVariables.set('get_EligibilityCheckResultsUrl', jsonData.links.get_BulkCheck_Results);\r",
 									"});"
 								],
 								"type": "text/javascript",
@@ -444,25 +445,6 @@
 					"response": []
 				},
 				{
-					"name": "BulkUpload/CheckProgress",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "accept",
-								"value": "text/plain"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}{{checkProgressUrl}}",
-							"host": [
-								"{{baseUrl}}{{checkProgressUrl}}"
-							]
-						}
-					},
-					"response": []
-				},
-				{
 					"name": "bulk load small",
 					"event": [
 						{
@@ -472,7 +454,8 @@
 									"pm.test(\"Status code is 202\", function () {\r",
 									"  pm.response.to.have.status(202);\r",
 									"  var jsonData = pm.response.json();\r",
-									"  pm.collectionVariables.set('checkProgressUrl', jsonData.links.get_Progress_Check)\r",
+									"  pm.collectionVariables.set('checkProgressUrl', jsonData.links.get_Progress_Check);\r",
+									"  pm.collectionVariables.set('get_EligibilityCheckResultsUrl', jsonData.links.get_BulkCheck_Results);\r",
 									"});\r",
 									"\r",
 									"\r",
@@ -514,7 +497,126 @@
 					"response": []
 				},
 				{
+					"name": "BulkUpload/CheckProgress",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"  pm.response.to.have.status(200);\r",
+									"  var jsonData = pm.response.json();\r",
+									"  pm.collectionVariables.set('get_EligibilityCheckResultsUrl', jsonData.links.get_BulkCheck_Results);\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "accept",
+								"value": "text/plain"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}{{checkProgressUrl}}",
+							"host": [
+								"{{baseUrl}}{{checkProgressUrl}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "BulkUpload/Results",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"  pm.response.to.have.status(200);\r",
+									"\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "accept",
+								"value": "text/plain"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}{{get_EligibilityCheckResultsUrl}}",
+							"host": [
+								"{{baseUrl}}{{get_EligibilityCheckResultsUrl}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
 					"name": "Check with ni",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 202\", function () {\r",
+									"  pm.response.to.have.status(202);\r",
+									"  var jsonData = pm.response.json();\r",
+									"  pm.collectionVariables.set('get_EligibilityCheckUrl', jsonData.links.get_EligibilityCheck)\r",
+									"  pm.collectionVariables.set('put_EligibilityCheckProcessUrl', jsonData.links.put_EligibilityCheckProcess)\r",
+									"  pm.collectionVariables.set('get_EligibilityCheckStatusUrl', jsonData.links.get_EligibilityCheckStatus)\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "accept",
+								"value": "text/plain"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"data\": {\r\n    \"nationalInsuranceNumber\": \"AB123456C\",\r\n    \"lastName\": \"SIMPSON\",\r\n    \"dateOfBirth\": \"1990-01-01\",\r\n    \"nationalAsylumSeekerServiceNumber\": null\r\n  }\r\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/FreeSchoolMeals",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"FreeSchoolMeals"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Check with ni not valid",
 					"event": [
 						{
 							"listen": "test",
@@ -595,7 +697,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n  \"data\": {\r\n    \"nationalInsuranceNumber\": null,\r\n    \"lastName\": \"SIMPSONz\",\r\n    \"dateOfBirth\": \"1990-01-01\",\r\n    \"nationalAsylumSeekerServiceNumber\": \"123\"\r\n  }\r\n}"
+							"raw": "{\r\n  \"data\": {\r\n    \"nationalInsuranceNumber\": null,\r\n    \"lastName\": \"SIMPSON\",\r\n    \"dateOfBirth\": \"1990-01-01\",\r\n    \"nationalAsylumSeekerServiceNumber\": \"240767890\"\r\n  }\r\n}"
 						},
 						"url": {
 							"raw": "{{baseUrl}}/FreeSchoolMeals",
@@ -610,7 +712,7 @@
 					"response": []
 				},
 				{
-					"name": "check with ni valid dwp",
+					"name": "check DWP eligible",
 					"event": [
 						{
 							"listen": "test",
@@ -643,7 +745,55 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n  \"data\": {\r\n    \"nationalInsuranceNumber\": \"AB123456C\",\r\n    \"lastName\": \"DWPmoqEligible\",\r\n    \"dateOfBirth\": \"1990-01-01\",\r\n    \"nationalAsylumSeekerServiceNumber\": null\r\n  }\r\n}"
+							"raw": "{\r\n  \"data\": {\r\n    \"nationalInsuranceNumber\": \"AB123456C\",\r\n    \"lastName\": \"Smith\",\r\n    \"dateOfBirth\": \"1990-01-01\",\r\n    \"nationalAsylumSeekerServiceNumber\": null\r\n  }\r\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/FreeSchoolMeals",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"FreeSchoolMeals"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "check DWP Not eligible",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 202\", function () {\r",
+									"  pm.response.to.have.status(202);\r",
+									"  var jsonData = pm.response.json();\r",
+									"  pm.collectionVariables.set('get_EligibilityCheckUrl', jsonData.links.get_EligibilityCheck)\r",
+									"  pm.collectionVariables.set('put_EligibilityCheckProcessUrl', jsonData.links.put_EligibilityCheckProcess)\r",
+									"  pm.collectionVariables.set('get_EligibilityCheckStatusUrl', jsonData.links.get_EligibilityCheckStatus)\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "accept",
+								"value": "text/plain"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"data\": {\r\n    \"nationalInsuranceNumber\": \"AB123456C\",\r\n    \"lastName\": \"Jones\",\r\n    \"dateOfBirth\": \"1990-01-01\",\r\n    \"nationalAsylumSeekerServiceNumber\": null\r\n  }\r\n}"
 						},
 						"url": {
 							"raw": "{{baseUrl}}/FreeSchoolMeals",
@@ -727,7 +877,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n  \"data\": {\r\n    \"school\": 100000,\r\n    \"parentFirstName\": \"Tom\",\r\n    \"parentLastName\": \"SIMPSON\",\r\n    \"parentNationalInsuranceNumber\": \"AB123456C\",\r\n    \"parentNationalAsylumSeekerServiceNumber\": \"\",\r\n    \"parentDateOfBirth\": \"1990-01-01\",\r\n    \"childFirstName\": \"Alexa\",\r\n    \"childLastName\": \"Smith\",\r\n    \"childDateOfBirth\": \"2000-01-01\",\r\n    \"UserId\":\"c9d1b9cc-1767-4933-b25f-06712c17ca76\"\r\n  }\r\n}"
+							"raw": "{\r\n    \"Data\": {\r\n        \"School\": 123456,\r\n        \"ParentFirstName\": \"frd\",\r\n        \"ParentLastName\": \"Jones\",\r\n        \"ParentNationalInsuranceNumber\": \"AB123456C\",\r\n        \"ParentNationalAsylumSeekerServiceNumber\": null,\r\n        \"ParentDateOfBirth\": \"1990-01-01\",\r\n        \"ChildFirstName\": \"Alexa\",\r\n        \"ChildLastName\": \"Crittenden\",\r\n        \"ChildDateOfBirth\": \"2007-08-14\",\r\n        \"UserId\": \"d28b2477-6989-4e73-b7f9-98d47df0a1ea\"\r\n    }\r\n}"
 						},
 						"url": {
 							"raw": "{{baseUrl}}/FreeSchoolMeals/application",
@@ -757,6 +907,46 @@
 					"response": []
 				},
 				{
+					"name": "application by guid",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/FreeSchoolMeals/application/0dbc1034-361e-4c8f-9e69-5be10865a7f0",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"FreeSchoolMeals",
+								"application",
+								"0dbc1034-361e-4c8f-9e69-5be10865a7f0"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "application by guid Copy",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://localhost:7117/FreeSchoolMeals/Application/032c24c6-a2f5-40b9-80ce-ec9daf894a4d",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "7117",
+							"path": [
+								"FreeSchoolMeals",
+								"Application",
+								"032c24c6-a2f5-40b9-80ce-ec9daf894a4d"
+							]
+						}
+					},
+					"response": []
+				},
+				{
 					"name": "application status",
 					"request": {
 						"method": "PATCH",
@@ -772,7 +962,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n  \"data\": {\r\n    \"status\": \"Open\"\r\n  }\r\n}"
+							"raw": "{\r\n  \"data\": {\r\n    \"status\": \"EvidenceNeeded\"\r\n  }\r\n}"
 						},
 						"url": {
 							"raw": "{{baseUrl}}{{get_ApplicationUrl}}",
@@ -799,7 +989,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n  \"data\": {\r\n    \"localAuthority\": null,\r\n    \"school\": null,\r\n    \"status\": null,\r\n    \"parentLastName\": \"SIMPSON\",\r\n    \"parentNationalInsuranceNumber\": null,\r\n    \"parentNationalAsylumSeekerServiceNumber\": null,\r\n    \"parentDateOfBirth\": \"1990-01-01\",\r\n    \"childLastName\": null,\r\n    \"childDateOfBirth\": null\r\n  }\r\n}"
+							"raw": "{\r\n \"pageNumber\": 1,\r\n  \"pageSize\": 50000,\r\n  \"data\": {\r\n    \"localAuthority\": null,\r\n    \"school\": 123456,\r\n    \"status\": null,\r\n    \"parentLastName\": null,\r\n    \"parentNationalInsuranceNumber\": null,\r\n    \"parentNationalAsylumSeekerServiceNumber\": null,\r\n    \"parentDateOfBirth\": null,\r\n    \"childLastName\": null,\r\n    \"childDateOfBirth\": null\r\n  }\r\n}"
 						},
 						"url": {
 							"raw": "{{baseUrl}}/FreeSchoolMeals/Application/Search",
@@ -810,6 +1000,26 @@
 								"FreeSchoolMeals",
 								"Application",
 								"Search"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "{{baseUrl}}/FreeSchoolMeals/Bulk/b9ff3657-7433-4785-add8-c74f2f67bd05/Results",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/FreeSchoolMeals/Bulk/b9ff3657-7433-4785-add8-c74f2f67bd05/Results",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"FreeSchoolMeals",
+								"Bulk",
+								"b9ff3657-7433-4785-add8-c74f2f67bd05",
+								"Results"
 							]
 						}
 					},
@@ -913,7 +1123,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n  \"data\": {\r\n    \"email\": \"test@test.com\",\r\n    \"reference\": \"testRef\"\r\n  }\r\n}"
+							"raw": "{\r\n  \"data\": {\r\n    \"email\": \"richard.crittenden@education.gov.uk\",\r\n    \"reference\": \"urn:fdc:gov.uk:2022:kzGGbQujEv1IOt11jsctDx-nvblsgXcpXKzdEkhXf70\"\r\n  }\r\n}"
 						},
 						"url": {
 							"raw": "{{baseUrl}}/Users",
@@ -1009,6 +1219,11 @@
 		},
 		{
 			"key": "get_ApplicationUrl",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "get_EligibilityCheckResultsUrl",
 			"value": "",
 			"type": "string"
 		}
