@@ -130,19 +130,49 @@ namespace CheckYourEligibility.Services
 
         public async Task<ApplicationSearchResponse> GetApplications(ApplicationRequestSearch model)
         {
-            var results = _db.Applications
+            IEnumerable<Application> results = new List<Application>();
+            if (model.Data.Statuses != null)
+                foreach (var status in model.Data.Statuses)
+                {
+                   var resultsForStatus =GetSearchResults(model,status);
+                   results = results.Union(resultsForStatus);
+                }
+            else
+            {
+                results = GetSearchResults(model,null);
+            }
+
+            // Calculate total records and total pages
+            int totalRecords = results.Count();
+            int totalPages = (int)Math.Ceiling((double)totalRecords / model.PageSize);
+
+            // Pagination logic
+            model.PageNumber = model.PageNumber <= 0 ? 1 : model.PageNumber;
+            var pagedResults = results
+                .Skip((model.PageNumber - 1) * model.PageSize)
+                .Take(model.PageSize);
+
+            // Use AutoMapper or manual mapping to map Application entities to ApplicationResponse DTOs
+            var mappedResults = _mapper.Map<IEnumerable<ApplicationResponse>>(pagedResults);
+
+            // Return paginated and mapped results
+            return new ApplicationSearchResponse { Data = mappedResults, TotalRecords = totalRecords, TotalPages = totalPages };
+        }
+
+        private IEnumerable<Application> GetSearchResults(ApplicationRequestSearch model, Domain.Enums.ApplicationStatus? status)
+        {
+            IQueryable<Application> results = results = _db.Applications
                .Include(x => x.Statuses)
                .Include(x => x.School)
                .ThenInclude(x => x.LocalAuthority)
                .Include(x => x.User)
                .Where(x => x.Type == CheckEligibilityType.ApplcicationFsm);
-
             if (model.Data?.School != null)
                 results = results.Where(x => x.SchoolId == model.Data.School);
             if (model.Data?.LocalAuthority != null)
                 results = results.Where(x => x.LocalAuthorityId == model.Data.LocalAuthority);
-            if (model.Data?.Status != null)
-                results = results.Where(x => x.Status == model.Data.Status);
+            if (status != null)
+                results = results.Where(x => x.Status == status);
 
             if (!string.IsNullOrEmpty(model.Data?.ParentNationalInsuranceNumber))
                 results = results.Where(x => x.ParentNationalInsuranceNumber == model.Data.ParentNationalInsuranceNumber);
@@ -158,22 +188,7 @@ namespace CheckYourEligibility.Services
                 results = results.Where(x => x.ChildDateOfBirth == DateTime.ParseExact(model.Data.ChildDateOfBirth, "yyyy-MM-dd", CultureInfo.InvariantCulture));
             if (!string.IsNullOrEmpty(model.Data?.Reference))
                 results = results.Where(x => x.Reference == model.Data.Reference);
-            // Calculate total records and total pages
-            int totalRecords = await results.CountAsync();
-            int totalPages = (int)Math.Ceiling((double)totalRecords / model.PageSize);
-
-            // Pagination logic
-            model.PageNumber = model.PageNumber <=0 ? 1 : model.PageNumber;
-            var pagedResults = await results
-                .Skip((model.PageNumber - 1) * model.PageSize)
-                .Take(model.PageSize)
-                .ToListAsync();
-
-            // Use AutoMapper or manual mapping to map Application entities to ApplicationResponse DTOs
-            var mappedResults = _mapper.Map<IEnumerable<ApplicationResponse>>(pagedResults);
-
-            // Return paginated and mapped results
-            return new ApplicationSearchResponse { Data = mappedResults, TotalPages = totalRecords / model.PageSize };
+            return results.ToList();
         }
 
         public async Task<ApplicationStatusUpdateResponse> UpdateApplicationStatus(string guid, ApplicationStatusData data)
