@@ -4,15 +4,15 @@ import { validLoginRequestBody } from '../../support/requestBodies';
 describe('Verify POST application responses', () => {
     const baseApplicationRequestBody = {
         data: {
-            school: 100020,
+            school: 123456,
             parentFirstName: 'Homer',
             parentLastName: 'Simpson',
-            parentNationalInsuranceNumber: '',
-            parentNationalAsylumSeekerServiceNumber: 'AB123456C',
-            parentDateOfBirth: '1985-01-01',
+            parentNationalInsuranceNumber: 'AB123456C',
+            parentNationalAsylumSeekerServiceNumber: '',
+            parentDateOfBirth: '1990-01-01',
             childFirstName: 'Jane',
-            childLastName: 'Simpson',
-            childDateOfBirth: '2005-01-01'
+            childLastName: 'Smith',
+            childDateOfBirth: '2005-01-01',
         }
     };
 
@@ -20,6 +20,10 @@ describe('Verify POST application responses', () => {
         getandVerifyBearerToken('api/Login', validLoginRequestBody).then((token) => {
             cy.apiRequest('POST', 'FreeSchoolMeals/Application', baseApplicationRequestBody, token).then((response) => {
                 // Assert the status and statusText
+                if (response.status == 500) {
+                    cy.log('Status text:', response.statusText);
+                    cy.log('Response body', response.body);
+                }
                 cy.verifyApiResponseCode(response, 201);
 
                 // Assert the response body data

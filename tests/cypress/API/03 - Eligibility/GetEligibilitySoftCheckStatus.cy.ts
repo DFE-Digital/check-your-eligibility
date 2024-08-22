@@ -5,9 +5,9 @@ import { validLoginRequestBody } from '../../support/requestBodies';
 const validHomeOfficeRequestBody = {
   data: {
     nationalInsuranceNumber: '',
-    lastName: 'Bloggs',
-    dateOfBirth: '2000-01-01',
-    nationalAsylumSeekerServiceNumber: 'AB123456C'
+    lastName: 'Simpson',
+    dateOfBirth: '1990-01-01',
+    nationalAsylumSeekerServiceNumber: '240712349'
   }
 };
 describe('GET eligibility soft check  Status ', () => {
