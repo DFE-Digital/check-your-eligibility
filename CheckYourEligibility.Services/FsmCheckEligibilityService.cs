@@ -158,8 +158,10 @@ namespace CheckYourEligibility.Services
         public async Task<CheckEligibilityStatus?> ProcessCheck(string guid, AuditData auditDataTemplate)
         {         
             var result = await _db.CheckEligibilities.FirstOrDefaultAsync(x => x.EligibilityCheckID == guid);
+            
             if (result != null)
             {
+                result.LastName = result.LastName.ToUpper();
                 if (result.Status != CheckEligibilityStatus.queuedForProcessing)
                 {
                     LogApiEvent(this.GetType().Name, guid, $"CheckItem not queuedForProcessing. {GetCurrentMethod()}");
