@@ -107,8 +107,6 @@ namespace CheckYourEligibility.ServiceUnitTests
 
             _fakeInMemoryDb.SaveChanges();
 
-
-
             // Act
             var response = _sut.PostApplication(request);
 
