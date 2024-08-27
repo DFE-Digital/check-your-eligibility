@@ -37,7 +37,6 @@ namespace CheckYourEligibility.Services
         {
             try
             {
-
                 var item = _mapper.Map<Application>(data);
                 var hashCheck = GetHash(CheckEligibilityType.FreeSchoolMeals, item);
                 if (hashCheck == null)
