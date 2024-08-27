@@ -158,8 +158,10 @@ namespace CheckYourEligibility.Services
         public async Task<CheckEligibilityStatus?> ProcessCheck(string guid, AuditData auditDataTemplate)
         {         
             var result = await _db.CheckEligibilities.FirstOrDefaultAsync(x => x.EligibilityCheckID == guid);
+            
             if (result != null)
             {
+                result.LastName = result.LastName.ToUpper();
                 if (result.Status != CheckEligibilityStatus.queuedForProcessing)
                 {
                     LogApiEvent(this.GetType().Name, guid, $"CheckItem not queuedForProcessing. {GetCurrentMethod()}");
@@ -232,7 +234,7 @@ namespace CheckYourEligibility.Services
 
         public  static string GetHash(EligibilityCheck item)
         {
-            var key  = string.IsNullOrEmpty(item.NINumber) ? item.NASSNumber : item.NINumber;
+            var key  = string.IsNullOrEmpty(item.NINumber) ? item.NASSNumber.ToUpper() : item.NINumber.ToUpper();
             var input = $"{item.LastName.ToUpper()}{key}{item.DateOfBirth.ToString("d")}{item.Type}";
             var inputBytes = Encoding.UTF8.GetBytes(input);
             var inputHash = SHA256.HashData(inputBytes);
