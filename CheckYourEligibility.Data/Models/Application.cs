@@ -58,5 +58,7 @@ namespace CheckYourEligibility.Data.Models
         public string? UserId { get; set; }
         public virtual EligibilityCheckHash EligibilityCheckHash { get; set; }
         public string? EligibilityCheckHashID { get; set; }
+        [Column(TypeName = "varchar(1000)")]
+        public string ParentEmail { get; set; }
     }
 }
