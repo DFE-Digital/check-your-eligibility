@@ -7,6 +7,7 @@ describe('Verify POST application responses', () => {
             school: 123456,
             parentFirstName: 'Homer',
             parentLastName: 'Simpson',
+            parentEmail: 'homer@example.com',
             parentNationalInsuranceNumber: 'AB123456C',
             parentNationalAsylumSeekerServiceNumber: '',
             parentDateOfBirth: '1990-01-01',
@@ -20,10 +21,6 @@ describe('Verify POST application responses', () => {
         getandVerifyBearerToken('api/Login', validLoginRequestBody).then((token) => {
             cy.apiRequest('POST', 'FreeSchoolMeals/Application', baseApplicationRequestBody, token).then((response) => {
                 // Assert the status and statusText
-                if (response.status == 500) {
-                    cy.log('Status text:', response.statusText);
-                    cy.log('Response body', response.body);
-                }
                 cy.verifyApiResponseCode(response, 201);
 
                 // Assert the response body data
@@ -57,6 +54,7 @@ describe('Verify invalid application request responses', () => {
             school: 107126,
             parentFirstName: 'Homer',
             parentLastName: 'Simpson',
+            parentEmail: 'homer@example.com',
             parentNationalInsuranceNumber: '',
             parentNationalAsylumSeekerServiceNumber: 'AB123456C',
             parentDateOfBirth: '1985-01-01',
