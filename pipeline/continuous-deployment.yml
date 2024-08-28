@@ -186,3 +186,41 @@ stages:
         inputs:
          testResultsFiles: '**/combined-report.xml'
          searchFolder: 'tests'
+
+  - stage: DeployAppPP
+    displayName: Deploy App Pre-prod
+    jobs:
+    - deployment: ppdeploy
+      displayName: Deploy App Pre-prod
+      pool:
+        name: Azure Pipelines
+        vmImage: 'windows-latest'
+      environment: PRE-PROD
+      strategy:
+        runOnce:
+          preDeploy:
+            steps:
+            - task: DownloadPipelineArtifact@2
+              inputs:
+                buildType: 'current'
+                targetPath: '$(Pipeline.Workspace)'
+            - task: AzureCLI@2
+              displayName: 'Run Migrations'
+              env:
+                KEY_VAULT_NAME: ecs-pp-kv
+              inputs:
+                azureSubscription: 's203t.azdo.deployment'
+                scriptType: 'ps'
+                scriptLocation: 'inlineScript'
+                inlineScript: |
+                  $(Pipeline.Workspace)/checkYourEligibilityAPI/efbundle.exe
+                  
+          deploy:
+            steps:
+            - task: AzureRmWebAppDeployment@4
+              inputs:
+                ConnectionType: 'AzureRM'
+                azureSubscription: 's203t.azdo.deployment'
+                appType: 'webApp'
+                WebAppName: 'ecs-pp-as'
+                packageForLinux: '$(Pipeline.Workspace)/checkYourEligibilityAPI/CheckYourEligibility.WebApp.zip'
