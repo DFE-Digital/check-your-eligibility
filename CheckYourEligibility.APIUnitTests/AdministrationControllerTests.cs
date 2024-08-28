@@ -76,9 +76,7 @@ namespace CheckYourEligibility.APIUnitTests
             // Arrange
             _mockService.Setup(cs => cs.ImportEstablishments(It.IsAny<IEnumerable<EstablishmentRow>>())).Returns(Task.CompletedTask);
             _mockAuditService.Setup(cs => cs.AuditAdd(It.IsAny<AuditData>())).ReturnsAsync(Guid.NewGuid().ToString());
-            _mockSchoolService.Setup(x => x.RefreshData());
-
-
+            
             var content = Properties.Resources.small_gis;
             var fileName = "test.csv";
             var stream = new MemoryStream();
