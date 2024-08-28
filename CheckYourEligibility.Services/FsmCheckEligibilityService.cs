@@ -198,7 +198,7 @@ namespace CheckYourEligibility.Services
                    
                     var updates = await _db.SaveChangesAsync();
                 }
-                
+                LogApiEvent(this.GetType().Name, guid, "ProcessCheck", $"Result:-{result.Status}");
                 return result.Status;
             }
             else
