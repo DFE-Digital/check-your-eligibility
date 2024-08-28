@@ -11,6 +11,7 @@ describe('GET eligibility soft check by Guid', () => {
             school: 123456,
             parentFirstName: 'Homer',
             parentLastName: 'Simpson',
+            parentEmail: 'Homer@example.com',
             parentNationalInsuranceNumber: 'AB123456C',
             parentNationalAsylumSeekerServiceNumber: '',
             parentDateOfBirth: '1990-01-01',
@@ -24,10 +25,7 @@ describe('GET eligibility soft check by Guid', () => {
         getandVerifyBearerToken('api/Login', validLoginRequestBody).then((token) => {
             //Make post request for eligibility check
             cy.apiRequest('POST', 'FreeSchoolMeals/Application', ValidApplicationRequestBody, token).then((response) => {
-                if (response.status == 500) {
-                    cy.log('Status text:', response.statusText);
-                    cy.log('Response body', response.body);
-                }
+
                 cy.verifyApiResponseCode(response, 201);
                 //extract Guid
                 cy.extractGuid(response);
