@@ -45,10 +45,6 @@ describe('Update Application Status', () => {
             //Make post request for eligibility check
             cy.apiRequest('POST', 'FreeSchoolMeals/Application/Search', body, token).then((response) => {
                 // Assert the status and statusText
-                if (response.status == 400) {
-                    cy.log('Status text:', response.statusText);
-                    cy.log('Response body', JSON.stringify(response.body));
-                }
                 cy.verifyApiResponseCode(response, 200);
                 cy.verifyApplicationSearchResponse(response, expectedApplicationsData)
             })
