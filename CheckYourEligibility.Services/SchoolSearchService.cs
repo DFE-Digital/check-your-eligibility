@@ -14,34 +14,28 @@ namespace CheckYourEligibility.Services
 
         private readonly ILogger _logger;
         private readonly IEligibilityCheckContext _db;
-        static IEnumerable<School> _schools = new List<School>();
 
         public SchoolSearchService(ILoggerFactory logger, IEligibilityCheckContext dbContext)
         {
             _logger = logger.CreateLogger("SchoolSearchService");
             _db = Guard.Against.Null(dbContext);
-            if (!_schools.Any())
-            {
-                RefreshData();
-            }
-        }
-
-        public void RefreshData()
-        {
-            _schools = _db.Schools.Where(x => x.StatusOpen).Include(x => x.LocalAuthority).ToList();
         }
 
         [ExcludeFromCodeCoverage(Justification = "memory only db breaks test in full run, works fine run locally")]
           public async Task<IEnumerable<Domain.Responses.School>?> Search(string query)
         {
+            var allSchools = _db.Schools.Where(x => x.StatusOpen 
+            && x.EstablishmentName.Contains(query))
+                .Include(x => x.LocalAuthority);
+            
             var results = new List<Domain.Responses.School>();
             var queryResult = new List<School>();
-
+            
             var lev = new NormalizedLevenshtein();
             //var lev = new Fastenshtein.Levenshtein(query);
             //var lev = new Damerau();
             double levenshteinDistance;
-            foreach (var item in _schools)
+            foreach (var item in allSchools)
             {
                 levenshteinDistance = lev.Distance(query.ToUpper(), item.EstablishmentName.ToUpper());// lev.DistanceFrom(item.EstablishmentName);
                 if (levenshteinDistance < 20)

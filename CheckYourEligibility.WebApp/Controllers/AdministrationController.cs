@@ -94,7 +94,7 @@ namespace CheckYourEligibility.WebApp.Controllers
             }
 
             await _service.ImportEstablishments(DataLoad);
-            _schoolSearch.RefreshData();
+           
             await AuditAdd(Domain.Enums.AuditType.Administration, string.Empty);
             return new ObjectResult(new MessageResponse { Data = $"{file.FileName} - {Admin.EstablishmentFileProcessed}"}){ StatusCode = StatusCodes.Status200OK };
         }
