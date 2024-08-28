@@ -21,10 +21,6 @@ describe('Verify POST application responses', () => {
         getandVerifyBearerToken('api/Login', validLoginRequestBody).then((token) => {
             cy.apiRequest('POST', 'FreeSchoolMeals/Application', baseApplicationRequestBody, token).then((response) => {
                 // Assert the status and statusText
-                if (response.status == 500) {
-                    cy.log('Status text:', response.statusText);
-                    cy.log('Response body', response.body);
-                }
                 cy.verifyApiResponseCode(response, 201);
 
                 // Assert the response body data
