@@ -73,6 +73,8 @@ namespace CheckYourEligibility.Services
                 var saved = _db.Applications
                     .First(x => x.ApplicationID == item.ApplicationID);
 
+                TrackMetric($"Application {item.Type}", 1);
+
                 return await GetApplication(saved.ApplicationID);
             }
             catch (Exception ex)
@@ -187,7 +189,7 @@ namespace CheckYourEligibility.Services
                 results = results.Where(x => x.ChildDateOfBirth == DateTime.ParseExact(model.Data.ChildDateOfBirth, "yyyy-MM-dd", CultureInfo.InvariantCulture));
             if (!string.IsNullOrEmpty(model.Data?.Reference))
                 results = results.Where(x => x.Reference == model.Data.Reference);
-            return results.ToList();
+            return results.OrderBy(x=>x.Created).ToList();
         }
 
         public async Task<ApplicationStatusUpdateResponse> UpdateApplicationStatus(string guid, ApplicationStatusData data)

@@ -25,6 +25,11 @@ namespace CheckYourEligibility.Services
             return sf.GetMethod().Name;
         }
 
+        protected void TrackMetric(string name,double value)
+        {
+            _telemetry.TrackMetric(name,value,null);
+        }
+
         protected void LogApiEvent<t1, t2>(string className, t1 data, t2 response, [CallerMemberName] string name = "", string message = "")
         {
 
