@@ -200,6 +200,7 @@ namespace CheckYourEligibility.Services
                     // Revert status back and do not save changes
                     result.Status = CheckEligibilityStatus.queuedForProcessing;
                     LogApiEvent(this.GetType().Name, guid, "Dwp Error", "There has been an error calling DWP");
+                    TrackMetric($"Dwp Error", 1);
                 }
                 else
                 {
@@ -210,6 +211,8 @@ namespace CheckYourEligibility.Services
                 
                 TrackMetric($"FSM Check:-{result.Status}", 1);
                 TrackMetric($"FSM Check", 1);
+                var processingTime =  (DateTime.Now.ToUniversalTime() - result.Created.ToUniversalTime()).Seconds;
+                TrackMetric($"Check ProcessingTime (Seconds)", processingTime);
                 return result.Status;
             }
             else
