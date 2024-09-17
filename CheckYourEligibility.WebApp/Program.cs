@@ -8,6 +8,8 @@ using Microsoft.OpenApi.Models;
 using System.Text.Json.Serialization;
 using Azure.Identity;
 using System.Diagnostics.CodeAnalysis;
+using CheckYourEligibility.WebApp.Middleware;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -112,6 +114,7 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.UseHttpsRedirection();
+app.UseMiddleware<ResponseBodyLoggingMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();
 
