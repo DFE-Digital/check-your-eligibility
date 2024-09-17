@@ -151,11 +151,6 @@ app.Use(async (httpContext, next) =>
     }
 });
 
-
-
-//app.UseMiddleware<ResponseBodyLoggingMiddleware>();
-//app.UseMiddleware<RequestBodyLoggingMiddleware>();
-
 app.UseAuthentication();
 app.UseAuthorization();
 
