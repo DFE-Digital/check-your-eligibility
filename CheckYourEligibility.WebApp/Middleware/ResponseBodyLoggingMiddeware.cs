@@ -1,7 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.ApplicationInsights.DataContracts;
-using System.IO;
-using System.Threading.Tasks;
+﻿using Microsoft.ApplicationInsights.DataContracts;
 
 
 namespace CheckYourEligibility.WebApp.Middleware
