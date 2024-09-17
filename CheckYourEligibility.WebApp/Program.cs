@@ -114,7 +114,8 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.UseHttpsRedirection();
-//app.UseMiddleware<ResponseBodyLoggingMiddleware>();
+app.UseMiddleware<ResponseBodyLoggingMiddleware>();
+app.UseMiddleware<RequestBodyLoggingMiddleware>();
 
 app.UseAuthentication();
 app.UseAuthorization();
