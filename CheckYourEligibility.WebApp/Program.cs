@@ -9,12 +9,24 @@ using System.Text.Json.Serialization;
 using Azure.Identity;
 using System.Diagnostics.CodeAnalysis;
 using CheckYourEligibility.WebApp.Middleware;
-
+using Microsoft.ApplicationInsights.Extensibility;
+using Microsoft.ApplicationInsights.Extensibility.Implementation;
+using Microsoft.ApplicationInsights.Channel;
+using Microsoft.AspNetCore.Http;
+using System;
+using Microsoft.ApplicationInsights;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddApplicationInsightsTelemetry();
+
+// Register IHttpContextAccessor
+builder.Services.AddHttpContextAccessor();
+
+// Register the TelemetryInitializer
+builder.Services.AddSingleton<ITelemetryInitializer, UserTelemetryInitializer>();
+
 builder.Services.AddControllers()
     .AddNewtonsoftJson()
     .AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
@@ -63,7 +75,7 @@ builder.Services.AddSwaggerGen(c =>
     c.IncludeXmlComments(filePath);
 });
 
-if (Environment.GetEnvironmentVariable("KEY_VAULT_NAME")!=null)
+if (Environment.GetEnvironmentVariable("KEY_VAULT_NAME") != null)
 {
     var keyVaultName = Environment.GetEnvironmentVariable("KEY_VAULT_NAME");
     var kvUri = $"https://{keyVaultName}.vault.azure.net";
@@ -89,33 +101,19 @@ builder.Services.AddAuthorization(builder.Configuration);
 
 var app = builder.Build();
 
-
 // Configure the HTTP request pipeline.
-//if (app.Environment.IsDevelopment())
-//{
 app.UseSwagger();
-    app.UseSwaggerUI();
-    app.UseDeveloperExceptionPage();
-    app.UseMigrationsEndPoint();
-    
-//}
+app.UseSwaggerUI();
 
-using (var scope = app.Services.CreateScope())
-{
-    var services = scope.ServiceProvider;
+app.UseDeveloperExceptionPage();
+app.UseMigrationsEndPoint();
 
-    var context = services.GetRequiredService<EligibilityCheckContext>();
-    if (app.Environment.IsDevelopment())
-    {
-        //context.Database.EnsureCreated();
-        context.Database.Migrate(); //Runs all migrations that have not been processed. ensure there is a BaseMigration
-        DbInitializer.Initialize(context);
-    }
-}
+// Use custom exception logging middleware 
+app.UseMiddleware<ExceptionLoggingMiddleware>();
 
 app.UseHttpsRedirection();
-//app.UseMiddleware<ResponseBodyLoggingMiddleware>();
 
+// Use Authentication and Authorization
 app.UseAuthentication();
 app.UseAuthorization();
 
@@ -125,3 +123,64 @@ app.Run();
 
 [ExcludeFromCodeCoverage]
 public partial class Program { }
+
+// --- Add the following classes in the same file or in their respective files ---
+
+// UserTelemetryInitializer.cs
+public class UserTelemetryInitializer : ITelemetryInitializer
+{
+    private readonly IHttpContextAccessor _httpContextAccessor;
+
+    public UserTelemetryInitializer(IHttpContextAccessor httpContextAccessor)
+    {
+        _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
+    }
+
+    public void Initialize(ITelemetry telemetry)
+    {
+        var httpContext = _httpContextAccessor.HttpContext;
+
+        if (httpContext?.User?.Identity?.IsAuthenticated == true)
+        {
+            // Set the Authenticated User ID
+            telemetry.Context.User.AuthenticatedUserId = httpContext.User.Identity.Name;
+        }
+    }
+}
+
+// (Optional) ExceptionLoggingMiddleware.cs
+public class ExceptionLoggingMiddleware
+{
+    private readonly RequestDelegate _next;
+    private readonly TelemetryClient _telemetryClient;
+
+    public ExceptionLoggingMiddleware(RequestDelegate next, TelemetryClient telemetryClient)
+    {
+        _next = next;
+        _telemetryClient = telemetryClient;
+    }
+
+    public async Task Invoke(HttpContext context)
+    {
+        try
+        {
+            await _next(context);
+        }
+        catch (Exception ex)
+        {
+            var exceptionTelemetry = new Microsoft.ApplicationInsights.DataContracts.ExceptionTelemetry(ex);
+
+            // Add custom properties
+            if (context.User.Identity.IsAuthenticated)
+            {
+                exceptionTelemetry.Properties.Add("UserName", context.User.Identity.Name);
+            }
+            exceptionTelemetry.Properties.Add("RequestPath", context.Request.Path);
+
+            _telemetryClient.TrackException(exceptionTelemetry);
+
+            // Re-throw the exception after logging it
+            throw;
+        }
+    }
+}
