@@ -10,6 +10,7 @@ using CheckYourEligibility.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using NetTopologySuite.Index.HPRtree;
 using System.Globalization;
 
 namespace CheckYourEligibility.Services
@@ -72,6 +73,8 @@ namespace CheckYourEligibility.Services
 
                 var saved = _db.Applications
                     .First(x => x.ApplicationID == item.ApplicationID);
+
+                TrackMetric($"Application {item.Type}", 1);
 
                 return await GetApplication(saved.ApplicationID);
             }
@@ -187,7 +190,7 @@ namespace CheckYourEligibility.Services
                 results = results.Where(x => x.ChildDateOfBirth == DateTime.ParseExact(model.Data.ChildDateOfBirth, "yyyy-MM-dd", CultureInfo.InvariantCulture));
             if (!string.IsNullOrEmpty(model.Data?.Reference))
                 results = results.Where(x => x.Reference == model.Data.Reference);
-            return results.ToList();
+            return results.OrderBy(x=>x.Created).ToList();
         }
 
         public async Task<ApplicationStatusUpdateResponse> UpdateApplicationStatus(string guid, ApplicationStatusData data)
@@ -200,6 +203,9 @@ namespace CheckYourEligibility.Services
 
                 result.Updated = DateTime.UtcNow;
                 var updates = await _db.SaveChangesAsync();
+                TrackMetric($"Application Status Change {result.Status}", 1);
+                TrackMetric($"Application Status Change School:-{result.SchoolId} {result.Status}", 1);
+                TrackMetric($"Application Status Change La:-{result.LocalAuthorityId} {result.Status}", 1);
                 return new ApplicationStatusUpdateResponse { Data = new ApplicationStatusDataResponse { Status = result.Status.Value.ToString() } };
             }
 
