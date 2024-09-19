@@ -2,7 +2,10 @@
 
 using Ardalis.GuardClauses;
 using AutoMapper;
+using Azure;
+using Azure.Core.Pipeline;
 using Azure.Storage.Queues;
+using Azure.Storage.Queues.Models;
 using CheckYourEligibility.Data.Models;
 using CheckYourEligibility.Domain.Constants;
 using CheckYourEligibility.Domain.Enums;
@@ -18,6 +21,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
 using System.Diagnostics.CodeAnalysis;
+using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using System.Text;
 using static System.Runtime.InteropServices.JavaScript.JSType;
@@ -122,13 +126,16 @@ namespace CheckYourEligibility.Services
                 if (item.Group.IsNullOrEmpty())
                 {
                     await _queueClientStandard.SendMessageAsync(
-                                    JsonConvert.SerializeObject(new QueueMessageCheck()
-                                    {
-                                        Type = item.Type.ToString(),
-                                        Guid = item.EligibilityCheckID,
-                                        ProcessUrl = $"{FSMLinks.ProcessLink}{item.EligibilityCheckID}",
-                                        SetStatusUrl = $"{FSMLinks.GetLink}{item.EligibilityCheckID}/status"
-                                    }));
+                                        JsonConvert.SerializeObject(new QueueMessageCheck()
+                                        {
+                                            Type = item.Type.ToString(),
+                                            Guid = item.EligibilityCheckID,
+                                            ProcessUrl = $"{FSMLinks.ProcessLink}{item.EligibilityCheckID}",
+                                            SetStatusUrl = $"{FSMLinks.GetLink}{item.EligibilityCheckID}/status"
+                                        }));
+
+                    LogQueueCount(_queueClientStandard);
+
                 }
                 else
                 {
@@ -140,9 +147,11 @@ namespace CheckYourEligibility.Services
                                     ProcessUrl = $"{FSMLinks.ProcessLink}{item.EligibilityCheckID}",
                                     SetStatusUrl = $"{FSMLinks.GetLink}{item.EligibilityCheckID}/status"
                                 }));
+                    LogQueueCount(_queueClientBulk);
                 }
             }
         }
+
         
 
         public async Task<CheckEligibilityStatus?> GetStatus(string guid)
@@ -191,6 +200,7 @@ namespace CheckYourEligibility.Services
                     // Revert status back and do not save changes
                     result.Status = CheckEligibilityStatus.queuedForProcessing;
                     LogApiEvent(this.GetType().Name, guid, "Dwp Error", "There has been an error calling DWP");
+                    TrackMetric($"Dwp Error", 1);
                 }
                 else
                 {
@@ -198,7 +208,11 @@ namespace CheckYourEligibility.Services
                    
                     var updates = await _db.SaveChangesAsync();
                 }
-                LogApiEvent(this.GetType().Name, guid, "ProcessCheck", $"Result:-{result.Status}");
+                
+                TrackMetric($"FSM Check:-{result.Status}", 1);
+                TrackMetric($"FSM Check", 1);
+                var processingTime =  (DateTime.Now.ToUniversalTime() - result.Created.ToUniversalTime()).Seconds;
+                TrackMetric($"Check ProcessingTime (Seconds)", processingTime);
                 return result.Status;
             }
             else
@@ -269,6 +283,15 @@ namespace CheckYourEligibility.Services
         }
 
         #region Private
+
+        private void LogQueueCount(QueueClient queue)
+        {
+            QueueProperties properties = queue.GetProperties();
+
+            // Retrieve the cached approximate message count
+            int cachedMessagesCount = properties.ApproximateMessagesCount;
+            TrackMetric($"QueueCount:-{_queueClientStandard.Name}", cachedMessagesCount);
+        }
 
         private async Task<CheckEligibilityStatus> HO_Check(EligibilityCheck data)
         {
