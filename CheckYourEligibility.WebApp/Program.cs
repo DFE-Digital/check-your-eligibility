@@ -16,6 +16,7 @@ using System;
 using Microsoft.ApplicationInsights;
 using CheckYourEligibility.WebApp.Telemetry;
 using System.Text;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
