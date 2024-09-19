@@ -401,3 +401,5 @@ FodyWeavers.xsd
 /.gitignore
 tests/cypress/cypress.env.json
 tests/cypress.env.json
+/CheckYourEligibility.WebApp/Properties/serviceDependencies.json
+/CheckYourEligibility.WebApp/Properties/serviceDependencies.local.json
