@@ -31,15 +31,16 @@ namespace CheckYourEligibility.WebApp.Controllers
         //    )
         public async Task<ActionResult> Match(
             [FromBody] CitizenMatchRequest model,
-            [FromHeader(Name = "instigating-user-id")][Required] string investigatingUserId = "abcdef1234577890abcdeffghi",
-            [FromHeader(Name = "policy-id")][Required] string policy_id = "fsm",
+            [FromHeader(Name = "instigating-user-id")][Required] string investigatingUserId,
+            [FromHeader(Name = "policy-id")][Required] string policy_id = "ece",
             [FromHeader(Name = "correlation-id")][Required] string correlationId = "4c6a63f1-1924-4911-b45c-95dbad8b6c37",
             [FromHeader(Name = "context")][Required] string context = "abc-1-ab-x12888"
             )
         {
 
 
-            if (model?.Data?.Attributes?.LastName.ToUpper() == MogDWPValues.validCitizenSurnameEligible.ToUpper() || model?.Data?.Attributes?.LastName.ToUpper() == MogDWPValues.validCitizenSurnameNotEligible.ToUpper())
+            if (model?.Data?.Attributes?.LastName.ToUpper() == MogDWPValues.validCitizenSurnameEligible.ToUpper()
+                || model?.Data?.Attributes?.LastName.ToUpper() == MogDWPValues.validCitizenSurnameNotEligible.ToUpper())
             {
                 return new ObjectResult(new DwpResponse()
                 {
@@ -54,6 +55,10 @@ namespace CheckYourEligibility.WebApp.Controllers
                 })
                 { StatusCode = StatusCodes.Status200OK };
             }
+            else if(model?.Data?.Attributes?.LastName.ToUpper() == MogDWPValues.validCitizenSurnameDuplicatesFound.ToUpper())
+            {
+                return UnprocessableEntity();
+            }
             else
             {
                 return NotFound();
@@ -61,19 +66,20 @@ namespace CheckYourEligibility.WebApp.Controllers
 
         }
 
+
+
         [ProducesResponseType(typeof(DwpResponse), (int)HttpStatusCode.OK)]
         [ProducesResponseType((int)HttpStatusCode.BadRequest)]
         [HttpGet("{Guid}/Claims")]
         public async Task<ActionResult> Claim(
-           string Guid, string BenefitType, string EffectiveFromDate = "", string EffectiveToDate = "",
+           string Guid, string[] BenefitType,  string EffectiveFromDate = "", string EffectiveToDate = "",
            [FromHeader(Name = "instigating-user-id")][Required] string investigatingUserId = "abcdef1234577890abcdeffghi",
            [FromHeader(Name = "access-level")][Required] int accessLevel = 1,
            [FromHeader(Name = "correlation-id")][Required] string correlationId = "4c6a63f1-1924-4911-b45c-95dbad8b6c37",
-           [FromHeader(Name = "context")][Required] string context = "abc-1-ab-x12888"
-           )
+           [FromHeader(Name = "context")][Required] string context = "abc-1-ab-x12888")
         {
             if (Guid == MogDWPValues.validCitizenEligibleGuid
-                    && BenefitType == MogDWPValues.validUniversalBenefitType
+                    && BenefitType[0] == MogDWPValues.validUniversalBenefitType
                     )
             {
                 return new OkResult();
