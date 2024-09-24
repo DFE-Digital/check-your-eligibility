@@ -20,20 +20,32 @@ using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-builder.Services.AddApplicationInsightsTelemetry();
+// ------------------------
+// 1. Configure Services
+// ------------------------
 
-// Register IHttpContextAccessor
+// Application Insights Telemetry
+builder.Services.AddApplicationInsightsTelemetry(options =>
+{
+    // Disable adaptive sampling for development to capture all telemetry
+    options.EnableAdaptiveSampling = false;
+});
+
+// Register IHttpContextAccessor to access HttpContext in Telemetry Initializer
 builder.Services.AddHttpContextAccessor();
 
-// Register the TelemetryInitializer
+// Register the TelemetryInitializer to attach user information to telemetry data
 builder.Services.AddSingleton<ITelemetryInitializer, UserTelemetryInitializer>();
 
+// Register TelemetryClient for manual tracking of telemetry data
+builder.Services.AddSingleton<TelemetryClient>();
+
+// Add Controllers with JSON options
 builder.Services.AddControllers()
     .AddNewtonsoftJson()
     .AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+// Configure Swagger/OpenAPI
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -77,6 +89,7 @@ builder.Services.AddSwaggerGen(c =>
     c.IncludeXmlComments(filePath);
 });
 
+// Configure Azure Key Vault if environment variable is set
 if (Environment.GetEnvironmentVariable("KEY_VAULT_NAME") != null)
 {
     var keyVaultName = Environment.GetEnvironmentVariable("KEY_VAULT_NAME");
@@ -85,79 +98,82 @@ if (Environment.GetEnvironmentVariable("KEY_VAULT_NAME") != null)
     builder.Configuration.AddAzureKeyVault(new Uri(kvUri), new DefaultAzureCredential());
 }
 
+// Register Database and other services
 builder.Services.AddDatabase(builder.Configuration);
 builder.Services.AddAzureClients(builder.Configuration);
 builder.Services.AddServices();
 builder.Services.AddExternalServices(builder.Configuration);
+
+// Configure IIS and Kestrel server options
 builder.Services.Configure<IISServerOptions>(options =>
 {
     options.MaxRequestBodySize = int.MaxValue;
 });
 builder.Services.Configure<KestrelServerOptions>(options =>
 {
-    options.Limits.MaxRequestBodySize = int.MaxValue; // if don't set default value is: 30 MB
+    options.Limits.MaxRequestBodySize = int.MaxValue; // Default is 30 MB
 });
 
+// Add AutoMapper
 builder.Services.AddAutoMapper(typeof(FsmMappingProfile));
+
+// Add Authorization
 builder.Services.AddAuthorization(builder.Configuration);
 
 var app = builder.Build();
+
+// ------------------------
+// 2. Configure Middleware Pipeline
+// ------------------------
+
+// ------------------------
+// 2.1. Custom Middlewares
+// ------------------------
+
+// IMPORTANT:
+// Register ExceptionLoggingMiddleware before any exception handling middleware.
+// This ensures that all exceptions are logged, even those handled by DeveloperExceptionPage or ExceptionHandler.
+
 app.UseMiddleware<ExceptionLoggingMiddleware>();
-//app.UseMiddleware<RequestBodyLoggingMiddleware>();
+app.UseMiddleware<RequestBodyLoggingMiddleware>();
 app.UseMiddleware<ResponseBodyLoggingMiddleware>();
-app.Use(async (httpContext, next) =>
+
+// ------------------------
+// 2.2. Exception Handling
+// ------------------------
+
+if (app.Environment.IsDevelopment())
 {
-    try
-    {
-        httpContext.Request.EnableBuffering();
-        string requestBody = await new StreamReader(httpContext.Request.Body, Encoding.UTF8).ReadToEndAsync();
-        httpContext.Request.Body.Position = 0;
-        app.Logger.LogInformation($"Request body: {requestBody}");
-    }
-    catch (Exception ex)
-    {
-        app.Logger.LogInformation($"Exception reading request: {ex.Message}");
-    }
+    // DeveloperExceptionPage provides detailed exception information in Development
+    app.UseDeveloperExceptionPage();
+}
+else
+{
+    // ExceptionHandler handles exceptions in Production and redirects to a generic error page
+    app.UseExceptionHandler("/error");
+    app.UseHsts();
+}
 
-    Stream originalBody = httpContext.Response.Body;
-    try
-    {
-        using var memStream = new MemoryStream();
-        httpContext.Response.Body = memStream;
+// ------------------------
+// 2.3. Swagger Middleware
+// ------------------------
 
-        // call to the following middleware 
-        // response should be produced by one of the following middlewares
-        await next(httpContext);
-
-        memStream.Position = 0;
-        string responseBody = new StreamReader(memStream).ReadToEnd();
-
-        memStream.Position = 0;
-        await memStream.CopyToAsync(originalBody);
-        app.Logger.LogInformation($"Response body: {responseBody}");
-    }
-    finally
-    {
-        httpContext.Response.Body = originalBody;
-    }
-});
-
-// Configure the HTTP request pipeline.
 app.UseSwagger();
 app.UseSwaggerUI();
 
-app.UseDeveloperExceptionPage();
-app.UseMigrationsEndPoint();
+// ------------------------
+// 2.4. Inline Middleware for Logging Request and Response Bodies
+// ------------------------
 
-// Use custom exception logging middleware 
-
-
-app.UseHttpsRedirection();
+// NOTE:
+// This inline middleware can be redundant if you have separate RequestBodyLoggingMiddleware and ResponseBodyLoggingMiddleware.
+// Consider removing it if those middlewares sufficiently handle request and response logging.
 
 app.Use(async (httpContext, next) =>
 {
     try
     {
+        // Log Request Body
         httpContext.Request.EnableBuffering();
         string requestBody = await new StreamReader(httpContext.Request.Body, Encoding.UTF8).ReadToEndAsync();
         httpContext.Request.Body.Position = 0;
@@ -165,36 +181,51 @@ app.Use(async (httpContext, next) =>
     }
     catch (Exception ex)
     {
-        app.Logger.LogInformation($"Exception reading request: {ex.Message}");
+        app.Logger.LogError($"Exception reading request: {ex.Message}");
     }
 
+    // Capture the original response body stream
     Stream originalBody = httpContext.Response.Body;
+
     try
     {
         using var memStream = new MemoryStream();
         httpContext.Response.Body = memStream;
 
-        // call to the following middleware 
-        // response should be produced by one of the following middlewares
+        // Call the next middleware in the pipeline
         await next(httpContext);
 
+        // Read the response body from the memory stream
         memStream.Position = 0;
-        string responseBody = new StreamReader(memStream).ReadToEnd();
+        string responseBody = await new StreamReader(memStream).ReadToEndAsync();
 
         memStream.Position = 0;
-        await memStream.CopyToAsync(originalBody);
+        await memStream.CopyToAsync(originalBody); // Copy the response back to the original stream
+
         app.Logger.LogInformation($"Response body: {responseBody}");
     }
     finally
     {
-        httpContext.Response.Body = originalBody;
+        httpContext.Response.Body = originalBody; // Restore the original response body stream
     }
 });
 
+// ------------------------
+// 2.5. HTTPS Redirection
+// ------------------------
 
-// Use Authentication and Authorization
+app.UseHttpsRedirection();
+
+// ------------------------
+// 2.6. Authentication & Authorization
+// ------------------------
+
 app.UseAuthentication();
 app.UseAuthorization();
+
+// ------------------------
+// 2.7. Map Controllers
+// ------------------------
 
 app.MapControllers();
 
@@ -202,5 +233,3 @@ app.Run();
 
 [ExcludeFromCodeCoverage]
 public partial class Program { };
-
-

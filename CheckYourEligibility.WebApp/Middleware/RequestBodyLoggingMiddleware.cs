@@ -1,48 +1,51 @@
 ﻿using Microsoft.ApplicationInsights.DataContracts;
-
+using System.Text;
 
 namespace CheckYourEligibility.WebApp.Middleware
 {
-
     public class RequestBodyLoggingMiddleware
     {
         private readonly RequestDelegate _next;
+        private readonly ILogger<RequestBodyLoggingMiddleware> _logger;
 
-        public RequestBodyLoggingMiddleware(RequestDelegate next)
+        public RequestBodyLoggingMiddleware(RequestDelegate next, ILogger<RequestBodyLoggingMiddleware> logger)
         {
             _next = next;
+            _logger = logger;
         }
 
         public async Task Invoke(HttpContext context)
         {
-            // Keep the original response stream
-            var originalBodyStream = context.Response.Body;
+            context.Request.EnableBuffering(); // Allow multiple reads
 
-            // Create a new memory stream to hold the response
-            using (var body = new MemoryStream())
+            string requestBody = string.Empty;
+            if (context.Request.ContentLength > 0 &&
+                context.Request.ContentType != null &&
+                context.Request.ContentType.Contains("application/json"))
             {
-                context.Request.Body = body;
+                using (var reader = new StreamReader(
+                    context.Request.Body,
+                    encoding: Encoding.UTF8,
+                    detectEncodingFromByteOrderMarks: false,
+                    bufferSize: 1024,
+                    leaveOpen: true))
+                {
+                    requestBody = await reader.ReadToEndAsync();
+                    context.Request.Body.Position = 0; // Reset stream position
+                }
 
-                // Invoke the next middleware in the pipeline
-                await _next(context);
+                // Log the request body
+                _logger.LogInformation($"Request Body: {requestBody}");
 
-                // Read the response body
-                context.Request.Body.Seek(0, SeekOrigin.Begin);
-                var responseText = await new StreamReader(context.Request.Body).ReadToEndAsync();
-
-                // Attach the response body to telemetry
+                // Optionally, attach to telemetry
                 var telemetry = context.Features.Get<RequestTelemetry>();
                 if (telemetry != null)
                 {
-                    telemetry.Properties["RequestBody"] = responseText;
+                    telemetry.Properties["RequestBody"] = requestBody;
                 }
-
-                // Reset the stream position and copy it back to the original stream
-                context.Request.Body.Seek(0, SeekOrigin.Begin);
-                await body.CopyToAsync(originalBodyStream);
             }
+
+            await _next(context);
         }
     }
 }
-
-

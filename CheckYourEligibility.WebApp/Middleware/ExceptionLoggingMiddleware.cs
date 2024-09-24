@@ -1,5 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.ApplicationInsights;
+﻿using Microsoft.ApplicationInsights;
+using Microsoft.AspNetCore.Http;
 using System;
 using System.Threading.Tasks;
 
@@ -12,11 +12,11 @@ namespace CheckYourEligibility.WebApp.Middleware
 
         public ExceptionLoggingMiddleware(RequestDelegate next, TelemetryClient telemetryClient)
         {
-            _next = next ?? throw new ArgumentNullException(nameof(next));
-            _telemetryClient = telemetryClient ?? throw new ArgumentNullException(nameof(telemetryClient));
+            _next = next;
+            _telemetryClient = telemetryClient;
         }
 
-        public async Task Invoke(HttpContext context)
+        public async Task InvokeAsync(HttpContext context)
         {
             try
             {
@@ -24,18 +24,10 @@ namespace CheckYourEligibility.WebApp.Middleware
             }
             catch (Exception ex)
             {
-                var exceptionTelemetry = new Microsoft.ApplicationInsights.DataContracts.ExceptionTelemetry(ex);
+                // Log exception using TelemetryClient
+                _telemetryClient.TrackException(ex);
 
-                // Add custom properties
-                if (context.User.Identity.IsAuthenticated)
-                {
-                    exceptionTelemetry.Properties.Add("UserName", context.User.Identity.Name);
-                }
-                exceptionTelemetry.Properties.Add("RequestPath", context.Request.Path);
-
-                _telemetryClient.TrackException(exceptionTelemetry);
-
-                // Re-throw the exception after logging it
+                // Optionally, log additional information or rethrow
                 throw;
             }
         }
