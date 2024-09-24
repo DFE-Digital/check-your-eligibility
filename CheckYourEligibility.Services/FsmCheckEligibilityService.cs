@@ -2,8 +2,6 @@
 
 using Ardalis.GuardClauses;
 using AutoMapper;
-using Azure;
-using Azure.Core.Pipeline;
 using Azure.Storage.Queues;
 using Azure.Storage.Queues.Models;
 using CheckYourEligibility.Data.Models;
@@ -21,10 +19,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
 using System.Diagnostics.CodeAnalysis;
-using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using System.Text;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace CheckYourEligibility.Services
 {
@@ -341,9 +337,10 @@ namespace CheckYourEligibility.Services
             if (!string.IsNullOrEmpty(guid))
             {
                 //check for benefit
-                var result = await _dwpService.CheckForBenefit(guid);
+                var result = await _dwpService.GetCitizenClaims(guid, DateTime.Now.AddMonths(-3).ToString("yyyy-MMM-dd"), DateTime.Now.ToString("yyyy-MMM-dd"));
                 if (result.StatusCode == StatusCodes.Status200OK)
                 {
+
                     checkResult = CheckEligibilityStatus.eligible;
                 }
                 else if(result.StatusCode == StatusCodes.Status404NotFound)

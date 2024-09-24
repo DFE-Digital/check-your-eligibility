@@ -1,7 +1,7 @@
 ﻿namespace CheckYourEligibility.Domain.Responses.DWP
 {
 
-    public class DwpResponse
+    public class DwpMatchResponse
     {
         public DwpResponse_Jsonapi Jsonapi { get; set; }
         public DwpResponse_Data Data { get; set; }
@@ -23,14 +23,6 @@
             public string Version { get; set; }
         }
     }
-
-    
-
-   
-
-   
-
-
 
 }
 
