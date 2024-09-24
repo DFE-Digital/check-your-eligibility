@@ -122,7 +122,7 @@ namespace CheckYourEligibility.ServiceUnitTests
             await _fakeInMemoryDb.SaveChangesAsync();
             _moqDwpService.Setup(x => x.GetCitizen(It.IsAny<CitizenMatchRequest>())).ReturnsAsync(Guid.NewGuid().ToString());
             var result = new StatusCodeResult(StatusCodes.Status200OK);
-            _moqDwpService.Setup(x => x.CheckForBenefit(It.IsAny<string>())).ReturnsAsync(result);
+            _moqDwpService.Setup(x => x.GetCitizenClaims(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(result);
             _moqAudit.Setup(x => x.AuditAdd(It.IsAny<AuditData>())).ReturnsAsync("");
                         // Act/Assert
             var response = await _sut.PostCheck(request);
@@ -162,7 +162,7 @@ namespace CheckYourEligibility.ServiceUnitTests
             await _fakeInMemoryDb.SaveChangesAsync();
             _moqDwpService.Setup(x => x.GetCitizen(It.IsAny<CitizenMatchRequest>())).ReturnsAsync(Guid.NewGuid().ToString());
             var result = new StatusCodeResult(StatusCodes.Status200OK);
-            _moqDwpService.Setup(x => x.CheckForBenefit(It.IsAny<string>())).ReturnsAsync(result);
+            _moqDwpService.Setup(x => x.GetCitizenClaims(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(result);
             _moqAudit.Setup(x => x.AuditAdd(It.IsAny<AuditData>())).ReturnsAsync("");
 
 
@@ -199,7 +199,7 @@ namespace CheckYourEligibility.ServiceUnitTests
 
             _moqDwpService.Setup(x => x.GetCitizen(It.IsAny<CitizenMatchRequest>())).ReturnsAsync(Guid.NewGuid().ToString());
             var result = new StatusCodeResult(StatusCodes.Status200OK);
-            _moqDwpService.Setup(x => x.CheckForBenefit(It.IsAny<string>())).ReturnsAsync(result);
+            _moqDwpService.Setup(x => x.GetCitizenClaims(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(result);
             _moqAudit.Setup(x => x.AuditAdd(It.IsAny<AuditData>())).ReturnsAsync("");
 
             // Act
@@ -231,7 +231,7 @@ namespace CheckYourEligibility.ServiceUnitTests
 
             _moqDwpService.Setup(x => x.GetCitizen(It.IsAny<CitizenMatchRequest>())).ReturnsAsync(Guid.NewGuid().ToString());
             var result = new StatusCodeResult(StatusCodes.Status200OK);
-            _moqDwpService.Setup(x => x.CheckForBenefit(It.IsAny<string>())).ReturnsAsync(result);
+            _moqDwpService.Setup(x => x.GetCitizenClaims(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(result);
             _moqAudit.Setup(x => x.AuditAdd(It.IsAny<AuditData>())).ReturnsAsync("");
 
 
@@ -401,7 +401,7 @@ namespace CheckYourEligibility.ServiceUnitTests
             _fakeInMemoryDb.SaveChangesAsync();
             _moqDwpService.Setup(x => x.GetCitizen(It.IsAny<CitizenMatchRequest>())).ReturnsAsync(Guid.NewGuid().ToString());
             var result = new StatusCodeResult(StatusCodes.Status200OK);
-            _moqDwpService.Setup(x => x.CheckForBenefit(It.IsAny<string>())).ReturnsAsync(result);
+            _moqDwpService.Setup(x => x.GetCitizenClaims(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(result);
             _moqAudit.Setup(x => x.AuditAdd(It.IsAny<AuditData>())).ReturnsAsync("");
 
 
@@ -423,7 +423,7 @@ namespace CheckYourEligibility.ServiceUnitTests
             _fakeInMemoryDb.SaveChangesAsync();
             _moqDwpService.Setup(x => x.GetCitizen(It.IsAny<CitizenMatchRequest>())).ReturnsAsync(Guid.NewGuid().ToString());
             var result = new StatusCodeResult(StatusCodes.Status404NotFound);
-            _moqDwpService.Setup(x => x.CheckForBenefit(It.IsAny<string>())).ReturnsAsync(result);
+            _moqDwpService.Setup(x => x.GetCitizenClaims(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(result);
             _moqAudit.Setup(x => x.AuditAdd(It.IsAny<AuditData>())).ReturnsAsync("");
 
 
@@ -445,7 +445,7 @@ namespace CheckYourEligibility.ServiceUnitTests
             _fakeInMemoryDb.SaveChangesAsync();
             _moqDwpService.Setup(x => x.GetCitizen(It.IsAny<CitizenMatchRequest>())).ReturnsAsync(Guid.NewGuid().ToString());
             var result = new StatusCodeResult(StatusCodes.Status500InternalServerError);
-            _moqDwpService.Setup(x => x.CheckForBenefit(It.IsAny<string>())).ReturnsAsync(result);
+            _moqDwpService.Setup(x => x.GetCitizenClaims(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(result);
             _moqAudit.Setup(x => x.AuditAdd(It.IsAny<AuditData>())).ReturnsAsync("");
 
 

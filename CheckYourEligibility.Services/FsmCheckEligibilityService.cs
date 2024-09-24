@@ -337,9 +337,10 @@ namespace CheckYourEligibility.Services
             if (!string.IsNullOrEmpty(guid))
             {
                 //check for benefit
-                var result = await _dwpService.CheckForBenefit(guid);
+                var result = await _dwpService.GetCitizenClaims(guid, DateTime.Now.AddMonths(-3).ToString("yyyy-MMM-dd"), DateTime.Now.ToString("yyyy-MMM-dd"));
                 if (result.StatusCode == StatusCodes.Status200OK)
                 {
+
                     checkResult = CheckEligibilityStatus.eligible;
                 }
                 else if(result.StatusCode == StatusCodes.Status404NotFound)
