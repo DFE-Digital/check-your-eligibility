@@ -61,16 +61,16 @@ namespace CheckYourEligibility.APIUnitTests
             request.Data.Attributes.LastName = MogDWPValues.validCitizenSurnameEligible;
             request.Data.Attributes.NinoFragment = MogDWPValues.validCitizenNino;
 
-            var expectedResult = new ObjectResult(new DwpResponse()
+            var expectedResult = new ObjectResult(new DwpMatchResponse()
             {
-                Data = new DwpResponse.DwpResponse_Data
+                Data = new DwpMatchResponse.DwpResponse_Data
                 {
                     Id = MogDWPValues.validCitizenEligibleGuid,
                     Type = "MatchResult",
-                    Attributes = new DwpResponse.DwpResponse_Attributes { MatchingScenario = "FSM" }
+                    Attributes = new DwpMatchResponse.DwpResponse_Attributes { MatchingScenario = "FSM" }
                 }
                     ,
-                Jsonapi = new DwpResponse.DwpResponse_Jsonapi { Version = "2.0" }
+                Jsonapi = new DwpMatchResponse.DwpResponse_Jsonapi { Version = "2.0" }
             })
             { StatusCode = StatusCodes.Status200OK };
 
@@ -101,7 +101,7 @@ namespace CheckYourEligibility.APIUnitTests
             var expectedResult = new OkResult();
 
             // Act
-            var response = _sut.Claim(MogDWPValues.validCitizenEligibleGuid, MogDWPValues.validUniversalBenefitType);
+            var response = _sut.Claim(MogDWPValues.validCitizenEligibleGuid, DwpBenefitType.pensions_credit.ToString());
 
             // Assert
             response.Result.Should().BeEquivalentTo(expectedResult);
@@ -112,7 +112,7 @@ namespace CheckYourEligibility.APIUnitTests
         {
             // Arrange
             // Act
-            var response = _sut.Claim(MogDWPValues.validCitizenEligibleGuid, "invalid");
+            var response = _sut.Claim(MogDWPValues.inValidCitizenGuid, "invalid");
 
             // Assert
             response.Result.Should().BeOfType(typeof(BadRequestResult));
@@ -124,7 +124,7 @@ namespace CheckYourEligibility.APIUnitTests
             //Arrange
             var expectedResult = new NotFoundResult();
             //Act
-            var response = _sut.Claim(MogDWPValues.validCitizenNotEligibleGuid, MogDWPValues.validUniversalBenefitType);
+            var response = _sut.Claim(MogDWPValues.validCitizenNotEligibleGuid, DwpBenefitType.pensions_credit.ToString());
 
             //Assert
             response.Result.Should().BeEquivalentTo(expectedResult);
