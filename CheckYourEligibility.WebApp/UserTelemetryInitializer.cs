@@ -1,61 +1,50 @@
 ﻿using Microsoft.ApplicationInsights.Channel;
+using Microsoft.ApplicationInsights.DataContracts;
 using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.AspNetCore.Http;
 using System.Security.Claims;
-using Microsoft.Extensions.Logging;
 
 namespace CheckYourEligibility.WebApp.Telemetry
 {
     public class UserTelemetryInitializer : ITelemetryInitializer
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
-        private readonly ILogger<UserTelemetryInitializer> _logger;
 
-        public UserTelemetryInitializer(IHttpContextAccessor httpContextAccessor, ILogger<UserTelemetryInitializer> logger)
+        public UserTelemetryInitializer(IHttpContextAccessor httpContextAccessor)
         {
             _httpContextAccessor = httpContextAccessor;
-            _logger = logger;
         }
 
         public void Initialize(ITelemetry telemetry)
         {
             var httpContext = _httpContextAccessor.HttpContext;
 
-            if (httpContext == null)
+            if (httpContext == null || httpContext.User == null)
             {
-                _logger.LogWarning("UserTelemetryInitializer: HttpContext is null.");
+                // No HttpContext or User available
                 return;
             }
 
-            if (httpContext.User?.Identity?.IsAuthenticated == true)
+            var user = httpContext.User;
+
+            if (user.Identity.IsAuthenticated)
             {
-                var user = httpContext.User;
+                var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
+                var userEmail = user.FindFirst(ClaimTypes.Email)?.Value ?? string.Empty;
+                var userName = user.Identity.Name ?? string.Empty;
 
-                var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                var userEmail = user.FindFirst(ClaimTypes.Email)?.Value;
-                var userName = user.Identity.Name;
+                // Attach user information to telemetry context
+                telemetry.Context.User.AuthenticatedUserId = userId;
+                telemetry.Context.User.AccountId = userEmail;
+                telemetry.Context.User.Id = userName;
 
-                // Log for debugging
-                _logger.LogInformation("UserTelemetryInitializer: UserId={UserId}, Email={UserEmail}, Name={UserName}", userId, userEmail, userName);
-
-                if (!string.IsNullOrEmpty(userId))
+                // Attach user information to custom properties if supported
+                if (telemetry is ISupportProperties telemetryWithProperties)
                 {
-                    telemetry.Context.User.AuthenticatedUserId = userId;
+                    telemetryWithProperties.Properties["UserId"] = userId;
+                    telemetryWithProperties.Properties["UserEmail"] = userEmail;
+                    telemetryWithProperties.Properties["UserName"] = userName;
                 }
-
-                if (!string.IsNullOrEmpty(userEmail))
-                {
-                    telemetry.Context.User.AccountId = userEmail;
-                }
-
-                if (!string.IsNullOrEmpty(userName))
-                {
-                    telemetry.Context.User.Id = userName;
-                }
-            }
-            else
-            {
-                _logger.LogWarning("UserTelemetryInitializer: User is not authenticated.");
             }
         }
     }
