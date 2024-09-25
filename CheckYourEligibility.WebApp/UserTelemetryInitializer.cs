@@ -1,7 +1,6 @@
 ﻿using Microsoft.ApplicationInsights.Channel;
 using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.AspNetCore.Http;
-using System;
 using System.Security.Claims;
 
 namespace CheckYourEligibility.WebApp.Telemetry
@@ -12,7 +11,7 @@ namespace CheckYourEligibility.WebApp.Telemetry
 
         public UserTelemetryInitializer(IHttpContextAccessor httpContextAccessor)
         {
-            _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
+            _httpContextAccessor = httpContextAccessor;
         }
 
         public void Initialize(ITelemetry telemetry)
@@ -27,9 +26,6 @@ namespace CheckYourEligibility.WebApp.Telemetry
                 var userEmail = user.FindFirst(ClaimTypes.Email)?.Value;
                 var userName = user.Identity.Name;
 
-                // Log claims for debugging
-                Console.WriteLine($"Telemetry Initializer - UserId: {userId}, Email: {userEmail}, Name: {userName}");
-
                 if (!string.IsNullOrEmpty(userId))
                 {
                     telemetry.Context.User.AuthenticatedUserId = userId;
@@ -40,9 +36,11 @@ namespace CheckYourEligibility.WebApp.Telemetry
                     telemetry.Context.User.AccountId = userEmail;
                 }
 
-                telemetry.Context.User.Id = userName;
+                if (!string.IsNullOrEmpty(userName))
+                {
+                    telemetry.Context.User.Id = userName;
+                }
             }
         }
-
     }
 }
