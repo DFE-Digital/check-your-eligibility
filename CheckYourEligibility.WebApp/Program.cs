@@ -12,7 +12,6 @@ using Microsoft.OpenApi.Interfaces;
 using Microsoft.OpenApi.Models;
 using System.Diagnostics.CodeAnalysis;
 using Microsoft.AspNetCore.Http;
-using System.Text;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Logging;
 
@@ -35,9 +34,6 @@ builder.Services.AddHttpContextAccessor();
 
 // Register the TelemetryInitializer to attach user information to telemetry data
 builder.Services.AddSingleton<ITelemetryInitializer, UserTelemetryInitializer>();
-
-// Remove explicit TelemetryClient registration (it's automatically added by Application Insights)
-// builder.Services.AddSingleton<TelemetryClient>(); // Removed
 
 // Add Controllers with JSON options
 builder.Services.AddControllers()
@@ -140,20 +136,7 @@ var app = builder.Build();
 // 2. Configure Middleware Pipeline
 // ------------------------
 
-// ------------------------
-// 2.1. Custom Middlewares
-// ------------------------
-
-// Remove ExceptionLoggingMiddleware to allow Application Insights to handle exceptions automatically
-// app.UseMiddleware<ExceptionLoggingMiddleware>(); // Removed
-
-app.UseMiddleware<RequestBodyLoggingMiddleware>();
-app.UseMiddleware<ResponseBodyLoggingMiddleware>();
-
-// ------------------------
-// 2.2. Exception Handling
-// ------------------------
-
+// 2.1. Exception Handling
 if (app.Environment.IsDevelopment())
 {
     // DeveloperExceptionPage provides detailed exception information in Development
@@ -166,30 +149,22 @@ else
     app.UseHsts();
 }
 
-// ------------------------
-// 2.3. Swagger Middleware
-// ------------------------
-
-app.UseSwagger();
-app.UseSwaggerUI();
-
-// ------------------------
-// 2.4. HTTPS Redirection
-// ------------------------
-
+// 2.2. HTTPS Redirection
 app.UseHttpsRedirection();
 
-// ------------------------
-// 2.5. Authentication & Authorization
-// ------------------------
-
+// 2.3. Authentication & Authorization
 app.UseAuthentication();
 app.UseAuthorization();
 
-// ------------------------
-// 2.6. Map Controllers
-// ------------------------
+// 2.4. Custom Middlewares
+app.UseMiddleware<RequestBodyLoggingMiddleware>();
+app.UseMiddleware<ResponseBodyLoggingMiddleware>();
 
+// 2.5. Swagger Middleware
+app.UseSwagger();
+app.UseSwaggerUI();
+
+// 2.6. Map Controllers
 app.MapControllers();
 
 app.Run();
