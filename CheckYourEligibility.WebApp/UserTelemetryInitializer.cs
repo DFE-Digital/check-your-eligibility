@@ -1,4 +1,5 @@
 ﻿using Microsoft.ApplicationInsights.Channel;
+using Microsoft.ApplicationInsights.DataContracts;
 using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.AspNetCore.Http;
 using System.Security.Claims;
@@ -18,27 +19,31 @@ namespace CheckYourEligibility.WebApp.Telemetry
         {
             var httpContext = _httpContextAccessor.HttpContext;
 
-            if (httpContext?.User?.Identity?.IsAuthenticated == true)
+            if (httpContext == null || httpContext.User == null)
             {
-                var user = httpContext.User;
+                // No HttpContext or User available
+                return;
+            }
 
-                var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                var userEmail = user.FindFirst(ClaimTypes.Email)?.Value;
-                var userName = user.Identity.Name;
+            var user = httpContext.User;
 
-                if (!string.IsNullOrEmpty(userId))
+            if (user.Identity.IsAuthenticated)
+            {
+                var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
+                var userEmail = user.FindFirst(ClaimTypes.Email)?.Value ?? string.Empty;
+                var userName = user.Identity.Name ?? string.Empty;
+
+                // Attach user information to telemetry context
+                telemetry.Context.User.AuthenticatedUserId = userId;
+                telemetry.Context.User.AccountId = userEmail;
+                telemetry.Context.User.Id = userName;
+
+                // Attach user information to custom properties if supported
+                if (telemetry is ISupportProperties telemetryWithProperties)
                 {
-                    telemetry.Context.User.AuthenticatedUserId = userId;
-                }
-
-                if (!string.IsNullOrEmpty(userEmail))
-                {
-                    telemetry.Context.User.AccountId = userEmail;
-                }
-
-                if (!string.IsNullOrEmpty(userName))
-                {
-                    telemetry.Context.User.Id = userName;
+                    telemetryWithProperties.Properties["UserId"] = userId;
+                    telemetryWithProperties.Properties["UserEmail"] = userEmail;
+                    telemetryWithProperties.Properties["UserName"] = userName;
                 }
             }
         }
