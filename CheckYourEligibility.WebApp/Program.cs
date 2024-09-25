@@ -1,19 +1,21 @@
 using Azure.Identity;
-using CheckYourEligibility.Data;
 using CheckYourEligibility.Data.Mappings;
 using CheckYourEligibility.WebApp;
+using CheckYourEligibility.WebApp.Middleware;
+using CheckYourEligibility.WebApp.Telemetry;
+using Microsoft.ApplicationInsights;
+using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Azure;
+using Microsoft.OpenApi.Any;
+using Microsoft.OpenApi.Interfaces;
 using Microsoft.OpenApi.Models;
 using System.Diagnostics.CodeAnalysis;
-using CheckYourEligibility.WebApp.Middleware;
-using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.AspNetCore.Http;
 using System.Text;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Logging;
-using CheckYourEligibility.WebApp.Telemetry;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -49,10 +51,25 @@ builder.Services.AddSwaggerGen(c =>
     c.SwaggerDoc("v1",
         new OpenApiInfo
         {
-            Title = "ECS API - V1",
-            Version = "v1"
+            Title = "ECE API - V1",
+            Version = "v1",
+            Description = "DFE Eligibility Checking Engine: API to perform Checks determining eligibility for entitlements via integration with OGDs",
+          
+            Contact = new OpenApiContact
+            {
+                Email = "Ian.HOWARD@education.gov.uk",
+                Name = "Further Information",
+
+            },
+            License = new OpenApiLicense
+            {
+                Name = "Api Documentation",
+                Url = new Uri("https://github.com/DFE-Digital/check-your-eligibility-documentation/blob/main/Runbook/System/API/Readme.md")
+            }
+           
         }
      );
+    
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Description = @"JWT Authorization header using the Bearer scheme.\r\n\r\n 
