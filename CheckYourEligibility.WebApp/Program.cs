@@ -1,8 +1,6 @@
 using Azure.Identity;
 using CheckYourEligibility.Data.Mappings;
 using CheckYourEligibility.WebApp;
-using CheckYourEligibility.WebApp.Middleware;
-using CheckYourEligibility.WebApp.Telemetry;
 using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
@@ -11,10 +9,8 @@ using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Interfaces;
 using Microsoft.OpenApi.Models;
 using System.Diagnostics.CodeAnalysis;
-using Microsoft.AspNetCore.Http;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Logging;
-
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,11 +25,14 @@ builder.Services.AddApplicationInsightsTelemetry(options =>
     options.EnableAdaptiveSampling = false;
 });
 
-// Register IHttpContextAccessor to access HttpContext in Telemetry Initializer
-builder.Services.AddHttpContextAccessor();
+// Add Application Insights as a Logging Provider
+builder.Logging.AddApplicationInsights();
 
-// Register the TelemetryInitializer to attach user information to telemetry data
-builder.Services.AddSingleton<ITelemetryInitializer, UserTelemetryInitializer>();
+// Remove the UserTelemetryInitializer registration
+// (No longer needed with the middleware approach)
+
+// Register IHttpContextAccessor to access HttpContext if needed elsewhere
+builder.Services.AddHttpContextAccessor();
 
 // Add Controllers with JSON options
 builder.Services.AddControllers()
@@ -50,22 +49,19 @@ builder.Services.AddSwaggerGen(c =>
             Title = "ECE API - V1",
             Version = "v1",
             Description = "DFE Eligibility Checking Engine: API to perform Checks determining eligibility for entitlements via integration with OGDs",
-          
             Contact = new OpenApiContact
             {
                 Email = "Ian.HOWARD@education.gov.uk",
                 Name = "Further Information",
-
             },
             License = new OpenApiLicense
             {
                 Name = "Api Documentation",
                 Url = new Uri("https://github.com/DFE-Digital/check-your-eligibility-documentation/blob/main/Runbook/System/API/Readme.md")
             }
-           
         }
      );
-    
+
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Description = @"JWT Authorization header using the Bearer scheme.\r\n\r\n 
@@ -89,11 +85,10 @@ builder.Services.AddSwaggerGen(c =>
               Scheme = "oauth2",
               Name = "Bearer",
               In = ParameterLocation.Header,
-
-            },
-            new List<string>()
-          }
-        });
+          },
+          new List<string>()
+        }
+      });
 
     var filePath = Path.Combine(System.AppContext.BaseDirectory, "CheckYourEligibility.WebApp.xml");
     c.IncludeXmlComments(filePath);
@@ -130,6 +125,7 @@ builder.Services.AddAutoMapper(typeof(FsmMappingProfile));
 // Add Authorization
 builder.Services.AddAuthorization(builder.Configuration);
 
+// Build the app
 var app = builder.Build();
 
 // ------------------------
@@ -156,9 +152,26 @@ app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 
-// 2.4. Custom Middlewares
-app.UseMiddleware<RequestBodyLoggingMiddleware>();
-app.UseMiddleware<ResponseBodyLoggingMiddleware>();
+// 2.4. Set AuthenticatedUserId for Application Insights
+app.Use(async (context, next) =>
+{
+    if (context.User.Identity.IsAuthenticated)
+    {
+        var userId = context.User.Identity.Name;
+
+        // Optional: Hash or anonymize the userId for privacy compliance
+        // For example:
+        // userId = HashUserId(userId);
+
+        var requestTelemetry = context.Features.Get<Microsoft.ApplicationInsights.DataContracts.RequestTelemetry>();
+        if (requestTelemetry != null)
+        {
+            requestTelemetry.Context.User.AuthenticatedUserId = userId;
+        }
+    }
+
+    await next.Invoke();
+});
 
 // 2.5. Swagger Middleware
 app.UseSwagger();
