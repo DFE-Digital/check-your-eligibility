@@ -361,6 +361,7 @@ namespace CheckYourEligibility.ServiceUnitTests
             item.Status = CheckEligibilityStatus.queuedForProcessing;
             _fakeInMemoryDb.CheckEligibilities.Add(item);
             await _fakeInMemoryDb.SaveChangesAsync();
+            _moqDwpService.Setup(x => x.UseEcsforChecks).Returns(false);
             _moqDwpService.Setup(x => x.GetCitizen(It.IsAny<CitizenMatchRequest>())).ReturnsAsync(CheckEligibilityStatus.parentNotFound.ToString());
             _moqAudit.Setup(x => x.AuditAdd(It.IsAny<AuditData>())).ReturnsAsync("");
 
@@ -380,6 +381,7 @@ namespace CheckYourEligibility.ServiceUnitTests
             item.NASSNumber = string.Empty;
             _fakeInMemoryDb.CheckEligibilities.Add(item);
             _fakeInMemoryDb.SaveChangesAsync();
+            _moqDwpService.Setup(x => x.UseEcsforChecks).Returns(false);
             _moqDwpService.Setup(x => x.GetCitizen(It.IsAny<CitizenMatchRequest>())).ReturnsAsync(CheckEligibilityStatus.parentNotFound.ToString());
             _moqAudit.Setup(x => x.AuditAdd(It.IsAny<AuditData>())).ReturnsAsync("");
 
@@ -399,6 +401,7 @@ namespace CheckYourEligibility.ServiceUnitTests
             item.NASSNumber = string.Empty;
             _fakeInMemoryDb.CheckEligibilities.Add(item);
             _fakeInMemoryDb.SaveChangesAsync();
+            _moqDwpService.Setup(x => x.UseEcsforChecks).Returns(false);
             _moqDwpService.Setup(x => x.GetCitizen(It.IsAny<CitizenMatchRequest>())).ReturnsAsync(Guid.NewGuid().ToString());
             var result = new StatusCodeResult(StatusCodes.Status200OK);
             _moqDwpService.Setup(x => x.GetCitizenClaims(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(result);
@@ -421,6 +424,7 @@ namespace CheckYourEligibility.ServiceUnitTests
             item.NASSNumber = string.Empty;
             _fakeInMemoryDb.CheckEligibilities.Add(item);
             _fakeInMemoryDb.SaveChangesAsync();
+            _moqDwpService.Setup(x => x.UseEcsforChecks).Returns(false);
             _moqDwpService.Setup(x => x.GetCitizen(It.IsAny<CitizenMatchRequest>())).ReturnsAsync(Guid.NewGuid().ToString());
             var result = new StatusCodeResult(StatusCodes.Status404NotFound);
             _moqDwpService.Setup(x => x.GetCitizenClaims(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(result);
@@ -443,6 +447,7 @@ namespace CheckYourEligibility.ServiceUnitTests
             item.NASSNumber = string.Empty;
             _fakeInMemoryDb.CheckEligibilities.Add(item);
             _fakeInMemoryDb.SaveChangesAsync();
+            _moqDwpService.Setup(x => x.UseEcsforChecks).Returns(false);
             _moqDwpService.Setup(x => x.GetCitizen(It.IsAny<CitizenMatchRequest>())).ReturnsAsync(Guid.NewGuid().ToString());
             var result = new StatusCodeResult(StatusCodes.Status500InternalServerError);
             _moqDwpService.Setup(x => x.GetCitizenClaims(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(result);
@@ -465,6 +470,7 @@ namespace CheckYourEligibility.ServiceUnitTests
             item.NASSNumber = string.Empty;
             _fakeInMemoryDb.CheckEligibilities.Add(item);
             await _fakeInMemoryDb.SaveChangesAsync();
+            _moqDwpService.Setup(x => x.UseEcsforChecks).Returns(false);
             _moqDwpService.Setup(x => x.GetCitizen(It.IsAny<CitizenMatchRequest>())).ReturnsAsync(CheckEligibilityStatus.DwpError.ToString());
             var result = new StatusCodeResult(StatusCodes.Status500InternalServerError);
 
@@ -528,6 +534,7 @@ namespace CheckYourEligibility.ServiceUnitTests
             _fakeInMemoryDb.FreeSchoolMealsHMRC.Add(new FreeSchoolMealsHMRC { FreeSchoolMealsHMRCID = item.NINumber, Surname = surnameInvalid, DateOfBirth = item.DateOfBirth });
             _fakeInMemoryDb.SaveChangesAsync();
 
+            _moqDwpService.Setup(x=> x.UseEcsforChecks).Returns(false);
             _moqDwpService.Setup(x => x.GetCitizen(It.IsAny<CitizenMatchRequest>())).ReturnsAsync(CheckEligibilityStatus.parentNotFound.ToString());
             _moqAudit.Setup(x => x.AuditAdd(It.IsAny<AuditData>())).ReturnsAsync("");
 
