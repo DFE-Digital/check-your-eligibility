@@ -1,0 +1,771 @@
+{
+	"info": {
+		"_postman_id": "d4602337-0114-4138-a804-a5a9b7b2c379",
+		"name": "ECS-WebService",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "334351"
+	},
+	"item": [
+		{
+			"name": "Get Status",
+			"protocolProfileBehavior": {
+				"disabledSystemHeaders": {
+					"content-type": true
+				}
+			},
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "text/xml; charset=utf-8",
+						"type": "text"
+					},
+					{
+						"key": "SOAPAction",
+						"value": "http://www.dcsf.gov.uk/20090308/OnlineQueryService/GetFSMSystemStatus",
+						"type": "text"
+					},
+					{
+						"key": "X-CertificateOuid",
+						"value": "jbf-fsm",
+						"type": "text",
+						"disabled": true
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/xml",
+						"type": "text",
+						"disabled": true
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:ns=\"http://www.dcsf.gov.uk/20090308/\">\r\n   <soapenv:Header/>\r\n   <soapenv:Body>\r\n      <ns:GetFSMSystemStatus>\r\n         <!--Optional:-->\r\n         <ns:details>\r\n            <ns:SystemId>{{SystemId}}</ns:SystemId>\r\n            <ns:Password>{{Password}}</ns:Password>\r\n            <ns:RequestedServiceVersion>{{ServiceVersion}}</ns:RequestedServiceVersion>\r\n         </ns:details>\r\n      </ns:GetFSMSystemStatus>\r\n   </soapenv:Body>\r\n</soapenv:Envelope>",
+					"options": {
+						"raw": {
+							"language": "xml"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://{{Host}}/fsm.lawebservice/20170701/OnlineQueryService.svc",
+					"protocol": "https",
+					"host": [
+						"{{Host}}"
+					],
+					"path": [
+						"fsm.lawebservice",
+						"20170701",
+						"OnlineQueryService.svc"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "ResetPassword",
+			"protocolProfileBehavior": {
+				"disabledSystemHeaders": {
+					"content-type": true
+				}
+			},
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "text/xml; charset=utf-8",
+						"type": "text"
+					},
+					{
+						"key": "SOAPAction",
+						"value": "http://www.dcsf.gov.uk/20090308/OnlineQueryService/RequestPasswordReset",
+						"type": "text"
+					},
+					{
+						"key": "X-CertificateOuid",
+						"value": "jbf-fsm",
+						"type": "text",
+						"disabled": true
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/xml",
+						"type": "text",
+						"disabled": true
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:ns=\"http://www.dcsf.gov.uk/20090308/\">\r\n   <soapenv:Header/>\r\n   <soapenv:Body>\r\n      <ns:RequestPasswordReset>\r\n         <!--Optional:-->\r\n         <ns:requestInput>\r\n            <ns:SystemId>{{SystemId}}</ns:SystemId>\r\n             <ns:Password>{{Password}}</ns:Password>\r\n            <ns:RequestedServiceVersion>{{ServiceVersion}}</ns:RequestedServiceVersion>\r\n         </ns:requestInput>\r\n      </ns:RequestPasswordReset>\r\n   </soapenv:Body>\r\n</soapenv:Envelope>",
+					"options": {
+						"raw": {
+							"language": "xml"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://{{Host}}/fsm.lawebservice/20170701/OnlineQueryService.svc",
+					"protocol": "https",
+					"host": [
+						"{{Host}}"
+					],
+					"path": [
+						"fsm.lawebservice",
+						"20170701",
+						"OnlineQueryService.svc"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "SubmitSingleQuery - FSM",
+			"protocolProfileBehavior": {
+				"disabledSystemHeaders": {
+					"content-type": true
+				}
+			},
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "text/xml; charset=utf-8",
+						"type": "text"
+					},
+					{
+						"key": "SOAPAction",
+						"value": "http://www.dcsf.gov.uk/20090308/OnlineQueryService/SubmitSingleQuery",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:ns=\"http://www.dcsf.gov.uk/20090308/\">\r\n   <soapenv:Header/>\r\n   <soapenv:Body>\r\n      <ns:SubmitSingleQuery>\r\n         <!--Optional:-->\r\n         <ns:requestInput>\r\n            <ns:SystemId>{{SystemId}}</ns:SystemId>\r\n            <ns:Password>{{Password}}</ns:Password>\r\n            <ns:LocalAuthorityId>{{LAId}}</ns:LocalAuthorityId>\r\n            <ns:RequestedServiceVersion>{{ServiceVersion}}</ns:RequestedServiceVersion>\r\n            <ns:UserToQuery>\r\n               <!--Optional:-->\r\n               <ns:Surname>WEB</ns:Surname>\r\n               <ns:DateOfBirth>1967-03-07</ns:DateOfBirth>\r\n               <!--Optional:-->\r\n               <ns:NiNo>NN668767B</ns:NiNo>\r\n               <!--Optional:-->\r\n               <ns:NASS/>\r\n               <!--Optional:-->\r\n               <ns:Subscribers>\r\n                  <!--Zero or more repetitions:-->\r\n                  <ns:Subscriber>\r\n                     <ns:Id>{{LAId}}</ns:Id>\r\n                     <ns:Type>LA</ns:Type>\r\n                  </ns:Subscriber>\r\n               </ns:Subscribers>\r\n               <!--Optional:-->\r\n               <ns:Dern/>\r\n            </ns:UserToQuery>\r\n            <ns:SourceType>CITIZEN</ns:SourceType>\r\n            <ns:EligibilityCheckType>FSM</ns:EligibilityCheckType>\r\n            <ns:ServiceType>SHARED</ns:ServiceType>\r\n         </ns:requestInput>\r\n      </ns:SubmitSingleQuery>\r\n   </soapenv:Body>\r\n</soapenv:Envelope>",
+					"options": {
+						"raw": {
+							"language": "xml"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://{{HostECS}}/fsm.lawebservice/20170701/OnlineQueryService.svc",
+					"protocol": "https",
+					"host": [
+						"{{HostECS}}"
+					],
+					"path": [
+						"fsm.lawebservice",
+						"20170701",
+						"OnlineQueryService.svc"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "SubmitSingleQuery - FSM test noteligible",
+			"protocolProfileBehavior": {
+				"disabledSystemHeaders": {
+					"content-type": true
+				}
+			},
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "text/xml; charset=utf-8",
+						"type": "text"
+					},
+					{
+						"key": "SOAPAction",
+						"value": "http://www.dcsf.gov.uk/20090308/OnlineQueryService/SubmitSingleQuery",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:ns=\"http://www.dcsf.gov.uk/20090308/\">\r\n   <soapenv:Header/>\r\n   <soapenv:Body>\r\n      <ns:SubmitSingleQuery>\r\n         <!--Optional:-->\r\n         <ns:requestInput>\r\n            <ns:SystemId>{{SystemId}}</ns:SystemId>\r\n            <ns:Password>{{Password}}</ns:Password>\r\n            <ns:LocalAuthorityId>{{LAId}}</ns:LocalAuthorityId>\r\n            <ns:RequestedServiceVersion>{{ServiceVersion}}</ns:RequestedServiceVersion>\r\n            <ns:UserToQuery>\r\n               <!--Optional:-->\r\n               <ns:Surname>WEB</ns:Surname>\r\n               <ns:DateOfBirth>1967-03-07</ns:DateOfBirth>\r\n               <!--Optional:-->\r\n               <ns:NiNo>PN668767B</ns:NiNo>\r\n               <!--Optional:-->\r\n               <ns:NASS/>\r\n               <!--Optional:-->\r\n               <ns:Subscribers>\r\n                  <!--Zero or more repetitions:-->\r\n                  <ns:Subscriber>\r\n                     <ns:Id>{{LAId}}</ns:Id>\r\n                     <ns:Type>LA</ns:Type>\r\n                  </ns:Subscriber>\r\n               </ns:Subscribers>\r\n               <!--Optional:-->\r\n               <ns:Dern/>\r\n            </ns:UserToQuery>\r\n            <ns:SourceType>CITIZEN</ns:SourceType>\r\n            <ns:EligibilityCheckType>FSM</ns:EligibilityCheckType>\r\n            <ns:ServiceType>SHARED</ns:ServiceType>\r\n         </ns:requestInput>\r\n      </ns:SubmitSingleQuery>\r\n   </soapenv:Body>\r\n</soapenv:Envelope>",
+					"options": {
+						"raw": {
+							"language": "xml"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{HostECS}}",
+					"host": [
+						"{{HostECS}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "SubmitSingleQuery - FSM test eligible",
+			"protocolProfileBehavior": {
+				"disabledSystemHeaders": {
+					"content-type": true
+				}
+			},
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "text/xml; charset=utf-8",
+						"type": "text"
+					},
+					{
+						"key": "SOAPAction",
+						"value": "http://www.dcsf.gov.uk/20090308/OnlineQueryService/SubmitSingleQuery",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:ns=\"http://www.dcsf.gov.uk/20090308/\">\r\n   <soapenv:Header/>\r\n   <soapenv:Body>\r\n      <ns:SubmitSingleQuery>\r\n         <!--Optional:-->\r\n         <ns:requestInput>\r\n            <ns:SystemId>{{SystemId}}</ns:SystemId>\r\n            <ns:Password>{{Password}}</ns:Password>\r\n            <ns:LocalAuthorityId>{{LAId}}</ns:LocalAuthorityId>\r\n            <ns:RequestedServiceVersion>{{ServiceVersion}}</ns:RequestedServiceVersion>\r\n            <ns:UserToQuery>\r\n               <!--Optional:-->\r\n               <ns:Surname>WEB</ns:Surname>\r\n               <ns:DateOfBirth>1967-03-07</ns:DateOfBirth>\r\n               <!--Optional:-->\r\n               <ns:NiNo>NN668767B</ns:NiNo>\r\n               <!--Optional:-->\r\n               <ns:NASS/>\r\n               <!--Optional:-->\r\n               <ns:Subscribers>\r\n                  <!--Zero or more repetitions:-->\r\n                  <ns:Subscriber>\r\n                     <ns:Id>{{LAId}}</ns:Id>\r\n                     <ns:Type>LA</ns:Type>\r\n                  </ns:Subscriber>\r\n               </ns:Subscribers>\r\n               <!--Optional:-->\r\n               <ns:Dern/>\r\n            </ns:UserToQuery>\r\n            <ns:SourceType>CITIZEN</ns:SourceType>\r\n            <ns:EligibilityCheckType>FSM</ns:EligibilityCheckType>\r\n            <ns:ServiceType>SHARED</ns:ServiceType>\r\n         </ns:requestInput>\r\n      </ns:SubmitSingleQuery>\r\n   </soapenv:Body>\r\n</soapenv:Envelope>",
+					"options": {
+						"raw": {
+							"language": "xml"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{HostECS}}",
+					"host": [
+						"{{HostECS}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "SubmitSingleQuery - FSM test DWP Error",
+			"protocolProfileBehavior": {
+				"disabledSystemHeaders": {
+					"content-type": true
+				}
+			},
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "text/xml; charset=utf-8",
+						"type": "text"
+					},
+					{
+						"key": "SOAPAction",
+						"value": "http://www.dcsf.gov.uk/20090308/OnlineQueryService/SubmitSingleQuery",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:ns=\"http://www.dcsf.gov.uk/20090308/\">\r\n   <soapenv:Header/>\r\n   <soapenv:Body>\r\n      <ns:SubmitSingleQuery>\r\n         <!--Optional:-->\r\n         <ns:requestInput>\r\n            <ns:SystemId>{{SystemId}}</ns:SystemId>\r\n            <ns:Password>{{Password}}</ns:Password>\r\n            <ns:LocalAuthorityId>{{LAId}}</ns:LocalAuthorityId>\r\n            <ns:RequestedServiceVersion>{{ServiceVersion}}</ns:RequestedServiceVersion>\r\n            <ns:UserToQuery>\r\n               <!--Optional:-->\r\n               <ns:Surname>WEB</ns:Surname>\r\n               <ns:DateOfBirth>1967-03-07</ns:DateOfBirth>\r\n               <!--Optional:-->\r\n               <ns:NiNo>RH668767B</ns:NiNo>\r\n               <!--Optional:-->\r\n               <ns:NASS/>\r\n               <!--Optional:-->\r\n               <ns:Subscribers>\r\n                  <!--Zero or more repetitions:-->\r\n                  <ns:Subscriber>\r\n                     <ns:Id>{{LAId}}</ns:Id>\r\n                     <ns:Type>LA</ns:Type>\r\n                  </ns:Subscriber>\r\n               </ns:Subscribers>\r\n               <!--Optional:-->\r\n               <ns:Dern/>\r\n            </ns:UserToQuery>\r\n            <ns:SourceType>CITIZEN</ns:SourceType>\r\n            <ns:EligibilityCheckType>FSM</ns:EligibilityCheckType>\r\n            <ns:ServiceType>SHARED</ns:ServiceType>\r\n         </ns:requestInput>\r\n      </ns:SubmitSingleQuery>\r\n   </soapenv:Body>\r\n</soapenv:Envelope>",
+					"options": {
+						"raw": {
+							"language": "xml"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{HostECS}}",
+					"host": [
+						"{{HostECS}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "SubmitSingleQuery - EY",
+			"protocolProfileBehavior": {
+				"disabledSystemHeaders": {
+					"content-type": true
+				}
+			},
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "text/xml; charset=utf-8",
+						"type": "text"
+					},
+					{
+						"key": "SOAPAction",
+						"value": "http://www.dcsf.gov.uk/20090308/OnlineQueryService/SubmitSingleQuery",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "\r\n<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:ns=\"http://www.dcsf.gov.uk/20090308/\">\r\n   <soapenv:Header/>\r\n   <soapenv:Body>\r\n      <ns:SubmitSingleQuery>\r\n         <!--Optional:-->\r\n         <ns:requestInput>\r\n            <ns:SystemId>{{SystemId}}</ns:SystemId>\r\n            <ns:Password>{{Password}}</ns:Password>\r\n            <ns:LocalAuthorityId>{{LAId}}</ns:LocalAuthorityId>\r\n            <ns:RequestedServiceVersion>{{ServiceVersion}}</ns:RequestedServiceVersion>\r\n            <ns:UserToQuery>\r\n               <!--Optional:-->\r\n               <ns:Surname>GIL</ns:Surname>\r\n               <ns:DateOfBirth>1989-03-06</ns:DateOfBirth>\r\n               <!--Optional:-->\r\n               <ns:NiNo>PE000287D</ns:NiNo>\r\n               <!--Optional:-->\r\n               <ns:NASS/>\r\n               <!--Optional:-->\r\n               <ns:Dern/>\r\n            </ns:UserToQuery>\r\n            <ns:SourceType>CITIZEN</ns:SourceType>\r\n            <ns:EligibilityCheckType>EY</ns:EligibilityCheckType>\r\n            <ns:ServiceType>SINGLE</ns:ServiceType>\r\n         </ns:requestInput>\r\n      </ns:SubmitSingleQuery>\r\n   </soapenv:Body>\r\n</soapenv:Envelope>",
+					"options": {
+						"raw": {
+							"language": "xml"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://{{Host}}/fsm.lawebservice/20170701/OnlineQueryService.svc",
+					"protocol": "https",
+					"host": [
+						"{{Host}}"
+					],
+					"path": [
+						"fsm.lawebservice",
+						"20170701",
+						"OnlineQueryService.svc"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "SubmitSingleQuery - EYPP",
+			"protocolProfileBehavior": {
+				"disabledSystemHeaders": {
+					"content-type": true
+				}
+			},
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "text/xml; charset=utf-8",
+						"type": "text"
+					},
+					{
+						"key": "SOAPAction",
+						"value": "http://www.dcsf.gov.uk/20090308/OnlineQueryService/SubmitSingleQuery",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "\r\n<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:ns=\"http://www.dcsf.gov.uk/20090308/\">\r\n   <soapenv:Header/>\r\n   <soapenv:Body>\r\n      <ns:SubmitSingleQuery>\r\n         <!--Optional:-->\r\n         <ns:requestInput>\r\n            <ns:SystemId>{{SystemId}}</ns:SystemId>\r\n            <ns:Password>{{Password}}</ns:Password>\r\n            <ns:LocalAuthorityId>{{LAId}}</ns:LocalAuthorityId>\r\n            <ns:RequestedServiceVersion>{{ServiceVersion}}</ns:RequestedServiceVersion>\r\n            <ns:UserToQuery>\r\n               <!--Optional:-->\r\n               <ns:Surname>GIL</ns:Surname>\r\n               <ns:DateOfBirth>1989-03-06</ns:DateOfBirth>\r\n               <!--Optional:-->\r\n               <ns:NiNo>PT920287D</ns:NiNo>\r\n               <!--Optional:-->\r\n               <ns:NASS/>\r\n               <!--Optional:-->\r\n               <ns:Subscribers>\r\n                  <!--Zero or more repetitions:-->\r\n                  <ns:Subscriber>\r\n                     <ns:Id>310</ns:Id>\r\n                     <ns:Type>LA</ns:Type>\r\n                  </ns:Subscriber>\r\n               </ns:Subscribers>\r\n               <!--Optional:-->\r\n               <ns:Dern></ns:Dern>\r\n            </ns:UserToQuery>\r\n            <ns:SourceType>CITIZEN</ns:SourceType>\r\n            <ns:EligibilityCheckType>EYPP</ns:EligibilityCheckType>\r\n            <ns:ServiceType>SHARED</ns:ServiceType>\r\n         </ns:requestInput>\r\n      </ns:SubmitSingleQuery>\r\n   </soapenv:Body>\r\n</soapenv:Envelope>",
+					"options": {
+						"raw": {
+							"language": "xml"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://{{Host}}/fsm.lawebservice/20170701/OnlineQueryService.svc",
+					"protocol": "https",
+					"host": [
+						"{{Host}}"
+					],
+					"path": [
+						"fsm.lawebservice",
+						"20170701",
+						"OnlineQueryService.svc"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "SubmitSingleQuery - 30H",
+			"protocolProfileBehavior": {
+				"disabledSystemHeaders": {
+					"content-type": true
+				}
+			},
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "text/xml; charset=utf-8",
+						"type": "text"
+					},
+					{
+						"key": "SOAPAction",
+						"value": "http://www.dcsf.gov.uk/20090308/OnlineQueryService/SubmitSingleQuery",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "\r\n<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:ns=\"http://www.dcsf.gov.uk/20090308/\">\r\n   <soapenv:Header/>\r\n   <soapenv:Body>\r\n      <ns:SubmitSingleQuery>\r\n         <!--Optional:-->\r\n         <ns:requestInput>\r\n            <ns:SystemId>{{SystemId}}</ns:SystemId>\r\n            <ns:Password>{{Password}}</ns:Password>\r\n            <ns:LocalAuthorityId>{{LAId}}</ns:LocalAuthorityId>\r\n            <ns:RequestedServiceVersion>{{ServiceVersion}}</ns:RequestedServiceVersion>\r\n            <ns:UserToQuery>\r\n               <!--Optional:-->\r\n               <ns:Surname/>\r\n               <ns:DateOfBirth>1990-09-06</ns:DateOfBirth>\r\n               <!--Optional:-->\r\n               <ns:NiNo>AB123456A</ns:NiNo>\r\n               <!--Optional:-->\r\n               <ns:NASS/>\r\n               <!--Optional:-->\r\n               <ns:Subscribers/>\r\n               <!--Optional:-->\r\n               <ns:EligibilityCode>70609160101</ns:EligibilityCode>\r\n            </ns:UserToQuery>\r\n            <ns:SourceType>CITIZEN</ns:SourceType>\r\n            <ns:EligibilityCheckType>30H</ns:EligibilityCheckType>\r\n            <ns:ServiceType>SHARED</ns:ServiceType>\r\n         </ns:requestInput>\r\n      </ns:SubmitSingleQuery>\r\n   </soapenv:Body>\r\n</soapenv:Envelope>",
+					"options": {
+						"raw": {
+							"language": "xml"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://{{Host}}/fsm.lawebservice/20170701/OnlineQueryService.svc",
+					"protocol": "https",
+					"host": [
+						"{{Host}}"
+					],
+					"path": [
+						"fsm.lawebservice",
+						"20170701",
+						"OnlineQueryService.svc"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "SubmitBatchQuery - FSM",
+			"protocolProfileBehavior": {
+				"disabledSystemHeaders": {
+					"content-type": true
+				}
+			},
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "text/xml; charset=utf-8",
+						"type": "text"
+					},
+					{
+						"key": "SOAPAction",
+						"value": "http://www.dcsf.gov.uk/20090308/OnlineQueryService/SubmitBatchQuery",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:ns=\"http://www.dcsf.gov.uk/20090308/\" xmlns:ns1=\"http://www.dcsf.gov.uk/20090810/\">\r\n   <soapenv:Header/>\r\n   <soapenv:Body>\r\n      <ns:SubmitBatchQuery>\r\n         <!--Optional:-->\r\n         <ns:requestInput>\r\n            <ns1:SystemId>{{SystemId}}</ns1:SystemId>\r\n            <ns1:Password>{{Password}}</ns1:Password>\r\n            <ns1:LocalAuthorityId>{{LAId}}</ns1:LocalAuthorityId>\r\n            <ns1:RequestedServiceVersion>{{ServiceVersion}}</ns1:RequestedServiceVersion>\r\n            <!--Optional:-->\r\n            <ns1:LABatchID>TEST0</ns1:LABatchID>\r\n            <ns1:BatchQueries>\r\n               <!--Zero or more repetitions:-->\r\n               <ns1:BatchQuery>\r\n                  <!--Optional:-->\r\n                  <ns1:RowID>1</ns1:RowID>\r\n                  <!--Optional:-->\r\n                  <ns1:UserToQuery>\r\n                     <!--Optional:-->\r\n                     <ns:Surname>HAS</ns:Surname>\r\n                     <ns:DateOfBirth>1991-03-08</ns:DateOfBirth>\r\n                     <!--Optional:-->\r\n                     <ns:NiNo>RK821234A</ns:NiNo>\r\n                     <!--Optional:-->\r\n                     <ns:NASS/>\r\n                     <!--Optional:-->\r\n                     <ns:Subscribers>\r\n                        <!--Zero or more repetitions:-->\r\n                        <ns:Subscriber>\r\n                           <ns:Id>308</ns:Id>\r\n                           <ns:Type>LA</ns:Type>\r\n                        </ns:Subscriber>\r\n                     </ns:Subscribers>\r\n                     <!--Optional:-->\r\n                     <ns:Dern></ns:Dern>\r\n                  </ns1:UserToQuery>\r\n               </ns1:BatchQuery>\r\n               <ns1:BatchQuery>\r\n                  <ns1:RowID>2</ns1:RowID>\r\n                  <ns1:UserToQuery>\r\n                     <ns:Surname>Jones</ns:Surname>\r\n                     <ns:DateOfBirth>1965-11-21</ns:DateOfBirth>\r\n                     <ns:NiNo>B123456A</ns:NiNo>\r\n                     <ns:NASS />\r\n                     <ns:Subscribers>\r\n                        <ns:Subscriber>\r\n                           <ns:Id>308</ns:Id>\r\n                           <ns:Type>LA</ns:Type>\r\n                        </ns:Subscriber>\r\n                     </ns:Subscribers>\r\n                     <ns:Dern></ns:Dern>\r\n                  </ns1:UserToQuery>\r\n               </ns1:BatchQuery>\r\n               <ns1:BatchQuery>\r\n                  <ns1:RowID>3</ns1:RowID>\r\n                  <ns1:UserToQuery>\r\n                     <ns:Surname>Jackson</ns:Surname>\r\n                     <ns:DateOfBirth>1982-10-15</ns:DateOfBirth>\r\n                     <ns:NiNo/>\r\n                     <ns:NASS>020112345</ns:NASS>\r\n                     <ns:Subscribers>\r\n                        <ns:Subscriber>\r\n                           <ns:Id>308</ns:Id>\r\n                           <ns:Type>LA</ns:Type>\r\n                        </ns:Subscriber>\r\n                     </ns:Subscribers>\r\n                  \t<ns:Dern></ns:Dern>\r\n                  </ns1:UserToQuery>\r\n               </ns1:BatchQuery>\r\n            </ns1:BatchQueries>\r\n            <ns1:EligibilityCheckType>FSM</ns1:EligibilityCheckType>\r\n            <ns1:ServiceType>SHARED</ns1:ServiceType>\r\n         </ns:requestInput>\r\n      </ns:SubmitBatchQuery>\r\n   </soapenv:Body>\r\n</soapenv:Envelope>",
+					"options": {
+						"raw": {
+							"language": "xml"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://{{Host}}/fsm.lawebservice/20170701/OnlineQueryService.svc",
+					"protocol": "https",
+					"host": [
+						"{{Host}}"
+					],
+					"path": [
+						"fsm.lawebservice",
+						"20170701",
+						"OnlineQueryService.svc"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "SubmitBatchQuery - EY",
+			"protocolProfileBehavior": {
+				"disabledSystemHeaders": {
+					"content-type": true
+				}
+			},
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "text/xml; charset=utf-8",
+						"type": "text"
+					},
+					{
+						"key": "SOAPAction",
+						"value": "http://www.dcsf.gov.uk/20090308/OnlineQueryService/SubmitBatchQuery",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:ns=\"http://www.dcsf.gov.uk/20090308/\" xmlns:ns1=\"http://www.dcsf.gov.uk/20090810/\">\r\n   <soapenv:Header/>\r\n   <soapenv:Body>\r\n      <ns:SubmitBatchQuery>\r\n         <!--Optional:-->\r\n         <ns:requestInput>\r\n            <ns1:SystemId>{{SystemId}}</ns1:SystemId>\r\n            <ns1:Password>{{Password}}</ns1:Password>\r\n            <ns1:LocalAuthorityId>{{LAId}}</ns1:LocalAuthorityId>\r\n            <ns1:RequestedServiceVersion>{{ServiceVersion}}</ns1:RequestedServiceVersion>\r\n            <!--Optional:-->\r\n            <ns1:LABatchID>TEST0</ns1:LABatchID>\r\n            <ns1:BatchQueries>\r\n               <!--Zero or more repetitions:-->\r\n               <ns1:BatchQuery>\r\n                  <!--Optional:-->\r\n                  <ns1:RowID>1</ns1:RowID>\r\n                  <!--Optional:-->\r\n                  <ns1:UserToQuery>\r\n                     <!--Optional:-->\r\n                     <ns:Surname>HAS</ns:Surname>\r\n                     <ns:DateOfBirth>1991-03-08</ns:DateOfBirth>\r\n                     <!--Optional:-->\r\n                     <ns:NiNo>NN267572D</ns:NiNo>\r\n                     <!--Optional:-->\r\n                     <ns:NASS/>\r\n                     <!--Optional:-->\r\n                     <ns:Dern></ns:Dern>\r\n                  </ns1:UserToQuery>\r\n               </ns1:BatchQuery>\r\n               <ns1:BatchQuery>\r\n                  <ns1:RowID>2</ns1:RowID>\r\n                  <ns1:UserToQuery>\r\n                     <ns:Surname>Jones</ns:Surname>\r\n                     <ns:DateOfBirth>1965-11-21</ns:DateOfBirth>\r\n                     <ns:NiNo>B123456A</ns:NiNo>\r\n                     <ns:NASS />\r\n                     <ns:Dern></ns:Dern>\r\n                  </ns1:UserToQuery>\r\n               </ns1:BatchQuery>\r\n               <ns1:BatchQuery>\r\n                  <ns1:RowID>3</ns1:RowID>\r\n                  <ns1:UserToQuery>\r\n                     <ns:Surname>Jackson</ns:Surname>\r\n                     <ns:DateOfBirth>1982-10-15</ns:DateOfBirth>\r\n                     <ns:NiNo/>\r\n                     <ns:NASS>020112345</ns:NASS>\r\n                     <ns:Dern></ns:Dern>\r\n                  </ns1:UserToQuery>\r\n               </ns1:BatchQuery>\r\n               <ns1:BatchQuery>\r\n                  <!--Optional:-->\r\n                  <ns1:RowID>4</ns1:RowID>\r\n                  <!--Optional:-->\r\n                  <ns1:UserToQuery>\r\n                     <!--Optional:-->\r\n                     <ns:Surname>HAS</ns:Surname>\r\n                     <ns:DateOfBirth>1991-03-08</ns:DateOfBirth>\r\n                     <!--Optional:-->\r\n                     <ns:NiNo>PW957572D</ns:NiNo>\r\n                     <!--Optional:-->\r\n                     <ns:NASS/>\r\n                     <!--Optional:-->\r\n                     <ns:Dern></ns:Dern>\r\n                  </ns1:UserToQuery>\r\n               </ns1:BatchQuery>\r\n            </ns1:BatchQueries>\r\n            <ns1:EligibilityCheckType>EY</ns1:EligibilityCheckType>\r\n            <ns1:ServiceType>SINGLE</ns1:ServiceType>\r\n         </ns:requestInput>\r\n      </ns:SubmitBatchQuery>\r\n   </soapenv:Body>\r\n</soapenv:Envelope>",
+					"options": {
+						"raw": {
+							"language": "xml"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://{{Host}}/fsm.lawebservice/20170701/OnlineQueryService.svc",
+					"protocol": "https",
+					"host": [
+						"{{Host}}"
+					],
+					"path": [
+						"fsm.lawebservice",
+						"20170701",
+						"OnlineQueryService.svc"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "SubmitBatchQuery - EYPP",
+			"protocolProfileBehavior": {
+				"disabledSystemHeaders": {
+					"content-type": true
+				}
+			},
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "text/xml; charset=utf-8",
+						"type": "text"
+					},
+					{
+						"key": "SOAPAction",
+						"value": "http://www.dcsf.gov.uk/20090308/OnlineQueryService/SubmitBatchQuery",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:ns=\"http://www.dcsf.gov.uk/20090308/\" xmlns:ns1=\"http://www.dcsf.gov.uk/20090810/\">\r\n   <soapenv:Header/>\r\n   <soapenv:Body>\r\n      <ns:SubmitBatchQuery>\r\n         <!--Optional:-->\r\n         <ns:requestInput>\r\n            <ns1:SystemId>{{SystemId}}</ns1:SystemId>\r\n            <ns1:Password>{{Password}}</ns1:Password>\r\n            <ns1:LocalAuthorityId>{{LAId}}</ns1:LocalAuthorityId>\r\n            <ns1:RequestedServiceVersion>{{ServiceVersion}}</ns1:RequestedServiceVersion>\r\n            <!--Optional:-->\r\n            <ns1:LABatchID>TEST0</ns1:LABatchID>\r\n            <ns1:BatchQueries>\r\n               <!--Zero or more repetitions:-->\r\n               <ns1:BatchQuery>\r\n                  <!--Optional:-->\r\n                  <ns1:RowID>1</ns1:RowID>\r\n                  <!--Optional:-->\r\n                  <ns1:UserToQuery>\r\n                     <!--Optional:-->\r\n                     <ns:Surname>HAS</ns:Surname>\r\n                     <ns:DateOfBirth>1991-03-08</ns:DateOfBirth>\r\n                     <!--Optional:-->\r\n                     <ns:NiNo>NN267572D</ns:NiNo>\r\n                     <!--Optional:-->\r\n                     <ns:NASS/>\r\n                     <!--Optional:-->\r\n                     <ns:Subscribers>\r\n                        <!--Zero or more repetitions:-->\r\n                        <ns:Subscriber>\r\n                           <ns:Id>311</ns:Id>\r\n                           <ns:Type>LA</ns:Type>\r\n                        </ns:Subscriber>\r\n                     </ns:Subscribers>\r\n                     <!--Optional:-->\r\n                     <ns:Dern></ns:Dern>\r\n                  </ns1:UserToQuery>\r\n               </ns1:BatchQuery>\r\n               <ns1:BatchQuery>\r\n                  <ns1:RowID>2</ns1:RowID>\r\n                  <ns1:UserToQuery>\r\n                     <ns:Surname>Jones</ns:Surname>\r\n                     <ns:DateOfBirth>1965-11-21</ns:DateOfBirth>\r\n                     <ns:NiNo>B123456A</ns:NiNo>\r\n                     <ns:NASS />\r\n                     <ns:Subscribers>\r\n                        <ns:Subscriber>\r\n                           <ns:Id>311</ns:Id>\r\n                           <ns:Type>LA</ns:Type>\r\n                        </ns:Subscriber>\r\n                     </ns:Subscribers>\r\n                     <ns:Dern></ns:Dern>\r\n                  </ns1:UserToQuery>\r\n               </ns1:BatchQuery>\r\n               <ns1:BatchQuery>\r\n                  <ns1:RowID>3</ns1:RowID>\r\n                  <ns1:UserToQuery>\r\n                     <ns:Surname>Jackson</ns:Surname>\r\n                     <ns:DateOfBirth>1982-10-15</ns:DateOfBirth>\r\n                     <ns:NiNo/>\r\n                     <ns:NASS>020112345</ns:NASS>\r\n                     <ns:Subscribers>\r\n                        <ns:Subscriber>\r\n                           <ns:Id>123456</ns:Id>\r\n                           <ns:Type>SCHOOL</ns:Type>\r\n                        </ns:Subscriber>\r\n                     </ns:Subscribers>\r\n                     <ns:Dern></ns:Dern>\r\n                  </ns1:UserToQuery>\r\n               </ns1:BatchQuery>\r\n               <ns1:BatchQuery>\r\n                  <!--Optional:-->\r\n                  <ns1:RowID>4</ns1:RowID>\r\n                  <!--Optional:-->\r\n                  <ns1:UserToQuery>\r\n                     <!--Optional:-->\r\n                     <ns:Surname>HAS</ns:Surname>\r\n                     <ns:DateOfBirth>1991-03-08</ns:DateOfBirth>\r\n                     <!--Optional:-->\r\n                     <ns:NiNo>PZ927572D</ns:NiNo>\r\n                     <!--Optional:-->\r\n                     <ns:NASS/>\r\n                     <!--Optional:-->\r\n                     <ns:Subscribers>\r\n                        <!--Zero or more repetitions:-->\r\n                        <ns:Subscriber>\r\n                           <ns:Id>311</ns:Id>\r\n                           <ns:Type>LA</ns:Type>\r\n                        </ns:Subscriber>\r\n                     </ns:Subscribers>\r\n                     <!--Optional:-->\r\n                     <ns:Dern></ns:Dern>\r\n                  </ns1:UserToQuery>\r\n               </ns1:BatchQuery>\r\n            </ns1:BatchQueries>\r\n            <ns1:EligibilityCheckType>EYPP</ns1:EligibilityCheckType>\r\n            <ns1:ServiceType>SHARED</ns1:ServiceType>\r\n         </ns:requestInput>\r\n      </ns:SubmitBatchQuery>\r\n   </soapenv:Body>\r\n</soapenv:Envelope>",
+					"options": {
+						"raw": {
+							"language": "xml"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://{{Host}}/fsm.lawebservice/20170701/OnlineQueryService.svc",
+					"protocol": "https",
+					"host": [
+						"{{Host}}"
+					],
+					"path": [
+						"fsm.lawebservice",
+						"20170701",
+						"OnlineQueryService.svc"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "SubmitBatchQuery - 30H",
+			"protocolProfileBehavior": {
+				"disabledSystemHeaders": {
+					"content-type": true
+				}
+			},
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "text/xml; charset=utf-8",
+						"type": "text"
+					},
+					{
+						"key": "SOAPAction",
+						"value": "http://www.dcsf.gov.uk/20090308/OnlineQueryService/SubmitBatchQuery",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:ns=\"http://www.dcsf.gov.uk/20090308/\" xmlns:ns1=\"http://www.dcsf.gov.uk/20090810/\">\r\n   <soapenv:Header/>\r\n   <soapenv:Body>\r\n      <ns:SubmitBatchQuery>\r\n         <!--Optional:-->\r\n         <ns:requestInput>\r\n            <ns1:SystemId>{{SystemId}}</ns1:SystemId>\r\n            <ns1:Password>{{Password}}</ns1:Password>\r\n            <ns1:LocalAuthorityId>{{LAId}}</ns1:LocalAuthorityId>\r\n            <ns1:RequestedServiceVersion>{{ServiceVersion}}</ns1:RequestedServiceVersion>\r\n            <!--Optional:-->\r\n            <ns1:LABatchID>TEST0</ns1:LABatchID>\r\n            <ns1:BatchQueries>\r\n               <ns1:BatchQuery>\r\n                  <ns1:RowID>1</ns1:RowID>\r\n                  <ns1:UserToQuery>\r\n                     <ns:Surname/>                     \r\n                     <ns:DateOfBirth>1990-09-06</ns:DateOfBirth>\r\n                     <ns:NiNo>PN111111A</ns:NiNo>\r\n                     <ns:NASS/>\r\n                     <ns:Subscribers>\r\n                        <ns:Subscriber>\r\n                           <ns:Id>308</ns:Id>\r\n                           <ns:Type>LA</ns:Type>\r\n                        </ns:Subscriber>\r\n                     </ns:Subscribers>\r\n                     <ns:EligibilityCode>70609160101</ns:EligibilityCode>\r\n                  </ns1:UserToQuery>\r\n               </ns1:BatchQuery>\r\n               <ns1:BatchQuery>\r\n                  <ns1:RowID>2</ns1:RowID>\r\n                  <ns1:UserToQuery>\r\n                     <ns:Surname/>\r\n                     <ns:DateOfBirth>1980-03-05</ns:DateOfBirth>\r\n                     <ns:NiNo>PN222222A</ns:NiNo>\r\n                     <ns:NASS />\r\n                     <ns:Subscribers>\r\n                        <ns:Subscriber>\r\n                           <ns:Id>308</ns:Id>\r\n                           <ns:Type>LA</ns:Type>\r\n                        </ns:Subscriber>\r\n                     </ns:Subscribers>\r\n\t\t\t\t\t <!-- Invalid DERN -->\r\n                     <ns:EligibilityCode>1234567890</ns:EligibilityCode>\r\n                  </ns1:UserToQuery>\r\n               </ns1:BatchQuery>\r\n               <ns1:BatchQuery>\r\n                  <ns1:RowID>3</ns1:RowID>\r\n                  <ns1:UserToQuery>\r\n                     <ns:Surname/>\r\n                     <ns:DateOfBirth>1980-03-05</ns:DateOfBirth>\r\n                     <ns:NiNo>PN333333A</ns:NiNo>\r\n                     <ns:NASS/>\r\n                     <ns:Subscribers>\r\n                        <ns:Subscriber>\r\n                           <ns:Id>308</ns:Id>\r\n                           <ns:Type>LA</ns:Type>\r\n                        </ns:Subscriber>\r\n                     </ns:Subscribers>\r\n                  \t<ns:EligibilityCode>80609160101</ns:EligibilityCode>\r\n                  </ns1:UserToQuery>\r\n               </ns1:BatchQuery>\r\n            </ns1:BatchQueries>\r\n            <ns1:EligibilityCheckType>30H</ns1:EligibilityCheckType>\r\n            <ns1:ServiceType>SHARED</ns1:ServiceType>\r\n         </ns:requestInput>\r\n      </ns:SubmitBatchQuery>\r\n   </soapenv:Body>\r\n</soapenv:Envelope>",
+					"options": {
+						"raw": {
+							"language": "xml"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://{{Host}}/fsm.lawebservice/20170701/OnlineQueryService.svc",
+					"protocol": "https",
+					"host": [
+						"{{Host}}"
+					],
+					"path": [
+						"fsm.lawebservice",
+						"20170701",
+						"OnlineQueryService.svc"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "FetchBatchStatus",
+			"protocolProfileBehavior": {
+				"disabledSystemHeaders": {
+					"content-type": true
+				}
+			},
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "text/xml; charset=utf-8",
+						"type": "text"
+					},
+					{
+						"key": "SOAPAction",
+						"value": "http://www.dcsf.gov.uk/20090308/OnlineQueryService/FetchBatchStatus",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:ns=\"http://www.dcsf.gov.uk/20090308/\">\r\n   <soapenv:Header/>\r\n   <soapenv:Body>\r\n      <ns:FetchBatchStatus>\r\n         <!--Optional:-->\r\n         <ns:requestInput>\r\n            <ns:SystemId>{{SystemId}}</ns:SystemId>\r\n            <ns:Password>{{Password}}</ns:Password>\r\n            <ns:LocalAuthorityId>{{LAId}}</ns:LocalAuthorityId>\r\n            <ns:RequestedServiceVersion>{{ServiceVersion}}</ns:RequestedServiceVersion>\r\n            <ns:BatchID>27f63702-e7ed-47e4-b918-05855a46e13a</ns:BatchID>\r\n         </ns:requestInput>\r\n      </ns:FetchBatchStatus>\r\n   </soapenv:Body>\r\n</soapenv:Envelope>",
+					"options": {
+						"raw": {
+							"language": "xml"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://{{Host}}/fsm.lawebservice/20170701/OnlineQueryService.svc",
+					"protocol": "https",
+					"host": [
+						"{{Host}}"
+					],
+					"path": [
+						"fsm.lawebservice",
+						"20170701",
+						"OnlineQueryService.svc"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "FetchBatchResults",
+			"protocolProfileBehavior": {
+				"disabledSystemHeaders": {
+					"content-type": true
+				}
+			},
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "text/xml; charset=utf-8",
+						"type": "text"
+					},
+					{
+						"key": "SOAPAction",
+						"value": "http://www.dcsf.gov.uk/20090308/OnlineQueryService/FetchBatchResults",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:ns=\"http://www.dcsf.gov.uk/20090308/\">\r\n   <soapenv:Header/>\r\n   <soapenv:Body>\r\n      <ns:FetchBatchResults>\r\n         <!--Optional:-->\r\n         <ns:requestInput>\r\n            <ns:SystemId>{{SystemId}}</ns:SystemId>\r\n            <ns:Password>{{Password}}</ns:Password>\r\n            <ns:LocalAuthorityId>{{LAId}}</ns:LocalAuthorityId>\r\n            <ns:RequestedServiceVersion>{{ServiceVersion}}</ns:RequestedServiceVersion>\r\n            <ns:BatchID>27f63702-e7ed-47e4-b918-05855a46e13a</ns:BatchID>\r\n         </ns:requestInput>\r\n      </ns:FetchBatchResults>\r\n   </soapenv:Body>\r\n</soapenv:Envelope>",
+					"options": {
+						"raw": {
+							"language": "xml"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://{{Host}}/fsm.lawebservice/20170701/OnlineQueryService.svc",
+					"protocol": "https",
+					"host": [
+						"{{Host}}"
+					],
+					"path": [
+						"fsm.lawebservice",
+						"20170701",
+						"OnlineQueryService.svc"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "SubmitDeleteBatch",
+			"protocolProfileBehavior": {
+				"disabledSystemHeaders": {
+					"content-type": true
+				}
+			},
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "text/xml; charset=utf-8",
+						"type": "text"
+					},
+					{
+						"key": "SOAPAction",
+						"value": "http://www.dcsf.gov.uk/20090308/OnlineQueryService/SubmitDeleteBatch",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:ns=\"http://www.dcsf.gov.uk/20090308/\">\r\n   <soapenv:Header/>\r\n   <soapenv:Body>\r\n      <ns:SubmitDeleteBatch>\r\n         <!--Optional:-->\r\n         <ns:requestInput>\r\n            <ns:SystemId>{{SystemId}}</ns:SystemId>\r\n            <ns:Password>{{Password}}</ns:Password>\r\n            <ns:LocalAuthorityId>{{LAId}}</ns:LocalAuthorityId>\r\n            <ns:RequestedServiceVersion>{{ServiceVersion}}</ns:RequestedServiceVersion>\r\n            <ns:BatchID>27f63702-e7ed-47e4-b918-05855a46e13a</ns:BatchID>\r\n         </ns:requestInput>\r\n      </ns:SubmitDeleteBatch>\r\n   </soapenv:Body>\r\n</soapenv:Envelope>",
+					"options": {
+						"raw": {
+							"language": "xml"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://{{Host}}/fsm.lawebservice/20170701/OnlineQueryService.svc",
+					"protocol": "https",
+					"host": [
+						"{{Host}}"
+					],
+					"path": [
+						"fsm.lawebservice",
+						"20170701",
+						"OnlineQueryService.svc"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"auth": {
+		"type": "basic",
+		"basic": [
+			{
+				"key": "password",
+				"value": "",
+				"type": "string"
+			},
+			{
+				"key": "username",
+				"value": "",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	]
+}
