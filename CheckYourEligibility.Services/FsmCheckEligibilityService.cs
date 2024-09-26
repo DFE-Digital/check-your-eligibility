@@ -310,6 +310,50 @@ namespace CheckYourEligibility.Services
         {
             var checkResult = CheckEligibilityStatus.parentNotFound;
 
+            if (!_dwpService.UseEcsforChecks)
+            {
+                checkResult = await DwpCitizenCheck(data, checkResult);
+            }
+            else
+            {
+                checkResult = await DwpEcsFsmCheck(data, checkResult);
+            }
+                
+            return checkResult;
+        }
+
+        private async Task<CheckEligibilityStatus> DwpEcsFsmCheck(EligibilityCheck data, CheckEligibilityStatus checkResult)
+        {
+            //check for benefit
+            var result = await _dwpService.EcsFsmCheck(data);
+            if (result != null)
+            {
+                if (result.Status == "1")
+                {
+                    checkResult = CheckEligibilityStatus.eligible;
+                }
+                else if (result.Status == "0" && result.ErrorCode == "0" && result.Qualifier.IsNullOrEmpty())
+                {
+                    checkResult = CheckEligibilityStatus.notEligible;
+                }
+                else
+                {
+                    _logger.LogError($"DwpError unknown Response status code:-{result.Status}, error code:-{result.ErrorCode} qualifier:-{result.Qualifier}.");
+                    checkResult = CheckEligibilityStatus.DwpError;
+                }
+            }
+            else
+            {
+                _logger.LogError($"DwpError unknown Response status code:-{result.Status}, error code:-{result.ErrorCode} qualifier:-{result.Qualifier}.");
+                checkResult = CheckEligibilityStatus.DwpError;
+            }
+
+            return checkResult;
+        }
+
+
+        private async Task<CheckEligibilityStatus> DwpCitizenCheck(EligibilityCheck data, CheckEligibilityStatus checkResult)
+        {
             var citizenRequest = new CitizenMatchRequest
             {
                 Jsonapi = new CitizenMatchRequest.CitizenMatchRequest_Jsonapi { Version = "2.0" },
@@ -324,8 +368,6 @@ namespace CheckYourEligibility.Services
                     }
                 }
             };
-
-
             //check citizen
             // if a guid is not valid ie the request failed then the status is updated
             var guid = await _dwpService.GetCitizen(citizenRequest);
@@ -333,17 +375,16 @@ namespace CheckYourEligibility.Services
             {
                 return (CheckEligibilityStatus)Enum.Parse(typeof(CheckEligibilityStatus), guid);
             }
-            
+
             if (!string.IsNullOrEmpty(guid))
             {
                 //check for benefit
                 var result = await _dwpService.GetCitizenClaims(guid, DateTime.Now.AddMonths(-3).ToString("yyyy-MMM-dd"), DateTime.Now.ToString("yyyy-MMM-dd"));
                 if (result.StatusCode == StatusCodes.Status200OK)
                 {
-
                     checkResult = CheckEligibilityStatus.eligible;
                 }
-                else if(result.StatusCode == StatusCodes.Status404NotFound)
+                else if (result.StatusCode == StatusCodes.Status404NotFound)
                 {
                     checkResult = CheckEligibilityStatus.notEligible;
                 }
@@ -353,7 +394,6 @@ namespace CheckYourEligibility.Services
                     checkResult = CheckEligibilityStatus.DwpError;
                 }
             }
-
             return checkResult;
         }
 
