@@ -1,4 +1,5 @@
-﻿using CheckYourEligibility.Domain.Constants;
+﻿using CheckYourEligibility.Data.Models;
+using CheckYourEligibility.Domain.Constants;
 using CheckYourEligibility.Domain.Enums;
 using CheckYourEligibility.Domain.Requests.DWP;
 using CheckYourEligibility.Domain.Responses;
@@ -11,6 +12,9 @@ using Newtonsoft.Json;
 using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Text;
+using System.Xml.Linq;
+using System.Xml.Serialization;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace CheckYourEligibility.Services
 {
@@ -19,6 +23,8 @@ namespace CheckYourEligibility.Services
     {
         Task<StatusCodeResult> GetCitizenClaims(string guid, string effectiveFromDate, string effectiveToDate);
         Task<string?> GetCitizen(CitizenMatchRequest requestBody);
+        Task<SoapFsmCheckRespone?> EcsFsmCheck(EligibilityCheck eligibilityCheck);
+        public bool UseEcsforChecks { get; }
     }
 
     [ExcludeFromCodeCoverage]
@@ -41,8 +47,14 @@ namespace CheckYourEligibility.Services
         private double _DWP_UniversalCreditThreshhold_1;
         private double _DWP_UniversalCreditThreshhold_2;
         private double _DWP_UniversalCreditThreshhold_3;
+        private bool _UseEcsforChecks;
+        private string _DWP_EcsHost;
+        private string _DWP_EcsServiceVersion;
+        private string _DWP_EcsLAId;
+        private string _DWP_EcsSystemId;
+        private string _DWP_EcsPassword;
 
-
+        bool IDwpService.UseEcsforChecks => _UseEcsforChecks;
 
         public DwpService(ILoggerFactory logger,HttpClient httpClient, IConfiguration configuration)
         {
@@ -58,8 +70,78 @@ namespace CheckYourEligibility.Services
             double.TryParse(_configuration["Dwp:UniversalCreditThreshhold-1"], out _DWP_UniversalCreditThreshhold_1);
             double.TryParse(_configuration["Dwp:UniversalCreditThreshhold-2"], out _DWP_UniversalCreditThreshhold_2);
             double.TryParse(_configuration["Dwp:UniversalCreditThreshhold-3"], out _DWP_UniversalCreditThreshhold_3);
+
+            bool.TryParse(_configuration["Dwp:UseEcsforChecks"], out _UseEcsforChecks);
+            _DWP_EcsHost = _configuration["Dwp:EcsHost"];
+            _DWP_EcsServiceVersion = _configuration["Dwp:EcsServiceVersion"];
+            _DWP_EcsLAId = _configuration["Dwp:EcsLAId"];
+            _DWP_EcsSystemId = _configuration["Dwp:EcsSystemId"];
+            _DWP_EcsPassword = _configuration["Dwp:EcsPassword"];
+        }
+        #region ECS API Soap
+        public async Task<SoapFsmCheckRespone?> EcsFsmCheck(EligibilityCheck eligibilityCheck)
+        {
+            try
+            {
+                var uri = _DWP_EcsHost;
+                if (!uri.Contains("https"))
+                {
+                    uri = $"https://{_DWP_EcsHost}/fsm.lawebservice/20170701/OnlineQueryService.svc";
+                }
+
+                var soapMessage = Properties.Resources.EcsSoapFsm;
+                soapMessage = soapMessage.Replace("{{SystemId}}", _DWP_EcsSystemId);
+                soapMessage = soapMessage.Replace("{{Password}}", _DWP_EcsPassword);
+                soapMessage = soapMessage.Replace("{{LAId}}", _DWP_EcsLAId);
+                soapMessage = soapMessage.Replace("{{ServiceVersion}}", _DWP_EcsServiceVersion);
+                soapMessage = soapMessage.Replace("<ns:Surname>WEB</ns:Surname>", $"<ns:Surname>{eligibilityCheck.LastName}</ns:Surname>");
+                soapMessage = soapMessage.Replace("<ns:DateOfBirth>1967-03-07</ns:DateOfBirth>", $"<ns:DateOfBirth>{eligibilityCheck.DateOfBirth.ToString("yyyy-MM-dd")}</ns:DateOfBirth>");
+                soapMessage = soapMessage.Replace("<ns:NiNo>NN668767B</ns:NiNo>", $"<ns:NiNo>{eligibilityCheck.NINumber}</ns:NiNo>");
+
+                var content = new StringContent(soapMessage, Encoding.UTF8, "text/xml");
+                var soapResponse = new SoapFsmCheckRespone();
+                try
+                {
+                    _httpClient.DefaultRequestHeaders.Add("SOAPAction", "http://www.dcsf.gov.uk/20090308/OnlineQueryService/SubmitSingleQuery");
+
+                    var response = await _httpClient.PostAsync(uri, content);
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var doc = XDocument.Parse(response.Content.ReadAsStringAsync().Result);
+                        var namespacePrefix = doc.Root.GetNamespaceOfPrefix("s");
+                        var elements = doc.Descendants(namespacePrefix + "Body").First().Descendants().Elements();
+                        XElement xElement = elements.First(x => x.Name.LocalName == "EligibilityStatus");
+                        soapResponse.Status = xElement.Value;
+                        xElement = elements.First(x => x.Name.LocalName == "ErrorCode");
+                        soapResponse.ErrorCode = xElement.Value;
+                        xElement = elements.FirstOrDefault(x=>x.Name.LocalName == "Qualifier");
+                        soapResponse.Qualifier = xElement.Value;
+                        return soapResponse;
+                    }
+                    else
+                    {
+
+                        _logger.LogError($"Get Citizen failed. uri:-{_httpClient.BaseAddress}{uri} Response:- {response.StatusCode} content:-{JsonConvert.SerializeObject(eligibilityCheck)}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, $"ECS check failed. uri:-{_httpClient.BaseAddress}{uri} content:-{JsonConvert.SerializeObject(eligibilityCheck)}");
+                
+                }
+            }
+            catch (Exception ex)
+            {
+
+                _logger.LogError(ex, $"ECS check failed.  content:-{JsonConvert.SerializeObject(eligibilityCheck)}");
+            }
+            return null;
         }
 
+
+        #endregion
+
+        #region Citizen Api Rest
         public async Task<StatusCodeResult> GetCitizenClaims(string guid, string effectiveFromDate, string effectiveToDate )
         {
             var uri = $"{_controllerUrl}/v2/citizens/{guid}/claims?effectiveFromDate={effectiveFromDate}&effectiveToDate={effectiveToDate}";
@@ -105,7 +187,6 @@ namespace CheckYourEligibility.Services
                 return new InternalServerErrorResult();
             }
         }
-
 
         public bool CheckBenefitEntitlement(string citizenId, DwpClaimsResponse claims)
         {
@@ -233,6 +314,7 @@ namespace CheckYourEligibility.Services
             }
             
         }
+        #endregion
 
     }
 
