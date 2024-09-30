@@ -12,8 +12,12 @@ using CheckYourEligibility.Services.Interfaces;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities.Resources;
 using Moq;
+using Moq.Protected;
+using System.Net;
 using String = System.String;
 
 namespace CheckYourEligibility.ServiceUnitTests
@@ -35,18 +39,33 @@ namespace CheckYourEligibility.ServiceUnitTests
             .UseInMemoryDatabase(databaseName: "FakeInMemoryDb")
             .Options;
 
+            //"c": "ecs.education.gov.uk",
+            //"EcsServiceVersion": "20170701",
+            //"EcsLAId": "999",
+            //"EcsSystemId": "ECE43342",
+            //"EcsPassword": "jiK65zxTmJ",
+
+
             var config = new MapperConfiguration(cfg => cfg.AddProfile<FsmMappingProfile>());
             var configForSmsApi = new Dictionary<string, string>
             {
                 {"Dwp:UniversalCreditThreshhold-1","616.66" },
                 {"Dwp:UniversalCreditThreshhold-2","1233.33" },
-                {"Dwp:UniversalCreditThreshhold-3","1849.99" }
+                {"Dwp:UniversalCreditThreshhold-3","1849.99" },
+                {"Dwp:EcsHost","ecs.education.gov.uk" },
+                {"Dwp:EcsServiceVersion","20170701" },
+                {"Dwp:EcsLAId","999"},
+                {"Dwp:EcsSystemId","testId" },
+                {"Dwp:EcsPassword","testpassword" }
 
             };
             _configuration = new ConfigurationBuilder()
                 .AddInMemoryCollection(configForSmsApi)
                 .Build();
             var webJobsConnection = "DefaultEndpointsProtocol=https;AccountName=none;AccountKey=none;EndpointSuffix=core.windows.net";
+
+
+
 
             _sut = new DwpService(new NullLoggerFactory(), httpClient, _configuration);
         }
@@ -55,6 +74,68 @@ namespace CheckYourEligibility.ServiceUnitTests
         public void Teardown()
         {
         }
+
+
+        [Test]
+        public async Task Given_Valid_EcsFsmCheck_Should_Return_SoapFsmCheckRespone()
+        {
+            // Arrange
+            var request = _fixture.Create<EligibilityCheck>();
+
+            var handlerMock = new Mock<HttpMessageHandler>();
+            var httpResponse = new HttpResponseMessage
+            {
+                StatusCode = HttpStatusCode.OK,
+                Content = new StringContent(Properties.Resources.EcsSoapEligible),
+            };
+
+            handlerMock
+              .Protected()
+              .Setup<Task<HttpResponseMessage>>(
+                "SendAsync",
+                ItExpr.IsAny<HttpRequestMessage>(),
+                ItExpr.IsAny<CancellationToken>())
+              .ReturnsAsync(httpResponse);
+            var httpClient = new HttpClient(handlerMock.Object);
+            _sut = new DwpService(new NullLoggerFactory(), httpClient, _configuration);
+
+            // Act
+            var response = await  _sut.EcsFsmCheck(request);
+
+            // Assert
+            response.Should().BeOfType<SoapFsmCheckRespone>();
+        }
+
+        [Test]
+        public async Task Given_InvalidValid_EcsFsmCheck_Should_Return_null()
+        {
+            // Arrange
+            var request = _fixture.Create<EligibilityCheck>();
+
+            var handlerMock = new Mock<HttpMessageHandler>();
+            var httpResponse = new HttpResponseMessage
+            {
+                StatusCode = HttpStatusCode.BadRequest,
+                Content = new StringContent(Properties.Resources.EcsSoapEligible),
+            };
+
+            handlerMock
+              .Protected()
+              .Setup<Task<HttpResponseMessage>>(
+                "SendAsync",
+                ItExpr.IsAny<HttpRequestMessage>(),
+                ItExpr.IsAny<CancellationToken>())
+              .ReturnsAsync(httpResponse);
+            var httpClient = new HttpClient(handlerMock.Object);
+            _sut = new DwpService(new NullLoggerFactory(), httpClient, _configuration);
+
+            // Act
+            var response = await _sut.EcsFsmCheck(request);
+
+            // Assert
+            response.Should().BeNull();
+        }
+
 
         [Test]
         public void Given_Claims_have_pensions_credit_CheckBenefitEntitlement_Should_Return_true()
@@ -306,5 +387,7 @@ namespace CheckYourEligibility.ServiceUnitTests
             // Assert
             response.Should().Be(true);
         }
+
+
     }
 }
