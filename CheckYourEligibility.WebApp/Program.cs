@@ -130,7 +130,11 @@ builder.Services.AddAutoMapper(typeof(FsmMappingProfile));
 // Add Authorization
 builder.Services.AddAuthorization(builder.Configuration);
 
+builder.Services.AddHealthChecks();
+
 var app = builder.Build();
+
+app.MapHealthChecks("/healthcheck");
 
 // ------------------------
 // 2. Configure Middleware Pipeline
