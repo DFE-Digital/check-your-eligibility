@@ -18,6 +18,7 @@ describe('GET eligibility soft check by Guid', () => {
             childFirstName: 'Jane',
             childLastName: 'Smith',
             childDateOfBirth: '2005-01-01',
+            userID: Cypress.env('USER_ID'),
         }
     };
     it('Verify 200 Success response is returned with valid guid', () => {

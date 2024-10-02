@@ -14,6 +14,7 @@ describe('Verify POST application responses', () => {
             childFirstName: 'Jane',
             childLastName: 'Smith',
             childDateOfBirth: '2005-01-01',
+            userID: Cypress.env('USER_ID'),
         }
     };
 
