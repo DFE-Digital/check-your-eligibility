@@ -2,6 +2,7 @@
 
 using Ardalis.GuardClauses;
 using AutoMapper;
+using Azure;
 using Azure.Storage.Queues;
 using Azure.Storage.Queues.Models;
 using CheckYourEligibility.Data.Models;
@@ -195,7 +196,7 @@ namespace CheckYourEligibility.Services
                 {
                     // Revert status back and do not save changes
                     result.Status = CheckEligibilityStatus.queuedForProcessing;
-                    LogApiEvent(this.GetType().Name, guid, "Dwp Error", "There has been an error calling DWP");
+                    LogApiEvent(this.GetType().Name, guid, "Dwp Error", $"There has been an error calling DWP, Request GUID:-{guid} ");
                     TrackMetric($"Dwp Error", 1);
                 }
                 else
@@ -309,7 +310,7 @@ namespace CheckYourEligibility.Services
         private async Task<CheckEligibilityStatus> DWP_Check(EligibilityCheck data)
         {
             var checkResult = CheckEligibilityStatus.parentNotFound;
-
+            _logger.LogInformation($"Dwp check use ECS service:- {_dwpService.UseEcsforChecks}");
             if (!_dwpService.UseEcsforChecks)
             {
                 checkResult = await DwpCitizenCheck(data, checkResult);
@@ -338,13 +339,13 @@ namespace CheckYourEligibility.Services
                 }
                 else
                 {
-                    _logger.LogError($"DwpError unknown Response status code:-{result.Status}, error code:-{result.ErrorCode} qualifier:-{result.Qualifier}.");
+                    _logger.LogError($"DwpError unknown Response status code:-{result.Status}, error code:-{result.ErrorCode} qualifier:-{result.Qualifier}. Request:-{JsonConvert.SerializeObject(data)}");
                     checkResult = CheckEligibilityStatus.DwpError;
                 }
             }
             else
             {
-                _logger.LogError($"DwpError unknown Response status code:-{result.Status}, error code:-{result.ErrorCode} qualifier:-{result.Qualifier}.");
+                _logger.LogError($"DwpError unknown Response status code:-{result.Status}, error code:-{result.ErrorCode} qualifier:-{result.Qualifier}. Request:-{JsonConvert.SerializeObject(data)}");
                 checkResult = CheckEligibilityStatus.DwpError;
             }
 
@@ -390,7 +391,7 @@ namespace CheckYourEligibility.Services
                 }
                 else
                 {
-                    _logger.LogError($"DwpError unknown Response status code:-{result.StatusCode}.");
+                    _logger.LogError($"DwpError unknown Response status code:-{result.StatusCode}. Request:-{JsonConvert.SerializeObject(citizenRequest.Data)}");
                     checkResult = CheckEligibilityStatus.DwpError;
                 }
             }
