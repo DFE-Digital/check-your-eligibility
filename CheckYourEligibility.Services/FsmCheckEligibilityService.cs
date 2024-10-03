@@ -337,6 +337,10 @@ namespace CheckYourEligibility.Services
                 {
                     checkResult = CheckEligibilityStatus.notEligible;
                 }
+                else if (result.Status == "0" && result.ErrorCode == "0" && !result.Qualifier.IsNullOrEmpty())
+                {
+                    checkResult = CheckEligibilityStatus.parentNotFound;
+                }
                 else
                 {
                     _logger.LogError($"DwpError unknown Response status code:-{result.Status}, error code:-{result.ErrorCode} qualifier:-{result.Qualifier}. Request:-{JsonConvert.SerializeObject(data)}");

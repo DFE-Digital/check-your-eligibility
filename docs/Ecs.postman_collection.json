@@ -1147,6 +1147,54 @@
 					"response": []
 				},
 				{
+					"name": "Check Ecs ParentNotFound",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 202\", function () {\r",
+									"  pm.response.to.have.status(202);\r",
+									"  var jsonData = pm.response.json();\r",
+									"  pm.collectionVariables.set('get_EligibilityCheckUrl', jsonData.links.get_EligibilityCheck)\r",
+									"  pm.collectionVariables.set('put_EligibilityCheckProcessUrl', jsonData.links.put_EligibilityCheckProcess)\r",
+									"  pm.collectionVariables.set('get_EligibilityCheckStatusUrl', jsonData.links.get_EligibilityCheckStatus)\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "accept",
+								"value": "text/plain"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"data\": {\r\n    \"nationalInsuranceNumber\": \"PE668767B\",\r\n    \"firstName\": \"ecsProd\",\r\n    \"lastName\": \"WEB\",\r\n    \"dateOfBirth\": \"1967-03-07\",\r\n    \"nationalAsylumSeekerServiceNumber\": null\r\n  }\r\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/FreeSchoolMeals",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"FreeSchoolMeals"
+							]
+						}
+					},
+					"response": []
+				},
+				{
 					"name": "Check Ecs DWP error",
 					"event": [
 						{

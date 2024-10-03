@@ -205,6 +205,45 @@
 			"response": []
 		},
 		{
+			"name": "SubmitSingleQuery - FSM test parentNotFound",
+			"protocolProfileBehavior": {
+				"disabledSystemHeaders": {
+					"content-type": true
+				}
+			},
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "text/xml; charset=utf-8",
+						"type": "text"
+					},
+					{
+						"key": "SOAPAction",
+						"value": "http://www.dcsf.gov.uk/20090308/OnlineQueryService/SubmitSingleQuery",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:ns=\"http://www.dcsf.gov.uk/20090308/\">\r\n   <soapenv:Header/>\r\n   <soapenv:Body>\r\n      <ns:SubmitSingleQuery>\r\n         <!--Optional:-->\r\n         <ns:requestInput>\r\n            <ns:SystemId>{{SystemId}}</ns:SystemId>\r\n            <ns:Password>{{Password}}</ns:Password>\r\n            <ns:LocalAuthorityId>{{LAId}}</ns:LocalAuthorityId>\r\n            <ns:RequestedServiceVersion>{{ServiceVersion}}</ns:RequestedServiceVersion>\r\n            <ns:UserToQuery>\r\n               <!--Optional:-->\r\n               <ns:Surname>WEB</ns:Surname>\r\n               <ns:DateOfBirth>1967-03-07</ns:DateOfBirth>\r\n               <!--Optional:-->\r\n               <ns:NiNo>PE668767B</ns:NiNo>\r\n               <!--Optional:-->\r\n               <ns:NASS/>\r\n               <!--Optional:-->\r\n               <ns:Subscribers>\r\n                  <!--Zero or more repetitions:-->\r\n                  <ns:Subscriber>\r\n                     <ns:Id>{{LAId}}</ns:Id>\r\n                     <ns:Type>LA</ns:Type>\r\n                  </ns:Subscriber>\r\n               </ns:Subscribers>\r\n               <!--Optional:-->\r\n               <ns:Dern/>\r\n            </ns:UserToQuery>\r\n            <ns:SourceType>CITIZEN</ns:SourceType>\r\n            <ns:EligibilityCheckType>FSM</ns:EligibilityCheckType>\r\n            <ns:ServiceType>SHARED</ns:ServiceType>\r\n         </ns:requestInput>\r\n      </ns:SubmitSingleQuery>\r\n   </soapenv:Body>\r\n</soapenv:Envelope>",
+					"options": {
+						"raw": {
+							"language": "xml"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{HostECS}}",
+					"host": [
+						"{{HostECS}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
 			"name": "SubmitSingleQuery - FSM test eligible",
 			"protocolProfileBehavior": {
 				"disabledSystemHeaders": {
