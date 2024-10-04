@@ -35,6 +35,7 @@ namespace CheckYourEligibility.WebApp.Middleware
                 if (telemetry != null)
                 {
                     telemetry.Properties["ResponseBody"] = responseBody;
+                    telemetry.Properties["EceApi"] = "responseBody";
                 }
 
                 await memStream.CopyToAsync(originalBodyStream);

@@ -42,6 +42,7 @@ namespace CheckYourEligibility.WebApp.Middleware
                 if (telemetry != null)
                 {
                     telemetry.Properties["RequestBody"] = requestBody;
+                    telemetry.Properties["EceApi"] = "responseBody";
                 }
             }
 

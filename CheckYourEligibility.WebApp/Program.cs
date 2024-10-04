@@ -162,55 +162,6 @@ app.UseSwagger();
 app.UseSwaggerUI();
 
 // ------------------------
-// 2.4. Inline Middleware for Logging Request and Response Bodies
-// ------------------------
-
-// NOTE:
-// This inline middleware can be redundant if you have separate RequestBodyLoggingMiddleware and ResponseBodyLoggingMiddleware.
-// Consider removing it if those middlewares sufficiently handle request and response logging.
-
-app.Use(async (httpContext, next) =>
-{
-    try
-    {
-        // Log Request Body
-        httpContext.Request.EnableBuffering();
-        string requestBody = await new StreamReader(httpContext.Request.Body, Encoding.UTF8).ReadToEndAsync();
-        httpContext.Request.Body.Position = 0;
-        app.Logger.LogInformation($"Request body: {requestBody}");
-    }
-    catch (Exception ex)
-    {
-        app.Logger.LogError($"Exception reading request: {ex.Message}");
-    }
-
-    // Capture the original response body stream
-    Stream originalBody = httpContext.Response.Body;
-
-    try
-    {
-        using var memStream = new MemoryStream();
-        httpContext.Response.Body = memStream;
-
-        // Call the next middleware in the pipeline
-        await next(httpContext);
-
-        // Read the response body from the memory stream
-        memStream.Position = 0;
-        string responseBody = await new StreamReader(memStream).ReadToEndAsync();
-
-        memStream.Position = 0;
-        await memStream.CopyToAsync(originalBody); // Copy the response back to the original stream
-
-        app.Logger.LogInformation($"Response body: {responseBody}");
-    }
-    finally
-    {
-        httpContext.Response.Body = originalBody; // Restore the original response body stream
-    }
-});
-
-// ------------------------
 // 2.5. HTTPS Redirection
 // ------------------------
 

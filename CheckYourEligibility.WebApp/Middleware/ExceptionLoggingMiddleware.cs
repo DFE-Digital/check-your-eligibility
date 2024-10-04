@@ -24,8 +24,10 @@ namespace CheckYourEligibility.WebApp.Middleware
             }
             catch (Exception ex)
             {
+                var properties = new Dictionary<string, string> { { "EceApi", "ExceptionRaised" } };
+                var measure = new Dictionary<string, double> { { "EceException", 1.0 } };
                 // Log exception using TelemetryClient
-                _telemetryClient.TrackException(ex);
+                _telemetryClient.TrackException(ex, properties, measure);
 
                 // Optionally, log additional information or rethrow
                 throw;
