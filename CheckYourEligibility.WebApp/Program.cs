@@ -2,18 +2,14 @@ using Azure.Identity;
 using CheckYourEligibility.Data.Mappings;
 using CheckYourEligibility.WebApp;
 using CheckYourEligibility.WebApp.Middleware;
+using CheckYourEligibility.WebApp.Middleware.CheckYourEligibility.WebApp.Middleware;
 using CheckYourEligibility.WebApp.Telemetry;
-using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.Azure;
-using Microsoft.OpenApi.Any;
-using Microsoft.OpenApi.Interfaces;
 using Microsoft.OpenApi.Models;
 using System.Diagnostics.CodeAnalysis;
-using Microsoft.AspNetCore.Http;
 using System.Text.Json.Serialization;
-using Microsoft.Extensions.Logging;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -161,6 +157,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 // 2.4. Custom Middlewares
+app.UseMiddleware<ExceptionLoggingMiddleware>();
 app.UseMiddleware<RequestBodyLoggingMiddleware>();
 app.UseMiddleware<ResponseBodyLoggingMiddleware>();
 

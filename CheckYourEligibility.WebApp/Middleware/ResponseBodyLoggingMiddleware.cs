@@ -1,7 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
-using System.IO;
-using System.Threading.Tasks;
+﻿using Microsoft.ApplicationInsights.DataContracts;
 
 namespace CheckYourEligibility.WebApp.Middleware
 {
@@ -32,6 +29,14 @@ namespace CheckYourEligibility.WebApp.Middleware
 
                 // Log the response body
                 _logger.LogInformation($"Response Body: {responseBody}");
+
+                // Optionally, attach to telemetry
+                var telemetry = context.Features.Get<RequestTelemetry>();
+                if (telemetry != null)
+                {
+                    telemetry.Properties["ResponseBody"] = responseBody;
+                    telemetry.Properties["EceApi"] = "responseBody";
+                }
 
                 await memStream.CopyToAsync(originalBodyStream);
             }
