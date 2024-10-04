@@ -35,14 +35,14 @@ namespace CheckYourEligibility.WebApp.Middleware
                 }
 
                 // Log the request body
-                _logger.LogInformation($"Request Body: {requestBody}");
+                _logger.LogInformation($"Endpoint:{context.GetEndpoint()} Request Body: {requestBody} endpoint");
 
                 // Optionally, attach to telemetry
                 var telemetry = context.Features.Get<RequestTelemetry>();
                 if (telemetry != null)
                 {
+                    telemetry.Name = "EceApiRequest";
                     telemetry.Properties["RequestBody"] = requestBody;
-                    telemetry.Properties["EceApi"] = "responseBody";
                 }
             }
 
