@@ -339,6 +339,7 @@ namespace CheckYourEligibility.Services
                 }
                 else if (result.Status == "0" && result.ErrorCode == "0" && !result.Qualifier.IsNullOrEmpty())
                 {
+                    _logger.LogError($"DwpParentNotFound:-{result.Status}, error code:-{result.ErrorCode} qualifier:-{result.Qualifier}. Request:-{JsonConvert.SerializeObject(data)}");
                     checkResult = CheckEligibilityStatus.parentNotFound;
                 }
                 else
