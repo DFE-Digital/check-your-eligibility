@@ -610,6 +610,8 @@ namespace CheckYourEligibility.APIUnitTests
             response.Result.Should().BeEquivalentTo(expectedResult);
         }
 
+      
+
         [Test]
         public void Given_InValid_guid_ApplicationStatusUpdate_Should_Return_StatusNotFound()
         {

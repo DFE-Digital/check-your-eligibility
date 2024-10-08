@@ -464,6 +464,30 @@ namespace CheckYourEligibility.ServiceUnitTests
         }
 
         [Test]
+        public void Given_validRequest_DWP_Soap_Process_Should_Return_Null_DwpError()
+        {
+            // Arrange
+            var item = _fixture.Create<EligibilityCheck>();
+            item.Status = CheckEligibilityStatus.queuedForProcessing;
+            item.NASSNumber = string.Empty;
+            _fakeInMemoryDb.CheckEligibilities.Add(item);
+            _fakeInMemoryDb.SaveChangesAsync();
+            _moqDwpService.Setup(x => x.UseEcsforChecks).Returns(true);
+            
+            _moqDwpService.Setup(x => x.EcsFsmCheck(It.IsAny<EligibilityCheck>())).ReturnsAsync(value:null);
+            var result = new StatusCodeResult(StatusCodes.Status200OK);
+            //_moqDwpService.Setup(x => x.GetCitizenClaims(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(result);
+            _moqAudit.Setup(x => x.AuditAdd(It.IsAny<AuditData>())).ReturnsAsync("");
+
+
+            // Act
+            var response = _sut.ProcessCheck(item.EligibilityCheckID, _fixture.Create<AuditData>());
+
+            // Assert
+            response.Result.Should().Be(CheckEligibilityStatus.queuedForProcessing);
+        }
+
+        [Test]
         public void Given_validRequest_DWP_Soap_Process_Should_Return_updatedStatus_DwpError()
         {
             // Arrange

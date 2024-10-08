@@ -67,6 +67,19 @@ namespace CheckYourEligibility.ServiceUnitTests
         }
 
         [Test]
+        public void Given_ExistingUser_User_Should_Return_Guid()
+        {
+            // Arrange
+            var request = _fixture.Create<UserData>();
+            var response = _sut.Create(request);
+            // Act
+            response = _sut.Create(request);
+
+            // Assert
+            response.Result.Should().BeOfType<String>();
+        }
+
+        [Test]
         public void Given_validRequest_User_Should_Return_New_Guid()
         {
             // Arrange

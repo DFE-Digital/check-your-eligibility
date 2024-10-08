@@ -4,6 +4,7 @@ using AutoFixture;
 using AutoMapper;
 using CheckYourEligibility.Data.Mappings;
 using CheckYourEligibility.Data.Models;
+using CheckYourEligibility.Domain.Enums;
 using CheckYourEligibility.Domain.Requests;
 using CheckYourEligibility.Domain.Responses;
 using CheckYourEligibility.Services;
@@ -90,6 +91,32 @@ namespace CheckYourEligibility.ServiceUnitTests
             act.Should().ThrowExactlyAsync<Exception>();
         }
 
+
+        [Test]
+        public async Task Given_HashNotFound_PostApplication_Should_throwException_withMessageNoCheckfound()
+        {
+            // Arrange
+            var request = _fixture.Create<ApplicationRequestData>();
+            request.ParentDateOfBirth = "1970-02-01";
+            request.ChildDateOfBirth = "2007-02-01";
+            var la = _fixture.Create<LocalAuthority>();
+            var school = _fixture.Create<School>();
+            school.LocalAuthorityId = la.LocalAuthorityId;
+            request.School = school.SchoolId;
+            _fakeInMemoryDb.LocalAuthorities.Add(la);
+            _fakeInMemoryDb.Schools.Add(school);
+            request.ParentLastName = "";
+          
+            _fakeInMemoryDb.SaveChanges();
+
+            // Act
+
+            Func<Task> act = async () => await _sut.PostApplication(request);
+            
+            // Assert
+            act.Should().ThrowExactlyAsync<Exception>().Result.WithMessage("No Check found.");
+        }
+
         [Test]
         public async Task Given_validRequest_PostApplication_Should_Return_ApplicationSaveFsm()
         {
@@ -113,7 +140,32 @@ namespace CheckYourEligibility.ServiceUnitTests
             // Assert
             response.Result.Should().BeOfType<ApplicationResponse>();
         }
-       
+
+        [Test]
+        public async Task Given_PostApplication_StatusEvidenseNeeded_Should_Return_ApplicationSaveFsm()
+        {
+            // Arrange
+            var request = _fixture.Create<ApplicationRequestData>();
+            request.ParentDateOfBirth = "1970-02-01";
+            request.ChildDateOfBirth = "2007-02-01";
+            var la = _fixture.Create<LocalAuthority>();
+            var school = _fixture.Create<School>();
+            school.LocalAuthorityId = la.LocalAuthorityId;
+            request.School = school.SchoolId;
+            _fakeInMemoryDb.LocalAuthorities.Add(la);
+            _fakeInMemoryDb.Schools.Add(school);
+            await AddHash(request, CheckEligibilityStatus.notEligible);
+
+            _fakeInMemoryDb.SaveChanges();
+
+            // Act
+            var response = _sut.PostApplication(request);
+
+            // Assert
+            response.Result.Should().BeOfType<ApplicationResponse>();
+            response.Result.Status.Should().BeEquivalentTo(Domain.Enums.ApplicationStatus.EvidenceNeeded.ToString());
+        }
+
         [Test]
         public void Given_InValidRequest_UpdateApplicationStatus_Should_Return_null()
         {
@@ -220,6 +272,89 @@ namespace CheckYourEligibility.ServiceUnitTests
 
             // Assert
             response.Result.Data.Should().BeEmpty();
+        }
+
+        [Test]
+        public async Task Given_ValidRequest_GetApplications_MultipleStatuses_Should_Return_results()
+        {
+            // Arrange
+            var request = _fixture.Create<ApplicationRequestData>();
+            request.ParentDateOfBirth = "1970-02-01";
+            request.ChildDateOfBirth = "2007-01-01";
+            var la = _fixture.Create<LocalAuthority>();
+            var school = _fixture.Create<School>();
+            school.LocalAuthorityId = la.LocalAuthorityId;
+            request.School = school.SchoolId;
+            _fakeInMemoryDb.LocalAuthorities.Add(la);
+            _fakeInMemoryDb.Schools.Add(school);
+            await AddHash(request,CheckEligibilityStatus.notEligible);
+
+            await _fakeInMemoryDb.SaveChangesAsync();
+
+           var app = await _sut.PostApplication(request);
+
+            Enum.TryParse(app.Status, out Domain.Enums.ApplicationStatus statusItem);
+
+            var requestSearch = new ApplicationRequestSearch
+            {
+                Data = new ApplicationRequestSearchData
+                {
+                    Statuses = [statusItem],
+                    School = school.SchoolId
+                }
+            };
+
+            // Act
+            var response = await _sut.GetApplications(requestSearch);
+
+            // Assert
+            response.Data.Should().NotBeEmpty();
+        }
+
+        [Test]
+        public async Task Given_ValidRequest_GetApplications_AllSearchCritieria_Should_Return_results()
+        {
+            // Arrange
+            var request = _fixture.Create<ApplicationRequestData>();
+            request.ParentDateOfBirth = "1970-02-01";
+            request.ChildDateOfBirth = "2007-01-01";
+           
+            var la = _fixture.Create<LocalAuthority>();
+            var school = _fixture.Create<School>();
+            school.LocalAuthorityId = la.LocalAuthorityId;
+            request.School = school.SchoolId;
+           _fakeInMemoryDb.LocalAuthorities.Add(la);
+           _fakeInMemoryDb.Schools.Add(school);
+            await AddHash(request, CheckEligibilityStatus.notEligible);
+
+            await _fakeInMemoryDb.SaveChangesAsync();
+
+            var app = await _sut.PostApplication(request);
+
+            Enum.TryParse(app.Status, out Domain.Enums.ApplicationStatus statusItem);
+
+            var requestSearch = new ApplicationRequestSearch
+            {
+                Data = new ApplicationRequestSearchData
+                {
+                    Statuses = [statusItem],
+                    School = school.SchoolId,
+                    LocalAuthority = school.LocalAuthorityId,
+                    ParentDateOfBirth = app.ParentDateOfBirth,
+                    ParentLastName = app.ParentLastName,
+                    ParentNationalAsylumSeekerServiceNumber = app.ParentNationalAsylumSeekerServiceNumber,
+                    ParentNationalInsuranceNumber = app.ParentNationalInsuranceNumber,
+                    Reference = app.Reference,
+                    ChildDateOfBirth = app.ChildDateOfBirth,
+                    ChildLastName = app.ChildLastName 
+                }
+            };
+
+            // Act
+            var response = await _sut.GetApplications(requestSearch);
+
+            // Assert
+            response.Data.Should().NotBeEmpty();
         }
 
         [Test]
@@ -350,7 +485,7 @@ namespace CheckYourEligibility.ServiceUnitTests
             response.Data.Count().Should().BeLessOrEqualTo(maxPageSize); // Ensures it doesn't exceed the max allowed page size
         }
 
-        private async Task AddHash(ApplicationRequestData request)
+        private async Task AddHash(ApplicationRequestData request, CheckEligibilityStatus status = CheckEligibilityStatus.eligible)
         {
             _moqAudit.Setup(x => x.AuditAdd(It.IsAny<AuditData>())).ReturnsAsync("");
             var dt = DateTime.ParseExact(request.ParentDateOfBirth, "yyyy-MM-dd", null, DateTimeStyles.None);
@@ -361,7 +496,7 @@ namespace CheckYourEligibility.ServiceUnitTests
                 LastName = request.ParentLastName,
                 NASSNumber = request.ParentNationalInsuranceNumber,
                 DateOfBirth = dt
-            }, Domain.Enums.CheckEligibilityStatus.eligible, Domain.Enums.ProcessEligibilityCheckSource.HO,
+            }, status, Domain.Enums.ProcessEligibilityCheckSource.HO,
             new AuditData { Type = Domain.Enums.AuditType.Check });
         }
     }

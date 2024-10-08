@@ -1,5 +1,6 @@
 using AutoFixture;
 using CheckYourEligibility.Domain;
+using CheckYourEligibility.Domain.Enums;
 using CheckYourEligibility.Domain.Requests;
 using CheckYourEligibility.Domain.Responses;
 using CheckYourEligibility.Services.Interfaces;
@@ -68,6 +69,43 @@ namespace CheckYourEligibility.APIUnitTests
 
             // assert
             item.Should().BeOfType<SystemUser>();
+        }
+
+        [Test]
+        public void EnumExtension_Description_Exists()
+        {
+            //arrange 
+            // act
+            var item = ApplicationStatus.EvidenceNeeded;
+
+
+            // assert
+            item.GetDescription().Should().Be("Evidence Needed");
+        }
+
+        [Test]
+        public void EnumExtension_Description_DoesNotExists()
+        {
+            //arrange 
+            // act
+            var item = AuditType.Application;
+
+
+            // assert
+            item.GetDescription().Should().Be(item.ToString());
+        }
+
+        [Test]
+        public void EnumExtension_Description_Null()
+        {
+            //arrange 
+            // act
+          
+            ApplicationStatus? item = null;
+
+
+            // assert
+            item.GetDescription().Should().BeEmpty();
         }
     }
 }

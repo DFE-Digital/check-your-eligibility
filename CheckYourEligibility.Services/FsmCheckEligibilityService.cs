@@ -281,6 +281,7 @@ namespace CheckYourEligibility.Services
 
         #region Private
 
+        [ExcludeFromCodeCoverage(Justification = "Queue is external dependency.")]
         private void LogQueueCount(QueueClient queue)
         {
             QueueProperties properties = queue.GetProperties();
@@ -323,6 +324,7 @@ namespace CheckYourEligibility.Services
             return checkResult;
         }
 
+        
         private async Task<CheckEligibilityStatus> DwpEcsFsmCheck(EligibilityCheck data, CheckEligibilityStatus checkResult)
         {
             //check for benefit
@@ -350,7 +352,7 @@ namespace CheckYourEligibility.Services
             }
             else
             {
-                _logger.LogError($"DwpError unknown Response status code:-{result.Status}, error code:-{result.ErrorCode} qualifier:-{result.Qualifier}. Request:-{JsonConvert.SerializeObject(data)}");
+                _logger.LogError($"DwpError unknown Response null. Request:-{JsonConvert.SerializeObject(data)}");
                 checkResult = CheckEligibilityStatus.DwpError;
             }
 

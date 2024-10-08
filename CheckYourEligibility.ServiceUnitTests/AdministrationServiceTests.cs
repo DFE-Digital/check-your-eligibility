@@ -13,13 +13,14 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Resources;
 
 namespace CheckYourEligibility.ServiceUnitTests
 {
 
-
+    [ExcludeFromCodeCoverage]
     public class AdministrationServiceTests : TestBase.TestBase
     {
         private IEligibilityCheckContext _fakeInMemoryDb;
