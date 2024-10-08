@@ -28,6 +28,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CheckYourEligibility.TestBa
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CheckYourEligibility.ServiceUnitTests", "CheckYourEligibility.ServiceUnitTests\CheckYourEligibility.ServiceUnitTests.csproj", "{4EF71DCE-04C5-472F-9645-ED4464CBEEC2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExceptionLoggingTests", "ExceptionLoggingMiddlewareTests\ExceptionLoggingTests.csproj", "{F19B82F5-B365-474C-8095-E899E51CDEB6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -66,6 +68,10 @@ Global
 		{4EF71DCE-04C5-472F-9645-ED4464CBEEC2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4EF71DCE-04C5-472F-9645-ED4464CBEEC2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4EF71DCE-04C5-472F-9645-ED4464CBEEC2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F19B82F5-B365-474C-8095-E899E51CDEB6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F19B82F5-B365-474C-8095-E899E51CDEB6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F19B82F5-B365-474C-8095-E899E51CDEB6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F19B82F5-B365-474C-8095-E899E51CDEB6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -75,6 +81,7 @@ Global
 		{8457D39B-6591-4EAF-8481-651F1A7215BF} = {5F304C0D-7BE2-4912-9AA7-F7FC563B91FC}
 		{C58CD004-D331-49CE-8D43-926CAD9057A1} = {5F304C0D-7BE2-4912-9AA7-F7FC563B91FC}
 		{4EF71DCE-04C5-472F-9645-ED4464CBEEC2} = {5F304C0D-7BE2-4912-9AA7-F7FC563B91FC}
+		{F19B82F5-B365-474C-8095-E899E51CDEB6} = {5F304C0D-7BE2-4912-9AA7-F7FC563B91FC}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {04898F63-3229-4E4B-8AE2-AC035EA9D779}

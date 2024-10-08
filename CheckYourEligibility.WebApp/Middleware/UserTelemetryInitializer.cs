@@ -4,7 +4,7 @@ using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.AspNetCore.Http;
 using System.Security.Claims;
 
-namespace CheckYourEligibility.WebApp.Telemetry
+namespace CheckYourEligibility.WebApp.Middleware
 {
     public class UserTelemetryInitializer : ITelemetryInitializer
     {

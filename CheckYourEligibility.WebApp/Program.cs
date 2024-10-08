@@ -2,15 +2,13 @@ using Azure.Identity;
 using CheckYourEligibility.Data.Mappings;
 using CheckYourEligibility.WebApp;
 using CheckYourEligibility.WebApp.Middleware;
-using CheckYourEligibility.WebApp.Middleware.CheckYourEligibility.WebApp.Middleware;
-using CheckYourEligibility.WebApp.Telemetry;
+using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.Azure;
 using Microsoft.OpenApi.Models;
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization;
-
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,6 +21,13 @@ builder.Services.AddApplicationInsightsTelemetry(options =>
 {
     // Disable adaptive sampling to capture all telemetry
     options.EnableAdaptiveSampling = false;
+});
+
+// Register TelemetryClient as a singleton
+builder.Services.AddSingleton<TelemetryClient>(provider =>
+{
+    var telemetryConfiguration = provider.GetRequiredService<TelemetryConfiguration>();
+    return new TelemetryClient(telemetryConfiguration);
 });
 
 // Register IHttpContextAccessor to access HttpContext in Telemetry Initializer
@@ -46,22 +51,19 @@ builder.Services.AddSwaggerGen(c =>
             Title = "ECE API - V1",
             Version = "v1",
             Description = "DFE Eligibility Checking Engine: API to perform Checks determining eligibility for entitlements via integration with OGDs",
-          
             Contact = new OpenApiContact
             {
                 Email = "Ian.HOWARD@education.gov.uk",
                 Name = "Further Information",
-
             },
             License = new OpenApiLicense
             {
                 Name = "Api Documentation",
                 Url = new Uri("https://github.com/DFE-Digital/check-your-eligibility-documentation/blob/main/Runbook/System/API/Readme.md")
             }
-           
         }
-     );
-    
+    );
+
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Description = @"JWT Authorization header using the Bearer scheme.\r\n\r\n 
@@ -85,7 +87,6 @@ builder.Services.AddSwaggerGen(c =>
               Scheme = "oauth2",
               Name = "Bearer",
               In = ParameterLocation.Header,
-
             },
             new List<string>()
           }
