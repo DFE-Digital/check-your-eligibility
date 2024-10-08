@@ -58,7 +58,7 @@ namespace CheckYourEligibility.WebApp
         {
             services.AddHttpClient<IDwpService, DwpService>(client =>
             {
-                client.BaseAddress = new Uri(configuration["DWPBaseUrl"]);
+                client.BaseAddress = new Uri(configuration["Dwp:BaseUrl"]);
             });
             return services;
         }
