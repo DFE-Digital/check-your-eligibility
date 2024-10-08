@@ -81,6 +81,36 @@ namespace CheckYourEligibility.APIUnitTests
             response.Result.Should().BeEquivalentTo(expectedResult);
         }
 
+
+        [Test]
+        public void Given_valid_Request_PostCitizenMatch_Should_Return_Status422UnprocessableEntity()
+        {
+            // Arrange
+            var request = _fixture.Create<CitizenMatchRequest>();
+            request.Data.Attributes.DateOfBirth = MogDWPValues.validCitizenDob;
+            request.Data.Attributes.LastName = MogDWPValues.validCitizenSurnameDuplicatesFound;
+            request.Data.Attributes.NinoFragment = MogDWPValues.validCitizenNino;
+
+            var expectedResult = new ObjectResult(new DwpMatchResponse()
+            {
+                Data = new DwpMatchResponse.DwpResponse_Data
+                {
+                    Id = MogDWPValues.validCitizenEligibleGuid,
+                    Type = "MatchResult",
+                    Attributes = new DwpMatchResponse.DwpResponse_Attributes { MatchingScenario = "FSM" }
+                }
+                    ,
+                Jsonapi = new DwpMatchResponse.DwpResponse_Jsonapi { Version = "2.0" }
+            })
+            { StatusCode = StatusCodes.Status422UnprocessableEntity };
+
+            // Act
+            var response = _sut.Match(request);
+
+            // Assert
+            response.Result.Should().BeOfType(typeof(Microsoft.AspNetCore.Mvc.UnprocessableEntityResult));
+        }
+
         [Test]
         public void Given_InValidRequest_Match_Should_Return_Status404NotFoundResult()
         {

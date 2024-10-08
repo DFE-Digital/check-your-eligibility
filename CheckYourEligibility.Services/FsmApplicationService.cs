@@ -171,7 +171,7 @@ namespace CheckYourEligibility.Services
                .Where(x => x.Type == CheckEligibilityType.ApplcicationFsm);
             if (model.Data?.School != null)
                 results = results.Where(x => x.SchoolId == model.Data.School);
-            if (model.Data?.LocalAuthority != null)
+           if (model.Data?.LocalAuthority != null)
                 results = results.Where(x => x.LocalAuthorityId == model.Data.LocalAuthority);
             if (status != null)
                 results = results.Where(x => x.Status == status);
