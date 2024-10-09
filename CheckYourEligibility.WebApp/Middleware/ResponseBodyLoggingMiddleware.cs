@@ -18,9 +18,6 @@ namespace CheckYourEligibility.WebApp.Middleware
                    var originalBodyStream = context.Response.Body;
                 try
                 {
-                //if (context.Response.ContentLength != null)
-                //{
-
                     using (var memStream = new MemoryStream())
                     {
                         context.Response.Body = memStream;
@@ -44,11 +41,10 @@ namespace CheckYourEligibility.WebApp.Middleware
 
                         await memStream.CopyToAsync(originalBodyStream);
                     }
-               // }
                 }
                 catch (Exception ex)
                 {
-                _logger.LogError(ex,"Response Middleware");
+                _logger.LogInformation(ex,"Api Response Middleware");
                 }
             
         }
