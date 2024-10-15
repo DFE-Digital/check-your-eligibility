@@ -38,9 +38,9 @@ namespace CheckYourEligibility.WebApp.Controllers
         [HttpPost("FreeSchoolMeals")]
         public async Task<ActionResult> Application([FromBody] ApplicationRequest model)
         {
-            if (model == null || model.Data == null)
+            if (model == null || model.Data == null || model.Data.Type != Domain.Enums.CheckEligibilityType.FreeSchoolMeals)
             {
-                return BadRequest(new MessageResponse { Data = "Invalid request, data is required." });
+                return BadRequest(new MessageResponse { Data = "Invalid request, data is required. Type should be FSM" });
             }
             model.Data.ParentNationalInsuranceNumber = model.Data.ParentNationalInsuranceNumber?.ToUpper();
             model.Data.ParentNationalAsylumSeekerServiceNumber = model.Data.ParentNationalAsylumSeekerServiceNumber?.ToUpper();
