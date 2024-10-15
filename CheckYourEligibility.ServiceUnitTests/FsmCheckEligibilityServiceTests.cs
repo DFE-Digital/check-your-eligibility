@@ -15,6 +15,7 @@ using CheckYourEligibility.Services;
 using CheckYourEligibility.Services.Interfaces;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -225,6 +226,8 @@ namespace CheckYourEligibility.ServiceUnitTests
             _fakeInMemoryDb.EligibilityCheckHashes.First(x=>x.Hash == hash).Should().NotBeNull();
         }
 
+       
+
 
         [Test]
         public async Task Given_PostBulk_Should_Complete()
@@ -249,8 +252,10 @@ namespace CheckYourEligibility.ServiceUnitTests
             _moqAudit.Setup(x => x.AuditAdd(It.IsAny<AuditData>())).ReturnsAsync("");
 
 
-            // Act
-            var response = _sut.PostCheck(new List<CheckEligibilityRequestData_Fsm>(){request}, Guid.NewGuid().ToString());
+            //
+            var groupId = Guid.NewGuid().ToString();
+            var data = new List<CheckEligibilityRequestData_Fsm>() { request };
+            await  _sut.PostCheck(data,groupId );
             Assert.Pass();
         }
 
@@ -355,6 +360,7 @@ namespace CheckYourEligibility.ServiceUnitTests
             // Arrange
             var item = _fixture.Create<EligibilityCheck>();
             item.Status = CheckEligibilityStatus.eligible;
+            item.Type = CheckEligibilityType.None;
             _fakeInMemoryDb.CheckEligibilities.Add(item);
             _fakeInMemoryDb.SaveChangesAsync();
 
@@ -363,6 +369,30 @@ namespace CheckYourEligibility.ServiceUnitTests
 
             // Assert
             act.Should().ThrowExactlyAsync<ProcessCheckException>();
+        }
+
+
+        [Test]
+        public void Given_validRequest_StatusNot_queuedForProcessing_Process_Should_throwProcessException_InvalidStatus()
+        {
+            // Arrange
+            var item = _fixture.Create<EligibilityCheck>();
+            item.Status = CheckEligibilityStatus.eligible;
+            item.Type = CheckEligibilityType.FreeSchoolMeals;
+            var fsm = _fixture.Create<CheckEligibilityRequestData_Fsm>();
+            fsm.DateOfBirth = "1990-01-01";
+            var dataItem = GetCheckProcessData(fsm);
+            item.Type = fsm.Type;
+            item.CheckData = JsonConvert.SerializeObject(dataItem);
+
+            _fakeInMemoryDb.CheckEligibilities.Add(item);
+            _fakeInMemoryDb.SaveChangesAsync();
+
+            // Act
+            Func<Task> act = async () => await _sut.ProcessCheck(item.EligibilityCheckID, _fixture.Create<AuditData>());
+
+            // Assert
+            act.Should().ThrowExactlyAsync<ProcessCheckException>().Result.WithMessage($"Error checkItem {item.EligibilityCheckID} not queuedForProcessing. {item.Status}");
         }
 
         [Test]
@@ -490,7 +520,7 @@ namespace CheckYourEligibility.ServiceUnitTests
             _fakeInMemoryDb.CheckEligibilities.Add(item);
             _fakeInMemoryDb.SaveChangesAsync();
             _moqDwpService.Setup(x => x.UseEcsforChecks).Returns(true);
-            var ecsSoapCheckResponse = new SoapFsmCheckRespone { Status = "0", ErrorCode = "0", Qualifier = "No trace" };
+            var ecsSoapCheckResponse = new SoapFsmCheckRespone { Status = "0", ErrorCode = "0", Qualifier = "No Trace - Check data" };
             _moqDwpService.Setup(x => x.EcsFsmCheck(It.IsAny<CheckProcessData>())).ReturnsAsync(ecsSoapCheckResponse);
             var result = new StatusCodeResult(StatusCodes.Status200OK);
             //_moqDwpService.Setup(x => x.GetCitizenClaims(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(result);

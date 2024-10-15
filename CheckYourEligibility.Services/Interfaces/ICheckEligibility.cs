@@ -10,7 +10,7 @@ namespace CheckYourEligibility.Services.Interfaces
         Task<BulkStatus?> GetBulkStatus(string guid);
         Task<CheckEligibilityItemFsm?> GetItem(string guid);
         Task<CheckEligibilityStatus?> GetStatus(string guid);
-        Task<PostCheckResult> PostCheck<T>(T data, string? groupId = null);
+        Task<PostCheckResult> PostCheck<T>(T data);
         Task PostCheck<T>(IEnumerable<T> data, string groupId);
         Task<CheckEligibilityStatus?> ProcessCheck(string guid, AuditData? auditItem);
         Task<CheckEligibilityStatusResponse> UpdateEligibilityCheckStatus(string guid, EligibilityCheckStatusData data);

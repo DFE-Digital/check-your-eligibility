@@ -38,6 +38,7 @@ namespace CheckYourEligibility.Services
             await _db.SaveChangesAsync();
         }
 
+        [ExcludeFromCodeCoverage(Justification ="Use of bulk operations")]
         public async Task ImportEstablishments(IEnumerable<EstablishmentRow> data)
         {
             //remove records where la is 0

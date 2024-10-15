@@ -16,8 +16,10 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Security.Cryptography;
@@ -37,6 +39,7 @@ namespace CheckYourEligibility.Services
             
         private readonly IDwpService _dwpService;
         private readonly IHash _hashService;
+        private string _groupId;
 
         public CheckEligibilityService(ILoggerFactory logger, IEligibilityCheckContext dbContext, IMapper mapper, QueueServiceClient queueClientService,
             IConfiguration configuration, IDwpService dwpService, IAudit audit, IHash hashService) : base()
@@ -54,14 +57,14 @@ namespace CheckYourEligibility.Services
 
         public async Task PostCheck<T>(IEnumerable<T> data, string groupId)
         {
-            
+            _groupId = groupId;
             foreach (var item in data)
             {
-                await PostCheck(item, groupId);
+                await PostCheck(item);
             }
         }
 
-        public async Task<PostCheckResult> PostCheck<T>(T data, string? group = null)
+        public async Task<PostCheckResult> PostCheck<T>(T data)
         {    
 
             var item = _mapper.Map<EligibilityCheck>(data);
@@ -73,7 +76,7 @@ namespace CheckYourEligibility.Services
                 
                 item.Type = baseType.Type;
 
-                item.Group = group;
+                item.Group = _groupId;
                 item.EligibilityCheckID = Guid.NewGuid().ToString();
                 item.Created = DateTime.UtcNow;
                 item.Updated = DateTime.UtcNow;
@@ -118,7 +121,7 @@ namespace CheckYourEligibility.Services
         {         
             var result = await _db.CheckEligibilities.FirstOrDefaultAsync(x => x.EligibilityCheckID == guid);
             
-            if (result != null && result.Type != CheckEligibilityType.None)
+            if (result != null)
             {
                 var checkData = GetCheckProcessData(result.Type,result.CheckData);
                 if (result.Status != CheckEligibilityStatus.queuedForProcessing)
@@ -129,10 +132,6 @@ namespace CheckYourEligibility.Services
 
                 switch (result.Type)
                 {
-                    case CheckEligibilityType.None:
-                        {
-                            throw new ProcessCheckException("Unknown Type");
-                        }
                     case CheckEligibilityType.FreeSchoolMeals:
                         {
                             await Process_StandardCheck(guid, auditDataTemplate, result, checkData);
@@ -308,8 +307,6 @@ namespace CheckYourEligibility.Services
         {
             switch (type)
             {
-                case CheckEligibilityType.None:
-                    throw new InvalidDataException("Type none not supported.");
                 case CheckEligibilityType.FreeSchoolMeals:
                     {
                         var checkItem = JsonConvert.DeserializeObject<CheckEligibilityRequestData_Fsm>(data);
@@ -385,8 +382,9 @@ namespace CheckYourEligibility.Services
                 {
                     checkResult = CheckEligibilityStatus.notEligible;
                 }
-                else if (result.Status == "0" && result.ErrorCode == "0" && !result.Qualifier.IsNullOrEmpty())
+                else if (result.Status == "0" && result.ErrorCode == "0" && result.Qualifier== "No Trace - Check data")
                 {
+                    //No Trace - Check data
                     _logger.LogError($"DwpParentNotFound:-{result.Status}, error code:-{result.ErrorCode} qualifier:-{result.Qualifier}. Request:-{JsonConvert.SerializeObject(data)}");
                     checkResult = CheckEligibilityStatus.parentNotFound;
                 }
