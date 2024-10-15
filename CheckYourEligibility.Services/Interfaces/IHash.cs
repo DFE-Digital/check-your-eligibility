@@ -8,7 +8,7 @@ namespace CheckYourEligibility.Services.Interfaces
 {
     public interface IHash
     {
-        Task<EligibilityCheckHash?> Exists(EligibilityCheck item);
-        Task<string> Create(EligibilityCheck item, CheckEligibilityStatus checkResult, ProcessEligibilityCheckSource source, AuditData auditDataTemplate);
+        Task<EligibilityCheckHash?> Exists(CheckProcessData item);
+        Task<string> Create(CheckProcessData item, CheckEligibilityStatus checkResult, ProcessEligibilityCheckSource source, AuditData auditDataTemplate);
     }
 }

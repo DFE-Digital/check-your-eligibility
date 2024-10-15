@@ -2,6 +2,7 @@
 
 using AutoFixture;
 using AutoMapper;
+using Azure.Core;
 using Azure.Storage.Queues;
 using CheckYourEligibility.Data.Mappings;
 using CheckYourEligibility.Data.Models;
@@ -14,12 +15,17 @@ using CheckYourEligibility.Services;
 using CheckYourEligibility.Services.Interfaces;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
+using NetTopologySuite.Index.HPRtree;
+using Newtonsoft.Json;
 using System;
+using System.Globalization;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace CheckYourEligibility.ServiceUnitTests
 {
@@ -30,7 +36,7 @@ namespace CheckYourEligibility.ServiceUnitTests
         private IEligibilityCheckContext _fakeInMemoryDb;
         private IMapper _mapper;
         private IConfiguration _configuration;
-        private FsmCheckEligibilityService _sut;
+        private CheckEligibilityService _sut;
         private Mock<IDwpService> _moqDwpService;
         private Mock<IAudit> _moqAudit;
         private HashService _hashService;
@@ -44,7 +50,7 @@ namespace CheckYourEligibility.ServiceUnitTests
 
             _fakeInMemoryDb = new EligibilityCheckContext(options);
 
-            var config = new MapperConfiguration(cfg => cfg.AddProfile<FsmMappingProfile>());
+            var config = new MapperConfiguration(cfg => cfg.AddProfile<MappingProfile>());
             _mapper = config.CreateMapper();
             var configForSmsApi = new Dictionary<string, string>
             {
@@ -63,7 +69,7 @@ namespace CheckYourEligibility.ServiceUnitTests
             _hashService = new HashService(new NullLoggerFactory(), _fakeInMemoryDb, _configuration, _moqAudit.Object);
 
 
-            _sut = new FsmCheckEligibilityService(new NullLoggerFactory(), _fakeInMemoryDb, _mapper, new QueueServiceClient(webJobsConnection),
+            _sut = new CheckEligibilityService(new NullLoggerFactory(), _fakeInMemoryDb, _mapper, new QueueServiceClient(webJobsConnection),
                 _configuration, _moqDwpService.Object, _moqAudit.Object, _hashService);
 
         }
@@ -78,7 +84,7 @@ namespace CheckYourEligibility.ServiceUnitTests
         {
             // Arrange
             // Act
-            Action act = () => new FsmCheckEligibilityService(new NullLoggerFactory(), null, _mapper, null, null,null,null,null);
+            Action act = () => new CheckEligibilityService(new NullLoggerFactory(), null, _mapper, null, null,null,null,null);
 
             // Assert
             act.Should().ThrowExactly<ArgumentNullException>().And.Message.Should().EndWithEquivalentOf("Value cannot be null. (Parameter 'dbContext')");
@@ -88,13 +94,13 @@ namespace CheckYourEligibility.ServiceUnitTests
         public async Task Given_PostCheck_ExceptionRaised()
         {
             // Arrange
-            var request = _fixture.Create<CheckEligibilityRequestDataFsm>();
+            var request = _fixture.Create<CheckEligibilityRequestData_Fsm>();
             request.DateOfBirth = "1970-02-01";
             request.NationalAsylumSeekerServiceNumber = null;
 
             var db = new Mock<IEligibilityCheckContext>(MockBehavior.Strict);
             
-            var svc = new FsmCheckEligibilityService(new NullLoggerFactory(), db.Object, _mapper, null, _configuration, _moqDwpService.Object, _moqAudit.Object, _hashService);
+            var svc = new CheckEligibilityService(new NullLoggerFactory(), db.Object, _mapper, null, _configuration, _moqDwpService.Object, _moqAudit.Object, _hashService);
             db.Setup(x => x.CheckEligibilities.AddAsync(It.IsAny<EligibilityCheck>(), It.IsAny<CancellationToken>())).ThrowsAsync(new Exception());
             
             // Act
@@ -108,7 +114,7 @@ namespace CheckYourEligibility.ServiceUnitTests
         public async Task Given_PostCheck_HashIsOldSoNewOne_generated()
         {
             // Arrange
-            var request = _fixture.Create<CheckEligibilityRequestDataFsm>();
+            var request = _fixture.Create<CheckEligibilityRequestData_Fsm>();
             request.DateOfBirth = "1970-02-01";
             request.NationalAsylumSeekerServiceNumber = null;
 
@@ -126,6 +132,8 @@ namespace CheckYourEligibility.ServiceUnitTests
             _moqAudit.Setup(x => x.AuditAdd(It.IsAny<AuditData>())).ReturnsAsync("");
                         // Act/Assert
             var response = await _sut.PostCheck(request);
+            
+            
             var baseItem = _fakeInMemoryDb.CheckEligibilities.FirstOrDefault(x => x.EligibilityCheckID == response.Id);
             baseItem.EligibilityCheckHashID.Should().BeNull();
             await _sut.ProcessCheck(response.Id, _fixture.Create<AuditData>());
@@ -148,7 +156,7 @@ namespace CheckYourEligibility.ServiceUnitTests
         public async Task Given_PostCheck_Status_should_Come_From_Hash()
         {
             // Arrange
-            var request = _fixture.Create<CheckEligibilityRequestDataFsm>();
+            var request = _fixture.Create<CheckEligibilityRequestData_Fsm>();
             request.DateOfBirth = "1970-02-01";
             request.NationalAsylumSeekerServiceNumber = null;
 
@@ -171,6 +179,7 @@ namespace CheckYourEligibility.ServiceUnitTests
             var baseItem = _fakeInMemoryDb.CheckEligibilities.FirstOrDefault(x => x.EligibilityCheckID == response.Id);
             baseItem.EligibilityCheckHashID.Should().BeNull();
             await _sut.ProcessCheck(response.Id, _fixture.Create<AuditData>());
+
             baseItem = _fakeInMemoryDb.CheckEligibilities.Include(x=>x.EligibilityCheckHash).FirstOrDefault(x => x.EligibilityCheckID == response.Id);
             baseItem.EligibilityCheckHash.Should().NotBeNull();
             var BaseHash = baseItem.EligibilityCheckHash;
@@ -187,7 +196,7 @@ namespace CheckYourEligibility.ServiceUnitTests
         public async Task Given_validRequest_PostFeature_Should_Return_id_HashShouldBeCreated()
         {
             // Arrange
-            var request = _fixture.Create<CheckEligibilityRequestDataFsm>();
+            var request = _fixture.Create<CheckEligibilityRequestData_Fsm>();
             request.DateOfBirth = "1970-02-01";
             request.NationalAsylumSeekerServiceNumber = null;
             var key = string.IsNullOrEmpty(request.NationalInsuranceNumber) ? request.NationalAsylumSeekerServiceNumber : request.NationalInsuranceNumber;
@@ -206,17 +215,25 @@ namespace CheckYourEligibility.ServiceUnitTests
             var response = _sut.PostCheck(request);
             var process = _sut.ProcessCheck(response.Result.Id, _fixture.Create<AuditData>());
             var item = _fakeInMemoryDb.CheckEligibilities.FirstOrDefault(x=>x.EligibilityCheckID == response.Result.Id);
-            var hash = FsmCheckEligibilityService.GetHash(item);
+            var hash = CheckEligibilityService.GetHash(
+                new CheckProcessData {DateOfBirth = request.DateOfBirth,
+                LastName = request.LastName,
+                NationalInsuranceNumber = request.NationalInsuranceNumber,
+                NationalAsylumSeekerServiceNumber = request.NationalAsylumSeekerServiceNumber,
+            Type = request.Type
+            });
             // Assert
             _fakeInMemoryDb.EligibilityCheckHashes.First(x=>x.Hash == hash).Should().NotBeNull();
         }
+
+       
 
 
         [Test]
         public async Task Given_PostBulk_Should_Complete()
         {
             // Arrange
-            var request = _fixture.Create<CheckEligibilityRequestDataFsm>();
+            var request = _fixture.Create<CheckEligibilityRequestData_Fsm>();
             request.DateOfBirth = "1970-02-01";
             request.NationalAsylumSeekerServiceNumber = null;
             var key = string.IsNullOrEmpty(request.NationalInsuranceNumber) ? request.NationalAsylumSeekerServiceNumber : request.NationalInsuranceNumber;
@@ -235,8 +252,10 @@ namespace CheckYourEligibility.ServiceUnitTests
             _moqAudit.Setup(x => x.AuditAdd(It.IsAny<AuditData>())).ReturnsAsync("");
 
 
-            // Act
-            var response = _sut.PostCheck(new List<CheckEligibilityRequestDataFsm>(){request}, Guid.NewGuid().ToString());
+            //
+            var groupId = Guid.NewGuid().ToString();
+            var data = new List<CheckEligibilityRequestData_Fsm>() { request };
+            await  _sut.PostCheck(data,groupId );
             Assert.Pass();
         }
 
@@ -245,7 +264,7 @@ namespace CheckYourEligibility.ServiceUnitTests
         public void Given_validRequest_PostFeature_Should_Return_id()
         {
             // Arrange
-            var request = _fixture.Create<CheckEligibilityRequestDataFsm>();
+            var request = _fixture.Create<CheckEligibilityRequestData_Fsm>();
             request.DateOfBirth = "1970-02-01";
 
             // Act
@@ -341,7 +360,7 @@ namespace CheckYourEligibility.ServiceUnitTests
             // Arrange
             var item = _fixture.Create<EligibilityCheck>();
             item.Status = CheckEligibilityStatus.eligible;
-            item.NASSNumber = string.Empty;
+            item.Type = CheckEligibilityType.None;
             _fakeInMemoryDb.CheckEligibilities.Add(item);
             _fakeInMemoryDb.SaveChangesAsync();
 
@@ -352,14 +371,46 @@ namespace CheckYourEligibility.ServiceUnitTests
             act.Should().ThrowExactlyAsync<ProcessCheckException>();
         }
 
+
+        [Test]
+        public void Given_validRequest_StatusNot_queuedForProcessing_Process_Should_throwProcessException_InvalidStatus()
+        {
+            // Arrange
+            var item = _fixture.Create<EligibilityCheck>();
+            item.Status = CheckEligibilityStatus.eligible;
+            item.Type = CheckEligibilityType.FreeSchoolMeals;
+            var fsm = _fixture.Create<CheckEligibilityRequestData_Fsm>();
+            fsm.DateOfBirth = "1990-01-01";
+            var dataItem = GetCheckProcessData(fsm);
+            item.Type = fsm.Type;
+            item.CheckData = JsonConvert.SerializeObject(dataItem);
+
+            _fakeInMemoryDb.CheckEligibilities.Add(item);
+            _fakeInMemoryDb.SaveChangesAsync();
+
+            // Act
+            Func<Task> act = async () => await _sut.ProcessCheck(item.EligibilityCheckID, _fixture.Create<AuditData>());
+
+            // Assert
+            act.Should().ThrowExactlyAsync<ProcessCheckException>().Result.WithMessage($"Error checkItem {item.EligibilityCheckID} not queuedForProcessing. {item.Status}");
+        }
+
         [Test]
         public async Task Given_validRequest_Process_Should_Return_updatedStatus_parentNotFound()
         {
             // Arrange
+           
             var item = _fixture.Create<EligibilityCheck>();
-            item.NASSNumber = string.Empty;
+            item.Type = CheckEligibilityType.FreeSchoolMeals;
             item.Status = CheckEligibilityStatus.queuedForProcessing;
+            var fsm = _fixture.Create<CheckEligibilityRequestData_Fsm>();
+            fsm.DateOfBirth = "1990-01-01";
+            var dataItem = GetCheckProcessData(fsm);
+            item.Type = fsm.Type;
+            item.CheckData = JsonConvert.SerializeObject(dataItem);
+
             _fakeInMemoryDb.CheckEligibilities.Add(item);
+
             await _fakeInMemoryDb.SaveChangesAsync();
             _moqDwpService.Setup(x => x.UseEcsforChecks).Returns(false);
             _moqDwpService.Setup(x => x.GetCitizen(It.IsAny<CitizenMatchRequest>())).ReturnsAsync(CheckEligibilityStatus.parentNotFound.ToString());
@@ -378,7 +429,12 @@ namespace CheckYourEligibility.ServiceUnitTests
             // Arrange
             var item = _fixture.Create<EligibilityCheck>();
             item.Status = CheckEligibilityStatus.queuedForProcessing;
-            item.NASSNumber = string.Empty;
+            var fsm = _fixture.Create<CheckEligibilityRequestData_Fsm>();
+            fsm.DateOfBirth = "1990-01-01";
+            var dataItem = GetCheckProcessData(fsm);
+            item.Type = fsm.Type;
+            item.CheckData = JsonConvert.SerializeObject(dataItem);
+
             _fakeInMemoryDb.CheckEligibilities.Add(item);
             _fakeInMemoryDb.SaveChangesAsync();
             _moqDwpService.Setup(x => x.UseEcsforChecks).Returns(false);
@@ -391,19 +447,24 @@ namespace CheckYourEligibility.ServiceUnitTests
             // Assert
             response.Result.Should().Be(CheckEligibilityStatus.parentNotFound);
         }
+       
 
         [Test]
         public void Given_validRequest_DWP_Soap_Process_Should_Return_updatedStatus_Eligible()
         {
             // Arrange
             var item = _fixture.Create<EligibilityCheck>();
-            item.Status = CheckEligibilityStatus.queuedForProcessing;
-            item.NASSNumber = string.Empty;
+            var fsm = _fixture.Create<CheckEligibilityRequestData_Fsm>();
+            fsm.DateOfBirth = "1990-01-01";
+            var dataItem = GetCheckProcessData(fsm);
+            item.Type = fsm.Type;
+            item.CheckData = JsonConvert.SerializeObject(dataItem);
+
             _fakeInMemoryDb.CheckEligibilities.Add(item);
             _fakeInMemoryDb.SaveChangesAsync();
             _moqDwpService.Setup(x => x.UseEcsforChecks).Returns(true);
             var ecsSoapCheckResponse = new SoapFsmCheckRespone { Status="1",ErrorCode ="0", Qualifier =""};
-            _moqDwpService.Setup(x => x.EcsFsmCheck(It.IsAny<EligibilityCheck>())).ReturnsAsync(ecsSoapCheckResponse);
+            _moqDwpService.Setup(x => x.EcsFsmCheck(It.IsAny<CheckProcessData>())).ReturnsAsync(ecsSoapCheckResponse);
             var result = new StatusCodeResult(StatusCodes.Status200OK);
             //_moqDwpService.Setup(x => x.GetCitizenClaims(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(result);
             _moqAudit.Setup(x => x.AuditAdd(It.IsAny<AuditData>())).ReturnsAsync("");
@@ -421,12 +482,17 @@ namespace CheckYourEligibility.ServiceUnitTests
             // Arrange
             var item = _fixture.Create<EligibilityCheck>();
             item.Status = CheckEligibilityStatus.queuedForProcessing;
-            item.NASSNumber = string.Empty;
+            var fsm = _fixture.Create<CheckEligibilityRequestData_Fsm>();
+            fsm.DateOfBirth = "1990-01-01";
+            var dataItem = GetCheckProcessData(fsm);
+            item.Type = fsm.Type;
+            item.CheckData = JsonConvert.SerializeObject(dataItem);
+
             _fakeInMemoryDb.CheckEligibilities.Add(item);
             _fakeInMemoryDb.SaveChangesAsync();
             _moqDwpService.Setup(x => x.UseEcsforChecks).Returns(true);
             var ecsSoapCheckResponse = new SoapFsmCheckRespone { Status = "0", ErrorCode = "0", Qualifier = "" };
-            _moqDwpService.Setup(x => x.EcsFsmCheck(It.IsAny<EligibilityCheck>())).ReturnsAsync(ecsSoapCheckResponse);
+            _moqDwpService.Setup(x => x.EcsFsmCheck(It.IsAny<CheckProcessData>())).ReturnsAsync(ecsSoapCheckResponse);
             var result = new StatusCodeResult(StatusCodes.Status200OK);
             //_moqDwpService.Setup(x => x.GetCitizenClaims(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(result);
             _moqAudit.Setup(x => x.AuditAdd(It.IsAny<AuditData>())).ReturnsAsync("");
@@ -445,12 +511,17 @@ namespace CheckYourEligibility.ServiceUnitTests
             // Arrange
             var item = _fixture.Create<EligibilityCheck>();
             item.Status = CheckEligibilityStatus.queuedForProcessing;
-            item.NASSNumber = string.Empty;
+            var fsm = _fixture.Create<CheckEligibilityRequestData_Fsm>();
+            fsm.DateOfBirth = "1990-01-01";
+            var dataItem = GetCheckProcessData(fsm);
+            item.Type = fsm.Type;
+            item.CheckData = JsonConvert.SerializeObject(dataItem);
+
             _fakeInMemoryDb.CheckEligibilities.Add(item);
             _fakeInMemoryDb.SaveChangesAsync();
             _moqDwpService.Setup(x => x.UseEcsforChecks).Returns(true);
-            var ecsSoapCheckResponse = new SoapFsmCheckRespone { Status = "0", ErrorCode = "0", Qualifier = "No trace" };
-            _moqDwpService.Setup(x => x.EcsFsmCheck(It.IsAny<EligibilityCheck>())).ReturnsAsync(ecsSoapCheckResponse);
+            var ecsSoapCheckResponse = new SoapFsmCheckRespone { Status = "0", ErrorCode = "0", Qualifier = "No Trace - Check data" };
+            _moqDwpService.Setup(x => x.EcsFsmCheck(It.IsAny<CheckProcessData>())).ReturnsAsync(ecsSoapCheckResponse);
             var result = new StatusCodeResult(StatusCodes.Status200OK);
             //_moqDwpService.Setup(x => x.GetCitizenClaims(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(result);
             _moqAudit.Setup(x => x.AuditAdd(It.IsAny<AuditData>())).ReturnsAsync("");
@@ -469,12 +540,16 @@ namespace CheckYourEligibility.ServiceUnitTests
             // Arrange
             var item = _fixture.Create<EligibilityCheck>();
             item.Status = CheckEligibilityStatus.queuedForProcessing;
-            item.NASSNumber = string.Empty;
+            var fsm = _fixture.Create<CheckEligibilityRequestData_Fsm>();
+            fsm.DateOfBirth = "1990-01-01";
+            var dataItem = GetCheckProcessData(fsm);
+            item.Type = fsm.Type;
+            item.CheckData = JsonConvert.SerializeObject(dataItem);
             _fakeInMemoryDb.CheckEligibilities.Add(item);
             _fakeInMemoryDb.SaveChangesAsync();
             _moqDwpService.Setup(x => x.UseEcsforChecks).Returns(true);
             
-            _moqDwpService.Setup(x => x.EcsFsmCheck(It.IsAny<EligibilityCheck>())).ReturnsAsync(value:null);
+            _moqDwpService.Setup(x => x.EcsFsmCheck(It.IsAny<CheckProcessData>())).ReturnsAsync(value:null);
             var result = new StatusCodeResult(StatusCodes.Status200OK);
             //_moqDwpService.Setup(x => x.GetCitizenClaims(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(result);
             _moqAudit.Setup(x => x.AuditAdd(It.IsAny<AuditData>())).ReturnsAsync("");
@@ -493,12 +568,17 @@ namespace CheckYourEligibility.ServiceUnitTests
             // Arrange
             var item = _fixture.Create<EligibilityCheck>();
             item.Status = CheckEligibilityStatus.queuedForProcessing;
-            item.NASSNumber = string.Empty;
+            var fsm = _fixture.Create<CheckEligibilityRequestData_Fsm>();
+            fsm.DateOfBirth = "1990-01-01";
+            var dataItem = GetCheckProcessData(fsm);
+            item.Type = fsm.Type;
+            item.CheckData = JsonConvert.SerializeObject(dataItem);
+
             _fakeInMemoryDb.CheckEligibilities.Add(item);
             _fakeInMemoryDb.SaveChangesAsync();
             _moqDwpService.Setup(x => x.UseEcsforChecks).Returns(true);
             var ecsSoapCheckResponse = new SoapFsmCheckRespone { Status = "0", ErrorCode = "-1", Qualifier = "refer to admin" };
-            _moqDwpService.Setup(x => x.EcsFsmCheck(It.IsAny<EligibilityCheck>())).ReturnsAsync(ecsSoapCheckResponse);
+            _moqDwpService.Setup(x => x.EcsFsmCheck(It.IsAny<CheckProcessData>())).ReturnsAsync(ecsSoapCheckResponse);
             var result = new StatusCodeResult(StatusCodes.Status200OK);
             //_moqDwpService.Setup(x => x.GetCitizenClaims(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(result);
             _moqAudit.Setup(x => x.AuditAdd(It.IsAny<AuditData>())).ReturnsAsync("");
@@ -517,7 +597,11 @@ namespace CheckYourEligibility.ServiceUnitTests
             // Arrange
             var item = _fixture.Create<EligibilityCheck>();
             item.Status = CheckEligibilityStatus.queuedForProcessing;
-            item.NASSNumber = string.Empty;
+            var fsm = _fixture.Create<CheckEligibilityRequestData_Fsm>();
+            fsm.DateOfBirth = "1990-01-01";
+            var dataItem = GetCheckProcessData(fsm);
+            item.Type = fsm.Type;
+            item.CheckData = JsonConvert.SerializeObject(dataItem);
             _fakeInMemoryDb.CheckEligibilities.Add(item);
             _fakeInMemoryDb.SaveChangesAsync();
             _moqDwpService.Setup(x => x.UseEcsforChecks).Returns(false);
@@ -540,7 +624,11 @@ namespace CheckYourEligibility.ServiceUnitTests
             // Arrange
             var item = _fixture.Create<EligibilityCheck>();
             item.Status = CheckEligibilityStatus.queuedForProcessing;
-            item.NASSNumber = string.Empty;
+            var fsm = _fixture.Create<CheckEligibilityRequestData_Fsm>();
+            fsm.DateOfBirth = "1990-01-01";
+            var dataItem = GetCheckProcessData(fsm);
+            item.Type = fsm.Type;
+            item.CheckData = JsonConvert.SerializeObject(dataItem);
             _fakeInMemoryDb.CheckEligibilities.Add(item);
             _fakeInMemoryDb.SaveChangesAsync();
             _moqDwpService.Setup(x => x.UseEcsforChecks).Returns(false);
@@ -563,7 +651,11 @@ namespace CheckYourEligibility.ServiceUnitTests
             // Arrange
             var item = _fixture.Create<EligibilityCheck>();
             item.Status = CheckEligibilityStatus.queuedForProcessing;
-            item.NASSNumber = string.Empty;
+            var fsm = _fixture.Create<CheckEligibilityRequestData_Fsm>();
+            fsm.DateOfBirth = "1990-01-01";
+            var dataItem = GetCheckProcessData(fsm);
+            item.Type = fsm.Type;
+            item.CheckData = JsonConvert.SerializeObject(dataItem);
             _fakeInMemoryDb.CheckEligibilities.Add(item);
             _fakeInMemoryDb.SaveChangesAsync();
             _moqDwpService.Setup(x => x.UseEcsforChecks).Returns(false);
@@ -586,7 +678,11 @@ namespace CheckYourEligibility.ServiceUnitTests
             // Arrange
             var item = _fixture.Create<EligibilityCheck>();
             item.Status = CheckEligibilityStatus.queuedForProcessing;
-            item.NASSNumber = string.Empty;
+            var fsm = _fixture.Create<CheckEligibilityRequestData_Fsm>();
+            fsm.DateOfBirth = "1990-01-01";
+            var dataItem = GetCheckProcessData(fsm);
+            item.Type = fsm.Type;
+            item.CheckData = JsonConvert.SerializeObject(dataItem);
             _fakeInMemoryDb.CheckEligibilities.Add(item);
             await _fakeInMemoryDb.SaveChangesAsync();
             _moqDwpService.Setup(x => x.UseEcsforChecks).Returns(false);
@@ -606,7 +702,12 @@ namespace CheckYourEligibility.ServiceUnitTests
             // Arrange
             var item = _fixture.Create<EligibilityCheck>();
             item.Status = CheckEligibilityStatus.queuedForProcessing;
-            item.NINumber = string.Empty;
+            var fsm = _fixture.Create<CheckEligibilityRequestData_Fsm>();
+            fsm.DateOfBirth = "1990-01-01";
+            fsm.NationalInsuranceNumber = null;
+            var dataItem = GetCheckProcessData(fsm);
+            item.Type = fsm.Type;
+            item.CheckData = JsonConvert.SerializeObject(dataItem);
             _fakeInMemoryDb.CheckEligibilities.Add(item);
             _fakeInMemoryDb.SaveChangesAsync();
             _moqAudit.Setup(x => x.AuditAdd(It.IsAny<AuditData>())).ReturnsAsync("");
@@ -624,9 +725,15 @@ namespace CheckYourEligibility.ServiceUnitTests
             // Arrange
             var item = _fixture.Create<EligibilityCheck>();
             item.Status = CheckEligibilityStatus.queuedForProcessing;
-            item.NASSNumber = string.Empty;
+            var fsm = _fixture.Create<CheckEligibilityRequestData_Fsm>();
+            fsm.DateOfBirth = "1990-01-01";
+            var dataItem = GetCheckProcessData(fsm);
+            item.Type = fsm.Type;
+            item.CheckData = JsonConvert.SerializeObject(dataItem);
+
             _fakeInMemoryDb.CheckEligibilities.Add(item);
-            _fakeInMemoryDb.FreeSchoolMealsHMRC.Add(new FreeSchoolMealsHMRC { FreeSchoolMealsHMRCID = item.NINumber, Surname = item.LastName, DateOfBirth = item.DateOfBirth });
+            _fakeInMemoryDb.FreeSchoolMealsHMRC.Add(new FreeSchoolMealsHMRC { FreeSchoolMealsHMRCID = fsm.NationalInsuranceNumber, Surname = fsm.LastName, DateOfBirth = DateTime.ParseExact(fsm.DateOfBirth, "yyyy-MM-dd", null, DateTimeStyles.None),
+                 });
             _fakeInMemoryDb.SaveChangesAsync();
             _moqAudit.Setup(x => x.AuditAdd(It.IsAny<AuditData>())).ReturnsAsync("");
 
@@ -644,13 +751,19 @@ namespace CheckYourEligibility.ServiceUnitTests
             // Arrange
             var item = _fixture.Create<EligibilityCheck>();
             item.Status = CheckEligibilityStatus.queuedForProcessing;
+            var fsm = _fixture.Create<CheckEligibilityRequestData_Fsm>();
+            fsm.DateOfBirth = "1990-01-01";
+            var dataItem = GetCheckProcessData(fsm);
+            item.Type = fsm.Type;
+            item.CheckData = JsonConvert.SerializeObject(dataItem);
+            item.Status = CheckEligibilityStatus.queuedForProcessing;
             var surnamevalid = "simpson";
-            item.LastName = surnamevalid;
             var surnameInvalid = "x" + surnamevalid;
 
-            item.NASSNumber = string.Empty;
             _fakeInMemoryDb.CheckEligibilities.Add(item);
-            _fakeInMemoryDb.FreeSchoolMealsHMRC.Add(new FreeSchoolMealsHMRC { FreeSchoolMealsHMRCID = item.NINumber, Surname = surnameInvalid, DateOfBirth = item.DateOfBirth });
+            _fakeInMemoryDb.FreeSchoolMealsHMRC.Add(new FreeSchoolMealsHMRC { FreeSchoolMealsHMRCID = fsm.NationalInsuranceNumber, Surname = surnameInvalid, DateOfBirth =
+                DateTime.ParseExact(dataItem.DateOfBirth, "yyyy-MM-dd", null, DateTimeStyles.None),
+            });
             _fakeInMemoryDb.SaveChangesAsync();
 
             _moqDwpService.Setup(x=> x.UseEcsforChecks).Returns(false);
@@ -665,44 +778,60 @@ namespace CheckYourEligibility.ServiceUnitTests
         }
 
         [Test]
-        public void Given_SurnameCharacterMatchPasses_HMRC_Process_Should_Return_updatedStatus_eligible()
+        public async Task Given_SurnameCharacterMatchPasses_HMRC_Process_Should_Return_updatedStatus_eligible()
         {
             // Arrange
             var item = _fixture.Create<EligibilityCheck>();
-            item.Status = CheckEligibilityStatus.queuedForProcessing;
+            var fsm = _fixture.Create<CheckEligibilityRequestData_Fsm>();
+            fsm.DateOfBirth = "1990-01-01";
             var surnamevalid = "simpson";
-            item.LastName = surnamevalid;
-            var surnameInvalid = surnamevalid + "x";
-            item.NASSNumber = string.Empty;
+            fsm.LastName = surnamevalid;
+            var dataItem = GetCheckProcessData(fsm);
+            item.Type = fsm.Type;
+            item.CheckData = JsonConvert.SerializeObject(dataItem);
+            item.Status = CheckEligibilityStatus.queuedForProcessing;
+           
             _fakeInMemoryDb.CheckEligibilities.Add(item);
-            _fakeInMemoryDb.FreeSchoolMealsHMRC.Add(new FreeSchoolMealsHMRC { FreeSchoolMealsHMRCID = item.NINumber, Surname = surnameInvalid, DateOfBirth = item.DateOfBirth });
-            _fakeInMemoryDb.SaveChangesAsync();
+            _fakeInMemoryDb.FreeSchoolMealsHMRC.Add(new FreeSchoolMealsHMRC { FreeSchoolMealsHMRCID = dataItem.NationalInsuranceNumber, Surname = surnamevalid, DateOfBirth = DateTime.ParseExact(dataItem.DateOfBirth, "yyyy-MM-dd", null, DateTimeStyles.None),
+            });
+            await _fakeInMemoryDb.SaveChangesAsync();
             _moqAudit.Setup(x => x.AuditAdd(It.IsAny<AuditData>())).ReturnsAsync("");
 
             // Act
-            var response = _sut.ProcessCheck(item.EligibilityCheckID, _fixture.Create<AuditData>());
+            var response = await _sut.ProcessCheck(item.EligibilityCheckID, _fixture.Create<AuditData>());
 
             // Assert
-            response.Result.Should().Be(CheckEligibilityStatus.eligible);
+            response.Should().Be(CheckEligibilityStatus.eligible);
         }
 
         [Test]
-        public void Given_validRequest_HO_Process_Should_Return_updatedStatus_eligible()
+        public async Task Given_validRequest_HO_Process_Should_Return_updatedStatus_eligible()
         {
             // Arrange
             var item = _fixture.Create<EligibilityCheck>();
+            var fsm = _fixture.Create<CheckEligibilityRequestData_Fsm>();
+            fsm.DateOfBirth = "1990-01-01";
+            fsm.NationalInsuranceNumber = string.Empty;
+
+            var dataItem = GetCheckProcessData(fsm);
+            item.Type = fsm.Type;
             item.Status = CheckEligibilityStatus.queuedForProcessing;
-            item.NINumber = string.Empty;
+            item.CheckData = JsonConvert.SerializeObject(dataItem);
+
+            item.CheckData = JsonConvert.SerializeObject(dataItem);
+
             _fakeInMemoryDb.CheckEligibilities.Add(item);
-            _fakeInMemoryDb.FreeSchoolMealsHO.Add(new FreeSchoolMealsHO { FreeSchoolMealsHOID = "123", NASS = item.NASSNumber, LastName = item.LastName, DateOfBirth = item.DateOfBirth });
+            _fakeInMemoryDb.FreeSchoolMealsHO.Add(new FreeSchoolMealsHO { FreeSchoolMealsHOID = "123", NASS = dataItem.NationalAsylumSeekerServiceNumber, LastName = dataItem.LastName,
+                DateOfBirth = DateTime.ParseExact(dataItem.DateOfBirth, "yyyy-MM-dd", null, DateTimeStyles.None)
+            });
             _fakeInMemoryDb.SaveChangesAsync();
             _moqAudit.Setup(x => x.AuditAdd(It.IsAny<AuditData>())).ReturnsAsync("");
 
             // Act
-            var response = _sut.ProcessCheck(item.EligibilityCheckID, _fixture.Create<AuditData>());
+            var response = await _sut.ProcessCheck(item.EligibilityCheckID, _fixture.Create<AuditData>());
 
             // Assert
-            response.Result.Should().Be(CheckEligibilityStatus.eligible);
+            response.Should().Be(CheckEligibilityStatus.eligible);
         }
 
         [Test]
@@ -793,6 +922,18 @@ namespace CheckYourEligibility.ServiceUnitTests
             // Assert
             statusUpdate.Should().BeOfType<CheckEligibilityStatusResponse>();
             statusUpdate.Data.Status.Should().BeEquivalentTo(requestUpdateStatus.Status.ToString());
+        }
+
+        private CheckProcessData GetCheckProcessData(CheckEligibilityRequestData_Fsm request)
+        {
+            return  new CheckProcessData
+            {
+                DateOfBirth = request.DateOfBirth,
+                LastName = request.LastName,
+                NationalAsylumSeekerServiceNumber = request.NationalAsylumSeekerServiceNumber,
+                NationalInsuranceNumber = request.NationalInsuranceNumber,
+                Type = new CheckEligibilityRequestData_Fsm().Type
+            };
         }
     }
 }

@@ -2,7 +2,7 @@
 
 namespace CheckYourEligibility.Domain.Constants.ErrorMessages
 {
-    public static class FSM
+    public static class ValidationMessages
     {
         public const string NI_and_NASS = "National Insurance Number or National Asylum Seeker Service Number is required is required, not both";
         public const string DOB = "Date of birth is required:- (yyyy-mm-dd)";

@@ -17,10 +17,10 @@ namespace CheckYourEligibility.WebApp.Controllers
     [Route("[controller]/v2/citizens/")]
     public class MoqDWPController : Controller
     {
-        private readonly ILogger<FreeSchoolMealsController> _logger;
-        private readonly IFsmCheckEligibility _service;
+        private readonly ILogger<EligibilityCheckController> _logger;
+        private readonly ICheckEligibility _service;
 
-        public MoqDWPController(ILogger<FreeSchoolMealsController> logger, IFsmCheckEligibility service)
+        public MoqDWPController(ILogger<EligibilityCheckController> logger, ICheckEligibility service)
         {
             _logger = Guard.Against.Null(logger);
             _service = Guard.Against.Null(service);

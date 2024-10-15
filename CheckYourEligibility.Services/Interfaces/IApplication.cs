@@ -3,7 +3,7 @@ using CheckYourEligibility.Domain.Responses;
 
 namespace CheckYourEligibility.Services.Interfaces
 {
-    public interface IFsmApplication
+    public interface IApplication
     {
         Task<ApplicationResponse> PostApplication(ApplicationRequestData data);
         Task<ApplicationResponse?> GetApplication(string guid);

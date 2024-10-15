@@ -17,38 +17,38 @@ namespace FeatureManagement.Domain.Validation
                 .WithMessage("data is required");
 
             RuleFor(x => x.Data.ParentFirstName)
-               .NotEmpty().WithMessage(FSM.FirstName);
+               .NotEmpty().WithMessage(ValidationMessages.FirstName);
             RuleFor(x => x.Data.ParentLastName)
-               .NotEmpty().WithMessage(FSM.LastName);
+               .NotEmpty().WithMessage(ValidationMessages.LastName);
             RuleFor(x => x.Data.ChildFirstName)
-              .NotEmpty().WithMessage(FSM.ChildFirstName);
+              .NotEmpty().WithMessage(ValidationMessages.ChildFirstName);
             RuleFor(x => x.Data.ChildLastName)
-               .NotEmpty().WithMessage(FSM.ChildLastName);
+               .NotEmpty().WithMessage(ValidationMessages.ChildLastName);
 
             RuleFor(x => x.Data.ParentDateOfBirth)
                .NotEmpty()
                .Must(DataValidation.BeAValidDate)
-               .WithMessage(FSM.DOB);
+               .WithMessage(ValidationMessages.DOB);
             RuleFor(x => x.Data.ChildDateOfBirth)
                .NotEmpty()
                .Must(DataValidation.BeAValidDate)
-               .WithMessage(FSM.ChildDOB);
+               .WithMessage(ValidationMessages.ChildDOB);
 
             When(x => !string.IsNullOrEmpty(x.Data.ParentNationalInsuranceNumber), () =>
             {
                 RuleFor(x => x.Data.ParentNationalAsylumSeekerServiceNumber)
                     .Empty()
-                    .WithMessage(FSM.NI_and_NASS);
+                    .WithMessage(ValidationMessages.NI_and_NASS);
                 RuleFor(x => x.Data.ParentNationalInsuranceNumber)
                 .NotEmpty()
                    .Must(DataValidation.BeAValidNi)
-                   .WithMessage(FSM.NI);
+                   .WithMessage(ValidationMessages.NI);
 
             }).Otherwise(() =>
             {
                 RuleFor(x => x.Data.ParentNationalAsylumSeekerServiceNumber)
                     .NotEmpty()
-                   .WithMessage(FSM.NI_or_NASS);
+                   .WithMessage(ValidationMessages.NI_or_NASS);
             });
 
         }

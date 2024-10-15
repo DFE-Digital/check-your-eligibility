@@ -121,7 +121,7 @@ builder.Services.Configure<KestrelServerOptions>(options =>
 });
 
 // Add AutoMapper
-builder.Services.AddAutoMapper(typeof(FsmMappingProfile));
+builder.Services.AddAutoMapper(typeof(MappingProfile));
 
 // Add Authorization
 builder.Services.AddAuthorization(builder.Configuration);

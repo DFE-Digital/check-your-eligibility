@@ -39,7 +39,7 @@ namespace CheckYourEligibility.Services
         /// </summary>
         /// <param name="item"></param>
         /// <returns></returns>
-        public async Task<EligibilityCheckHash?> Exists(EligibilityCheck item)
+        public async Task<EligibilityCheckHash?> Exists(CheckProcessData item)
         {
             var age = DateTime.UtcNow.AddDays(-_hashCheckDays);
             var hash = GetHash(item);
@@ -55,26 +55,26 @@ namespace CheckYourEligibility.Services
         /// <param name="auditDataTemplate"></param>
         /// <returns></returns>
         /// <remarks>NOTE there is no save, Context should be saved in calling service</remarks>
-         public async Task<string> Create(EligibilityCheck item, CheckEligibilityStatus outcome, ProcessEligibilityCheckSource source, AuditData auditDataTemplate)
+         public async Task<string> Create(CheckProcessData item, CheckEligibilityStatus outcome, ProcessEligibilityCheckSource source, AuditData auditDataTemplate)
         {
             var hash = GetHash(item);
             var HashItem = new EligibilityCheckHash()
             {
                 EligibilityCheckHashID = Guid.NewGuid().ToString(),
+                
                 Hash = hash,
                 Type = item.Type,
                 Outcome = outcome,
                 TimeStamp = DateTime.UtcNow,
                 Source = source
             };
-            item.EligibilityCheckHashID = HashItem.EligibilityCheckHashID;
+            
             await _db.EligibilityCheckHashes.AddAsync(HashItem);
 
             auditDataTemplate.Type = AuditType.Hash;
             auditDataTemplate.typeId = HashItem.EligibilityCheckHashID;
             await _audit.AuditAdd(auditDataTemplate);
-
-            return item.EligibilityCheckHashID;
+            return HashItem.EligibilityCheckHashID;
         }
 
         /// <summary>
@@ -82,10 +82,10 @@ namespace CheckYourEligibility.Services
         /// </summary>
         /// <param name="item"></param>
         /// <returns></returns>
-        private string GetHash(EligibilityCheck item)
+        private string GetHash(CheckProcessData item)
         {
-            var key = string.IsNullOrEmpty(item.NINumber) ? item.NASSNumber.ToUpper() : item.NINumber.ToUpper();
-            var input = $"{item.LastName.ToUpper()}{key}{item.DateOfBirth.ToString("d")}{item.Type}";
+            var key = string.IsNullOrEmpty(item.NationalInsuranceNumber) ? item.NationalAsylumSeekerServiceNumber.ToUpper() : item.NationalInsuranceNumber.ToUpper();
+            var input = $"{item.LastName.ToUpper()}{key}{item.DateOfBirth}{item.Type}";
             var inputBytes = Encoding.UTF8.GetBytes(input);
             var inputHash = SHA256.HashData(inputBytes);
             return Convert.ToHexString(inputHash);

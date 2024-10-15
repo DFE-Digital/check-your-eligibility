@@ -23,7 +23,7 @@ namespace CheckYourEligibility.Services
     {
         Task<StatusCodeResult> GetCitizenClaims(string guid, string effectiveFromDate, string effectiveToDate);
         Task<string?> GetCitizen(CitizenMatchRequest requestBody);
-        Task<SoapFsmCheckRespone?> EcsFsmCheck(EligibilityCheck eligibilityCheck);
+        Task<SoapFsmCheckRespone?> EcsFsmCheck(CheckProcessData eligibilityCheck);
         public bool UseEcsforChecks { get; }
     }
 
@@ -82,7 +82,7 @@ namespace CheckYourEligibility.Services
         
 
         #region ECS API Soap
-        public async Task<SoapFsmCheckRespone?> EcsFsmCheck(EligibilityCheck eligibilityCheck)
+        public async Task<SoapFsmCheckRespone?> EcsFsmCheck(CheckProcessData eligibilityCheck)
         {
             try
             {
@@ -98,8 +98,8 @@ namespace CheckYourEligibility.Services
                 soapMessage = soapMessage.Replace("{{LAId}}", _DWP_EcsLAId);
                 soapMessage = soapMessage.Replace("{{ServiceVersion}}", _DWP_EcsServiceVersion);
                 soapMessage = soapMessage.Replace("<ns:Surname>WEB</ns:Surname>", $"<ns:Surname>{eligibilityCheck.LastName}</ns:Surname>");
-                soapMessage = soapMessage.Replace("<ns:DateOfBirth>1967-03-07</ns:DateOfBirth>", $"<ns:DateOfBirth>{eligibilityCheck.DateOfBirth.ToString("yyyy-MM-dd")}</ns:DateOfBirth>");
-                soapMessage = soapMessage.Replace("<ns:NiNo>NN668767B</ns:NiNo>", $"<ns:NiNo>{eligibilityCheck.NINumber}</ns:NiNo>");
+                soapMessage = soapMessage.Replace("<ns:DateOfBirth>1967-03-07</ns:DateOfBirth>", $"<ns:DateOfBirth>{eligibilityCheck.DateOfBirth}</ns:DateOfBirth>");
+                soapMessage = soapMessage.Replace("<ns:NiNo>NN668767B</ns:NiNo>", $"<ns:NiNo>{eligibilityCheck.NationalInsuranceNumber}</ns:NiNo>");
 
                 var content = new StringContent(soapMessage, Encoding.UTF8, "text/xml");
                 var soapResponse = new SoapFsmCheckRespone();

@@ -9,20 +9,15 @@ using static CheckYourEligibility.Domain.Responses.ApplicationResponse;
 namespace CheckYourEligibility.Data.Mappings;
 
 [ExcludeFromCodeCoverage]
-public class FsmMappingProfile : Profile
+public class MappingProfile : Profile
 {
-    public FsmMappingProfile()
+    public MappingProfile()
     {
-        CreateMap<CheckEligibilityRequestDataFsm, EligibilityCheck>()
-        .ForMember(dest => dest.NINumber, opt => opt.MapFrom(src => src.NationalInsuranceNumber))
-        .ForMember(dest => dest.NASSNumber, opt => opt.MapFrom(src => src.NationalAsylumSeekerServiceNumber))
-        .ForMember(x => x.DateOfBirth, y => y.MapFrom(z => DateTime.ParseExact(z.DateOfBirth, "yyyy-MM-dd", CultureInfo.InvariantCulture)))
+        CreateMap<CheckEligibilityRequestData_Fsm, EligibilityCheck>()
+       
         .ReverseMap();
 
         CreateMap<EligibilityCheck, CheckEligibilityItemFsm>()
-        .ForMember(dest => dest.NationalInsuranceNumber, opt => opt.MapFrom(src => src.NINumber))
-        .ForMember(dest => dest.NationalAsylumSeekerServiceNumber, opt => opt.MapFrom(src => src.NASSNumber))
-        .ForMember(x => x.DateOfBirth, y => y.MapFrom(z => z.DateOfBirth.ToString("yyyy-MM-dd")))
         .ReverseMap();
 
         CreateMap<ApplicationRequestData, Application>()

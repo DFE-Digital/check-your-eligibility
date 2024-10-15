@@ -23,17 +23,6 @@ namespace CheckYourEligibility.Data.Models
 
         public DateTime Updated { get; set; }
 
-        [Column(TypeName = "varchar(50)")]
-        public string? NINumber { get; set; }
-
-        [Column(TypeName = "varchar(50)")]
-        public string? NASSNumber { get; set; }
-
-        [Column(TypeName = "varchar(100)")]
-        public string LastName { get; set; }
-
-        public DateTime DateOfBirth { get; set; }
-
         public  string? EligibilityCheckHashID { get; set; }
 
         public virtual EligibilityCheckHash? EligibilityCheckHash { get; set; }
@@ -41,5 +30,6 @@ namespace CheckYourEligibility.Data.Models
         public string? Group { get; set; }
 
         public int? Sequence { get; set; }
+        public string CheckData { get; set; }
     }
 }
