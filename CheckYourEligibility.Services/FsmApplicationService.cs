@@ -2,6 +2,7 @@
 
 using Ardalis.GuardClauses;
 using AutoMapper;
+using Azure.Core;
 using CheckYourEligibility.Data.Models;
 using CheckYourEligibility.Domain.Enums;
 using CheckYourEligibility.Domain.Requests;
@@ -15,7 +16,7 @@ using System.Globalization;
 
 namespace CheckYourEligibility.Services
 {
-    public partial class FsmApplicationService : BaseService, IFsmApplication
+    public partial class FsmApplicationService : BaseService, IApplication
     {
         const int referenceMaxValue = 99999999;
         private readonly ILogger _logger;
@@ -39,17 +40,17 @@ namespace CheckYourEligibility.Services
             try
             {
                 var item = _mapper.Map<Application>(data);
-                var hashCheck = GetHash(CheckEligibilityType.FreeSchoolMeals, item);
+                var hashCheck = GetHash(data.Type, item);
                 if (hashCheck == null)
                 {
                     throw new Exception("No Check found.");
                 }
                 item.ApplicationID = Guid.NewGuid().ToString();
+                item.Type = hashCheck.Type;
                 item.Reference = GetReference();
                 item.EligibilityCheckHashID = hashCheck?.EligibilityCheckHashID;
                 item.Created = DateTime.UtcNow;
                 item.Updated = DateTime.UtcNow;
-                item.Type = CheckEligibilityType.ApplcicationFsm;
 
                 if (hashCheck.Outcome == CheckEligibilityStatus.eligible)
                 {
@@ -88,11 +89,11 @@ namespace CheckYourEligibility.Services
         private EligibilityCheckHash? GetHash(CheckEligibilityType type, Application data)
         {
             var age = DateTime.UtcNow.AddDays(-_hashCheckDays);
-            var hash = FsmCheckEligibilityService.GetHash(new EligibilityCheck
+            var hash = CheckEligibilityService.GetHash(new CheckProcessData
             {
-                DateOfBirth = data.ParentDateOfBirth,
-                NASSNumber = data.ParentNationalAsylumSeekerServiceNumber,
-                NINumber = data.ParentNationalInsuranceNumber,
+                DateOfBirth = data.ParentDateOfBirth.ToString("yyyy-MM-dd"),
+                NationalInsuranceNumber = data.ParentNationalAsylumSeekerServiceNumber,
+                NationalAsylumSeekerServiceNumber = data.ParentNationalInsuranceNumber,
                 LastName = data.ParentLastName.ToUpper(),
                 Type = type
             });
@@ -168,7 +169,7 @@ namespace CheckYourEligibility.Services
                .Include(x => x.School)
                .ThenInclude(x => x.LocalAuthority)
                .Include(x => x.User)
-               .Where(x => x.Type == CheckEligibilityType.ApplcicationFsm);
+               .Where(x => x.Type == CheckEligibilityType.FreeSchoolMeals);
             if (model.Data?.School != null)
                 results = results.Where(x => x.SchoolId == model.Data.School);
            if (model.Data?.LocalAuthority != null)

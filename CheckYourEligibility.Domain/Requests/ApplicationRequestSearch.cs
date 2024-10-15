@@ -15,6 +15,7 @@ namespace CheckYourEligibility.Domain.Requests
 
     public class ApplicationRequestSearchData
     {
+        public CheckEligibilityType Type { get; set; } = CheckEligibilityType.FreeSchoolMeals;
         public int? LocalAuthority { get; set; }
         public int? School { get; set; }
         public IEnumerable<ApplicationStatus>? Statuses { get; set; }

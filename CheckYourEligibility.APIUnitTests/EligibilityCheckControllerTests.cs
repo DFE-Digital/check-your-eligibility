@@ -14,22 +14,20 @@ using NUnit.Framework.Internal;
 
 namespace CheckYourEligibility.APIUnitTests
 {
-    public class FreeSchoolMealsControllerTests : TestBase.TestBase
+    public class EligibilityCheckControllerTests : TestBase.TestBase
     {
-        private Mock<IFsmCheckEligibility> _mockCheckService;
-        private Mock<IFsmApplication> _mockApplicationService;
+        private Mock<ICheckEligibility> _mockCheckService;
         private Mock<IAudit> _mockAuditService;
-        private ILogger<FreeSchoolMealsController> _mockLogger;
-        private FreeSchoolMealsController _sut;
+        private ILogger<EligibilityCheckController> _mockLogger;
+        private EligibilityCheckController _sut;
 
         [SetUp]
         public void Setup()
         {
-            _mockCheckService = new Mock<IFsmCheckEligibility>(MockBehavior.Strict);
-            _mockApplicationService = new Mock<IFsmApplication>(MockBehavior.Strict);
+            _mockCheckService = new Mock<ICheckEligibility>(MockBehavior.Strict);
             _mockAuditService = new Mock<IAudit>(MockBehavior.Strict);
-            _mockLogger = Mock.Of<ILogger<FreeSchoolMealsController>>();
-            _sut = new FreeSchoolMealsController(_mockLogger, _mockCheckService.Object, _mockApplicationService.Object, _mockAuditService.Object);
+            _mockLogger = Mock.Of<ILogger<EligibilityCheckController>>();
+            _sut = new EligibilityCheckController(_mockLogger, _mockCheckService.Object, _mockAuditService.Object);
         }
 
         [TearDown]
@@ -42,79 +40,22 @@ namespace CheckYourEligibility.APIUnitTests
         public void Constructor_throws_argumentNullException_when_service_is_null()
         {
             // Arrange
-            IFsmCheckEligibility checkService = null;
-            IFsmApplication applicationService = null;
+            ICheckEligibility checkService = null;
             IAudit auditService = null;
 
             // Act
-            Action act = () => new FreeSchoolMealsController(_mockLogger, checkService, applicationService, auditService);
+            Action act = () => new EligibilityCheckController(_mockLogger, checkService, auditService);
 
             // Assert
             act.Should().ThrowExactly<ArgumentNullException>().And.Message.Should().EndWithEquivalentOf("Value cannot be null. (Parameter 'checkService')");
         }
 
-        [Test]
-        public void Given_valid_NInumber_ApplicationRequest_Post_Should_Return_Status201Created()
-        {
-            // Arrange
-            var request = _fixture.Create<ApplicationRequest>();
-            var applicationFsm = _fixture.Create<ApplicationResponse>();
-            request.Data.ParentNationalInsuranceNumber = "ns738356d";
-            request.Data.ParentDateOfBirth = "1970-02-01";
-            request.Data.ChildDateOfBirth = "1970-02-01";
-            request.Data.ParentNationalAsylumSeekerServiceNumber = string.Empty;
-            _mockApplicationService.Setup(cs => cs.PostApplication(request.Data)).ReturnsAsync(applicationFsm);
-            _mockAuditService.Setup(cs => cs.AuditAdd(It.IsAny<AuditData>())).ReturnsAsync(Guid.NewGuid().ToString());
-
-            var expectedResult = new ObjectResult(new ApplicationSaveItemResponse
-            {
-                Data = applicationFsm,
-                Links = new ApplicationResponseLinks
-                {
-                    get_Application = $"{Domain.Constants.FSMLinks.GetLinkApplication}{applicationFsm.Id}"
-                }
-            })
-            { StatusCode = StatusCodes.Status201Created };
-
-            // Act
-            var response = _sut.Application(request);
-
-            // Assert
-            response.Result.Should().BeEquivalentTo(expectedResult);
-        }
-
-        [Test]
-        public void Given_InValidRequest_Values_Application_Should_Return_Status400BadRequest()
-        {
-            // Arrange
-            var request = new ApplicationRequest();
-
-            // Act
-            var response = _sut.Application(request);
-
-            // Assert
-            response.Result.Should().BeOfType(typeof(BadRequestObjectResult));
-        }
-
-        [Test]
-        public void Given_InValidRequest_Validation_Application_Should_Return_Status400BadRequest()
-        {
-            // Arrange
-            var request = _fixture.Create<ApplicationRequest>();
-            request.Data.ParentLastName = string.Empty;
-
-            // Act
-            var response = _sut.Application(request);
-
-            // Assert
-            response.Result.Should().BeOfType(typeof(BadRequestObjectResult));
-        }
 
         [Test]
         public void Given_InValidRequest_Values_CheckEligibilityBulk_Should_Return_Status400BadRequest()
         {
             // Arrange
-            var request = new CheckEligibilityRequestBulk();
+            var request = new CheckEligibilityRequestBulk_Fsm();
 
             // Act
             var response = _sut.CheckEligibilityBulk(request);
@@ -127,16 +68,16 @@ namespace CheckYourEligibility.APIUnitTests
         public void Given_valid_CheckEligibilityBulk_Should_Return_Status202Accepted()
         {
             // Arrange
-            var requestItem = _fixture.Create<CheckEligibilityRequestDataFsm>();
+            var requestItem = _fixture.Create<CheckEligibilityRequestData_Fsm>();
             requestItem.NationalInsuranceNumber = "ns738356d";
             requestItem.DateOfBirth = "1970-02-01";
             requestItem.NationalAsylumSeekerServiceNumber = string.Empty;
                         
-            _mockCheckService.Setup(cs => cs.PostCheck(It.IsAny<IEnumerable<CheckEligibilityRequestDataFsm>>(), It.IsAny<string>())).Returns(Task.CompletedTask);
+            _mockCheckService.Setup(cs => cs.PostCheck(It.IsAny<IEnumerable<CheckEligibilityRequestData_Fsm>>(), It.IsAny<string>())).Returns(Task.CompletedTask);
             _mockAuditService.Setup(x => x.AuditAdd(It.IsAny<AuditData>())).ReturnsAsync("");
 
             // Act
-            var response = _sut.CheckEligibilityBulk(new CheckEligibilityRequestBulk { Data = [requestItem] });
+            var response = _sut.CheckEligibilityBulk(new CheckEligibilityRequestBulk_Fsm { Data = [requestItem] });
 
             // Assert
             Assert.Pass();
@@ -146,14 +87,14 @@ namespace CheckYourEligibility.APIUnitTests
         public void Given_Invalid_CheckEligibilityBulk_Should_Return_BadRequest()
         {
             // Arrange
-            var requestItem = _fixture.Create<CheckEligibilityRequestDataFsm>();
+            var requestItem = _fixture.Create<CheckEligibilityRequestData_Fsm>();
             requestItem.NationalInsuranceNumber = "xyz";
             requestItem.DateOfBirth = "1970-02-01";
             requestItem.NationalAsylumSeekerServiceNumber = string.Empty;
 
             
             // Act
-            var response = _sut.CheckEligibilityBulk(new CheckEligibilityRequestBulk { Data = [requestItem] });
+            var response = _sut.CheckEligibilityBulk(new CheckEligibilityRequestBulk_Fsm { Data = [requestItem] });
 
             // Assert
             response.Result.Should().BeOfType(typeof(BadRequestObjectResult));
@@ -163,7 +104,7 @@ namespace CheckYourEligibility.APIUnitTests
         public void Given_valid_NInumber_Request_Post_Should_Return_Status202Accepted()
         {
             // Arrange
-            var request = _fixture.Create<CheckEligibilityRequestDataFsm>();
+            var request = _fixture.Create<CheckEligibilityRequestData_Fsm>();
             var id = _fixture.Create<string>();
             request.NationalInsuranceNumber = "ns738356d";
             request.DateOfBirth = "1970-02-01";
@@ -174,7 +115,7 @@ namespace CheckYourEligibility.APIUnitTests
             var expectedResult = new ObjectResult(new CheckEligibilityStatusResponse() { Data = new StatusValue() { Status = CheckEligibilityStatus.queuedForProcessing.ToString() } }) { StatusCode = StatusCodes.Status202Accepted };
 
             // Act
-            var response = _sut.CheckEligibility(new CheckEligibilityRequest { Data = request});
+            var response = _sut.CheckEligibility(new CheckEligibilityRequest_Fsm { Data = request});
 
             // Assert
             response.Result.Should().BeEquivalentTo(expectedResult);
@@ -184,7 +125,7 @@ namespace CheckYourEligibility.APIUnitTests
         public void Given_InValidRequest_Values_PostFeature_Should_Return_Status400BadRequest()
         {
             // Arrange
-            var request = new CheckEligibilityRequest();
+            var request = new CheckEligibilityRequest_Fsm();
 
             // Act
             var response = _sut.CheckEligibility(request);
@@ -197,11 +138,11 @@ namespace CheckYourEligibility.APIUnitTests
         public void Given_InValidRequest_NI_and_NASS_Values_PostFeature_Should_Return_Status400BadRequest()
         {
             // Arrange
-            var request = _fixture.Create<CheckEligibilityRequest>();
+            var request = _fixture.Create<CheckEligibilityRequest_Fsm>();
             request.Data.NationalInsuranceNumber = "ns738356d";
             request.Data.DateOfBirth = "1970-02-01";
             request.Data.NationalAsylumSeekerServiceNumber = "789";
-            var expectedResult = new BadRequestObjectResult(new MessageResponse { Data = Domain.Constants.ErrorMessages.FSM.NI_and_NASS });
+            var expectedResult = new BadRequestObjectResult(new MessageResponse { Data = Domain.Constants.ErrorMessages.ApplicationValidationMessages.NI_and_NASS });
 
             // Act
             var response = _sut.CheckEligibility(request);
@@ -214,11 +155,11 @@ namespace CheckYourEligibility.APIUnitTests
         public void Given_InValidRequest_NI_or_NASS_Values_PostFeature_Should_Return_Status400BadRequest()
         {
             // Arrange
-            var request = _fixture.Create<CheckEligibilityRequest>();
+            var request = _fixture.Create<CheckEligibilityRequest_Fsm>();
             request.Data.NationalInsuranceNumber = string.Empty;
             request.Data.DateOfBirth = "1970-02-01";
             request.Data.NationalAsylumSeekerServiceNumber = string.Empty;
-            var expectedResult = new BadRequestObjectResult(new MessageResponse { Data = Domain.Constants.ErrorMessages.FSM.NI_or_NASS });
+            var expectedResult = new BadRequestObjectResult(new MessageResponse { Data = Domain.Constants.ErrorMessages.ApplicationValidationMessages.NI_or_NASS });
 
             // Act
             var response = _sut.CheckEligibility(request);
@@ -231,11 +172,11 @@ namespace CheckYourEligibility.APIUnitTests
         public void Given_InValidRequest_NI_Values_PostFeature_Should_Return_Status400BadRequest()
         {
             // Arrange
-            var request = _fixture.Create<CheckEligibilityRequest>();
+            var request = _fixture.Create<CheckEligibilityRequest_Fsm>();
             request.Data.NationalInsuranceNumber = "123";
             request.Data.DateOfBirth = "1970-02-01";
             request.Data.NationalAsylumSeekerServiceNumber = "";
-            var expectedResult = new BadRequestObjectResult(new MessageResponse { Data = Domain.Constants.ErrorMessages.FSM.NI });
+            var expectedResult = new BadRequestObjectResult(new MessageResponse { Data = Domain.Constants.ErrorMessages.ApplicationValidationMessages.NI });
 
             // Act
             var response = _sut.CheckEligibility(request);
@@ -248,11 +189,11 @@ namespace CheckYourEligibility.APIUnitTests
         public void Given_InValidRequest_DOB_Values_PostFeature_Should_Return_Status400BadRequest()
         {
             // Arrange
-            var request = _fixture.Create<CheckEligibilityRequest>();
+            var request = _fixture.Create<CheckEligibilityRequest_Fsm>();
             request.Data.NationalInsuranceNumber = "ns738356d";
             request.Data.DateOfBirth = "01/02/1970";
             request.Data.NationalAsylumSeekerServiceNumber = "";
-            var expectedResult = new BadRequestObjectResult(new MessageResponse { Data = Domain.Constants.ErrorMessages.FSM.DOB });
+            var expectedResult = new BadRequestObjectResult(new MessageResponse { Data = Domain.Constants.ErrorMessages.ApplicationValidationMessages.DOB });
 
             // Act
             var response = _sut.CheckEligibility(request);
@@ -266,12 +207,12 @@ namespace CheckYourEligibility.APIUnitTests
         public void Given_InValidRequest_LastName_Values_PostFeature_Should_Return_Status400BadRequest()
         {
             // Arrange
-            var request = _fixture.Create<CheckEligibilityRequest>();
+            var request = _fixture.Create<CheckEligibilityRequest_Fsm>();
             request.Data.NationalInsuranceNumber = "ns738356d";
             request.Data.DateOfBirth = "1970-02-01";
             request.Data.LastName = string.Empty;
             request.Data.NationalAsylumSeekerServiceNumber = string.Empty;
-            var expectedResult = new BadRequestObjectResult(new MessageResponse { Data = Domain.Constants.ErrorMessages.FSM.LastName });
+            var expectedResult = new BadRequestObjectResult(new MessageResponse { Data = Domain.Constants.ErrorMessages.ApplicationValidationMessages.LastName });
             
             // Act
             var response = _sut.CheckEligibility(request);
@@ -341,7 +282,7 @@ namespace CheckYourEligibility.APIUnitTests
             {
                 Data = status,
                 Links = new BulkCheckResponseLinks()
-                { Get_BulkCheck_Results = $"{Domain.Constants.FSMLinks.BulkCheckLink}{guid}{Domain.Constants.FSMLinks.BulkCheckResults}" }
+                { Get_BulkCheck_Results = $"{Domain.Constants.CheckLinks.BulkCheckLink}{guid}{Domain.Constants.CheckLinks.BulkCheckResults}" }
             })
             { StatusCode = StatusCodes.Status200OK };
 
@@ -509,8 +450,8 @@ namespace CheckYourEligibility.APIUnitTests
                 Data = expectedResponse,
                 Links = new CheckEligibilityResponseLinks
                 {
-                    Get_EligibilityCheck = $"{Domain.Constants.FSMLinks.GetLink}{guid}",
-                    Put_EligibilityCheckProcess = $"{Domain.Constants.FSMLinks.ProcessLink}{guid}"
+                    Get_EligibilityCheck = $"{Domain.Constants.CheckLinks.GetLink}{guid}",
+                    Put_EligibilityCheckProcess = $"{Domain.Constants.CheckLinks.ProcessLink}{guid}"
                 }
             })
             { StatusCode = StatusCodes.Status200OK };
@@ -522,133 +463,6 @@ namespace CheckYourEligibility.APIUnitTests
             response.Result.Should().BeEquivalentTo(expectedResult);
         }
 
-        [Test]
-        public void Given_InValid_guid_Application_Should_Return_StatusNotFound()
-        {
-            // Arrange
-            var guid = _fixture.Create<Guid>().ToString();
-            _mockApplicationService.Setup(cs => cs.GetApplication(guid)).Returns(Task.FromResult<ApplicationResponse?>(null));
-            var expectedResult = new ObjectResult(guid)
-            { StatusCode = StatusCodes.Status404NotFound };
-
-            // Act
-            var response = _sut.Application(guid);
-
-            // Assert
-            response.Result.Should().BeEquivalentTo(expectedResult);
-        }
-
-        [Test]
-        public void Given_Valid_guid_Application_Should_Return_StatusOk()
-        {
-            // Arrange
-            var guid = _fixture.Create<Guid>().ToString();
-            var expectedResponse = _fixture.Create<ApplicationResponse>();
-            _mockAuditService.Setup(cs => cs.AuditAdd(It.IsAny<AuditData>())).ReturnsAsync(Guid.NewGuid().ToString());
-            _mockApplicationService.Setup(cs => cs.GetApplication(guid)).ReturnsAsync(expectedResponse);
-            var expectedResult = new ObjectResult(new ApplicationItemResponse
-            {
-                Data = expectedResponse,
-                Links = new ApplicationResponseLinks
-                {
-                    get_Application = $"{Domain.Constants.FSMLinks.GetLinkApplication}{expectedResponse.Id}"
-                }
-            })
-            { StatusCode = StatusCodes.Status200OK };
-
-            // Act
-            var response = _sut.Application(guid);
-
-            // Assert
-            response.Result.Should().BeEquivalentTo(expectedResult);
-        }
-
-        [Test]
-        public void Given_InValid_ApplicationSearch_Should_Return_Status204NoContent()
-        {
-            // Arrange
-            var searchData = _fixture.Create<ApplicationRequestSearchData>();
-            var model = new ApplicationRequestSearch
-            {
-                Data = searchData,
-                PageNumber = 1,
-                PageSize = 10
-            };
-            _mockApplicationService.Setup(cs => cs.GetApplications(It.IsAny<ApplicationRequestSearch>())).ReturnsAsync(new ApplicationSearchResponse { Data = new List<ApplicationResponse>() });
-            var expectedResult = new NoContentResult();
-
-            // Act
-            var response = _sut.ApplicationSearch(model);
-
-            // Assert
-            response.Result.Should().BeEquivalentTo(expectedResult);
-        }
-
-        [Test]
-        public void Given_Valid_ApplicationSearch_Should_Return_StatusOk()
-        {
-            // Arrange
-            var searchData = _fixture.Create<ApplicationRequestSearchData>();
-            var model = new ApplicationRequestSearch
-            {
-                Data = searchData,
-                PageNumber = 1,
-                PageSize = 10
-            };
-            var expectedResponse = _fixture.CreateMany<ApplicationResponse>();
-            _mockApplicationService.Setup(cs => cs.GetApplications(It.IsAny<ApplicationRequestSearch>())).ReturnsAsync(new ApplicationSearchResponse { Data = expectedResponse });
-            _mockAuditService.Setup(cs => cs.AuditAdd(It.IsAny<AuditData>())).ReturnsAsync(Guid.NewGuid().ToString());
-            var expectedResult = new ObjectResult(new ApplicationSearchResponse { Data = expectedResponse })
-            {
-                StatusCode = StatusCodes.Status200OK
-            };
-
-            // Act
-            var response = _sut.ApplicationSearch(model);
-
-            // Assert
-            response.Result.Should().BeEquivalentTo(expectedResult);
-        }
-
-      
-
-        [Test]
-        public void Given_InValid_guid_ApplicationStatusUpdate_Should_Return_StatusNotFound()
-        {
-            // Arrange
-            var guid = _fixture.Create<Guid>().ToString();
-            var request = _fixture.Create<ApplicationStatusUpdateRequest>();
-            _mockApplicationService.Setup(cs => cs.UpdateApplicationStatus(guid, request.Data)).Returns(Task.FromResult<ApplicationStatusUpdateResponse?>(null));
-            var expectedResult = new NotFoundResult();
-
-            // Act
-            var response = _sut.ApplicationStatusUpdate(guid,request);
-
-            // Assert
-            response.Result.Should().BeEquivalentTo(expectedResult);
-        }
-
-        [Test]
-        public void Given_Valid_guid_ApplicationStatusUpdate_Should_Return_StatusOk()
-        {
-            // Arrange
-            var guid = _fixture.Create<Guid>().ToString();
-            var request = _fixture.Create<ApplicationStatusUpdateRequest>();
-            var expectedResponse = _fixture.Create<ApplicationStatusUpdateResponse>();
-            _mockApplicationService.Setup(cs => cs.UpdateApplicationStatus(guid,request.Data)).ReturnsAsync(expectedResponse);
-            _mockAuditService.Setup(cs => cs.AuditAdd(It.IsAny<AuditData>())).ReturnsAsync(Guid.NewGuid().ToString());
-            var expectedResult = new ObjectResult(new ApplicationStatusUpdateResponse
-            {
-                Data = expectedResponse.Data
-            })
-            { StatusCode = StatusCodes.Status200OK };
-
-            // Act
-            var response = _sut.ApplicationStatusUpdate(guid, request);
-
-            // Assert
-            response.Result.Should().BeEquivalentTo(expectedResult);
-        }
 
         [Test]
         public void Given_InValid_guid_CheckEligibilityStatusUpdate_Should_Return_StatusNotFound()
@@ -686,26 +500,5 @@ namespace CheckYourEligibility.APIUnitTests
             response.Result.Should().BeEquivalentTo(expectedResult);
         }
 
-        [Test]
-        public void Given_Valid_guid_CheckEligibilityStatusUpdate_Should_Return_StatusOk()
-        {
-            // Arrange
-            var guid = _fixture.Create<Guid>().ToString();
-            var request = _fixture.Create<ApplicationStatusUpdateRequest>();
-            var expectedResponse = _fixture.Create<ApplicationStatusUpdateResponse>();
-            _mockApplicationService.Setup(cs => cs.UpdateApplicationStatus(guid, request.Data)).ReturnsAsync(expectedResponse);
-            _mockAuditService.Setup(cs => cs.AuditAdd(It.IsAny<AuditData>())).ReturnsAsync(Guid.NewGuid().ToString());
-            var expectedResult = new ObjectResult(new ApplicationStatusUpdateResponse
-            {
-                Data = expectedResponse.Data
-            })
-            { StatusCode = StatusCodes.Status200OK };
-
-            // Act
-            var response = _sut.ApplicationStatusUpdate(guid, request);
-
-            // Assert
-            response.Result.Should().BeEquivalentTo(expectedResult);
-        }
     }
 }

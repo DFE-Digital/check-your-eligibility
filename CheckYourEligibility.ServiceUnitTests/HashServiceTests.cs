@@ -12,6 +12,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
+using NetTopologySuite.Index.HPRtree;
+using Newtonsoft.Json;
+using System.Globalization;
 using String = System.String;
 
 namespace CheckYourEligibility.ServiceUnitTests
@@ -35,7 +38,7 @@ namespace CheckYourEligibility.ServiceUnitTests
 
             _fakeInMemoryDb = new EligibilityCheckContext(options);
 
-            var config = new MapperConfiguration(cfg => cfg.AddProfile<FsmMappingProfile>());
+            var config = new MapperConfiguration(cfg => cfg.AddProfile<MappingProfile>());
             var configForSmsApi = new Dictionary<string, string>
             {
                 {"QueueFsmCheckStandard", "notSet"},
@@ -72,12 +75,15 @@ namespace CheckYourEligibility.ServiceUnitTests
             // Arrange
             var request = _fixture.Create<EligibilityCheck>();
             _moqAudit.Setup(x => x.AuditAdd(It.IsAny<AuditData>())).ReturnsAsync("");
+            var fsm = _fixture.Create<CheckEligibilityRequestData_Fsm>();
+            fsm.DateOfBirth = "1990-01-01";
+            var dataItem = GetCheckProcessData(fsm);
 
             // Act
-            var id = await _sut.Create(request, Domain.Enums.CheckEligibilityStatus.parentNotFound, Domain.Enums.ProcessEligibilityCheckSource.HMRC, new AuditData());
+            var id = await _sut.Create(dataItem, Domain.Enums.CheckEligibilityStatus.parentNotFound, Domain.Enums.ProcessEligibilityCheckSource.HMRC, new AuditData());
             await _fakeInMemoryDb.SaveChangesAsync();
 
-            var response = await _sut.Exists(request);
+            var response = await _sut.Exists(dataItem);
 
             // Assert
             response.Should().BeOfType<EligibilityCheckHash>();
@@ -89,18 +95,34 @@ namespace CheckYourEligibility.ServiceUnitTests
             // Arrange
             var request = _fixture.Create<EligibilityCheck>();
             _moqAudit.Setup(x => x.AuditAdd(It.IsAny<AuditData>())).ReturnsAsync("");
+            var fsm = _fixture.Create<CheckEligibilityRequestData_Fsm>();
+            fsm.DateOfBirth = "1990-01-01";
+            var dataItem = GetCheckProcessData(fsm);
 
-            var id = await _sut.Create(request, Domain.Enums.CheckEligibilityStatus.parentNotFound, Domain.Enums.ProcessEligibilityCheckSource.HMRC, new AuditData());
+
+            var id = await _sut.Create(dataItem, Domain.Enums.CheckEligibilityStatus.parentNotFound, Domain.Enums.ProcessEligibilityCheckSource.HMRC, new AuditData());
             await _fakeInMemoryDb.SaveChangesAsync();
             var hashItem = _fakeInMemoryDb.EligibilityCheckHashes.First(x => x.EligibilityCheckHashID.Equals(id));
                         hashItem.TimeStamp = hashItem.TimeStamp.AddDays(-(_hashCheckDays + 1));
             await _fakeInMemoryDb.SaveChangesAsync();
 
             // Act
-            var response = await _sut.Exists(request);
+            var response = await _sut.Exists(dataItem);
 
             // Assert
             response.Should().BeNull();
+        }
+
+        private CheckProcessData GetCheckProcessData(CheckEligibilityRequestData_Fsm request)
+        {
+            return new CheckProcessData
+            {
+                DateOfBirth = request.DateOfBirth,
+                LastName = request.LastName,
+                NationalAsylumSeekerServiceNumber = request.NationalAsylumSeekerServiceNumber,
+                NationalInsuranceNumber = request.NationalInsuranceNumber,
+                Type = new CheckEligibilityRequestData_Fsm().Type
+            };
         }
 
     }

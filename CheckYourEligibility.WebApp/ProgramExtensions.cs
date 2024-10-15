@@ -44,8 +44,8 @@ namespace CheckYourEligibility.WebApp
         public static IServiceCollection AddServices(this IServiceCollection services)
         {
 
-            services.AddTransient<IFsmCheckEligibility, FsmCheckEligibilityService>();
-            services.AddTransient<IFsmApplication, FsmApplicationService>();
+            services.AddTransient<ICheckEligibility, CheckEligibilityService>();
+            services.AddTransient<IApplication, FsmApplicationService>();
             services.AddTransient<IAdministration, AdministrationService>();
             services.AddTransient<ISchoolsSearch, SchoolSearchService>();
             services.AddTransient<IUsers, UsersService>();

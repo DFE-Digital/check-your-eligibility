@@ -17,6 +17,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities.Resources;
 using Moq;
 using Moq.Protected;
+using System.Globalization;
 using System.Net;
 using String = System.String;
 
@@ -46,7 +47,7 @@ namespace CheckYourEligibility.ServiceUnitTests
             //"EcsPassword": "jiK65zxTmJ",
 
 
-            var config = new MapperConfiguration(cfg => cfg.AddProfile<FsmMappingProfile>());
+            var config = new MapperConfiguration(cfg => cfg.AddProfile<MappingProfile>());
             var configForSmsApi = new Dictionary<string, string>
             {
                 {"Dwp:UniversalCreditThreshhold-1","616.66" },
@@ -80,7 +81,7 @@ namespace CheckYourEligibility.ServiceUnitTests
         public async Task Given_Valid_EcsFsmCheck_Should_Return_SoapFsmCheckRespone()
         {
             // Arrange
-            var request = _fixture.Create<EligibilityCheck>();
+            var request = _fixture.Create<CheckProcessData>();
 
             var handlerMock = new Mock<HttpMessageHandler>();
             var httpResponse = new HttpResponseMessage
@@ -129,8 +130,13 @@ namespace CheckYourEligibility.ServiceUnitTests
             var httpClient = new HttpClient(handlerMock.Object);
             _sut = new DwpService(new NullLoggerFactory(), httpClient, _configuration);
 
+            var fsm = _fixture.Create<CheckEligibilityRequestData_Fsm>();
+            fsm.DateOfBirth = "1990-01-01";
+            var dataItem = GetCheckProcessData(fsm);
+
+
             // Act
-            var response = await _sut.EcsFsmCheck(request);
+            var response = await _sut.EcsFsmCheck(dataItem);
 
             // Assert
             response.Should().BeNull();
@@ -388,6 +394,16 @@ namespace CheckYourEligibility.ServiceUnitTests
             response.Should().Be(true);
         }
 
-
+        private CheckProcessData GetCheckProcessData(CheckEligibilityRequestData_Fsm request)
+        {
+            return new CheckProcessData
+            {
+                DateOfBirth = request.DateOfBirth,
+                LastName = request.LastName,
+                NationalAsylumSeekerServiceNumber = request.NationalAsylumSeekerServiceNumber,
+                NationalInsuranceNumber = request.NationalInsuranceNumber,
+                Type = new CheckEligibilityRequestData_Fsm().Type
+            };
+        }
     }
 }

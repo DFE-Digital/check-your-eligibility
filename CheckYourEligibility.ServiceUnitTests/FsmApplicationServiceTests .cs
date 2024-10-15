@@ -2,6 +2,7 @@
 
 using AutoFixture;
 using AutoMapper;
+using Azure.Core;
 using CheckYourEligibility.Data.Mappings;
 using CheckYourEligibility.Data.Models;
 using CheckYourEligibility.Domain.Enums;
@@ -14,8 +15,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
+using Newtonsoft.Json;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
+using static Microsoft.ApplicationInsights.MetricDimensionNames.TelemetryContext;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 using School = CheckYourEligibility.Data.Models.School;
 
 namespace CheckYourEligibility.ServiceUnitTests
@@ -31,6 +35,9 @@ namespace CheckYourEligibility.ServiceUnitTests
         private IHash _HashService;
         private Mock<IAudit> _moqAudit;
 
+        Data.Models.User User;
+        School School;
+
         [SetUp]
         public void Setup()
         {
@@ -40,7 +47,7 @@ namespace CheckYourEligibility.ServiceUnitTests
 
             _fakeInMemoryDb = new EligibilityCheckContext(options);
 
-            var config = new MapperConfiguration(cfg => cfg.AddProfile<FsmMappingProfile>());
+            var config = new MapperConfiguration(cfg => cfg.AddProfile<MappingProfile>());
             _mapper = config.CreateMapper();
             var configForSmsApi = new Dictionary<string, string>
             {
@@ -96,15 +103,10 @@ namespace CheckYourEligibility.ServiceUnitTests
         public async Task Given_HashNotFound_PostApplication_Should_throwException_withMessageNoCheckfound()
         {
             // Arrange
-            var request = _fixture.Create<ApplicationRequestData>();
-            request.ParentDateOfBirth = "1970-02-01";
-            request.ChildDateOfBirth = "2007-02-01";
-            var la = _fixture.Create<LocalAuthority>();
-            var school = _fixture.Create<School>();
-            school.LocalAuthorityId = la.LocalAuthorityId;
-            request.School = school.SchoolId;
-            _fakeInMemoryDb.LocalAuthorities.Add(la);
-            _fakeInMemoryDb.Schools.Add(school);
+            await ClearDownData();
+            await CreateUserSchoolAndLa();
+            var request = await CreateApplication(CheckEligibilityType.FreeSchoolMeals, CheckEligibilityStatus.eligible);
+
             request.ParentLastName = "";
           
             _fakeInMemoryDb.SaveChanges();
@@ -121,18 +123,9 @@ namespace CheckYourEligibility.ServiceUnitTests
         public async Task Given_validRequest_PostApplication_Should_Return_ApplicationSaveFsm()
         {
             // Arrange
-            var request = _fixture.Create<ApplicationRequestData>();
-            request.ParentDateOfBirth = "1970-02-01";
-            request.ChildDateOfBirth = "2007-02-01";
-            var la = _fixture.Create<LocalAuthority>();
-            var school = _fixture.Create<School>();
-            school.LocalAuthorityId = la.LocalAuthorityId;
-            request.School = school.SchoolId;
-            _fakeInMemoryDb.LocalAuthorities.Add(la);
-            _fakeInMemoryDb.Schools.Add(school);
-            await AddHash(request);
-
-            _fakeInMemoryDb.SaveChanges();
+            await ClearDownData();
+            await CreateUserSchoolAndLa();
+            var request = await CreateApplication(CheckEligibilityType.FreeSchoolMeals, CheckEligibilityStatus.eligible);
 
             // Act
             var response = _sut.PostApplication(request);
@@ -144,19 +137,11 @@ namespace CheckYourEligibility.ServiceUnitTests
         [Test]
         public async Task Given_PostApplication_StatusEvidenseNeeded_Should_Return_ApplicationSaveFsm()
         {
-            // Arrange
-            var request = _fixture.Create<ApplicationRequestData>();
-            request.ParentDateOfBirth = "1970-02-01";
-            request.ChildDateOfBirth = "2007-02-01";
-            var la = _fixture.Create<LocalAuthority>();
-            var school = _fixture.Create<School>();
-            school.LocalAuthorityId = la.LocalAuthorityId;
-            request.School = school.SchoolId;
-            _fakeInMemoryDb.LocalAuthorities.Add(la);
-            _fakeInMemoryDb.Schools.Add(school);
-            await AddHash(request, CheckEligibilityStatus.notEligible);
+            //
+            await ClearDownData();
+            await CreateUserSchoolAndLa();
 
-            _fakeInMemoryDb.SaveChanges();
+            var request = await CreateApplication(CheckEligibilityType.FreeSchoolMeals, CheckEligibilityStatus.notEligible);
 
             // Act
             var response = _sut.PostApplication(request);
@@ -184,23 +169,16 @@ namespace CheckYourEligibility.ServiceUnitTests
         public async Task Given_ValidRequest_UpdateApplicationStatus_Should_Return_UpdatedStatus()
         {
             // Arrange
-            var request = _fixture.Create<ApplicationRequestData>();
-            request.ParentDateOfBirth = "1970-02-01";
-            request.ChildDateOfBirth = "2007-02-01";
-            var la = _fixture.Create<LocalAuthority>();
-            var school = _fixture.Create<School>();
-            school.LocalAuthorityId = la.LocalAuthorityId;
-            request.School = school.SchoolId;
-            _fakeInMemoryDb.LocalAuthorities.Add(la);
-            _fakeInMemoryDb.Schools.Add(school);
-            await AddHash(request);
+            await ClearDownData();
+            await CreateUserSchoolAndLa();
 
-            await _fakeInMemoryDb.SaveChangesAsync();
+            var request = await CreateApplication(CheckEligibilityType.FreeSchoolMeals, CheckEligibilityStatus.notEligible);
+            var response = _sut.PostApplication(request);
 
             var requestUpdateStatus = _fixture.Create<ApplicationStatusUpdateRequest>();
 
             // Act
-            var response = _sut.PostApplication(request);
+           
 
             // Act
             var applicationStatusUpdate = await _sut.UpdateApplicationStatus(response.Result.Id, requestUpdateStatus.Data);
@@ -228,23 +206,11 @@ namespace CheckYourEligibility.ServiceUnitTests
         public async Task Given_ValidRequest_GetApplication_Should_Return_Item()
         {
             // Arrange
-            _fakeInMemoryDb.Applications.RemoveRange(_fakeInMemoryDb.Applications);
-            _fakeInMemoryDb.Schools.RemoveRange(_fakeInMemoryDb.Schools);
-            _fakeInMemoryDb.LocalAuthorities.RemoveRange(_fakeInMemoryDb.LocalAuthorities);
-            _fakeInMemoryDb.SaveChanges();
-            var request = _fixture.Create<ApplicationRequestData>();
-            request.ParentDateOfBirth = "1970-02-01";
-            request.ChildDateOfBirth = "2007-02-01";
-            var la = _fixture.Create<LocalAuthority>();
-            var school = _fixture.Create<School>();
-            school.LocalAuthorityId = la.LocalAuthorityId;
-            request.School = school.SchoolId;
-            _fakeInMemoryDb.LocalAuthorities.Add(la);
-            _fakeInMemoryDb.Schools.Add(school);
-            await AddHash(request);
+            await ClearDownData();
+            await CreateUserSchoolAndLa();
 
-            await _fakeInMemoryDb.SaveChangesAsync();
-            
+            var request = await CreateApplication(CheckEligibilityType.FreeSchoolMeals, CheckEligibilityStatus.notEligible);
+
             var postApplicationResponse =await _sut.PostApplication(request);
 
             // Act
@@ -277,30 +243,21 @@ namespace CheckYourEligibility.ServiceUnitTests
         [Test]
         public async Task Given_ValidRequest_GetApplications_MultipleStatuses_Should_Return_results()
         {
-            // Arrange
-            var request = _fixture.Create<ApplicationRequestData>();
-            request.ParentDateOfBirth = "1970-02-01";
-            request.ChildDateOfBirth = "2007-01-01";
-            var la = _fixture.Create<LocalAuthority>();
-            var school = _fixture.Create<School>();
-            school.LocalAuthorityId = la.LocalAuthorityId;
-            request.School = school.SchoolId;
-            _fakeInMemoryDb.LocalAuthorities.Add(la);
-            _fakeInMemoryDb.Schools.Add(school);
-            await AddHash(request,CheckEligibilityStatus.notEligible);
+            await ClearDownData();
+            await CreateUserSchoolAndLa();
 
-            await _fakeInMemoryDb.SaveChangesAsync();
+            var request = await CreateApplication(CheckEligibilityType.FreeSchoolMeals, CheckEligibilityStatus.notEligible);
 
-           var app = await _sut.PostApplication(request);
+            var postApplicationResponse = await _sut.PostApplication(request);
 
-            Enum.TryParse(app.Status, out Domain.Enums.ApplicationStatus statusItem);
+            Enum.TryParse(postApplicationResponse.Status, out Domain.Enums.ApplicationStatus statusItem);
 
             var requestSearch = new ApplicationRequestSearch
             {
                 Data = new ApplicationRequestSearchData
                 {
                     Statuses = [statusItem],
-                    School = school.SchoolId
+                    School = School.SchoolId
                 }
             };
 
@@ -315,38 +272,29 @@ namespace CheckYourEligibility.ServiceUnitTests
         public async Task Given_ValidRequest_GetApplications_AllSearchCritieria_Should_Return_results()
         {
             // Arrange
-            var request = _fixture.Create<ApplicationRequestData>();
-            request.ParentDateOfBirth = "1970-02-01";
-            request.ChildDateOfBirth = "2007-01-01";
-           
-            var la = _fixture.Create<LocalAuthority>();
-            var school = _fixture.Create<School>();
-            school.LocalAuthorityId = la.LocalAuthorityId;
-            request.School = school.SchoolId;
-           _fakeInMemoryDb.LocalAuthorities.Add(la);
-           _fakeInMemoryDb.Schools.Add(school);
-            await AddHash(request, CheckEligibilityStatus.notEligible);
+            await ClearDownData();
+            await CreateUserSchoolAndLa();
 
-            await _fakeInMemoryDb.SaveChangesAsync();
+            var request = await CreateApplication(CheckEligibilityType.FreeSchoolMeals, CheckEligibilityStatus.notEligible);
 
-            var app = await _sut.PostApplication(request);
+            var postApplicationResponse = await _sut.PostApplication(request);
 
-            Enum.TryParse(app.Status, out Domain.Enums.ApplicationStatus statusItem);
+            Enum.TryParse(postApplicationResponse.Status, out Domain.Enums.ApplicationStatus statusItem);
 
             var requestSearch = new ApplicationRequestSearch
             {
                 Data = new ApplicationRequestSearchData
                 {
                     Statuses = [statusItem],
-                    School = school.SchoolId,
-                    LocalAuthority = school.LocalAuthorityId,
-                    ParentDateOfBirth = app.ParentDateOfBirth,
-                    ParentLastName = app.ParentLastName,
-                    ParentNationalAsylumSeekerServiceNumber = app.ParentNationalAsylumSeekerServiceNumber,
-                    ParentNationalInsuranceNumber = app.ParentNationalInsuranceNumber,
-                    Reference = app.Reference,
-                    ChildDateOfBirth = app.ChildDateOfBirth,
-                    ChildLastName = app.ChildLastName 
+                    School = School.SchoolId,
+                    LocalAuthority = School.LocalAuthorityId,
+                    ParentDateOfBirth = postApplicationResponse.ParentDateOfBirth,
+                    ParentLastName = postApplicationResponse.ParentLastName,
+                    ParentNationalAsylumSeekerServiceNumber = postApplicationResponse.ParentNationalAsylumSeekerServiceNumber,
+                    ParentNationalInsuranceNumber = postApplicationResponse.ParentNationalInsuranceNumber,
+                    Reference = postApplicationResponse.Reference,
+                    ChildDateOfBirth = postApplicationResponse.ChildDateOfBirth,
+                    ChildLastName = postApplicationResponse.ChildLastName 
                 }
             };
 
@@ -361,18 +309,10 @@ namespace CheckYourEligibility.ServiceUnitTests
         public async Task Given_ValidRequest_GetApplications_Should_Return_results()
         {
             // Arrange
-            var request = _fixture.Create<ApplicationRequestData>();
-            request.ParentDateOfBirth = "1970-02-01";
-            request.ChildDateOfBirth = "2007-01-01";
-            var la = _fixture.Create<LocalAuthority>();
-            var school = _fixture.Create<School>();
-            school.LocalAuthorityId = la.LocalAuthorityId;
-            request.School = school.SchoolId;
-            _fakeInMemoryDb.LocalAuthorities.Add(la);
-            _fakeInMemoryDb.Schools.Add(school);
-            await AddHash(request);
+            await ClearDownData();
+            await CreateUserSchoolAndLa();
 
-            await _fakeInMemoryDb.SaveChangesAsync();
+            var request = await CreateApplication(CheckEligibilityType.FreeSchoolMeals, CheckEligibilityStatus.notEligible);
 
             await _sut.PostApplication(request);
 
@@ -380,7 +320,7 @@ namespace CheckYourEligibility.ServiceUnitTests
             {
                 Data = new ApplicationRequestSearchData
                 {
-                    School = school.SchoolId
+                    School = School.SchoolId
                 }
             };
 
@@ -395,28 +335,10 @@ namespace CheckYourEligibility.ServiceUnitTests
         public async Task Given_Application_WithUserReturnNewUser()
         {
             // Arrange
-            _fakeInMemoryDb.Applications.RemoveRange(_fakeInMemoryDb.Applications);
-            _fakeInMemoryDb.Schools.RemoveRange(_fakeInMemoryDb.Schools);
-            _fakeInMemoryDb.LocalAuthorities.RemoveRange(_fakeInMemoryDb.LocalAuthorities);
-            _fakeInMemoryDb.Users.RemoveRange(_fakeInMemoryDb.Users);
-            _fakeInMemoryDb.SaveChanges();
+            await ClearDownData();
+            await CreateUserSchoolAndLa();
 
-            var request = _fixture.Create<ApplicationRequestData>();
-            request.ParentDateOfBirth = "1970-02-01";
-            request.ChildDateOfBirth = "2007-02-01";
-            var la = _fixture.Create<LocalAuthority>();
-            var school = _fixture.Create<School>();
-            school.LocalAuthorityId = la.LocalAuthorityId;
-            request.School = school.SchoolId;
-            _fakeInMemoryDb.LocalAuthorities.Add(la);
-            _fakeInMemoryDb.Schools.Add(school);
-            var user = _fixture.Create<User>();
-            _fakeInMemoryDb.Users.Add(user);
-            request.UserId = user.UserID;
-            await AddHash(request);
-
-            await _fakeInMemoryDb.SaveChangesAsync();
-
+            var request = await CreateApplication(CheckEligibilityType.FreeSchoolMeals, CheckEligibilityStatus.notEligible);
 
             var appResponse = await _sut.PostApplication(request);
 
@@ -424,13 +346,18 @@ namespace CheckYourEligibility.ServiceUnitTests
             var response = await _sut.GetApplication(appResponse.Id);
 
             // Assert
-            response.User.UserID.Should().BeEquivalentTo(user.UserID);
+            response.User.UserID.Should().BeEquivalentTo(User.UserID);
         }
 
         [Test]
         public async Task Given_ZeroOrNegativePageNumber_GetApplications_Should_DefaultToFirstPage()
         {
             // Arrange
+            await ClearDownData();
+            await CreateUserSchoolAndLa();
+            var request = await CreateApplication(CheckEligibilityType.FreeSchoolMeals, CheckEligibilityStatus.notEligible);
+            await _sut.PostApplication(request);
+
             var requestSearch = new ApplicationRequestSearch
             {
                 PageNumber = 0, // Edge case: Zero page number
@@ -450,6 +377,12 @@ namespace CheckYourEligibility.ServiceUnitTests
         public async Task Given_NegativePageNumber_GetApplications_Should_DefaultToFirstPage()
         {
             // Arrange
+            await ClearDownData();
+            await CreateUserSchoolAndLa();
+
+            var request = await CreateApplication(CheckEligibilityType.FreeSchoolMeals, CheckEligibilityStatus.notEligible);
+
+            var postApplicationResponse = await _sut.PostApplication(request);
             var requestSearch = new ApplicationRequestSearch
             {
                 PageNumber = -1, // Edge case: Negative page number
@@ -465,39 +398,71 @@ namespace CheckYourEligibility.ServiceUnitTests
             response.Data.Count().Should().BeLessOrEqualTo(10); // Ensures correct page size is respected
         }
 
-        [Test]
-        public async Task Given_ExcessivelyLargePageSize_GetApplications_Should_LimitToMaxPageSize()
-        {
-            // Arrange
-            var maxPageSize = 100; // Define  maximum allowable page size
-            var requestSearch = new ApplicationRequestSearch
-            {
-                PageNumber = 1,  // Valid page number
-                PageSize = 1000, // Edge case: Excessively large page size
-                Data = new ApplicationRequestSearchData()
-            };
-
-            // Act
-            var response = await _sut.GetApplications(requestSearch);
-
-            // Assert
-            response.Data.Should().NotBeEmpty(); // Ensures data is returned
-            response.Data.Count().Should().BeLessOrEqualTo(maxPageSize); // Ensures it doesn't exceed the max allowed page size
-        }
-
-        private async Task AddHash(ApplicationRequestData request, CheckEligibilityStatus status = CheckEligibilityStatus.eligible)
+        private async Task AddHash(CheckProcessData request, CheckEligibilityStatus status = CheckEligibilityStatus.eligible)
         {
             _moqAudit.Setup(x => x.AuditAdd(It.IsAny<AuditData>())).ReturnsAsync("");
-            var dt = DateTime.ParseExact(request.ParentDateOfBirth, "yyyy-MM-dd", null, DateTimeStyles.None);
-            await _HashService.Create(new EligibilityCheck
+          
+            var processItem = new CheckProcessData
             {
-                Created = DateTime.Now,
-                EligibilityCheckID = Guid.NewGuid().ToString(),
-                LastName = request.ParentLastName,
-                NASSNumber = request.ParentNationalInsuranceNumber,
-                DateOfBirth = dt
-            }, status, Domain.Enums.ProcessEligibilityCheckSource.HO,
-            new AuditData { Type = Domain.Enums.AuditType.Check });
+                DateOfBirth = request.DateOfBirth,
+                LastName = request.LastName,
+                NationalAsylumSeekerServiceNumber = request.NationalAsylumSeekerServiceNumber,
+                NationalInsuranceNumber = request.NationalInsuranceNumber,
+                Type = new CheckEligibilityRequestData_Fsm().Type
+            };
+           var hashId =  await _HashService.Create(processItem, status, ProcessEligibilityCheckSource.HO,
+            new AuditData { Type = AuditType.Check });
         }
+
+        private async Task CreateUserSchoolAndLa()
+        {
+            var la = _fixture.Create<LocalAuthority>();
+            School = _fixture.Create<School>();
+            School.LocalAuthorityId = la.LocalAuthorityId;
+         
+            _fakeInMemoryDb.LocalAuthorities.Add(la);
+            _fakeInMemoryDb.Schools.Add(School);
+            User = _fixture.Create<Data.Models.User>();
+            _fakeInMemoryDb.Users.Add(User);
+            await _fakeInMemoryDb.SaveChangesAsync();
+
+        }
+
+        private async Task<ApplicationRequestData> CreateApplication(CheckEligibilityType type, CheckEligibilityStatus checkEligibilityStatus)
+        {
+
+            var request = _fixture.Create<ApplicationRequestData>();
+            request.Type = type;
+            request.ParentDateOfBirth = "1970-02-01";
+            request.ChildDateOfBirth = "2007-02-01";
+            request.ParentNationalAsylumSeekerServiceNumber = null;
+            request.UserId = User.UserID;
+            request.School = School.SchoolId;
+
+            await AddHash(new CheckProcessData
+            {
+                DateOfBirth = request.ParentDateOfBirth,
+                LastName = request.ParentLastName,
+                Type = request.Type,
+                NationalAsylumSeekerServiceNumber = request.ParentNationalAsylumSeekerServiceNumber,
+                NationalInsuranceNumber = request.ParentNationalInsuranceNumber,
+
+            }, checkEligibilityStatus);
+            await _fakeInMemoryDb.SaveChangesAsync();
+            return request;
+        }
+
+
+        private async Task ClearDownData()
+        {
+            _fakeInMemoryDb.Applications.RemoveRange(_fakeInMemoryDb.Applications);
+            _fakeInMemoryDb.Schools.RemoveRange(_fakeInMemoryDb.Schools);
+            _fakeInMemoryDb.LocalAuthorities.RemoveRange(_fakeInMemoryDb.LocalAuthorities);
+            _fakeInMemoryDb.Users.RemoveRange(_fakeInMemoryDb.Users);
+            _fakeInMemoryDb.SaveChanges();
+
+            await _fakeInMemoryDb.SaveChangesAsync();
+        }
+
     }
 }

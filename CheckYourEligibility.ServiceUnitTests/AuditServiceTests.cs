@@ -34,7 +34,7 @@ namespace CheckYourEligibility.ServiceUnitTests
 
             _fakeInMemoryDb = new EligibilityCheckContext(options);
 
-            var config = new MapperConfiguration(cfg => cfg.AddProfile<FsmMappingProfile>());
+            var config = new MapperConfiguration(cfg => cfg.AddProfile<MappingProfile>());
             _mapper = config.CreateMapper();
             var configForSmsApi = new Dictionary<string, string>
             {

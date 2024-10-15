@@ -2,7 +2,6 @@
 
 using Ardalis.GuardClauses;
 using AutoMapper;
-using Azure;
 using Azure.Storage.Queues;
 using Azure.Storage.Queues.Models;
 using CheckYourEligibility.Data.Models;
@@ -20,28 +19,29 @@ using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
 
 namespace CheckYourEligibility.Services
 {
-    public partial class FsmCheckEligibilityService : BaseService, IFsmCheckEligibility
+    public partial class CheckEligibilityService : BaseService, ICheckEligibility
     {
+        private QueueClient _queueClientStandard;
+        private QueueClient _queueClientBulk;
+        private const int SurnameCheckCharachters = 3;
         private  readonly ILogger _logger;
         private readonly IEligibilityCheckContext _db;
         protected readonly IMapper _mapper;
         protected readonly IAudit _audit;
-        private  QueueClient _queueClientStandard;
-        private QueueClient _queueClientBulk;
-        private const int SurnameCheckCharachters = 3;
-     
+            
         private readonly IDwpService _dwpService;
         private readonly IHash _hashService;
 
-        public FsmCheckEligibilityService(ILoggerFactory logger, IEligibilityCheckContext dbContext, IMapper mapper, QueueServiceClient queueClientService,
+        public CheckEligibilityService(ILoggerFactory logger, IEligibilityCheckContext dbContext, IMapper mapper, QueueServiceClient queueClientService,
             IConfiguration configuration, IDwpService dwpService, IAudit audit, IHash hashService) : base()
         {
-            _logger = logger.CreateLogger("ServiceFsmCheckEligibility");
+            _logger = logger.CreateLogger("ServiceCheckEligibility");
             _db = Guard.Against.Null(dbContext);
             _mapper = Guard.Against.Null(mapper);
             _dwpService = Guard.Against.Null(dwpService);
@@ -52,25 +52,7 @@ namespace CheckYourEligibility.Services
             setQueueBulk(configuration.GetValue<string>("QueueFsmCheckBulk"), queueClientService);
         }
 
-        [ExcludeFromCodeCoverage]
-        private void setQueueStandard(string queName, QueueServiceClient queueClientService)
-        {
-            if (queName != "notSet")
-            {
-                _queueClientStandard = queueClientService.GetQueueClient(queName);
-            }
-        }
-
-        [ExcludeFromCodeCoverage]
-        private void setQueueBulk(string queName, QueueServiceClient queueClientService)
-        {
-            if (queName != "notSet")
-            {
-                _queueClientBulk = queueClientService.GetQueueClient(queName);
-            }
-        }
-
-        public async Task PostCheck(IEnumerable<CheckEligibilityRequestDataFsm> data, string groupId)
+        public async Task PostCheck<T>(IEnumerable<T> data, string groupId)
         {
             
             foreach (var item in data)
@@ -79,19 +61,26 @@ namespace CheckYourEligibility.Services
             }
         }
 
-        public async Task<PostCheckResult> PostCheck(CheckEligibilityRequestDataFsm data, string? group = null)
-        {
+        public async Task<PostCheckResult> PostCheck<T>(T data, string? group = null)
+        {    
+
             var item = _mapper.Map<EligibilityCheck>(data);
+
             try
             {
+                var baseType = data as CheckEligibilityRequestDataBase;
+                item.CheckData = JsonConvert.SerializeObject(data);
+                
+                item.Type = baseType.Type;
+
                 item.Group = group;
                 item.EligibilityCheckID = Guid.NewGuid().ToString();
                 item.Created = DateTime.UtcNow;
                 item.Updated = DateTime.UtcNow;
 
                 item.Status = CheckEligibilityStatus.queuedForProcessing;
-                item.Type = CheckEligibilityType.FreeSchoolMeals;
-                var checkHashResult = await  _hashService.Exists(item);
+                
+                var checkHashResult = await  _hashService.Exists(JsonConvert.DeserializeObject<CheckProcessData>(item.CheckData));
                 if (checkHashResult != null)
                 {
                     item.Status = checkHashResult.Outcome;
@@ -115,42 +104,6 @@ namespace CheckYourEligibility.Services
             }
         }
 
-        [ExcludeFromCodeCoverage(Justification = "Queue is external dependency.")]
-        private async Task SendMessage(EligibilityCheck item)
-        {
-            if (_queueClientStandard != null)
-            {
-                if (item.Group.IsNullOrEmpty())
-                {
-                    await _queueClientStandard.SendMessageAsync(
-                                        JsonConvert.SerializeObject(new QueueMessageCheck()
-                                        {
-                                            Type = item.Type.ToString(),
-                                            Guid = item.EligibilityCheckID,
-                                            ProcessUrl = $"{FSMLinks.ProcessLink}{item.EligibilityCheckID}",
-                                            SetStatusUrl = $"{FSMLinks.GetLink}{item.EligibilityCheckID}/status"
-                                        }));
-
-                    LogQueueCount(_queueClientStandard);
-
-                }
-                else
-                {
-                    await _queueClientBulk.SendMessageAsync(
-                                JsonConvert.SerializeObject(new QueueMessageCheck()
-                                {
-                                    Type = item.Type.ToString(),
-                                    Guid = item.EligibilityCheckID,
-                                    ProcessUrl = $"{FSMLinks.ProcessLink}{item.EligibilityCheckID}",
-                                    SetStatusUrl = $"{FSMLinks.GetLink}{item.EligibilityCheckID}/status"
-                                }));
-                    LogQueueCount(_queueClientBulk);
-                }
-            }
-        }
-
-        
-
         public async Task<CheckEligibilityStatus?> GetStatus(string guid)
         {
             var result = await _db.CheckEligibilities.FirstOrDefaultAsync(x=> x.EligibilityCheckID == guid);
@@ -165,51 +118,29 @@ namespace CheckYourEligibility.Services
         {         
             var result = await _db.CheckEligibilities.FirstOrDefaultAsync(x => x.EligibilityCheckID == guid);
             
-            if (result != null)
+            if (result != null && result.Type != CheckEligibilityType.None)
             {
-                result.LastName = result.LastName.ToUpper();
+                var checkData = GetCheckProcessData(result.Type,result.CheckData);
                 if (result.Status != CheckEligibilityStatus.queuedForProcessing)
                 {
                     LogApiEvent(this.GetType().Name, guid, $"CheckItem not queuedForProcessing. {GetCurrentMethod()}");
-                    throw new ProcessCheckException($"Error checkItem {guid} not queuedForProcessing.");
+                    throw new ProcessCheckException($"Error checkItem {guid} not queuedForProcessing. {result.Status}");
                 }
-                var source = ProcessEligibilityCheckSource.HMRC;
-                CheckEligibilityStatus checkResult = CheckEligibilityStatus.parentNotFound;
-                if (!result.NINumber.IsNullOrEmpty())
+
+                switch (result.Type)
                 {
-                    checkResult = await HMRC_Check(result);
-                    if (checkResult == CheckEligibilityStatus.parentNotFound)
-                    {
-                        checkResult = await DWP_Check(result);
-                        source = ProcessEligibilityCheckSource.DWP;
-                    }
+                    case CheckEligibilityType.None:
+                        {
+                            throw new ProcessCheckException("Unknown Type");
+                        }
+                    case CheckEligibilityType.FreeSchoolMeals:
+                        {
+                            await Process_StandardCheck(guid, auditDataTemplate, result, checkData);
+                        }
+                        break;
+                    default:
+                        break;
                 }
-                else if (!result.NASSNumber.IsNullOrEmpty())
-                {
-                    checkResult = await HO_Check(result);
-                    source = ProcessEligibilityCheckSource.HO;
-                }
-                result.Status = checkResult;
-                result.Updated = DateTime.UtcNow;
-               
-                if (checkResult == CheckEligibilityStatus.DwpError)
-                {
-                    // Revert status back and do not save changes
-                    result.Status = CheckEligibilityStatus.queuedForProcessing;
-                    LogApiEvent(this.GetType().Name, guid, "Dwp Error", $"There has been an error calling DWP, Request GUID:-{guid} ");
-                    TrackMetric($"Dwp Error", 1);
-                }
-                else
-                {
-                    await _hashService.Create(result, checkResult, source, auditDataTemplate);
-                   
-                    var updates = await _db.SaveChangesAsync();
-                }
-                
-                TrackMetric($"FSM Check:-{result.Status}", 1);
-                TrackMetric($"FSM Check", 1);
-                var processingTime =  (DateTime.Now.ToUniversalTime() - result.Created.ToUniversalTime()).Seconds;
-                TrackMetric($"Check ProcessingTime (Seconds)", processingTime);
                 return result.Status;
             }
             else
@@ -243,10 +174,10 @@ namespace CheckYourEligibility.Services
             return null;
         }
 
-        public  static string GetHash(EligibilityCheck item)
+        public  static string GetHash(CheckProcessData item)
         {
-            var key  = string.IsNullOrEmpty(item.NINumber) ? item.NASSNumber.ToUpper() : item.NINumber.ToUpper();
-            var input = $"{item.LastName.ToUpper()}{key}{item.DateOfBirth.ToString("d")}{item.Type}";
+            var key  = string.IsNullOrEmpty(item.NationalInsuranceNumber) ? item.NationalAsylumSeekerServiceNumber.ToUpper() : item.NationalInsuranceNumber.ToUpper();
+            var input = $"{item.LastName.ToUpper()}{key}{item.DateOfBirth}{item.Type}";
             var inputBytes = Encoding.UTF8.GetBytes(input);
             var inputHash = SHA256.HashData(inputBytes);
             return Convert.ToHexString(inputHash);
@@ -280,6 +211,121 @@ namespace CheckYourEligibility.Services
         }
 
         #region Private
+        [ExcludeFromCodeCoverage]
+        private void setQueueStandard(string queName, QueueServiceClient queueClientService)
+        {
+            if (queName != "notSet")
+            {
+                _queueClientStandard = queueClientService.GetQueueClient(queName);
+            }
+        }
+
+        [ExcludeFromCodeCoverage]
+        private void setQueueBulk(string queName, QueueServiceClient queueClientService)
+        {
+            if (queName != "notSet")
+            {
+                _queueClientBulk = queueClientService.GetQueueClient(queName);
+            }
+        }
+
+        [ExcludeFromCodeCoverage(Justification = "Queue is external dependency.")]
+        private async Task SendMessage(EligibilityCheck item)
+        {
+            if (_queueClientStandard != null)
+            {
+                if (item.Group.IsNullOrEmpty())
+                {
+                    await _queueClientStandard.SendMessageAsync(
+                                        JsonConvert.SerializeObject(new QueueMessageCheck()
+                                        {
+                                            Type = item.Type.ToString(),
+                                            Guid = item.EligibilityCheckID,
+                                            ProcessUrl = $"{CheckLinks.ProcessLink}{item.EligibilityCheckID}",
+                                            SetStatusUrl = $"{CheckLinks.GetLink}{item.EligibilityCheckID}/status"
+                                        }));
+
+                    LogQueueCount(_queueClientStandard);
+
+                }
+                else
+                {
+                    await _queueClientBulk.SendMessageAsync(
+                                JsonConvert.SerializeObject(new QueueMessageCheck()
+                                {
+                                    Type = item.Type.ToString(),
+                                    Guid = item.EligibilityCheckID,
+                                    ProcessUrl = $"{CheckLinks.ProcessLink}{item.EligibilityCheckID}",
+                                    SetStatusUrl = $"{CheckLinks.GetLink}{item.EligibilityCheckID}/status"
+                                }));
+                    LogQueueCount(_queueClientBulk);
+                }
+            }
+        }
+
+
+        private async Task Process_StandardCheck(string guid, AuditData auditDataTemplate, EligibilityCheck? result, CheckProcessData checkData)
+        {
+            var source = ProcessEligibilityCheckSource.HMRC;
+            CheckEligibilityStatus checkResult = CheckEligibilityStatus.parentNotFound;
+            if (!checkData.NationalInsuranceNumber.IsNullOrEmpty())
+            {
+                checkResult = await HMRC_Check(checkData);
+                if (checkResult == CheckEligibilityStatus.parentNotFound)
+                {
+                    checkResult = await DWP_Check(checkData);
+                    source = ProcessEligibilityCheckSource.DWP;
+                }
+            }
+            else if (!checkData.NationalAsylumSeekerServiceNumber.IsNullOrEmpty())
+            {
+                checkResult = await HO_Check(checkData);
+                source = ProcessEligibilityCheckSource.HO;
+            }
+            result.Status = checkResult;
+            result.Updated = DateTime.UtcNow;
+
+            if (checkResult == CheckEligibilityStatus.DwpError)
+            {
+                // Revert status back and do not save changes
+                result.Status = CheckEligibilityStatus.queuedForProcessing;
+                LogApiEvent(this.GetType().Name, guid, "Dwp Error", $"There has been an error calling DWP, Request GUID:-{guid} ");
+                TrackMetric($"Dwp Error", 1);
+            }
+            else
+            {
+              result.EligibilityCheckHashID =  await _hashService.Create(checkData, checkResult, source, auditDataTemplate);
+              await _db.SaveChangesAsync();
+            }
+
+            TrackMetric($"FSM Check:-{result.Status}", 1);
+            TrackMetric($"FSM Check", 1);
+            var processingTime = (DateTime.Now.ToUniversalTime() - result.Created.ToUniversalTime()).Seconds;
+            TrackMetric($"Check ProcessingTime (Seconds)", processingTime);
+        }
+
+        private CheckProcessData GetCheckProcessData(CheckEligibilityType type, string data)
+        {
+            switch (type)
+            {
+                case CheckEligibilityType.None:
+                    throw new InvalidDataException("Type none not supported.");
+                case CheckEligibilityType.FreeSchoolMeals:
+                    {
+                        var checkItem = JsonConvert.DeserializeObject<CheckEligibilityRequestData_Fsm>(data);
+                        return new CheckProcessData
+                        {
+                            DateOfBirth = checkItem.DateOfBirth,
+                            LastName = checkItem.LastName.ToUpper(),
+                            NationalAsylumSeekerServiceNumber = checkItem.NationalAsylumSeekerServiceNumber,
+                            NationalInsuranceNumber = checkItem.NationalInsuranceNumber,
+                            Type = type,
+                        };
+                    }
+                default:
+                    throw new NotImplementedException($"Type:-{type} not supported.");
+            }
+        }
 
         [ExcludeFromCodeCoverage(Justification = "Queue is external dependency.")]
         private void LogQueueCount(QueueClient queue)
@@ -291,24 +337,24 @@ namespace CheckYourEligibility.Services
             TrackMetric($"QueueCount:-{_queueClientStandard.Name}", cachedMessagesCount);
         }
 
-        private async Task<CheckEligibilityStatus> HO_Check(EligibilityCheck data)
+        private async Task<CheckEligibilityStatus> HO_Check(CheckProcessData data)
         {
             var checkReults = _db.FreeSchoolMealsHO.Where(x =>
-           x.NASS == data.NASSNumber
-           && x.DateOfBirth == data.DateOfBirth).Select(x => x.LastName);
+           x.NASS == data.NationalAsylumSeekerServiceNumber
+           && x.DateOfBirth ==DateTime.ParseExact(data.DateOfBirth, "yyyy-MM-dd", null, DateTimeStyles.None)).Select(x => x.LastName);
             return CheckSurname(data.LastName, checkReults);
         }
 
-        private async Task<CheckEligibilityStatus> HMRC_Check(EligibilityCheck data)
+        private async Task<CheckEligibilityStatus> HMRC_Check(CheckProcessData data )
         {
             var checkReults = _db.FreeSchoolMealsHMRC.Where(x =>
-            x.FreeSchoolMealsHMRCID == data.NINumber
-            && x.DateOfBirth == data.DateOfBirth).Select(x => x.Surname);
+            x.FreeSchoolMealsHMRCID == data.NationalInsuranceNumber
+            && x.DateOfBirth ==DateTime.ParseExact(data.DateOfBirth, "yyyy-MM-dd", null, DateTimeStyles.None)).Select(x => x.Surname);
 
-            return CheckSurname(data.LastName, checkReults);
+            return CheckSurname(data.LastName, checkReults) ;
         }
 
-        private async Task<CheckEligibilityStatus> DWP_Check(EligibilityCheck data)
+        private async Task<CheckEligibilityStatus> DWP_Check(CheckProcessData data)
         {
             var checkResult = CheckEligibilityStatus.parentNotFound;
             _logger.LogInformation($"Dwp check use ECS service:- {_dwpService.UseEcsforChecks}");
@@ -325,7 +371,7 @@ namespace CheckYourEligibility.Services
         }
 
         
-        private async Task<CheckEligibilityStatus> DwpEcsFsmCheck(EligibilityCheck data, CheckEligibilityStatus checkResult)
+        private async Task<CheckEligibilityStatus> DwpEcsFsmCheck(CheckProcessData data, CheckEligibilityStatus checkResult)
         {
             //check for benefit
             var result = await _dwpService.EcsFsmCheck(data);
@@ -360,7 +406,7 @@ namespace CheckYourEligibility.Services
         }
 
 
-        private async Task<CheckEligibilityStatus> DwpCitizenCheck(EligibilityCheck data, CheckEligibilityStatus checkResult)
+        private async Task<CheckEligibilityStatus> DwpCitizenCheck(CheckProcessData data, CheckEligibilityStatus checkResult)
         {
             var citizenRequest = new CitizenMatchRequest
             {
@@ -371,8 +417,8 @@ namespace CheckYourEligibility.Services
                     Attributes = new CitizenMatchRequest.CitizenMatchRequest_Attributes
                     {
                         LastName = data.LastName,
-                        NinoFragment = data.NINumber,
-                        DateOfBirth = data.DateOfBirth.ToString("yyyy-MM-dd")
+                        NinoFragment = data.NationalInsuranceNumber,
+                        DateOfBirth = data.DateOfBirth
                     }
                 }
             };

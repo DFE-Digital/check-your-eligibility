@@ -19,15 +19,15 @@ namespace CheckYourEligibility.APIUnitTests
 {
     public class MoqDwpControllerTests : TestBase.TestBase
     {
-        private Mock<IFsmCheckEligibility> _mockService;
-        private ILogger<FreeSchoolMealsController> _mockLogger;
+        private Mock<ICheckEligibility> _mockService;
+        private ILogger<EligibilityCheckController> _mockLogger;
         private MoqDWPController _sut;
 
         [SetUp]
         public void Setup()
         {
-            _mockService = new Mock<IFsmCheckEligibility>(MockBehavior.Strict);
-            _mockLogger = Mock.Of<ILogger<FreeSchoolMealsController>>();
+            _mockService = new Mock<ICheckEligibility>(MockBehavior.Strict);
+            _mockLogger = Mock.Of<ILogger<EligibilityCheckController>>();
             _sut = new MoqDWPController(_mockLogger, _mockService.Object);
         }
 
@@ -41,12 +41,12 @@ namespace CheckYourEligibility.APIUnitTests
         public void Constructor_throws_argumentNullException_when_service_is_null()
         {
             // Arrange
-            IFsmCheckEligibility checkService = null;
-            IFsmApplication applicationService = null;
+            ICheckEligibility checkService = null;
+            IApplication applicationService = null;
             IAudit auditService = null;
 
             // Act
-            Action act = () => new FreeSchoolMealsController(_mockLogger, checkService, applicationService, auditService);
+            Action act = () => new EligibilityCheckController(_mockLogger, checkService,  auditService);
 
             // Assert
             act.Should().ThrowExactly<ArgumentNullException>().And.Message.Should().EndWithEquivalentOf("Value cannot be null. (Parameter 'checkService')");
