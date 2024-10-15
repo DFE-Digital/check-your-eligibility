@@ -35,12 +35,12 @@ namespace CheckYourEligibility.WebApp.Controllers
         /// <returns></returns>
         [ProducesResponseType(typeof(ApplicationSaveItemResponse), (int)HttpStatusCode.Created)]
         [ProducesResponseType((int)HttpStatusCode.BadRequest)]
-        [HttpPost("FreeSchoolMeals")]
+        [HttpPost()]
         public async Task<ActionResult> Application([FromBody] ApplicationRequest model)
         {
-            if (model == null || model.Data == null || model.Data.Type != Domain.Enums.CheckEligibilityType.FreeSchoolMeals)
+            if (model == null || model.Data == null )
             {
-                return BadRequest(new MessageResponse { Data = "Invalid request, data is required. Type should be FSM" });
+                return BadRequest(new MessageResponse { Data = "Invalid request, data is required" });
             }
             model.Data.ParentNationalInsuranceNumber = model.Data.ParentNationalInsuranceNumber?.ToUpper();
             model.Data.ParentNationalAsylumSeekerServiceNumber = model.Data.ParentNationalAsylumSeekerServiceNumber?.ToUpper();
