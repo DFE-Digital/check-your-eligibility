@@ -142,7 +142,7 @@ namespace CheckYourEligibility.APIUnitTests
             request.Data.NationalInsuranceNumber = "ns738356d";
             request.Data.DateOfBirth = "1970-02-01";
             request.Data.NationalAsylumSeekerServiceNumber = "789";
-            var expectedResult = new BadRequestObjectResult(new MessageResponse { Data = Domain.Constants.ErrorMessages.ApplicationValidationMessages.NI_and_NASS });
+            var expectedResult = new BadRequestObjectResult(new MessageResponse { Data = Domain.Constants.ErrorMessages.ValidationMessages.NI_and_NASS });
 
             // Act
             var response = _sut.CheckEligibility(request);
@@ -159,7 +159,7 @@ namespace CheckYourEligibility.APIUnitTests
             request.Data.NationalInsuranceNumber = string.Empty;
             request.Data.DateOfBirth = "1970-02-01";
             request.Data.NationalAsylumSeekerServiceNumber = string.Empty;
-            var expectedResult = new BadRequestObjectResult(new MessageResponse { Data = Domain.Constants.ErrorMessages.ApplicationValidationMessages.NI_or_NASS });
+            var expectedResult = new BadRequestObjectResult(new MessageResponse { Data = Domain.Constants.ErrorMessages.ValidationMessages.NI_or_NASS });
 
             // Act
             var response = _sut.CheckEligibility(request);
@@ -176,7 +176,7 @@ namespace CheckYourEligibility.APIUnitTests
             request.Data.NationalInsuranceNumber = "123";
             request.Data.DateOfBirth = "1970-02-01";
             request.Data.NationalAsylumSeekerServiceNumber = "";
-            var expectedResult = new BadRequestObjectResult(new MessageResponse { Data = Domain.Constants.ErrorMessages.ApplicationValidationMessages.NI });
+            var expectedResult = new BadRequestObjectResult(new MessageResponse { Data = Domain.Constants.ErrorMessages.ValidationMessages.NI });
 
             // Act
             var response = _sut.CheckEligibility(request);
@@ -193,7 +193,7 @@ namespace CheckYourEligibility.APIUnitTests
             request.Data.NationalInsuranceNumber = "ns738356d";
             request.Data.DateOfBirth = "01/02/1970";
             request.Data.NationalAsylumSeekerServiceNumber = "";
-            var expectedResult = new BadRequestObjectResult(new MessageResponse { Data = Domain.Constants.ErrorMessages.ApplicationValidationMessages.DOB });
+            var expectedResult = new BadRequestObjectResult(new MessageResponse { Data = Domain.Constants.ErrorMessages.ValidationMessages.DOB });
 
             // Act
             var response = _sut.CheckEligibility(request);
@@ -212,7 +212,7 @@ namespace CheckYourEligibility.APIUnitTests
             request.Data.DateOfBirth = "1970-02-01";
             request.Data.LastName = string.Empty;
             request.Data.NationalAsylumSeekerServiceNumber = string.Empty;
-            var expectedResult = new BadRequestObjectResult(new MessageResponse { Data = Domain.Constants.ErrorMessages.ApplicationValidationMessages.LastName });
+            var expectedResult = new BadRequestObjectResult(new MessageResponse { Data = Domain.Constants.ErrorMessages.ValidationMessages.LastName });
             
             // Act
             var response = _sut.CheckEligibility(request);

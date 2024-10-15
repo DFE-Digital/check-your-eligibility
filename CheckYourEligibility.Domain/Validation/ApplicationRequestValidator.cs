@@ -17,38 +17,38 @@ namespace FeatureManagement.Domain.Validation
                 .WithMessage("data is required");
 
             RuleFor(x => x.Data.ParentFirstName)
-               .NotEmpty().WithMessage(ApplicationValidationMessages.FirstName);
+               .NotEmpty().WithMessage(ValidationMessages.FirstName);
             RuleFor(x => x.Data.ParentLastName)
-               .NotEmpty().WithMessage(ApplicationValidationMessages.LastName);
+               .NotEmpty().WithMessage(ValidationMessages.LastName);
             RuleFor(x => x.Data.ChildFirstName)
-              .NotEmpty().WithMessage(ApplicationValidationMessages.ChildFirstName);
+              .NotEmpty().WithMessage(ValidationMessages.ChildFirstName);
             RuleFor(x => x.Data.ChildLastName)
-               .NotEmpty().WithMessage(ApplicationValidationMessages.ChildLastName);
+               .NotEmpty().WithMessage(ValidationMessages.ChildLastName);
 
             RuleFor(x => x.Data.ParentDateOfBirth)
                .NotEmpty()
                .Must(DataValidation.BeAValidDate)
-               .WithMessage(ApplicationValidationMessages.DOB);
+               .WithMessage(ValidationMessages.DOB);
             RuleFor(x => x.Data.ChildDateOfBirth)
                .NotEmpty()
                .Must(DataValidation.BeAValidDate)
-               .WithMessage(ApplicationValidationMessages.ChildDOB);
+               .WithMessage(ValidationMessages.ChildDOB);
 
             When(x => !string.IsNullOrEmpty(x.Data.ParentNationalInsuranceNumber), () =>
             {
                 RuleFor(x => x.Data.ParentNationalAsylumSeekerServiceNumber)
                     .Empty()
-                    .WithMessage(ApplicationValidationMessages.NI_and_NASS);
+                    .WithMessage(ValidationMessages.NI_and_NASS);
                 RuleFor(x => x.Data.ParentNationalInsuranceNumber)
                 .NotEmpty()
                    .Must(DataValidation.BeAValidNi)
-                   .WithMessage(ApplicationValidationMessages.NI);
+                   .WithMessage(ValidationMessages.NI);
 
             }).Otherwise(() =>
             {
                 RuleFor(x => x.Data.ParentNationalAsylumSeekerServiceNumber)
                     .NotEmpty()
-                   .WithMessage(ApplicationValidationMessages.NI_or_NASS);
+                   .WithMessage(ValidationMessages.NI_or_NASS);
             });
 
         }
