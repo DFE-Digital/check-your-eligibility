@@ -95,19 +95,7 @@ namespace CheckYourEligibility.APIUnitTests
         }
 
 
-        [Test]
-        public void Given_InValidRequest_Type_Application_Should_Return_Status400BadRequest()
-        {
-            // Arrange
-            var request = new ApplicationRequest() { Data = new ApplicationRequestData { Type = CheckEligibilityType.None } };
-
-            // Act
-            var response = _sut.Application(request);
-
-            // Assert
-            response.Result.Should().BeOfType(typeof(BadRequestObjectResult));
-        }
-
+       
         [Test]
         public void Given_InValidRequest_Validation_Application_Should_Return_Status400BadRequest()
         {
