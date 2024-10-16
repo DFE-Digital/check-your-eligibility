@@ -26,12 +26,12 @@ namespace CheckYourEligibility.ServiceUnitTests
 {
 
     [ExcludeFromCodeCoverage(Justification = "test")]
-    public class FsmApplicationServiceTests : TestBase.TestBase
+    public class ApplicationServiceTests : TestBase.TestBase
     {
         private IEligibilityCheckContext _fakeInMemoryDb;
         private IMapper _mapper;
         private IConfiguration _configuration;
-        private FsmApplicationService _sut;
+        private ApplicationService _sut;
         private IHash _HashService;
         private Mock<IAudit> _moqAudit;
 
@@ -62,7 +62,7 @@ namespace CheckYourEligibility.ServiceUnitTests
 
             _moqAudit = new Mock<IAudit>(MockBehavior.Strict);
             _HashService = new HashService(new NullLoggerFactory(), _fakeInMemoryDb, _configuration, _moqAudit.Object);
-            _sut = new FsmApplicationService(new NullLoggerFactory(), _fakeInMemoryDb, _mapper, _configuration);
+            _sut = new ApplicationService(new NullLoggerFactory(), _fakeInMemoryDb, _mapper, _configuration);
 
         }
 
@@ -76,7 +76,7 @@ namespace CheckYourEligibility.ServiceUnitTests
         {
             // Arrange
             // Act
-            Action act = () => new FsmApplicationService(new NullLoggerFactory(), null, _mapper, _configuration);
+            Action act = () => new ApplicationService(new NullLoggerFactory(), null, _mapper, _configuration);
 
             // Assert
             act.Should().ThrowExactly<ArgumentNullException>().And.Message.Should().EndWithEquivalentOf("Value cannot be null. (Parameter 'dbContext')");
@@ -87,7 +87,7 @@ namespace CheckYourEligibility.ServiceUnitTests
         {
             // Arrange
             var db = new Mock<IEligibilityCheckContext>(MockBehavior.Strict);
-            var svc = new FsmApplicationService(new NullLoggerFactory(), db.Object, _mapper, _configuration);
+            var svc = new ApplicationService(new NullLoggerFactory(), db.Object, _mapper, _configuration);
             db.Setup(x => x.Applications.AddAsync(It.IsAny<Application>(), It.IsAny<CancellationToken>())).ThrowsAsync(new Exception());
             var request = _fixture.Create<ApplicationRequestData>();
 
@@ -132,6 +132,25 @@ namespace CheckYourEligibility.ServiceUnitTests
 
             // Assert
             response.Result.Should().BeOfType<ApplicationResponse>();
+        }
+        [Test]
+        public async Task Given_PostApplication_InvalidSchool_Should_Return_Exception()
+        {
+            //
+            await ClearDownData();
+            await CreateUserSchoolAndLa();
+
+            var request = await CreateApplication(CheckEligibilityType.FreeSchoolMeals, CheckEligibilityStatus.notEligible);
+            request.School = -1;
+            try
+            {
+                await _sut.PostApplication(request);
+            }
+            catch (Exception ex)
+            {
+
+                ex.Message.Should().BeEquivalentTo("Unable to find school:- -1, Sequence contains no elements");
+            }
         }
 
         [Test]
@@ -304,6 +323,42 @@ namespace CheckYourEligibility.ServiceUnitTests
             // Assert
             response.Data.Should().NotBeEmpty();
         }
+        [Test]
+        public async Task Given_ValidRequest_GetApplicationsWithNas_AllSearchCritieria_Should_Return_results()
+        {
+            // Arrange
+            await ClearDownData();
+            await CreateUserSchoolAndLa();
+
+            var request = await CreateApplicationWithNas(CheckEligibilityType.FreeSchoolMeals, CheckEligibilityStatus.notEligible);
+
+            var postApplicationResponse = await _sut.PostApplication(request);
+
+            Enum.TryParse(postApplicationResponse.Status, out Domain.Enums.ApplicationStatus statusItem);
+
+            var requestSearch = new ApplicationRequestSearch
+            {
+                Data = new ApplicationRequestSearchData
+                {
+                    Statuses = [statusItem],
+                    School = School.SchoolId,
+                    LocalAuthority = School.LocalAuthorityId,
+                    ParentDateOfBirth = postApplicationResponse.ParentDateOfBirth,
+                    ParentLastName = postApplicationResponse.ParentLastName,
+                    ParentNationalAsylumSeekerServiceNumber = postApplicationResponse.ParentNationalAsylumSeekerServiceNumber,
+                    ParentNationalInsuranceNumber = postApplicationResponse.ParentNationalInsuranceNumber,
+                    Reference = postApplicationResponse.Reference,
+                    ChildDateOfBirth = postApplicationResponse.ChildDateOfBirth,
+                    ChildLastName = postApplicationResponse.ChildLastName
+                }
+            };
+
+            // Act
+            var response = await _sut.GetApplications(requestSearch);
+
+            // Assert
+            response.Data.Should().NotBeEmpty();
+        }
 
         [Test]
         public async Task Given_ValidRequest_GetApplications_Should_Return_results()
@@ -451,6 +506,31 @@ namespace CheckYourEligibility.ServiceUnitTests
             await _fakeInMemoryDb.SaveChangesAsync();
             return request;
         }
+
+        private async Task<ApplicationRequestData> CreateApplicationWithNas(CheckEligibilityType type, CheckEligibilityStatus checkEligibilityStatus)
+        {
+
+            var request = _fixture.Create<ApplicationRequestData>();
+            request.Type = type;
+            request.ParentDateOfBirth = "1970-02-01";
+            request.ChildDateOfBirth = "2007-02-01";
+            request.ParentNationalInsuranceNumber = null;
+            request.UserId = User.UserID;
+            request.School = School.SchoolId;
+
+            await AddHash(new CheckProcessData
+            {
+                DateOfBirth = request.ParentDateOfBirth,
+                LastName = request.ParentLastName,
+                Type = request.Type,
+                NationalAsylumSeekerServiceNumber = request.ParentNationalAsylumSeekerServiceNumber,
+                NationalInsuranceNumber = request.ParentNationalInsuranceNumber,
+
+            }, checkEligibilityStatus);
+            await _fakeInMemoryDb.SaveChangesAsync();
+            return request;
+        }
+
 
 
         private async Task ClearDownData()

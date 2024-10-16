@@ -221,6 +221,23 @@ namespace CheckYourEligibility.APIUnitTests
             response.Result.Should().BeEquivalentTo(expectedResult);
         }
 
+
+        [Test]
+        public async Task Given_Exception_Return_500()
+        {
+            // Arrange
+            var request = _fixture.Create<CheckEligibilityRequestData_Fsm>();
+
+            var expectedResult = new StatusCodeResult(500);
+
+            // Act
+            var response = await _sut.PostCheck(request);
+
+            // Assert
+            response.Should().BeEquivalentTo(expectedResult);
+
+        }
+
         [Test]
         public void Given_InValid_guid_CheckEligibilityStatus_Should_Return_StatusNotFound()
         {

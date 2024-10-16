@@ -31,7 +31,7 @@ namespace CheckYourEligibility.ServiceUnitTests
 {
 
 
-    public class FsmCheckEligibilityServiceTests : TestBase.TestBase
+    public class CheckEligibilityServiceTests : TestBase.TestBase
     {
         private IEligibilityCheckContext _fakeInMemoryDb;
         private IMapper _mapper;
