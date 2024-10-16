@@ -1,4 +1,5 @@
 using AutoFixture;
+using Azure.Core;
 using CheckYourEligibility.Domain.Enums;
 using CheckYourEligibility.Domain.Exceptions;
 using CheckYourEligibility.Domain.Requests;
@@ -111,6 +112,44 @@ namespace CheckYourEligibility.APIUnitTests
         }
 
 
+        [Test]
+        public void Given_InValidRequest_Type_Application_Should_Return_Status400BadRequest()
+        {
+            // Arrange
+            var request = _fixture.Create<ApplicationRequest>();
+            request.Data.Type = CheckEligibilityType.None;
+
+            // Act
+            var response = _sut.Application(request);
+
+            // Assert
+            response.Result.Should().BeOfType(typeof(BadRequestObjectResult));
+        }
+
+        [Test]
+        public async Task Given_Exception_Return_500()
+        {
+            // Arrange
+            var request = _fixture.Create<ApplicationRequest>();
+            request.Data.Type = CheckEligibilityType.FreeSchoolMeals;
+            var applicationFsm = _fixture.Create<ApplicationResponse>();
+            request.Data.ParentNationalInsuranceNumber = "ns738356d";
+            request.Data.ParentDateOfBirth = "1970-02-01";
+            request.Data.ChildDateOfBirth = "1970-02-01";
+            request.Data.ParentNationalAsylumSeekerServiceNumber = string.Empty;
+
+            var expectedResult = new StatusCodeResult(500);
+
+            // Act
+            var response = await _sut.Application(request);
+
+            // Assert
+            response.Should().BeEquivalentTo(expectedResult);
+
+        }
+
+        // Act
+      
         [Test]
         public void Given_InValid_guid_Application_Should_Return_StatusNotFound()
         {

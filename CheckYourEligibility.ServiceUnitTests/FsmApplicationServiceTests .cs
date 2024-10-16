@@ -112,11 +112,11 @@ namespace CheckYourEligibility.ServiceUnitTests
             _fakeInMemoryDb.SaveChanges();
 
             // Act
-
+            var message = $"No Check found. Type:- {request.Type} {JsonConvert.SerializeObject(request)}";
             Func<Task> act = async () => await _sut.PostApplication(request);
             
             // Assert
-            act.Should().ThrowExactlyAsync<Exception>().Result.WithMessage("No Check found.");
+            act.Should().ThrowExactlyAsync<Exception>().Result.WithMessage(message);
         }
 
         [Test]

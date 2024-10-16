@@ -49,6 +49,7 @@ namespace CheckYourEligibility.WebApp.Controllers
             {
                 return BadRequest(new MessageResponse { Data = "Invalid Request, data is required." });
             }
+
             return await PostCheck(model);
         }
 
@@ -234,19 +235,27 @@ namespace CheckYourEligibility.WebApp.Controllers
 
         private async Task<ActionResult> PostCheck<T>(T model)
         {
-            switch (model)
+            try
             {
-                case CheckEligibilityRequest_Fsm requestData:
-                    {
-                        var validationResults = Validate_Fsm(requestData);
-                        if (!validationResults.IsValid)
-                            return BadRequest(new MessageResponse { Data = validationResults.ToString() });
+                switch (model)
+                {
+                    case CheckEligibilityRequest_Fsm requestData:
+                        {
+                            var validationResults = Validate_Fsm(requestData);
+                            if (!validationResults.IsValid)
+                                return BadRequest(new MessageResponse { Data = validationResults.ToString() });
 
-                        var response = await _checkService.PostCheck(requestData.Data);
-                        return await GetPostResponse(response);
-                    }
-                default:
-                    throw new Exception($"Unknown request type:-{model.GetType()}");
+                            var response = await _checkService.PostCheck(requestData.Data);
+                            return await GetPostResponse(response);
+                        }
+                    default:
+                        throw new Exception($"Unknown request type:-{model.GetType()}");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return StatusCode(500);
             }
         }
 
