@@ -17,7 +17,7 @@ using System.Globalization;
 
 namespace CheckYourEligibility.Services
 {
-    public partial class FsmApplicationService : BaseService, IApplication
+    public partial class ApplicationService : BaseService, IApplication
     {
         const int referenceMaxValue = 99999999;
         private readonly ILogger _logger;
@@ -26,9 +26,9 @@ namespace CheckYourEligibility.Services
         private static Random randomNumber;
         private readonly int _hashCheckDays;
 
-        public FsmApplicationService(ILoggerFactory logger, IEligibilityCheckContext dbContext, IMapper mapper, IConfiguration configuration) : base()
+        public ApplicationService(ILoggerFactory logger, IEligibilityCheckContext dbContext, IMapper mapper, IConfiguration configuration) : base()
         {
-            _logger = logger.CreateLogger("ServiceFsmCheckEligibility");
+            _logger = logger.CreateLogger("ServiceCheckEligibility");
             _db = Guard.Against.Null(dbContext);
             _mapper = Guard.Against.Null(mapper);
 

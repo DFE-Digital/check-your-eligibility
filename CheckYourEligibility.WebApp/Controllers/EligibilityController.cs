@@ -233,7 +233,7 @@ namespace CheckYourEligibility.WebApp.Controllers
             { StatusCode = StatusCodes.Status200OK };
         }
 
-        private async Task<ActionResult> PostCheck<T>(T model)
+        public async Task<ActionResult> PostCheck<T>(T model)
         {
             try
             {
