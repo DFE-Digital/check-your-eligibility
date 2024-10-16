@@ -42,6 +42,10 @@ namespace CheckYourEligibility.WebApp.Controllers
             {
                 return BadRequest(new MessageResponse { Data = "Invalid request, data is required" });
             }
+            if (model.Data.Type == Domain.Enums.CheckEligibilityType.None)
+            {
+                return BadRequest(new MessageResponse { Data = $"Invalid request, Valid Type is required{model.Data.Type}" });
+            }
             model.Data.ParentNationalInsuranceNumber = model.Data.ParentNationalInsuranceNumber?.ToUpper();
             model.Data.ParentNationalAsylumSeekerServiceNumber = model.Data.ParentNationalAsylumSeekerServiceNumber?.ToUpper();
 
@@ -52,19 +56,26 @@ namespace CheckYourEligibility.WebApp.Controllers
             {
                 return BadRequest(new MessageResponse { Data = validationResults.ToString() });
             }
-
-            var response = await _applicationService.PostApplication(model.Data);
-            await AuditAdd(Domain.Enums.AuditType.Application, response.Id);
-
-            return new ObjectResult(new ApplicationSaveItemResponse
+            try
             {
-                Data = response,
-                Links = new ApplicationResponseLinks
+                var response = await _applicationService.PostApplication(model.Data);
+                await AuditAdd(Domain.Enums.AuditType.Application, response.Id);
+
+                return new ObjectResult(new ApplicationSaveItemResponse
                 {
-                    get_Application = $"{Domain.Constants.ApplicationLinks.GetLinkApplication}{response.Id}"
-                }
-            })
-            { StatusCode = StatusCodes.Status201Created };
+                    Data = response,
+                    Links = new ApplicationResponseLinks
+                    {
+                        get_Application = $"{Domain.Constants.ApplicationLinks.GetLinkApplication}{response.Id}"
+                    }
+                })
+                { StatusCode = StatusCodes.Status201Created };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return StatusCode(500);
+            }
         }
 
         /// <summary>

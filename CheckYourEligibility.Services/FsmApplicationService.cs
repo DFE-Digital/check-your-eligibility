@@ -12,6 +12,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using NetTopologySuite.Index.HPRtree;
+using Newtonsoft.Json;
 using System.Globalization;
 
 namespace CheckYourEligibility.Services
@@ -43,7 +44,7 @@ namespace CheckYourEligibility.Services
                 var hashCheck = GetHash(data.Type, item);
                 if (hashCheck == null)
                 {
-                    throw new Exception("No Check found.");
+                    throw new Exception($"No Check found. Type:- {data.Type} {JsonConvert.SerializeObject(data)}");
                 }
                 item.ApplicationID = Guid.NewGuid().ToString();
                 item.Type = hashCheck.Type;
@@ -61,11 +62,18 @@ namespace CheckYourEligibility.Services
                     item.Status = Domain.Enums.ApplicationStatus.EvidenceNeeded;
                 }
 
-
-                var school = _db.Schools
-                    .Include(x => x.LocalAuthority)
-                    .First(x => x.SchoolId == data.School);
-                item.LocalAuthorityId = school.LocalAuthorityId;
+                try
+                {
+                    var school = _db.Schools
+                   .Include(x => x.LocalAuthority)
+                   .First(x => x.SchoolId == data.School);
+                    item.LocalAuthorityId = school.LocalAuthorityId;
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception($"Unable to find school:- {data.School}, {ex.Message}");
+                }
+               
 
                 await _db.Applications.AddAsync(item);
                 await AddStatusHistory(item, Domain.Enums.ApplicationStatus.Entitled);
