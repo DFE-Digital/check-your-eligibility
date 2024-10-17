@@ -227,7 +227,7 @@ stages:
                 packageForLinux: '$(Pipeline.Workspace)/checkYourEligibilityAPI/CheckYourEligibility.WebApp.zip'
                 
 
-  - stage: DeployAppPP
+  - stage: DeployApp
     displayName: Deploy App Production
     jobs:
       - deployment: deploy
