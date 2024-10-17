@@ -262,5 +262,5 @@ stages:
                     ConnectionType: 'AzureRM'
                     azureSubscription: 's203p.azdo.deployment'
                     appType: 'webApp'
-                    WebAppName: 'ece'
+                    WebAppName: 'ece-as'
                     packageForLinux: '$(Pipeline.Workspace)/checkYourEligibilityAPI/CheckYourEligibility.WebApp.zip'
