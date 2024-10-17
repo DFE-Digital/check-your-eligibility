@@ -78,7 +78,7 @@ stages:
       pool:
         name: Azure Pipelines
         vmImage: 'windows-latest'
-      environment: DEVELOPMENT
+      environment: DEV
       strategy:
         runOnce:
           preDeploy:
@@ -90,7 +90,7 @@ stages:
             - task: AzureCLI@2
               displayName: 'Run Migrations'
               env:
-                KEY_VAULT_NAME: ecs-dev-kv
+                KEY_VAULT_NAME: ece-dev-kv
               inputs:
                 azureSubscription: 's203d.azdo.deployment'
                 scriptType: 'ps'
@@ -105,7 +105,7 @@ stages:
                 ConnectionType: 'AzureRM'
                 azureSubscription: 's203d.azdo.deployment'
                 appType: 'webApp'
-                WebAppName: 'ecs-dev-as'
+                WebAppName: 'ece-dev-as'
                 packageForLinux: '$(Pipeline.Workspace)/checkYourEligibilityAPI/CheckYourEligibility.WebApp.zip'
 
   - stage: DeployAppTest
@@ -128,7 +128,7 @@ stages:
             - task: AzureCLI@2
               displayName: 'Run Migrations'
               env:
-                KEY_VAULT_NAME: ecs-test-kv
+                KEY_VAULT_NAME: ece-test-kv
               inputs:
                 azureSubscription: 's203t.azdo.deployment'
                 scriptType: 'ps'
@@ -143,7 +143,7 @@ stages:
                 ConnectionType: 'AzureRM'
                 azureSubscription: 's203t.azdo.deployment'
                 appType: 'webApp'
-                WebAppName: 'ecs-test-as'
+                WebAppName: 'ece-test-as'
                 packageForLinux: '$(Pipeline.Workspace)/checkYourEligibilityAPI/CheckYourEligibility.WebApp.zip'
               
   - stage: RunCypressTests
@@ -208,7 +208,7 @@ stages:
             - task: AzureCLI@2
               displayName: 'Run Migrations'
               env:
-                KEY_VAULT_NAME: ecs-pp-kv
+                KEY_VAULT_NAME: ece-pp-kv
               inputs:
                 azureSubscription: 's203t.azdo.deployment'
                 scriptType: 'ps'
@@ -223,5 +223,5 @@ stages:
                 ConnectionType: 'AzureRM'
                 azureSubscription: 's203t.azdo.deployment'
                 appType: 'webApp'
-                WebAppName: 'ecs-pp-as'
+                WebAppName: 'ece-pp-as'
                 packageForLinux: '$(Pipeline.Workspace)/checkYourEligibilityAPI/CheckYourEligibility.WebApp.zip'
