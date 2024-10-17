@@ -225,3 +225,42 @@ stages:
                 appType: 'webApp'
                 WebAppName: 'ece-pp-as'
                 packageForLinux: '$(Pipeline.Workspace)/checkYourEligibilityAPI/CheckYourEligibility.WebApp.zip'
+                
+
+  - stage: DeployAppPP
+    displayName: Deploy App Production
+    jobs:
+      - deployment: deploy
+        displayName: Deploy App Production
+        pool:
+          name: Azure Pipelines
+          vmImage: 'windows-latest'
+        environment: PROD
+        strategy:
+          runOnce:
+            preDeploy:
+              steps:
+                - task: DownloadPipelineArtifact@2
+                  inputs:
+                    buildType: 'current'
+                    targetPath: '$(Pipeline.Workspace)'
+                - task: AzureCLI@2
+                  displayName: 'Run Migrations'
+                  env:
+                    KEY_VAULT_NAME: ece-kv-api
+                  inputs:
+                    azureSubscription: 's203p.azdo.deployment'
+                    scriptType: 'ps'
+                    scriptLocation: 'inlineScript'
+                    inlineScript: |
+                      $(Pipeline.Workspace)/checkYourEligibilityAPI/efbundle.exe
+            
+            deploy:
+              steps:
+                - task: AzureRmWebAppDeployment@4
+                  inputs:
+                    ConnectionType: 'AzureRM'
+                    azureSubscription: 's203p.azdo.deployment'
+                    appType: 'webApp'
+                    WebAppName: 'ece'
+                    packageForLinux: '$(Pipeline.Workspace)/checkYourEligibilityAPI/CheckYourEligibility.WebApp.zip'
