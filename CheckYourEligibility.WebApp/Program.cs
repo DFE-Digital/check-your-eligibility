@@ -1,5 +1,6 @@
 using Azure.Identity;
 using CheckYourEligibility.Data.Mappings;
+using CheckYourEligibility.Domain.Constants;
 using CheckYourEligibility.WebApp;
 using CheckYourEligibility.WebApp.Middleware;
 using CheckYourEligibility.WebApp.Middleware.CheckYourEligibility.WebApp.Middleware;
@@ -9,6 +10,7 @@ using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.Azure;
 using Microsoft.OpenApi.Models;
 using System.Diagnostics.CodeAnalysis;
+using System.Security.Claims;
 using System.Text.Json.Serialization;
 
 
@@ -89,11 +91,20 @@ builder.Services.AddSwaggerGen(c =>
             },
             new List<string>()
           }
-        });
+        }
+    );
 
     var filePath = Path.Combine(System.AppContext.BaseDirectory, "CheckYourEligibility.WebApp.xml");
     c.IncludeXmlComments(filePath);
 });
+
+builder.Services.AddAuthorization(options =>
+{
+   // options.AddPolicy("ApiAccess", policy => policy.RequireClaim("ApiInternal"));
+    //options.AddPolicy("ApiAccess", policy => policy.RequireRole("ApiInternal", "ApiExternal"));
+    options.AddPolicy("ApiAccess", policy => policy.RequireRole(ApiAccessRoles.Internal, ApiAccessRoles.External));
+});
+
 
 // Configure Azure Key Vault if environment variable is set
 if (Environment.GetEnvironmentVariable("KEY_VAULT_NAME") != null)

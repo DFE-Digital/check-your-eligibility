@@ -116,6 +116,7 @@ Add-Migration UpdateApplicationStatus -project CheckYourEligibility.Data.Migrati
 Add-Migration UserReference -project CheckYourEligibility.Data.Migrations
 Add-Migration ApplicationParentEmail -project CheckYourEligibility.Data.Migrations
 Add-Migration DeCoupleCheck -project CheckYourEligibility.Data.Migrations
+Add-Migration ApiUsers -project CheckYourEligibility.Data.Migrations
 
 
 ##### Update db to latest migration

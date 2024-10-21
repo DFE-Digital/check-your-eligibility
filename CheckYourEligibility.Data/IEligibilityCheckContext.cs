@@ -13,6 +13,7 @@ public interface IEligibilityCheckContext
     DbSet<EligibilityCheckHash> EligibilityCheckHashes { get; set; }
     DbSet<User> Users { get; set; }
     DbSet<Audit> Audits { get; set; }
+    DbSet<SystemUser> SystemUsers { get; set; }
 
     void BulkInsert_FreeSchoolMealsHO(IEnumerable<FreeSchoolMealsHO> data);
     Task<int> SaveChangesAsync();

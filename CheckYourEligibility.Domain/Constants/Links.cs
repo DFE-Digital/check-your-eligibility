@@ -18,4 +18,8 @@ namespace CheckYourEligibility.Domain.Constants
         public const string GetLinkApplication = "/Application/";
     }
 
+    public static class ApiUserLinks
+    {
+        public const string Link = "/ApiUsers/";
+    }
 }

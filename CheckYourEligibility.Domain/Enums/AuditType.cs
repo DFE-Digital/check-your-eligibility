@@ -12,5 +12,6 @@ namespace CheckYourEligibility.Domain.Enums
         Administration,
         BulkCheck,
         CheckBulkResults,
+        ApiUser,
     }
 }

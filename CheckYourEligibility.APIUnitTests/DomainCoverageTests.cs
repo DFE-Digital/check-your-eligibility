@@ -1,4 +1,5 @@
 using AutoFixture;
+using CheckYourEligibility.Data.Models;
 using CheckYourEligibility.Domain;
 using CheckYourEligibility.Domain.Enums;
 using CheckYourEligibility.Domain.Requests;
@@ -76,7 +77,7 @@ namespace CheckYourEligibility.APIUnitTests
         {
             //arrange 
             // act
-            var item = ApplicationStatus.EvidenceNeeded;
+            var item = Domain.Enums.ApplicationStatus.EvidenceNeeded;
 
 
             // assert
@@ -101,7 +102,7 @@ namespace CheckYourEligibility.APIUnitTests
             //arrange 
             // act
           
-            ApplicationStatus? item = null;
+            Domain.Enums.ApplicationStatus? item = null;
 
 
             // assert

@@ -1,10 +1,13 @@
-﻿using CheckYourEligibility.Domain.Requests;
+﻿using CheckYourEligibility.Domain.Constants;
+using CheckYourEligibility.Domain.Requests;
 using CheckYourEligibility.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics.CodeAnalysis;
 
 namespace CheckYourEligibility.WebApp.Controllers
 {
+    
     public class BaseController : Controller
     {
         private readonly IAudit _audit;
