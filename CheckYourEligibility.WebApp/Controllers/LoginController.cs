@@ -1,8 +1,6 @@
 ﻿using Ardalis.GuardClauses;
 using CheckYourEligibility.Domain;
 using CheckYourEligibility.Domain.Constants;
-using CheckYourEligibility.Domain.Requests;
-using CheckYourEligibility.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
@@ -77,9 +75,11 @@ namespace CheckYourEligibility.WebApp.Controllers
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]));
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
-            var claims = new[]{
-                new Claim(JwtRegisteredClaimNames.Sub, userInfo.UserName),
-                new Claim(JwtRegisteredClaimNames.Sub, userInfo.UserName),
+            var claims = new[] {
+               // new Claim(ClaimTypes.Role, ApiAccessRoles.Internal),
+                new Claim(ClaimTypes.Role, ApiAccessRoles.External),
+
+                new Claim(JwtRegisteredClaimNames.Sub, userInfo.Username),
                 new Claim("EceApi", "apiCustomClaim"),
                 new Claim(JwtRegisteredClaimNames.Email, "ece@ece.com"),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
