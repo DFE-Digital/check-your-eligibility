@@ -108,6 +108,48 @@ stages:
                 WebAppName: 'ece-dev-as'
                 packageForLinux: '$(Pipeline.Workspace)/checkYourEligibilityAPI/CheckYourEligibility.WebApp.zip'
 
+  - stage: RunCypressTestsDev
+    displayName: Run Cypress Tests Dev
+    jobs:
+      - job: 'SetUpCypress'
+        displayName: 'SetUpTestsDev'
+        pool:
+          vmImage: ubuntu-latest
+        steps:
+          - task: Bash@3
+            inputs:
+              targetType: inline
+              script: |
+                cd tests
+                npm install
+          - task: Bash@3
+            displayName: 'RunTests'
+            inputs:
+              targetType: inline
+              script: |
+                cd tests
+                export CYPRESS_API_HOST="$(CYPRESS_API_HOST_DEV)"
+                export CYPRESS_JWT_USERNAME=$(JWT_USERNAME_DEV)
+                export CYPRESS_JWT_PASSWORD="$(JWT_PASSWORD_DEV)"
+                export CYPRESS_USER_ID="${USER_ID}"
+                npm run e2e:electron
+
+          - task: Bash@3
+            condition: always()
+            displayName: 'Generate report'
+            inputs:
+              targetType: inline
+              script: |
+                cd tests
+                npm run combine:reports
+
+          - task: PublishTestResults@2
+            condition: always()
+            displayName: 'Publish test results'
+            inputs:
+              testResultsFiles: '**/combined-report.xml'
+              searchFolder: 'tests'
+
   - stage: DeployAppTest
     displayName: Deploy App Test
     jobs:
@@ -146,8 +188,8 @@ stages:
                 WebAppName: 'ece-test-as'
                 packageForLinux: '$(Pipeline.Workspace)/checkYourEligibilityAPI/CheckYourEligibility.WebApp.zip'
               
-  - stage: RunCypressTests
-    displayName: Run Cypress Tests
+  - stage: RunCypressTestsTest
+    displayName: Run Cypress Tests Test
     jobs:
     - job: 'SetUpCypress'
       displayName: 'SetUpTests'
@@ -166,9 +208,9 @@ stages:
          targetType: inline
          script: |
           cd tests
-          export CYPRESS_API_HOST="$(CYPRESS_API_HOST)"
-          export CYPRESS_JWT_USERNAME=$(JWT_USERNAME)
-          export CYPRESS_JWT_PASSWORD="$(JWT_PASSWORD)"
+          export CYPRESS_API_HOST="$(CYPRESS_API_HOST_TEST)"
+          export CYPRESS_JWT_USERNAME=$(JWT_USERNAME_TEST)
+          export CYPRESS_JWT_PASSWORD="$(JWT_PASSWORD_TEST)"
           export CYPRESS_USER_ID="${USER_ID}"
           npm run e2e:electron
 
@@ -226,6 +268,47 @@ stages:
                 WebAppName: 'ece-pp-as'
                 packageForLinux: '$(Pipeline.Workspace)/checkYourEligibilityAPI/CheckYourEligibility.WebApp.zip'
                 
+  - stage: RunCypressTestsPp
+    displayName: Run Cypress Tests Pre-Prod
+    jobs:
+      - job: 'SetUpCypress'
+        displayName: 'SetUpTests'
+        pool:
+          vmImage: ubuntu-latest
+        steps:
+          - task: Bash@3
+            inputs:
+              targetType: inline
+              script: |
+                cd tests
+                npm install
+          - task: Bash@3
+            displayName: 'RunTests'
+            inputs:
+              targetType: inline
+              script: |
+                cd tests
+                export CYPRESS_API_HOST="$(CYPRESS_API_HOST_PP)"
+                export CYPRESS_JWT_USERNAME=$(JWT_USERNAME_PP)
+                export CYPRESS_JWT_PASSWORD="$(JWT_PASSWORD_PP)"
+                export CYPRESS_USER_ID="${USER_ID}"
+                npm run e2e:electron
+
+          - task: Bash@3
+            condition: always()
+            displayName: 'Generate report'
+            inputs:
+              targetType: inline
+              script: |
+                cd tests
+                npm run combine:reports
+
+          - task: PublishTestResults@2
+            condition: always()
+            displayName: 'Publish test results'
+            inputs:
+              testResultsFiles: '**/combined-report.xml'
+              searchFolder: 'tests'
 
   - stage: DeployApp
     displayName: Deploy App Production
