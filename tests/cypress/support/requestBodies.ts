@@ -7,7 +7,7 @@ export const validLoginRequestBody = {
 export const validHMRCRequestBody = {
     data: {
         nationalInsuranceNumber: 'AB123456C',
-        lastName: 'Smith',
+        lastName: 'SMITH',
         dateOfBirth: '2000-01-01',
         nationalAsylumSeekerServiceNumber: ''
     }
