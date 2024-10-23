@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NUnit.Framework.Internal;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace CheckYourEligibility.APIUnitTests
 {
@@ -53,11 +54,81 @@ namespace CheckYourEligibility.APIUnitTests
         }
 
         [Test]
+        public async Task Given_ApplicationSearch_Exception_Return_500()
+        {
+            // Arrange
+            var request = _fixture.Create<ApplicationRequestSearch>();
+            _mockApplicationService.Setup(x => x.GetApplications(It.IsAny<ApplicationRequestSearch>())).Throws<Exception>();
+
+            var expectedResult = new StatusCodeResult(500);
+
+            // Act
+            var response = await _sut.ApplicationSearch(request);
+
+            // Assert
+            response.Should().BeEquivalentTo(expectedResult);
+        }
+
+        [Test]
+        public async Task Given_GetApplication_Exception_Return_500()
+        {
+            // Arrange
+            var request = _fixture.Create<string>();
+
+            var expectedResult = new StatusCodeResult(500);
+
+            // Act
+            var response = await _sut.Application(request);
+
+            // Assert
+            response.Should().BeEquivalentTo(expectedResult);
+        }
+
+        [Test]
+        public async Task Given_ApplicationStatusUpdate_Exception_Return_500()
+        {
+            var request = _fixture.Create<string>();
+            var data = _fixture.Create<ApplicationStatusUpdateRequest>();
+            _mockApplicationService.Setup(x => x.UpdateApplicationStatus(It.IsAny<string>(), data.Data)).Throws<Exception>();
+
+            var expectedResult = new StatusCodeResult(500);
+
+            // Act
+            var response = await _sut.ApplicationStatusUpdate(request, data);
+
+            // Assert
+            response.Should().BeEquivalentTo(expectedResult);
+        }
+
+        [Test]
+        public async Task Given_Application_Exception_Return_500()
+        {
+            // Arrange
+            var request = _fixture.Create<ApplicationRequest>();
+            request.Data.Type = CheckEligibilityType.FreeSchoolMeals;
+            var applicationFsm = _fixture.Create<ApplicationResponse>();
+            request.Data.ParentNationalInsuranceNumber = "ns738356d";
+            request.Data.ParentDateOfBirth = "1970-02-01";
+            request.Data.ChildDateOfBirth = "1970-02-01";
+            request.Data.ParentNationalAsylumSeekerServiceNumber = string.Empty;
+
+            var expectedResult = new StatusCodeResult(500);
+
+            // Act
+            var response = await _sut.Application(request);
+
+            // Assert
+            response.Should().BeEquivalentTo(expectedResult);
+        }
+
+
+        [Test]
         public void Given_valid_NInumber_ApplicationRequest_Post_Should_Return_Status201Created()
         {
             // Arrange
             var request = _fixture.Create<ApplicationRequest>();
             var applicationFsm = _fixture.Create<ApplicationResponse>();
+            request.Data.Type = CheckEligibilityType.FreeSchoolMeals;
             request.Data.ParentNationalInsuranceNumber = "ns738356d";
             request.Data.ParentDateOfBirth = "1970-02-01";
             request.Data.ChildDateOfBirth = "1970-02-01";
@@ -126,27 +197,6 @@ namespace CheckYourEligibility.APIUnitTests
             response.Result.Should().BeOfType(typeof(BadRequestObjectResult));
         }
 
-        [Test]
-        public async Task Given_Exception_Return_500()
-        {
-            // Arrange
-            var request = _fixture.Create<ApplicationRequest>();
-            request.Data.Type = CheckEligibilityType.FreeSchoolMeals;
-            var applicationFsm = _fixture.Create<ApplicationResponse>();
-            request.Data.ParentNationalInsuranceNumber = "ns738356d";
-            request.Data.ParentDateOfBirth = "1970-02-01";
-            request.Data.ChildDateOfBirth = "1970-02-01";
-            request.Data.ParentNationalAsylumSeekerServiceNumber = string.Empty;
-
-            var expectedResult = new StatusCodeResult(500);
-
-            // Act
-            var response = await _sut.Application(request);
-
-            // Assert
-            response.Should().BeEquivalentTo(expectedResult);
-
-        }
 
         // Act
       
