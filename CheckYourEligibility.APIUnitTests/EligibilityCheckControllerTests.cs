@@ -52,6 +52,151 @@ namespace CheckYourEligibility.APIUnitTests
 
 
         [Test]
+        public async Task Given_Process_Exception_Return_500()
+        {
+            // Arrange
+            var request = _fixture.Create<string>();
+            _mockCheckService.Setup(x => x.ProcessCheck(It.IsAny<string>(),It.IsAny<AuditData>())).Throws<Exception>();
+
+            var expectedResult = new StatusCodeResult(500);
+
+            // Act
+            var response = await _sut.Process(request);
+
+            // Assert
+            response.Should().BeEquivalentTo(expectedResult);
+
+        }
+
+        [Test]
+        public async Task Given_EligibilityCheckStatusUpdate_Exception_Return_500()
+        {
+            // Arrange
+            var request = _fixture.Create<string>();
+            var data =_fixture.Create<EligibilityStatusUpdateRequest>();
+            _mockCheckService.Setup(x => x.UpdateEligibilityCheckStatus(It.IsAny<string>(),data.Data)).Throws<Exception>();
+
+            var expectedResult = new StatusCodeResult(500);
+
+            // Act
+            var response = await _sut.EligibilityCheckStatusUpdate(request,data);
+
+            // Assert
+            response.Should().BeEquivalentTo(expectedResult);
+
+        }
+
+        [Test]
+        public async Task Given_CheckEligibilityStatus_Exception_Return_500()
+        {
+            // Arrange
+            var request = _fixture.Create<string>();
+            _mockCheckService.Setup(x => x.GetStatus(It.IsAny<string>())).Throws<Exception>();
+
+            var expectedResult = new StatusCodeResult(500);
+
+            // Act
+            var response = await _sut.CheckEligibilityStatus(request);
+
+            // Assert
+            response.Should().BeEquivalentTo(expectedResult);
+
+        }
+
+
+        [Test]
+        public async Task Given_BulkUploadResults_Exception_Return_500()
+        {
+            // Arrange
+            var request = _fixture.Create<string>();
+            _mockCheckService.Setup(x => x.GetBulkCheckResults(It.IsAny<string>())).Throws<Exception>();
+
+            var expectedResult = new StatusCodeResult(500);
+
+            // Act
+            var response = await _sut.BulkUploadResults(request);
+
+            // Assert
+            response.Should().BeEquivalentTo(expectedResult);
+
+        }
+
+        [Test]
+        public async Task Given_BulkUploadProgress_Exception_Return_500()
+        {
+            // Arrange
+            var request = _fixture.Create<string>();
+            _mockCheckService.Setup(x => x.GetBulkStatus(It.IsAny<string>())).Throws<Exception>();
+
+            var expectedResult = new StatusCodeResult(500);
+
+            // Act
+            var response = await _sut.BulkUploadProgress(request);
+
+            // Assert
+            response.Should().BeEquivalentTo(expectedResult);
+
+        }
+
+        [Test]
+        public async Task Given_CheckEligibilityBulk_Exception_Return_500()
+        {
+            // Arrange
+            var item = new CheckEligibilityRequestData_Fsm {
+                DateOfBirth = "1990-01-01",
+                NationalInsuranceNumber = "AB123456C",
+                LastName = "Name",
+                Sequence = 0
+            };
+            var request = new CheckEligibilityRequestBulk_Fsm { Data = new List<CheckEligibilityRequestData_Fsm> { item } };
+            _mockCheckService.Setup(x => x.PostCheck(It.IsAny<IEnumerable<CheckEligibilityRequestData_Fsm>>(), It.IsAny<string>())).Throws<Exception>();
+
+            var expectedResult = new StatusCodeResult(500);
+
+            // Act
+            var response = await _sut.CheckEligibilityBulk(request);
+
+            // Assert
+            response.Should().BeEquivalentTo(expectedResult);
+
+        }
+
+        [Test]
+        public async Task Given_GetItem_Exception_Return_500()
+        {
+            // Arrange
+            var request = _fixture.Create<string>();
+            _mockCheckService.Setup(x => x.GetItem(It.IsAny<string>())).Throws<Exception>();
+
+            var expectedResult = new StatusCodeResult(500);
+
+            // Act
+            var response = await _sut.EligibilityCheck(request);
+
+            // Assert
+            response.Should().BeEquivalentTo(expectedResult);
+
+        }
+
+        [Test]
+        public async Task Given_PostCheck_Exception_Return_500()
+        {
+            // Arrange
+            var request = _fixture.Create<CheckEligibilityRequestData_Fsm>();
+
+            var expectedResult = new StatusCodeResult(500);
+
+            // Act
+            var response = await _sut.PostCheck(request);
+
+            // Assert
+            response.Should().BeEquivalentTo(expectedResult);
+
+        }
+
+
+
+        [Test]
         public void Given_InValidRequest_Values_CheckEligibilityBulk_Should_Return_Status400BadRequest()
         {
             // Arrange
@@ -221,22 +366,6 @@ namespace CheckYourEligibility.APIUnitTests
             response.Result.Should().BeEquivalentTo(expectedResult);
         }
 
-
-        [Test]
-        public async Task Given_Exception_Return_500()
-        {
-            // Arrange
-            var request = _fixture.Create<CheckEligibilityRequestData_Fsm>();
-
-            var expectedResult = new StatusCodeResult(500);
-
-            // Act
-            var response = await _sut.PostCheck(request);
-
-            // Assert
-            response.Should().BeEquivalentTo(expectedResult);
-
-        }
 
         [Test]
         public void Given_InValid_guid_CheckEligibilityStatus_Should_Return_StatusNotFound()

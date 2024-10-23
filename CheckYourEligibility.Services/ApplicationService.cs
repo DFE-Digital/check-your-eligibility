@@ -94,31 +94,6 @@ namespace CheckYourEligibility.Services
             }
         }
 
-        private EligibilityCheckHash? GetHash(CheckEligibilityType type, Application data)
-        {
-            var age = DateTime.UtcNow.AddDays(-_hashCheckDays);
-            var hash = CheckEligibilityService.GetHash(new CheckProcessData
-            {
-                DateOfBirth = data.ParentDateOfBirth.ToString("yyyy-MM-dd"),
-                NationalInsuranceNumber = data.ParentNationalAsylumSeekerServiceNumber,
-                NationalAsylumSeekerServiceNumber = data.ParentNationalInsuranceNumber,
-                LastName = data.ParentLastName.ToUpper(),
-                Type = type
-            });
-            return _db.EligibilityCheckHashes.FirstOrDefault(x => x.Hash == hash && x.TimeStamp >= age);
-        }
-
-        private async Task AddStatusHistory(Application application, Domain.Enums.ApplicationStatus applicationStatus)
-        {
-            var status = new Data.Models.ApplicationStatus()
-            {
-                ApplicationStatusID = Guid.NewGuid().ToString(),
-                ApplicationID = application.ApplicationID,
-                Type = applicationStatus,
-                TimeStamp = DateTime.UtcNow
-            };
-            await _db.ApplicationStatuses.AddAsync(status);
-        }
 
         public async Task<ApplicationResponse?> GetApplication(string guid)
         {
@@ -235,7 +210,34 @@ namespace CheckYourEligibility.Services
 
             return nextReference;
         }
-       
+
+
+        private EligibilityCheckHash? GetHash(CheckEligibilityType type, Application data)
+        {
+            var age = DateTime.UtcNow.AddDays(-_hashCheckDays);
+            var hash = CheckEligibilityService.GetHash(new CheckProcessData
+            {
+                DateOfBirth = data.ParentDateOfBirth.ToString("yyyy-MM-dd"),
+                NationalInsuranceNumber = data.ParentNationalAsylumSeekerServiceNumber,
+                NationalAsylumSeekerServiceNumber = data.ParentNationalInsuranceNumber,
+                LastName = data.ParentLastName.ToUpper(),
+                Type = type
+            });
+            return _db.EligibilityCheckHashes.FirstOrDefault(x => x.Hash == hash && x.TimeStamp >= age);
+        }
+
+        private async Task AddStatusHistory(Application application, Domain.Enums.ApplicationStatus applicationStatus)
+        {
+            var status = new Data.Models.ApplicationStatus()
+            {
+                ApplicationStatusID = Guid.NewGuid().ToString(),
+                ApplicationID = application.ApplicationID,
+                Type = applicationStatus,
+                TimeStamp = DateTime.UtcNow
+            };
+            await _db.ApplicationStatuses.AddAsync(status);
+        }
+
         #endregion
     }
 

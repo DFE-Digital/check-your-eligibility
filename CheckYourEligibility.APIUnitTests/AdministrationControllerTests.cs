@@ -1,3 +1,4 @@
+using AutoFixture;
 using CheckYourEligibility.Data.Models;
 using CheckYourEligibility.Domain.Constants;
 using CheckYourEligibility.Domain.Requests;
@@ -52,6 +53,115 @@ namespace CheckYourEligibility.APIUnitTests
 
             // Assert
             act.Should().ThrowExactly<ArgumentNullException>().And.Message.Should().EndWithEquivalentOf("Value cannot be null. (Parameter 'service')");
+        }
+
+        [Test]
+        public async Task Given_ImportHMRCData_Exception_Return_500()
+        {
+            // Arrange
+
+            var content = Properties.Resources.exampleHMRC; ;
+            var fileName = "test.xml";
+            var stream = new MemoryStream();
+            var writer = new StreamWriter(stream);
+            writer.Write(content);
+            writer.Flush();
+            stream.Position = 0;
+
+            //create FormFile with desired data
+            var file = new FormFile(stream, 0, stream.Length, fileName, fileName)
+            {
+                Headers = new HeaderDictionary(),
+                ContentType = "text/xml"
+            };
+
+            _mockService.Setup(x => x.ImportHMRCData(It.IsAny<IEnumerable<FreeSchoolMealsHMRC>>())).Throws<Exception>();
+
+            var expectedResult = new StatusCodeResult(500);
+
+            // Act
+            var response = await _sut.ImportFsmHMRCData(file);
+
+            // Assert
+            response.Should().BeEquivalentTo(expectedResult);
+        }
+
+        [Test]
+        public async Task Given_ImportFsmHomeOfficeData_Exception_Return_500()
+        {
+            // Arrange
+
+            var content = Properties.Resources.HO_Data_small; ;
+            var fileName = "test.csv";
+            var stream = new MemoryStream();
+            var writer = new StreamWriter(stream);
+            writer.Write(content);
+            writer.Flush();
+            stream.Position = 0;
+
+            //create FormFile with desired data
+            var file = new FormFile(stream, 0, stream.Length, fileName, fileName)
+            {
+                Headers = new HeaderDictionary(),
+                ContentType = "text/csv"
+            };
+
+            _mockService.Setup(x => x.ImportHomeOfficeData(It.IsAny<IEnumerable<FreeSchoolMealsHO>>())).Throws<Exception>();
+
+            var expectedResult = new StatusCodeResult(500);
+
+            // Act
+            var response = await _sut.ImportFsmHomeOfficeData(file);
+
+            // Assert
+            response.Should().BeEquivalentTo(expectedResult);
+        }
+
+        [Test]
+        public async Task Given_ImportEstablishments_Exception_Return_500()
+        {
+            // Arrange
+
+            var content = Properties.Resources.small_gis;
+            var fileName = "test.csv";
+            var stream = new MemoryStream();
+            var writer = new StreamWriter(stream);
+            writer.Write(content);
+            writer.Flush();
+            stream.Position = 0;
+
+            //create FormFile with desired data
+            var file = new FormFile(stream, 0, stream.Length, fileName, fileName)
+            {
+                Headers = new HeaderDictionary(),
+                ContentType = "text/csv"
+            };
+            _mockService.Setup(x => x.ImportEstablishments(It.IsAny<IEnumerable<EstablishmentRow>>())).Throws<Exception>();
+
+            var expectedResult = new StatusCodeResult(500);
+
+            // Act
+            var response = await _sut.ImportEstablishments(file);
+
+            // Assert
+            response.Should().BeEquivalentTo(expectedResult);
+        }
+
+
+        [Test]
+        public async Task Given_CleanUpEligibilityChecks_Exception_Return_500()
+        {
+            // Arrange
+            var request = _fixture.Create<ApplicationRequestSearch>();
+            _mockService.Setup(x => x.CleanUpEligibilityChecks()).Throws<Exception>();
+
+            var expectedResult = new StatusCodeResult(500);
+
+            // Act
+            var response = await _sut.CleanUpEligibilityChecks();
+
+            // Assert
+            response.Should().BeEquivalentTo(expectedResult);
         }
 
         [Test]

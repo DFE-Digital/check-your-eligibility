@@ -63,12 +63,20 @@ namespace CheckYourEligibility.WebApp.Controllers
         [HttpPost("/EligibilityCheck/FreeSchoolMeals/Bulk")]
         public async Task<ActionResult> CheckEligibilityBulk([FromBody] CheckEligibilityRequestBulk_Fsm model)
         {
-            if (model == null || model.Data == null)
+            try
             {
-                return BadRequest(new MessageResponse { Data = "Invalid Request, data is required." });
-            }
+                if (model == null || model.Data == null)
+                {
+                    return BadRequest(new MessageResponse { Data = "Invalid Request, data is required." });
+                }
 
-            return await ProcessBulk(model);
+                return await ProcessBulk(model);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return StatusCode(500);
+            }
         }
 
         /// <summary>
@@ -81,19 +89,29 @@ namespace CheckYourEligibility.WebApp.Controllers
         [HttpGet("Bulk/{guid}/CheckProgress")]
         public async Task<ActionResult> BulkUploadProgress(string guid)
         {
-            var response = await _checkService.GetBulkStatus(guid);
-            if (response == null)
+            try
             {
-                return NotFound(guid);
-            }
 
-            return new ObjectResult(new CheckEligibilityBulkStatusResponse()
+                var response = await _checkService.GetBulkStatus(guid);
+                if (response == null)
+                {
+                    return NotFound(guid);
+                }
+
+                return new ObjectResult(new CheckEligibilityBulkStatusResponse()
+                {
+                    Data = response,
+                    Links = new BulkCheckResponseLinks()
+                    { Get_BulkCheck_Results = $"{Domain.Constants.CheckLinks.BulkCheckLink}{guid}{Domain.Constants.CheckLinks.BulkCheckResults}" }
+                })
+                { StatusCode = StatusCodes.Status200OK };
+
+            }
+            catch (Exception ex)
             {
-                Data = response,
-                Links = new BulkCheckResponseLinks()
-                { Get_BulkCheck_Results = $"{Domain.Constants.CheckLinks.BulkCheckLink}{guid}{Domain.Constants.CheckLinks.BulkCheckResults}" }
-            })
-            { StatusCode = StatusCodes.Status200OK };
+                _logger.LogError(ex, ex.Message);
+                return StatusCode(500);
+            }
         }
 
         /// <summary>
@@ -106,17 +124,25 @@ namespace CheckYourEligibility.WebApp.Controllers
         [HttpGet("Bulk/{guid}/Results")]
         public async Task<ActionResult> BulkUploadResults(string guid)
         {
-            var response = await _checkService.GetBulkCheckResults(guid);
-            if (response == null)
+            try
             {
-                return NotFound(guid);
+                var response = await _checkService.GetBulkCheckResults(guid);
+                if (response == null)
+                {
+                    return NotFound(guid);
+                }
+                await AuditAdd(Domain.Enums.AuditType.CheckBulkResults, guid);
+                return new ObjectResult(new CheckEligibilityBulkResponse()
+                {
+                    Data = response
+                })
+                { StatusCode = StatusCodes.Status200OK };
             }
-            await AuditAdd(Domain.Enums.AuditType.CheckBulkResults, guid);
-            return new ObjectResult(new CheckEligibilityBulkResponse()
+            catch (Exception ex)
             {
-                Data = response
-            })
-            { StatusCode = StatusCodes.Status200OK };
+                _logger.LogError(ex, ex.Message);
+                return StatusCode(500);
+            }
         }
 
 
@@ -130,14 +156,22 @@ namespace CheckYourEligibility.WebApp.Controllers
         [HttpGet("{guid}/Status")]
         public async Task<ActionResult> CheckEligibilityStatus(string guid)
         {
-            var response = await _checkService.GetStatus(guid);
-            if (response == null)
+            try
             {
-                return NotFound(guid);
-            }
-            await AuditAdd(Domain.Enums.AuditType.Check, guid);
+                var response = await _checkService.GetStatus(guid);
+                if (response == null)
+                {
+                    return NotFound(guid);
+                }
+                await AuditAdd(Domain.Enums.AuditType.Check, guid);
 
-            return new ObjectResult(new CheckEligibilityStatusResponse() { Data = new StatusValue() { Status = response.Value.ToString() } }) { StatusCode = StatusCodes.Status200OK };
+                return new ObjectResult(new CheckEligibilityStatusResponse() { Data = new StatusValue() { Status = response.Value.ToString() } }) { StatusCode = StatusCodes.Status200OK };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return StatusCode(500);
+            }
         }
 
         /// <summary>
@@ -150,19 +184,27 @@ namespace CheckYourEligibility.WebApp.Controllers
         [HttpPatch("{guid}/Status")]
         public async Task<ActionResult> EligibilityCheckStatusUpdate(string guid, [FromBody] EligibilityStatusUpdateRequest model)
         {
-            var response = await _checkService.UpdateEligibilityCheckStatus(guid, model.Data);
-            if (response == null)
+            try
             {
-                return NotFound();
+                var response = await _checkService.UpdateEligibilityCheckStatus(guid, model.Data);
+                if (response == null)
+                {
+                    return NotFound();
+                }
+
+                await AuditAdd(Domain.Enums.AuditType.Check, guid);
+
+                return new ObjectResult(new CheckEligibilityStatusResponse
+                {
+                    Data = response.Data
+                })
+                { StatusCode = StatusCodes.Status200OK };
             }
-
-            await AuditAdd(Domain.Enums.AuditType.Check, guid);
-
-            return new ObjectResult(new CheckEligibilityStatusResponse
+            catch (Exception ex)
             {
-                Data = response.Data
-            })
-            { StatusCode = StatusCodes.Status200OK };
+                _logger.LogError(ex, ex.Message);
+                return StatusCode(500);
+            }
         }
 
         /// <summary>
@@ -203,6 +245,11 @@ namespace CheckYourEligibility.WebApp.Controllers
             {
                 return BadRequest(guid);
             }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return StatusCode(500);
+            }
         }
 
         /// <summary>
@@ -215,22 +262,32 @@ namespace CheckYourEligibility.WebApp.Controllers
         [HttpGet("{guid}")]
         public async Task<ActionResult> EligibilityCheck(string guid)
         {
-            var response = await _checkService.GetItem(guid);
-            if (response == null)
+            try
             {
-                return NotFound(guid);
-            }
-            await AuditAdd(Domain.Enums.AuditType.Check, guid);
-            return new ObjectResult(new CheckEligibilityItemResponse()
-            {
-                Data = response,
-                Links = new CheckEligibilityResponseLinks
+
+                var response = await _checkService.GetItem(guid);
+                if (response == null)
                 {
-                    Get_EligibilityCheck = $"{Domain.Constants.CheckLinks.GetLink}{guid}",
-                    Put_EligibilityCheckProcess = $"{Domain.Constants.CheckLinks.ProcessLink}{guid}"
+                    return NotFound(guid);
                 }
-            })
-            { StatusCode = StatusCodes.Status200OK };
+                await AuditAdd(Domain.Enums.AuditType.Check, guid);
+                return new ObjectResult(new CheckEligibilityItemResponse()
+                {
+                    Data = response,
+                    Links = new CheckEligibilityResponseLinks
+                    {
+                        Get_EligibilityCheck = $"{Domain.Constants.CheckLinks.GetLink}{guid}",
+                        Put_EligibilityCheckProcess = $"{Domain.Constants.CheckLinks.ProcessLink}{guid}"
+                    }
+                })
+                { StatusCode = StatusCodes.Status200OK };
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return StatusCode(500);
+            }
         }
 
         public async Task<ActionResult> PostCheck<T>(T model)
