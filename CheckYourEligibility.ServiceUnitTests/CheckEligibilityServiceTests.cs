@@ -848,18 +848,25 @@ namespace CheckYourEligibility.ServiceUnitTests
         }
 
         [Test]
-        public void Given_ValidRequest_GetItem_Should_Return_Item()
+        public async Task Given_ValidRequest_GetItem_Should_Return_Item()
         {
             // Arrange
             var item = _fixture.Create<EligibilityCheck>();
+            
+            var check =_fixture.Create<CheckEligibilityRequestData_Fsm>();
+            item.CheckData = JsonConvert.SerializeObject(GetCheckProcessData(check)) ;
             _fakeInMemoryDb.CheckEligibilities.Add(item);
             _fakeInMemoryDb.SaveChangesAsync();
 
             // Act
-            var response = _sut.GetItem(item.EligibilityCheckID);
+            var response = await _sut.GetItem(item.EligibilityCheckID);
 
             // Assert
-            response.Result.Should().BeOfType<CheckEligibilityItemFsm>();
+            response.Should().BeOfType<CheckEligibilityItemFsm>();
+            response.DateOfBirth.Should().BeEquivalentTo(check.DateOfBirth);
+            response.NationalAsylumSeekerServiceNumber.Should().BeEquivalentTo(check.NationalAsylumSeekerServiceNumber);
+            response.NationalInsuranceNumber.Should().BeEquivalentTo(check.NationalInsuranceNumber);
+            response.LastName.Should().BeEquivalentTo(check.LastName.ToUpper());
         }
 
         [Test]
