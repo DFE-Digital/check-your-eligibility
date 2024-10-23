@@ -152,9 +152,16 @@ namespace CheckYourEligibility.Services
         public async Task<CheckEligibilityItemFsm?> GetItem(string guid)
         {
             var result = await _db.CheckEligibilities.FirstOrDefaultAsync(x => x.EligibilityCheckID == guid);
+
+
             if (result != null)
             {
                 var item = _mapper.Map<CheckEligibilityItemFsm>(result);
+                var CheckData = GetCheckProcessData(CheckEligibilityType.FreeSchoolMeals, result.CheckData);
+                item.DateOfBirth = CheckData.DateOfBirth;
+                item.NationalInsuranceNumber = CheckData.NationalInsuranceNumber;
+                item.NationalAsylumSeekerServiceNumber = CheckData.NationalAsylumSeekerServiceNumber;
+                item.LastName = CheckData.LastName;
                 return  item ;
             }
             return null;

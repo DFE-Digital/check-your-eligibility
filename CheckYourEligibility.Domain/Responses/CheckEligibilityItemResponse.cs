@@ -18,8 +18,6 @@
 
         public string Status { get; set; }
 
-        public string? Group { get; set; }
-
         public DateTime Created { get; set; }
     }
 }

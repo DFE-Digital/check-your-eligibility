@@ -277,7 +277,8 @@ namespace CheckYourEligibility.WebApp.Controllers
                     Links = new CheckEligibilityResponseLinks
                     {
                         Get_EligibilityCheck = $"{Domain.Constants.CheckLinks.GetLink}{guid}",
-                        Put_EligibilityCheckProcess = $"{Domain.Constants.CheckLinks.ProcessLink}{guid}"
+                        Put_EligibilityCheckProcess = $"{Domain.Constants.CheckLinks.ProcessLink}{guid}",
+                        Get_EligibilityCheckStatus = $"{Domain.Constants.CheckLinks.GetLink}{guid}/Status"
                     }
                 })
                 { StatusCode = StatusCodes.Status200OK };
