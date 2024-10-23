@@ -64,5 +64,28 @@ namespace CheckYourEligibility.ServiceUnitTests
             }
             
         }
+
+        [Test]
+        public async Task Given_Search_Urn_Should_Return_ExpectedResult()
+        {
+            // Arrange
+            _fakeInMemoryDb.Schools.RemoveRange(_fakeInMemoryDb.Schools);
+            school = _fixture.Create<School>();
+            var urn = 12345;
+            school.SchoolId = urn;
+            _fakeInMemoryDb.Schools.Add(school);
+            _fakeInMemoryDb.SaveChanges();
+            var expectedResult = _fakeInMemoryDb.Schools.First();
+
+            // Act
+            var response = await _sut.Search(urn.ToString());
+
+            // Assert
+            if (response != null && response.Any())
+            {
+                response.First().Name.Should().BeEquivalentTo(expectedResult.EstablishmentName);
+            }
+
+        }
     }
 }

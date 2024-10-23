@@ -24,16 +24,40 @@ namespace CheckYourEligibility.Services
         [ExcludeFromCodeCoverage(Justification = "memory only db breaks test in full run, works fine run locally")]
           public async Task<IEnumerable<Domain.Responses.School>?> Search(string query)
         {
-            var allSchools = _db.Schools.Where(x => x.StatusOpen 
+            var results = new List<Domain.Responses.School>();
+
+            
+            if (int.TryParse(query, out var SchoolId))
+            {
+
+                var schoolFromUrn = _db.Schools
+                    .Include(x => x.LocalAuthority)
+                    .FirstOrDefault(x => x.StatusOpen && x.SchoolId == SchoolId);
+                
+                if (schoolFromUrn != null)
+                {
+                    var item = new Domain.Responses.School()
+                    {
+                        Id = schoolFromUrn.SchoolId,
+                        Name = schoolFromUrn.EstablishmentName,
+                        Postcode = schoolFromUrn.Postcode,
+                        Locality = schoolFromUrn.Locality,
+                        County = schoolFromUrn.County,
+                        Street = schoolFromUrn.Street,
+                        Town = schoolFromUrn.Town,
+                        La = schoolFromUrn.LocalAuthority.LaName
+                    };
+                    results.Add( item);
+                };
+                return results;
+            }
+            var allSchools = _db.Schools.Where(x => x.StatusOpen
             && x.EstablishmentName.Contains(query))
                 .Include(x => x.LocalAuthority);
-            
-            var results = new List<Domain.Responses.School>();
+
             var queryResult = new List<School>();
             
             var lev = new NormalizedLevenshtein();
-            //var lev = new Fastenshtein.Levenshtein(query);
-            //var lev = new Damerau();
             double levenshteinDistance;
             foreach (var item in allSchools)
             {
