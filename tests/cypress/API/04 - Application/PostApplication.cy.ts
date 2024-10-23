@@ -15,12 +15,13 @@ describe('Verify POST application responses', () => {
             childLastName: 'Smith',
             childDateOfBirth: '2005-01-01',
             userID: Cypress.env('USER_ID'),
+            type: 'FreeSchoolMeals'
         }
     };
 
     it('Verify 201 Created response is returned with valid application', () => {
         getandVerifyBearerToken('api/Login', validLoginRequestBody).then((token) => {
-            cy.apiRequest('POST', 'FreeSchoolMeals/Application', baseApplicationRequestBody, token).then((response) => {
+            cy.apiRequest('POST', 'Application', baseApplicationRequestBody, token).then((response) => {
                 // Assert the status and statusText
                 cy.verifyApiResponseCode(response, 201);
 
@@ -40,7 +41,7 @@ describe('Verify POST application responses', () => {
         };
 
         getandVerifyBearerToken('api/Login', validLoginRequestBody).then((token) => {
-            cy.apiRequest('POST', 'FreeSchoolMeals/Application', invalidApplicationNoLastNameRequestBody, token).then((response) => {
+            cy.apiRequest('POST', 'Application', invalidApplicationNoLastNameRequestBody, token).then((response) => {
                 // Assert the status and statusText
                 cy.verifyApiResponseCode(response, 400);
                 expect(response.body).to.have.property('data', 'LastName is required');
@@ -61,7 +62,8 @@ describe('Verify invalid application request responses', () => {
             parentDateOfBirth: '1985-01-01',
             childFirstName: 'Jane',
             childLastName: 'Simpson',
-            childDateOfBirth: '2005-01-01'
+            childDateOfBirth: '2005-01-01',
+            type: 'FreeSchoolMeals'
         }
     };
 
@@ -74,7 +76,7 @@ describe('Verify invalid application request responses', () => {
             }
         };
         getandVerifyBearerToken('api/Login', validLoginRequestBody).then((token) => {
-            cy.apiRequest('POST', 'FreeSchoolMeals/Application', invalidApplicationNoChildLastNameRequestBody, token).then((response) => {
+            cy.apiRequest('POST', 'Application', invalidApplicationNoChildLastNameRequestBody, token).then((response) => {
                 // Assert the status and statusText
                 cy.verifyApiResponseCode(response, 400);
                 expect(response.body).to.have.property('data', 'Child LastName is required');
@@ -92,7 +94,7 @@ describe('Verify invalid application request responses', () => {
         };
 
         getandVerifyBearerToken('api/Login', validLoginRequestBody).then((token) => {
-            cy.apiRequest('POST', 'FreeSchoolMeals/Application', invalidApplicationInvalidChildDOBRequestBody, token).then((response) => {
+            cy.apiRequest('POST', 'Application', invalidApplicationInvalidChildDOBRequestBody, token).then((response) => {
                 // Assert the status and statusText
                 cy.verifyApiResponseCode(response, 400);
                 expect(response.body).to.have.property('data', "Child Date of birth is required:- (yyyy-mm-dd)");
@@ -101,7 +103,7 @@ describe('Verify invalid application request responses', () => {
     });
 
     it('Verify 401 response is returned when bearer token is not provided', () => {
-        cy.apiRequest('POST', 'FreeSchoolMeals/Application', validLoginRequestBody,).then((response) => {
+        cy.apiRequest('POST', 'Application', validLoginRequestBody,).then((response) => {
           cy.verifyApiResponseCode(response, 401)
         });
       });

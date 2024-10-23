@@ -43,7 +43,7 @@ describe('Update Application Status', () => {
         //Get token
         getandVerifyBearerToken('api/Login', validLoginRequestBody).then((token) => {
             //Make post request for eligibility check
-            cy.apiRequest('POST', 'FreeSchoolMeals/Application/Search', body, token).then((response) => {
+            cy.apiRequest('POST', 'Application/Search', body, token).then((response) => {
                 // Assert the status and statusText
                 cy.verifyApiResponseCode(response, 200);
                 cy.verifyApplicationSearchResponse(response, expectedApplicationsData)

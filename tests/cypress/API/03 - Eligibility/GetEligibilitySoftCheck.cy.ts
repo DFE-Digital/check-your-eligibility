@@ -8,14 +8,14 @@ describe('GET eligibility soft check by Guid', () => {
         //Get token
         getandVerifyBearerToken('api/Login', validLoginRequestBody).then((token) => {
             //Make post request for eligibility check
-            cy.apiRequest('POST', 'FreeSchoolMeals', validHMRCRequestBody, token).then((response) => {
+            cy.apiRequest('POST', 'EligibilityCheck/FreeSchoolMeals', validHMRCRequestBody, token).then((response) => {
                 cy.verifyApiResponseCode(response, 202);
                 //extract Guid
                 cy.extractGuid(response);
 
                 //make get request using the guid 
                 cy.get('@Guid').then((Guid) => {
-                    cy.apiRequest('GET', `freeSchoolMeals/${Guid}`, {}, token).then((newResponse) => {
+                    cy.apiRequest('GET', `EligibilityCheck/${Guid}`, {}, token).then((newResponse) => {
                         // Assert the response 
                         cy.verifyApiResponseCode(newResponse, 200)
                         cy.verifyGetEligibilityCheckResponseData(newResponse, validHMRCRequestBody)

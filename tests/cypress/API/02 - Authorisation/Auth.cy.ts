@@ -19,7 +19,7 @@ describe('Authorisation Tests', () => {
 
   it('Verify 401 Unauthorized is returned when token is not provided for protected endpoints', () => {
     verifyUnauthorizedWithoutToken('POST', 'api/Login', invalidRequestBody);
-    verifyUnauthorizedWithoutToken('POST', 'FreeSchoolMeals', invalidRequestBody);
-    verifyUnauthorizedWithoutToken('POST', 'FreeSchoolMeals/Application', invalidRequestBody);
+    verifyUnauthorizedWithoutToken('POST', 'EligibilityCheck/FreeSchoolMeals', invalidRequestBody);
+    verifyUnauthorizedWithoutToken('POST', 'Application', invalidRequestBody);
   });
 });
