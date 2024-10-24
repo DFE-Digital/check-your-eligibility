@@ -51,6 +51,7 @@ namespace CheckYourEligibility.WebApp
             services.AddTransient<IUsers, UsersService>();
             services.AddTransient<IAudit, AuditService>();
             services.AddTransient<IHash, HashService>();
+            services.AddTransient<IApiUsers, ApiUsersService>();
             return services;
         }
 

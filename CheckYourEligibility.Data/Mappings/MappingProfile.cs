@@ -62,5 +62,8 @@ public class MappingProfile : Profile
         CreateMap<EligibilityCheckHash, ApplicationHash>()
                 .ReverseMap();
 
+        CreateMap<SystemUser, SystemUserData>()
+       .ReverseMap();
+
     }
 }

@@ -23,6 +23,7 @@ public class EligibilityCheckContext : DbContext, IEligibilityCheckContext
     public virtual DbSet<EligibilityCheckHash> EligibilityCheckHashes { get; set; }
     public virtual DbSet<User> Users { get; set; }
     public virtual DbSet<Audit> Audits { get; set; }
+    public virtual DbSet<SystemUser> SystemUsers { get; set; }
 
 
     public Task<int> SaveChangesAsync()

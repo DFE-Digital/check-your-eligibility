@@ -1,4 +1,5 @@
 ﻿using Ardalis.GuardClauses;
+using CheckYourEligibility.Domain.Constants;
 using CheckYourEligibility.Domain.Exceptions;
 using CheckYourEligibility.Domain.Requests;
 using CheckYourEligibility.Domain.Responses;
@@ -43,6 +44,9 @@ namespace CheckYourEligibility.WebApp.Controllers
         [ProducesResponseType(typeof(CheckEligibilityResponse), (int)HttpStatusCode.Accepted)]
         [ProducesResponseType((int)HttpStatusCode.BadRequest)]
         [HttpPost("FreeSchoolMeals")]
+
+        [Authorize(Roles = ApiAccessRoles.External)]
+        [Authorize(Roles = ApiAccessRoles.Internal)]
         public async Task<ActionResult> CheckEligibility([FromBody] CheckEligibilityRequest_Fsm model)
         {
             if (model == null || model.Data == null)
