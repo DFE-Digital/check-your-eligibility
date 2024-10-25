@@ -11,6 +11,7 @@ using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NUnit.Framework.Internal;
@@ -19,6 +20,7 @@ namespace CheckYourEligibility.APIUnitTests
 {
     public class MoqDwpControllerTests : TestBase.TestBase
     {
+        private IConfigurationRoot _configuration;
         private Mock<ICheckEligibility> _mockService;
         private ILogger<EligibilityCheckController> _mockLogger;
         private MoqDWPController _sut;
@@ -26,6 +28,13 @@ namespace CheckYourEligibility.APIUnitTests
         [SetUp]
         public void Setup()
         {
+            var configForBulkUpload = new Dictionary<string, string>
+            {
+                {"BulkEligibilityCheckLimit", "5"},
+            };
+            _configuration = new ConfigurationBuilder()
+                .AddInMemoryCollection(configForBulkUpload)
+                .Build();
             _mockService = new Mock<ICheckEligibility>(MockBehavior.Strict);
             _mockLogger = Mock.Of<ILogger<EligibilityCheckController>>();
             _sut = new MoqDWPController(_mockLogger, _mockService.Object);
@@ -44,9 +53,10 @@ namespace CheckYourEligibility.APIUnitTests
             ICheckEligibility checkService = null;
             IApplication applicationService = null;
             IAudit auditService = null;
+          
 
             // Act
-            Action act = () => new EligibilityCheckController(_mockLogger, checkService,  auditService);
+            Action act = () => new EligibilityCheckController(_mockLogger, checkService,  auditService,_configuration);
 
             // Assert
             act.Should().ThrowExactly<ArgumentNullException>().And.Message.Should().EndWithEquivalentOf("Value cannot be null. (Parameter 'checkService')");
