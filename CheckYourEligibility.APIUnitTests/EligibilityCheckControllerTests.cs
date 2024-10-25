@@ -31,7 +31,7 @@ namespace CheckYourEligibility.APIUnitTests
             _mockLogger = Mock.Of<ILogger<EligibilityCheckController>>();
             var configForBulkUpload = new Dictionary<string, string>
             {
-                {"BulkUploadCheckRecordCountLimit", "5"},
+                {"BulkEligibilityCheckLimit", "5"},
             };
             _configuration = new ConfigurationBuilder()
                 .AddInMemoryCollection(configForBulkUpload)
@@ -223,7 +223,7 @@ namespace CheckYourEligibility.APIUnitTests
         {
             // Arrange
             var request = new CheckEligibilityRequestBulk_Fsm();
-            var limit = _configuration.GetValue<int>("BulkUploadCheckRecordCountLimit");
+            var limit = _configuration.GetValue<int>("BulkEligibilityCheckLimit");
             var requests = _fixture.CreateMany<CheckEligibilityRequestData_Fsm>(limit + 1);
             request.Data = requests;
 

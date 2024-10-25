@@ -34,7 +34,7 @@ namespace CheckYourEligibility.WebApp.Controllers
         {
             _logger = Guard.Against.Null(logger);
             _checkService = Guard.Against.Null(checkService);
-            _bulkUploadRecordCountLimit = configuration.GetValue<int>("BulkUploadCheckRecordCountLimit");
+            _bulkUploadRecordCountLimit = configuration.GetValue<int>("BulkEligibilityCheckLimit");
         }
 
         /// <summary>

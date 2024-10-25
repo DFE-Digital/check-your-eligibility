@@ -30,7 +30,7 @@ namespace CheckYourEligibility.APIUnitTests
         {
             var configForBulkUpload = new Dictionary<string, string>
             {
-                {"BulkUploadCheckRecordCountLimit", "5"},
+                {"BulkEligibilityCheckLimit", "5"},
             };
             _configuration = new ConfigurationBuilder()
                 .AddInMemoryCollection(configForBulkUpload)
