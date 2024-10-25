@@ -8,6 +8,7 @@ using CheckYourEligibility.WebApp.Controllers;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NUnit.Framework.Internal;
@@ -19,6 +20,7 @@ namespace CheckYourEligibility.APIUnitTests
         private Mock<ICheckEligibility> _mockCheckService;
         private Mock<IAudit> _mockAuditService;
         private ILogger<EligibilityCheckController> _mockLogger;
+        private IConfigurationRoot _configuration;
         private EligibilityCheckController _sut;
 
         [SetUp]
@@ -27,7 +29,14 @@ namespace CheckYourEligibility.APIUnitTests
             _mockCheckService = new Mock<ICheckEligibility>(MockBehavior.Strict);
             _mockAuditService = new Mock<IAudit>(MockBehavior.Strict);
             _mockLogger = Mock.Of<ILogger<EligibilityCheckController>>();
-            _sut = new EligibilityCheckController(_mockLogger, _mockCheckService.Object, _mockAuditService.Object);
+            var configForBulkUpload = new Dictionary<string, string>
+            {
+                {"BulkUploadCheckRecordCountLimit", "5"},
+            };
+            _configuration = new ConfigurationBuilder()
+                .AddInMemoryCollection(configForBulkUpload)
+                .Build();
+            _sut = new EligibilityCheckController(_mockLogger, _mockCheckService.Object, _mockAuditService.Object,_configuration);
         }
 
         [TearDown]
@@ -44,7 +53,7 @@ namespace CheckYourEligibility.APIUnitTests
             IAudit auditService = null;
 
             // Act
-            Action act = () => new EligibilityCheckController(_mockLogger, checkService, auditService);
+            Action act = () => new EligibilityCheckController(_mockLogger, checkService, auditService,_configuration);
 
             // Assert
             act.Should().ThrowExactly<ArgumentNullException>().And.Message.Should().EndWithEquivalentOf("Value cannot be null. (Parameter 'checkService')");
@@ -207,6 +216,26 @@ namespace CheckYourEligibility.APIUnitTests
 
             // Assert
             response.Result.Should().BeOfType(typeof(BadRequestObjectResult));
+        }
+
+        [Test]
+        public async Task Given_InValidRequest_RecordLimitExceeded_CheckEligibilityBulk_Should_Return_Status400BadRequest()
+        {
+            // Arrange
+            var request = new CheckEligibilityRequestBulk_Fsm();
+            var limit = _configuration.GetValue<int>("BulkUploadCheckRecordCountLimit");
+            var requests = _fixture.CreateMany<CheckEligibilityRequestData_Fsm>(limit + 1);
+            request.Data = requests;
+
+            // Act
+            var response = await _sut.CheckEligibilityBulk(request);
+
+            // Assert
+            response.Should().BeOfType(typeof(BadRequestObjectResult));
+            var badrequest = (BadRequestObjectResult) response;
+            var message = (MessageResponse)badrequest.Value;
+            message.Data.Should().BeEquivalentTo($"Invalid Request, data limit of {limit} exceeded, {requests.Count()} records.");
+            
         }
 
         [Test]
