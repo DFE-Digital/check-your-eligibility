@@ -1,4 +1,5 @@
 ﻿using Ardalis.GuardClauses;
+using CheckYourEligibility.Data.Migrations.Migrations;
 using CheckYourEligibility.Domain.Exceptions;
 using CheckYourEligibility.Domain.Requests;
 using CheckYourEligibility.Domain.Responses;
@@ -25,13 +26,15 @@ namespace CheckYourEligibility.WebApp.Controllers
         private readonly ICheckEligibility _checkService;
         
         private readonly ILogger<EligibilityCheckController> _logger;
+        private readonly int _bulkUploadRecordCountLimit;
 
 
-        public EligibilityCheckController(ILogger<EligibilityCheckController> logger, ICheckEligibility checkService, IAudit audit)
+        public EligibilityCheckController(ILogger<EligibilityCheckController> logger, ICheckEligibility checkService, IAudit audit, IConfiguration configuration)
             : base( audit)
         {
             _logger = Guard.Against.Null(logger);
             _checkService = Guard.Against.Null(checkService);
+            _bulkUploadRecordCountLimit = configuration.GetValue<int>("BulkEligibilityCheckLimit");
         }
 
         /// <summary>
@@ -68,6 +71,10 @@ namespace CheckYourEligibility.WebApp.Controllers
                 if (model == null || model.Data == null)
                 {
                     return BadRequest(new MessageResponse { Data = "Invalid Request, data is required." });
+                }
+                if (model.Data.Count()> _bulkUploadRecordCountLimit)
+                {
+                    return BadRequest(new MessageResponse { Data = $"Invalid Request, data limit of {_bulkUploadRecordCountLimit} exceeded, {model.Data.Count()} records."});
                 }
 
                 return await ProcessBulk(model);
