@@ -18,21 +18,11 @@ namespace CheckYourEligibility.WebApp.Controllers
     public class LoginController : Controller
     {
         private IConfiguration _config;
-        private List<SystemUser> _users;
         private readonly ILogger<LoginController> _logger;
 
         public LoginController(IConfiguration config, ILogger<LoginController> logger)
         {
             _config = config;
-            try
-            {
-                _users = JsonConvert.DeserializeObject<List<SystemUser>>(_config["Jwt:Users"]);
-            }
-            catch (Exception)
-            {
-                _users = _config.GetSection("Jwt:Users").Get<List<SystemUser>>();
-            }
-            
             _logger = Guard.Against.Null(logger);
         }
         [AllowAnonymous]
@@ -80,7 +70,9 @@ namespace CheckYourEligibility.WebApp.Controllers
         private SystemUser AuthenticateUser(SystemUser login)
         {
             //Validate the User Credentials
-            if (_users.FirstOrDefault(x=>x.Username == login.Username && x.Password == login.Password) != null) {
+            var password = _config.GetSection($"Jwt:Users:{login.Username}").Get<string>();
+
+            if (login.Password == password && !password.IsNullOrEmpty()) {
                 return new SystemUser { Username = login.Username };
             }
             return null;
