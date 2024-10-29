@@ -1,24 +1,15 @@
 ﻿using CheckYourEligibility.Domain.Enums;
-using Newtonsoft.Json.Converters;
 
 namespace CheckYourEligibility.Domain.Requests
 {
-    public class CheckEligibilityRequest_Fsm
-    {
-        public CheckEligibilityRequestData_Fsm? Data { get; set; }
-    }
-    public class CheckEligibilityRequestBulk_Fsm
-    {
-        public IEnumerable<CheckEligibilityRequestData_Fsm> Data { get; set; }
-    }
-
     public class CheckEligibilityRequestDataBase
     {
         protected CheckEligibilityType baseType;
-        public CheckEligibilityType Type { get { return baseType; }  }
+        public CheckEligibilityType Type { get { return baseType; } }
         public int? Sequence { get; set; }
     }
 
+    #region FreeSchoolMeals Type
     public class CheckEligibilityRequestData_Fsm : CheckEligibilityRequestDataBase
     {
         public CheckEligibilityRequestData_Fsm()
@@ -34,8 +25,15 @@ namespace CheckYourEligibility.Domain.Requests
 
         public string? NationalAsylumSeekerServiceNumber { get; set; }
     }
+    public class CheckEligibilityRequest_Fsm
+    {
+        public CheckEligibilityRequestData_Fsm? Data { get; set; }
+    }
+    public class CheckEligibilityRequestBulk_Fsm
+    {
+        public IEnumerable<CheckEligibilityRequestData_Fsm> Data { get; set; }
+    }
 
-
-
+    #endregion
 
 }

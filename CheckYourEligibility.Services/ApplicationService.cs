@@ -152,7 +152,7 @@ namespace CheckYourEligibility.Services
                .Include(x => x.School)
                .ThenInclude(x => x.LocalAuthority)
                .Include(x => x.User)
-               .Where(x => x.Type == CheckEligibilityType.FreeSchoolMeals);
+               .Where(x => x.Type == model.Data.Type);
             if (model.Data?.School != null)
                 results = results.Where(x => x.SchoolId == model.Data.School);
            if (model.Data?.LocalAuthority != null)

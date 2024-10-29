@@ -854,7 +854,9 @@ namespace CheckYourEligibility.ServiceUnitTests
             var item = _fixture.Create<EligibilityCheck>();
             
             var check =_fixture.Create<CheckEligibilityRequestData_Fsm>();
+            check.DateOfBirth = "1990-01-01";
             item.CheckData = JsonConvert.SerializeObject(GetCheckProcessData(check)) ;
+            item.Type = check.Type;
             _fakeInMemoryDb.CheckEligibilities.Add(item);
             _fakeInMemoryDb.SaveChangesAsync();
 
@@ -862,7 +864,7 @@ namespace CheckYourEligibility.ServiceUnitTests
             var response = await _sut.GetItem(item.EligibilityCheckID);
 
             // Assert
-            response.Should().BeOfType<CheckEligibilityItemFsm>();
+            response.Should().BeOfType<CheckEligibilityItem>();
             response.DateOfBirth.Should().BeEquivalentTo(check.DateOfBirth);
             response.NationalAsylumSeekerServiceNumber.Should().BeEquivalentTo(check.NationalAsylumSeekerServiceNumber);
             response.NationalInsuranceNumber.Should().BeEquivalentTo(check.NationalInsuranceNumber);
@@ -896,7 +898,7 @@ namespace CheckYourEligibility.ServiceUnitTests
             var response = _sut.GetBulkCheckResults(groupId);
 
             // Assert
-            response.Result.Should().BeOfType<List<CheckEligibilityItemFsm>>();
+            response.Result.Should().BeOfType<List<CheckEligibilityItem>>();
         }
 
         [Test]

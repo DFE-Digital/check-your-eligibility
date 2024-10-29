@@ -473,7 +473,7 @@ namespace CheckYourEligibility.APIUnitTests
         {
             // Arrange
             var guid = _fixture.Create<Guid>().ToString();
-            _mockCheckService.Setup(cs => cs.GetBulkCheckResults(guid)).Returns(Task.FromResult<IEnumerable<CheckEligibilityItemFsm>>(null));
+            _mockCheckService.Setup(cs => cs.GetBulkCheckResults(guid)).Returns(Task.FromResult<IEnumerable<CheckEligibilityItem>>(null));
             var expectedResult = new ObjectResult(guid)
             { StatusCode = StatusCodes.Status404NotFound };
 
@@ -489,7 +489,7 @@ namespace CheckYourEligibility.APIUnitTests
         {
             // Arrange
             var guid = _fixture.Create<Guid>().ToString();
-            var resultItems = _fixture.CreateMany<CheckEligibilityItemFsm>();
+            var resultItems = _fixture.CreateMany<CheckEligibilityItem>();
             _mockCheckService.Setup(cs => cs.GetBulkCheckResults(guid)).Returns(Task.FromResult(resultItems));
             _mockAuditService.Setup(cs => cs.AuditAdd(It.IsAny<AuditData>())).ReturnsAsync(Guid.NewGuid().ToString());
             var expectedResult = new ObjectResult(new CheckEligibilityBulkResponse()
@@ -601,7 +601,7 @@ namespace CheckYourEligibility.APIUnitTests
         {
             // Arrange
             var guid = _fixture.Create<Guid>().ToString();
-            _mockCheckService.Setup(cs => cs.GetItem(guid)).Returns(Task.FromResult<CheckEligibilityItemFsm?>(null));
+            _mockCheckService.Setup(cs => cs.GetItem(guid)).Returns(Task.FromResult<CheckEligibilityItem?>(null));
             var expectedResult = new ObjectResult(guid)
             { StatusCode = StatusCodes.Status404NotFound };
 
@@ -617,7 +617,7 @@ namespace CheckYourEligibility.APIUnitTests
         {
             // Arrange
             var guid = _fixture.Create<Guid>().ToString();
-            var expectedResponse = _fixture.Create<CheckEligibilityItemFsm>();
+            var expectedResponse = _fixture.Create<CheckEligibilityItem>();
             _mockCheckService.Setup(cs => cs.GetItem(guid)).ReturnsAsync(expectedResponse);
             _mockAuditService.Setup(cs => cs.AuditAdd(It.IsAny<AuditData>())).ReturnsAsync(Guid.NewGuid().ToString());
             var expectedResult = new ObjectResult(new CheckEligibilityItemResponse()

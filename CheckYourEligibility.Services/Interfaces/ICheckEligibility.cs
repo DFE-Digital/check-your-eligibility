@@ -6,9 +6,9 @@ namespace CheckYourEligibility.Services.Interfaces
 {
     public interface ICheckEligibility
     {
-        Task<IEnumerable<CheckEligibilityItemFsm>> GetBulkCheckResults(string guid);
+        Task<IEnumerable<CheckEligibilityItem>> GetBulkCheckResults(string guid);
         Task<BulkStatus?> GetBulkStatus(string guid);
-        Task<CheckEligibilityItemFsm?> GetItem(string guid);
+        Task<CheckEligibilityItem?> GetItem(string guid);
         Task<CheckEligibilityStatus?> GetStatus(string guid);
         Task<PostCheckResult> PostCheck<T>(T data);
         Task PostCheck<T>(IEnumerable<T> data, string groupId);

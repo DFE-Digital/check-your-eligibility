@@ -149,32 +149,33 @@ namespace CheckYourEligibility.Services
             return null;
         }
 
-        public async Task<CheckEligibilityItemFsm?> GetItem(string guid)
+
+        public async Task<CheckEligibilityItem?> GetItem(string guid)
         {
             var result = await _db.CheckEligibilities.FirstOrDefaultAsync(x => x.EligibilityCheckID == guid);
 
-
             if (result != null)
             {
-                var item = _mapper.Map<CheckEligibilityItemFsm>(result);
-                var CheckData = GetCheckProcessData(CheckEligibilityType.FreeSchoolMeals, result.CheckData);
+                var item = _mapper.Map<CheckEligibilityItem>(result);
+                var CheckData = GetCheckProcessData(result.Type, result.CheckData);
                 item.DateOfBirth = CheckData.DateOfBirth;
                 item.NationalInsuranceNumber = CheckData.NationalInsuranceNumber;
                 item.NationalAsylumSeekerServiceNumber = CheckData.NationalAsylumSeekerServiceNumber;
                 item.LastName = CheckData.LastName;
-                return  item ;
+
+                return item;
             }
-            return null;
+            return default;
         }
 
-        public async Task<IEnumerable<CheckEligibilityItemFsm>> GetBulkCheckResults(string guid)
+        public async Task<IEnumerable<CheckEligibilityItem>> GetBulkCheckResults(string guid)
         {
             var resultList =  _db.CheckEligibilities
                 .Where(x => x.Group == guid)
                 .OrderBy(x=>x.Sequence);
             if (resultList != null && resultList.Any())
             {
-                var items = _mapper.Map<List<CheckEligibilityItemFsm>>(resultList);
+                var items = _mapper.Map<List<CheckEligibilityItem>>(resultList);
                 return items;
             }
             return null;
