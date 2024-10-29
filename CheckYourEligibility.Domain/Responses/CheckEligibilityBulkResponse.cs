@@ -2,6 +2,6 @@
 {
     public class CheckEligibilityBulkResponse
     {
-        public IEnumerable<CheckEligibilityItemFsm> Data { get; set; }
+        public IEnumerable<CheckEligibilityItem> Data { get; set; }
     }
 }
