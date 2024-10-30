@@ -133,7 +133,7 @@ namespace CheckYourEligibility.WebApp.Controllers
         {
             try
             {
-                var response = await _checkService.GetBulkCheckResults(guid);
+                var response = await _checkService.GetBulkCheckResults<IList<CheckEligibilityItem>>(guid);
                 if (response == null)
                 {
                     return NotFound(guid);
@@ -141,7 +141,7 @@ namespace CheckYourEligibility.WebApp.Controllers
                 await AuditAdd(Domain.Enums.AuditType.CheckBulkResults, guid);
                 return new ObjectResult(new CheckEligibilityBulkResponse()
                 {
-                    Data = response
+                    Data = response as List<CheckEligibilityItem>,
                 })
                 { StatusCode = StatusCodes.Status200OK };
             }
@@ -272,7 +272,7 @@ namespace CheckYourEligibility.WebApp.Controllers
             try
             {
 
-                var response = await _checkService.GetItem(guid);
+                var response = await _checkService.GetItem<CheckEligibilityItem>(guid);
                 if (response == null)
                 {
                     return NotFound(guid);
@@ -351,7 +351,7 @@ namespace CheckYourEligibility.WebApp.Controllers
             return validationResults;
         }
 
-        private async Task<ActionResult> ProcessBulk<T>(T model)
+        private async Task<ActionResult> ProcessBulk<T>(T model) where T : CheckEligibilityRequestBulk_Fsm
         {
             StringBuilder validationResultsItems = ValidateBulkItems(model);
 
