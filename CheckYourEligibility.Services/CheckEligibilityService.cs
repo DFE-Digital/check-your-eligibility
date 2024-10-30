@@ -18,7 +18,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.IdentityModel.Tokens;
+using NetTopologySuite.Index.HPRtree;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
@@ -55,7 +57,7 @@ namespace CheckYourEligibility.Services
             setQueueBulk(configuration.GetValue<string>("QueueFsmCheckBulk"), queueClientService);
         }
 
-        public async Task PostCheck<T>(IEnumerable<T> data, string groupId)
+        public async Task PostCheck<T>(T data, string groupId) where T : IEnumerable<CheckEligibilityRequestData_Fsm> 
         {
             _groupId = groupId;
             foreach (var item in data)
@@ -64,9 +66,8 @@ namespace CheckYourEligibility.Services
             }
         }
 
-        public async Task<PostCheckResult> PostCheck<T>(T data)
+        public async Task<PostCheckResult> PostCheck<T>(T data) where T : CheckEligibilityRequestData_Fsm
         {    
-
             var item = _mapper.Map<EligibilityCheck>(data);
 
             try
@@ -150,7 +151,7 @@ namespace CheckYourEligibility.Services
         }
 
 
-        public async Task<CheckEligibilityItem?> GetItem(string guid)
+        public async Task<T?> GetItem<T>(string guid) where T : CheckEligibilityItem
         {
             var result = await _db.CheckEligibilities.FirstOrDefaultAsync(x => x.EligibilityCheckID == guid);
 
@@ -163,22 +164,32 @@ namespace CheckYourEligibility.Services
                 item.NationalAsylumSeekerServiceNumber = CheckData.NationalAsylumSeekerServiceNumber;
                 item.LastName = CheckData.LastName;
 
-                return item;
+                return (T)(object)item;
+
             }
             return default;
         }
 
-        public async Task<IEnumerable<CheckEligibilityItem>> GetBulkCheckResults(string guid)
+        public async Task<T> GetBulkCheckResults<T>(string guid) where T : IList<CheckEligibilityItem>
         {
             var resultList =  _db.CheckEligibilities
                 .Where(x => x.Group == guid)
                 .OrderBy(x=>x.Sequence);
             if (resultList != null && resultList.Any())
             {
-                var items = _mapper.Map<List<CheckEligibilityItem>>(resultList);
-                return items;
+                var type = typeof(T);
+                if (type == typeof(IList<CheckEligibilityItem>))
+                {
+                    var items = _mapper.Map<T>(resultList);
+                  
+                    return items;
+                }
+                else
+                {
+                    throw new Exception($"unable to cast to type {type}");
+                }
             }
-            return null;
+            return default;
         }
 
         public  static string GetHash(CheckProcessData item)

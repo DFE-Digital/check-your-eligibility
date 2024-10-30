@@ -104,7 +104,7 @@ namespace CheckYourEligibility.ServiceUnitTests
             db.Setup(x => x.CheckEligibilities.AddAsync(It.IsAny<EligibilityCheck>(), It.IsAny<CancellationToken>())).ThrowsAsync(new Exception());
             
             // Act
-            Func<Task> act = async () => await svc.PostCheck(request);
+            Func<Task> act = async () => await svc.PostCheck<CheckEligibilityRequestData_Fsm>(request);
 
             // Assert
             act.Should().ThrowExactlyAsync<DbUpdateException>();
@@ -841,7 +841,7 @@ namespace CheckYourEligibility.ServiceUnitTests
             var request = _fixture.Create<Guid>().ToString();
 
             // Act
-            var response = _sut.GetItem(request);
+            var response = _sut.GetItem<CheckEligibilityItem>(request);
 
             // Assert
             response.Result.Should().BeNull();
@@ -861,7 +861,7 @@ namespace CheckYourEligibility.ServiceUnitTests
             _fakeInMemoryDb.SaveChangesAsync();
 
             // Act
-            var response = await _sut.GetItem(item.EligibilityCheckID);
+            var response = await _sut.GetItem<CheckEligibilityItem>(item.EligibilityCheckID);
 
             // Assert
             response.Should().BeOfType<CheckEligibilityItem>();
@@ -878,7 +878,7 @@ namespace CheckYourEligibility.ServiceUnitTests
             var request = _fixture.Create<Guid>().ToString();
 
             // Act
-            var response = _sut.GetBulkCheckResults(request);
+            var response = _sut.GetBulkCheckResults<IList<CheckEligibilityItem>> (request);
 
             // Assert
             response.Result.Should().BeNull();
@@ -895,7 +895,7 @@ namespace CheckYourEligibility.ServiceUnitTests
             _fakeInMemoryDb.SaveChangesAsync();
 
             // Act
-            var response = _sut.GetBulkCheckResults(groupId);
+            var response = _sut.GetBulkCheckResults<IList<CheckEligibilityItem>> (groupId);
 
             // Assert
             response.Result.Should().BeOfType<List<CheckEligibilityItem>>();
