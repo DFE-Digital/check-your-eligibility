@@ -49,22 +49,6 @@ namespace CheckYourEligibility.APIUnitTests
         }
 
         [Test]
-        public async Task Given_ApplicationSearch_Exception_Return_500()
-        {
-            // Arrange
-            var request = _fixture.Create<UserCreateRequest>();
-            _mockService.Setup(x => x.Create(It.IsAny<UserData>())).Throws<Exception>();
-
-            var expectedResult = new StatusCodeResult(500);
-
-            // Act
-            var response = await _sut.User(request);
-
-            // Assert
-            response.Should().BeEquivalentTo(expectedResult);
-        }
-
-        [Test]
         public void Given_valid_Request_Post_Should_Return_Status201Created()
         {
             // Arrange

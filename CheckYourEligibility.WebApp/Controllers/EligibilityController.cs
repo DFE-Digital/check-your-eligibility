@@ -66,24 +66,16 @@ namespace CheckYourEligibility.WebApp.Controllers
         [HttpPost("/EligibilityCheck/FreeSchoolMeals/Bulk")]
         public async Task<ActionResult> CheckEligibilityBulk([FromBody] CheckEligibilityRequestBulk_Fsm model)
         {
-            try
+            if (model == null || model.Data == null)
             {
-                if (model == null || model.Data == null)
-                {
-                    return BadRequest(new MessageResponse { Data = "Invalid Request, data is required." });
-                }
-                if (model.Data.Count()> _bulkUploadRecordCountLimit)
-                {
-                    return BadRequest(new MessageResponse { Data = $"Invalid Request, data limit of {_bulkUploadRecordCountLimit} exceeded, {model.Data.Count()} records."});
-                }
+                return BadRequest(new MessageResponse { Data = "Invalid Request, data is required." });
+            }
+            if (model.Data.Count() > _bulkUploadRecordCountLimit)
+            {
+                return BadRequest(new MessageResponse { Data = $"Invalid Request, data limit of {_bulkUploadRecordCountLimit} exceeded, {model.Data.Count()} records." });
+            }
 
-                return await ProcessBulk(model);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, ex.Message);
-                return StatusCode(500);
-            }
+            return await ProcessBulk(model);
         }
 
         /// <summary>
@@ -96,29 +88,19 @@ namespace CheckYourEligibility.WebApp.Controllers
         [HttpGet("Bulk/{guid}/CheckProgress")]
         public async Task<ActionResult> BulkUploadProgress(string guid)
         {
-            try
+            var response = await _checkService.GetBulkStatus(guid);
+            if (response == null)
             {
-
-                var response = await _checkService.GetBulkStatus(guid);
-                if (response == null)
-                {
-                    return NotFound(guid);
-                }
-
-                return new ObjectResult(new CheckEligibilityBulkStatusResponse()
-                {
-                    Data = response,
-                    Links = new BulkCheckResponseLinks()
-                    { Get_BulkCheck_Results = $"{Domain.Constants.CheckLinks.BulkCheckLink}{guid}{Domain.Constants.CheckLinks.BulkCheckResults}" }
-                })
-                { StatusCode = StatusCodes.Status200OK };
-
+                return NotFound(guid);
             }
-            catch (Exception ex)
+
+            return new ObjectResult(new CheckEligibilityBulkStatusResponse()
             {
-                _logger.LogError(ex, ex.Message);
-                return StatusCode(500);
-            }
+                Data = response,
+                Links = new BulkCheckResponseLinks()
+                { Get_BulkCheck_Results = $"{Domain.Constants.CheckLinks.BulkCheckLink}{guid}{Domain.Constants.CheckLinks.BulkCheckResults}" }
+            })
+            { StatusCode = StatusCodes.Status200OK };
         }
 
         /// <summary>
@@ -131,25 +113,18 @@ namespace CheckYourEligibility.WebApp.Controllers
         [HttpGet("Bulk/{guid}/Results")]
         public async Task<ActionResult> BulkUploadResults(string guid)
         {
-            try
+            var response = await _checkService.GetBulkCheckResults<IList<CheckEligibilityItem>>(guid);
+            if (response == null)
             {
-                var response = await _checkService.GetBulkCheckResults<IList<CheckEligibilityItem>>(guid);
-                if (response == null)
-                {
-                    return NotFound(guid);
-                }
-                await AuditAdd(Domain.Enums.AuditType.CheckBulkResults, guid);
-                return new ObjectResult(new CheckEligibilityBulkResponse()
-                {
-                    Data = response as List<CheckEligibilityItem>,
-                })
-                { StatusCode = StatusCodes.Status200OK };
+                return NotFound(guid);
             }
-            catch (Exception ex)
+            await AuditAdd(Domain.Enums.AuditType.CheckBulkResults, guid);
+            return new ObjectResult(new CheckEligibilityBulkResponse()
             {
-                _logger.LogError(ex, ex.Message);
-                return StatusCode(500);
-            }
+                Data = response as List<CheckEligibilityItem>,
+            })
+            { StatusCode = StatusCodes.Status200OK };
+
         }
 
 
@@ -163,22 +138,14 @@ namespace CheckYourEligibility.WebApp.Controllers
         [HttpGet("{guid}/Status")]
         public async Task<ActionResult> CheckEligibilityStatus(string guid)
         {
-            try
+            var response = await _checkService.GetStatus(guid);
+            if (response == null)
             {
-                var response = await _checkService.GetStatus(guid);
-                if (response == null)
-                {
-                    return NotFound(guid);
-                }
-                await AuditAdd(Domain.Enums.AuditType.Check, guid);
+                return NotFound(guid);
+            }
+            await AuditAdd(Domain.Enums.AuditType.Check, guid);
 
-                return new ObjectResult(new CheckEligibilityStatusResponse() { Data = new StatusValue() { Status = response.Value.ToString() } }) { StatusCode = StatusCodes.Status200OK };
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, ex.Message);
-                return StatusCode(500);
-            }
+            return new ObjectResult(new CheckEligibilityStatusResponse() { Data = new StatusValue() { Status = response.Value.ToString() } }) { StatusCode = StatusCodes.Status200OK };
         }
 
         /// <summary>
@@ -191,27 +158,20 @@ namespace CheckYourEligibility.WebApp.Controllers
         [HttpPatch("{guid}/Status")]
         public async Task<ActionResult> EligibilityCheckStatusUpdate(string guid, [FromBody] EligibilityStatusUpdateRequest model)
         {
-            try
+            var response = await _checkService.UpdateEligibilityCheckStatus(guid, model.Data);
+            if (response == null)
             {
-                var response = await _checkService.UpdateEligibilityCheckStatus(guid, model.Data);
-                if (response == null)
-                {
-                    return NotFound();
-                }
-
-                await AuditAdd(Domain.Enums.AuditType.Check, guid);
-
-                return new ObjectResult(new CheckEligibilityStatusResponse
-                {
-                    Data = response.Data
-                })
-                { StatusCode = StatusCodes.Status200OK };
+                return NotFound();
             }
-            catch (Exception ex)
+
+            await AuditAdd(Domain.Enums.AuditType.Check, guid);
+
+            return new ObjectResult(new CheckEligibilityStatusResponse
             {
-                _logger.LogError(ex, ex.Message);
-                return StatusCode(500);
-            }
+                Data = response.Data
+            })
+            { StatusCode = StatusCodes.Status200OK };
+
         }
 
         /// <summary>
@@ -252,11 +212,6 @@ namespace CheckYourEligibility.WebApp.Controllers
             {
                 return BadRequest(guid);
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, ex.Message);
-                return StatusCode(500);
-            }
         }
 
         /// <summary>
@@ -269,58 +224,40 @@ namespace CheckYourEligibility.WebApp.Controllers
         [HttpGet("{guid}")]
         public async Task<ActionResult> EligibilityCheck(string guid)
         {
-            try
+            var response = await _checkService.GetItem<CheckEligibilityItem>(guid);
+            if (response == null)
             {
-
-                var response = await _checkService.GetItem<CheckEligibilityItem>(guid);
-                if (response == null)
+                return NotFound(guid);
+            }
+            await AuditAdd(Domain.Enums.AuditType.Check, guid);
+            return new ObjectResult(new CheckEligibilityItemResponse()
+            {
+                Data = response,
+                Links = new CheckEligibilityResponseLinks
                 {
-                    return NotFound(guid);
+                    Get_EligibilityCheck = $"{Domain.Constants.CheckLinks.GetLink}{guid}",
+                    Put_EligibilityCheckProcess = $"{Domain.Constants.CheckLinks.ProcessLink}{guid}",
+                    Get_EligibilityCheckStatus = $"{Domain.Constants.CheckLinks.GetLink}{guid}/Status"
                 }
-                await AuditAdd(Domain.Enums.AuditType.Check, guid);
-                return new ObjectResult(new CheckEligibilityItemResponse()
-                {
-                    Data = response,
-                    Links = new CheckEligibilityResponseLinks
-                    {
-                        Get_EligibilityCheck = $"{Domain.Constants.CheckLinks.GetLink}{guid}",
-                        Put_EligibilityCheckProcess = $"{Domain.Constants.CheckLinks.ProcessLink}{guid}",
-                        Get_EligibilityCheckStatus = $"{Domain.Constants.CheckLinks.GetLink}{guid}/Status"
-                    }
-                })
-                { StatusCode = StatusCodes.Status200OK };
-
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, ex.Message);
-                return StatusCode(500);
-            }
+            })
+            { StatusCode = StatusCodes.Status200OK };
         }
 
         public async Task<ActionResult> PostCheck<T>(T model)
         {
-            try
+            switch (model)
             {
-                switch (model)
-                {
-                    case CheckEligibilityRequest_Fsm requestData:
-                        {
-                            var validationResults = Validate_Fsm(requestData);
-                            if (!validationResults.IsValid)
-                                return BadRequest(new MessageResponse { Data = validationResults.ToString() });
+                case CheckEligibilityRequest_Fsm requestData:
+                    {
+                        var validationResults = Validate_Fsm(requestData);
+                        if (!validationResults.IsValid)
+                            return BadRequest(new MessageResponse { Data = validationResults.ToString() });
 
-                            var response = await _checkService.PostCheck(requestData.Data);
-                            return await GetPostResponse(response);
-                        }
-                    default:
-                        throw new Exception($"Unknown request type:-{model.GetType()}");
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, ex.Message);
-                return StatusCode(500);
+                        var response = await _checkService.PostCheck(requestData.Data);
+                        return await GetPostResponse(response);
+                    }
+                default:
+                    throw new Exception($"Unknown request type:-{model.GetType()}");
             }
         }
 

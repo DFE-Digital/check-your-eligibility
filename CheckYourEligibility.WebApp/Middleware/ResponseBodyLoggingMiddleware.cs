@@ -45,6 +45,7 @@ namespace CheckYourEligibility.WebApp.Middleware
                 catch (Exception ex)
                 {
                 _logger.LogInformation(ex,"Api Response Middleware");
+                throw;
                 }
             
         }

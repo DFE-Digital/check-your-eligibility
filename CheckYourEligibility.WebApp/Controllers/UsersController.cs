@@ -34,26 +34,19 @@ namespace CheckYourEligibility.WebApp.Controllers
         [HttpPost()]
         public async Task<ActionResult> User([FromBody] UserCreateRequest model)
         {
-            try
+            if (model == null || model.Data == null)
             {
-                if (model == null || model.Data == null)
-                {
-                    return BadRequest(new MessageResponse { Data = "Invalid request, data is required." });
-                }
+                return BadRequest(new MessageResponse { Data = "Invalid request, data is required." });
+            }
 
-                var response = await _service.Create(model.Data);
-                await AuditAdd(Domain.Enums.AuditType.User, response);
-                return new ObjectResult(new UserSaveItemResponse
-                {
-                    Data = response
-                })
-                { StatusCode = StatusCodes.Status201Created };
-            }
-            catch (Exception ex)
+            var response = await _service.Create(model.Data);
+            await AuditAdd(Domain.Enums.AuditType.User, response);
+            return new ObjectResult(new UserSaveItemResponse
             {
-                _logger.LogError(ex, ex.Message);
-                return StatusCode(500);
-            }
+                Data = response
+            })
+            { StatusCode = StatusCodes.Status201Created };
+
         }
     }
 }
