@@ -2,12 +2,14 @@
 
 namespace CheckYourEligibility.Domain.Requests
 {
-    public class CheckEligibilityRequestDataBase
+    public class CheckEligibilityRequestDataBase : IEligibilityServiceType
     {
         protected CheckEligibilityType baseType;
         public CheckEligibilityType Type { get { return baseType; } }
         public int? Sequence { get; set; }
     }
+
+    public interface IEligibilityServiceType { }
 
     #region FreeSchoolMeals Type
     public class CheckEligibilityRequestData_Fsm : CheckEligibilityRequestDataBase
