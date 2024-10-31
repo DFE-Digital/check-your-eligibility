@@ -57,7 +57,7 @@ namespace CheckYourEligibility.Services
             setQueueBulk(configuration.GetValue<string>("QueueFsmCheckBulk"), queueClientService);
         }
 
-        public async Task PostCheck<T>(T data, string groupId) where T : IEnumerable<CheckEligibilityRequestData_Fsm> 
+        public async Task PostCheck<T>(T data, string groupId) where T : IEnumerable<IEligibilityServiceType> 
         {
             _groupId = groupId;
             foreach (var item in data)
@@ -66,7 +66,7 @@ namespace CheckYourEligibility.Services
             }
         }
 
-        public async Task<PostCheckResult> PostCheck<T>(T data) where T : CheckEligibilityRequestData_Fsm
+        public async Task<PostCheckResult> PostCheck<T>(T data) where T : IEligibilityServiceType
         {    
             var item = _mapper.Map<EligibilityCheck>(data);
 
@@ -327,20 +327,24 @@ namespace CheckYourEligibility.Services
             switch (type)
             {
                 case CheckEligibilityType.FreeSchoolMeals:
-                    {
-                        var checkItem = JsonConvert.DeserializeObject<CheckEligibilityRequestData_Fsm>(data);
-                        return new CheckProcessData
-                        {
-                            DateOfBirth = checkItem.DateOfBirth,
-                            LastName = checkItem.LastName.ToUpper(),
-                            NationalAsylumSeekerServiceNumber = checkItem.NationalAsylumSeekerServiceNumber,
-                            NationalInsuranceNumber = checkItem.NationalInsuranceNumber,
-                            Type = type,
-                        };
-                    }
+                    return GetCheckProcessDataType<CheckEligibilityRequestData_Fsm>(type, data);
                 default:
                     throw new NotImplementedException($"Type:-{type} not supported.");
             }
+        }
+
+        private static CheckProcessData GetCheckProcessDataType<T>(CheckEligibilityType type, string data) where T : IEligibilityServiceType
+        {
+            dynamic checkItem = JsonConvert.DeserializeObject(data, typeof(T));
+            //CheckEligibilityRequestData_Fsm checkItem = JsonConvert.DeserializeObject<T>(data);
+            return new CheckProcessData
+            {
+                DateOfBirth = checkItem.DateOfBirth,
+                LastName = checkItem.LastName.ToUpper(),
+                NationalAsylumSeekerServiceNumber = checkItem.NationalAsylumSeekerServiceNumber,
+                NationalInsuranceNumber = checkItem.NationalInsuranceNumber,
+                Type = type,
+            };
         }
 
         [ExcludeFromCodeCoverage(Justification = "Queue is external dependency.")]
