@@ -42,17 +42,10 @@ namespace CheckYourEligibility.WebApp.Controllers
         [HttpPut("/cleanUpEligibilityChecks")]
         public async Task<ActionResult> CleanUpEligibilityChecks()
         {
-            try
-            {
-                await _service.CleanUpEligibilityChecks();
-                await AuditAdd(Domain.Enums.AuditType.Administration, string.Empty);
-                return new ObjectResult(new MessageResponse { Data = $"{Admin.EligibilityChecksCleanse}" }) { StatusCode = StatusCodes.Status200OK };
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, ex.Message);
-                return StatusCode(500);
-            }
+            await _service.CleanUpEligibilityChecks();
+            await AuditAdd(Domain.Enums.AuditType.Administration, string.Empty);
+            return new ObjectResult(new MessageResponse { Data = $"{Admin.EligibilityChecksCleanse}" }) { StatusCode = StatusCodes.Status200OK };
+
         }
 
         /// <summary>
@@ -64,55 +57,48 @@ namespace CheckYourEligibility.WebApp.Controllers
         [HttpPost("/importEstablishments")]
         public async Task<ActionResult> ImportEstablishments(IFormFile file)
         {
+            List<EstablishmentRow> DataLoad;
+            if (file == null || file.ContentType.ToLower() != "text/csv")
+            {
+                return BadRequest(new MessageResponse { Data = $"{Admin.CsvfileRequired}" });
+            }
             try
             {
-                List<EstablishmentRow> DataLoad;
-                if (file == null || file.ContentType.ToLower() != "text/csv")
+                var config = new CsvConfiguration(CultureInfo.InvariantCulture)
                 {
-                    return BadRequest(new MessageResponse { Data = $"{Admin.CsvfileRequired}" });
-                }
-                try
+                    HasHeaderRecord = true,
+                    BadDataFound = null,
+                    MissingFieldFound = null
+                };
+                using (var fileStream = file.OpenReadStream())
+
+                using (var csv = new CsvReader(new StreamReader(fileStream), config))
                 {
-                    var config = new CsvConfiguration(CultureInfo.InvariantCulture)
-                    {
-                        HasHeaderRecord = true,
-                        BadDataFound = null,
-                        MissingFieldFound = null
-                    };
-                    using (var fileStream = file.OpenReadStream())
+                    csv.Context.RegisterClassMap<EstablishmentRowMap>();
+                    DataLoad = csv.GetRecords<EstablishmentRow>().ToList();
 
-                    using (var csv = new CsvReader(new StreamReader(fileStream), config))
+                    if (DataLoad == null || !DataLoad.Any())
                     {
-                        csv.Context.RegisterClassMap<EstablishmentRowMap>();
-                        DataLoad = csv.GetRecords<EstablishmentRow>().ToList();
-
-                        if (DataLoad == null || !DataLoad.Any())
-                        {
-                            throw new InvalidDataException("Invalid file content.");
-                        }
+                        throw new InvalidDataException("Invalid file content.");
                     }
                 }
-                catch (Exception ex)
-                {
-                    _logger.LogError("ImportEstablishmentData", ex);
-                    return new ObjectResult(new MessageResponse
-                    {
-                        Data = $"{file.FileName} - {JsonConvert.SerializeObject(new EstablishmentRow())} :- {ex.Message}," +
-                        $"{ex.InnerException?.Message}"
-                    })
-                    { StatusCode = StatusCodes.Status400BadRequest };
-                }
-
-                await _service.ImportEstablishments(DataLoad);
-
-                await AuditAdd(Domain.Enums.AuditType.Administration, string.Empty);
-                return new ObjectResult(new MessageResponse { Data = $"{file.FileName} - {Admin.EstablishmentFileProcessed}" }) { StatusCode = StatusCodes.Status200OK };
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, ex.Message);
-                return StatusCode(500);
+                _logger.LogError("ImportEstablishmentData", ex);
+                return new ObjectResult(new MessageResponse
+                {
+                    Data = $"{file.FileName} - {JsonConvert.SerializeObject(new EstablishmentRow())} :- {ex.Message}," +
+                    $"{ex.InnerException?.Message}"
+                })
+                { StatusCode = StatusCodes.Status400BadRequest };
             }
+
+            await _service.ImportEstablishments(DataLoad);
+
+            await AuditAdd(Domain.Enums.AuditType.Administration, string.Empty);
+            return new ObjectResult(new MessageResponse { Data = $"{file.FileName} - {Admin.EstablishmentFileProcessed}" }) { StatusCode = StatusCodes.Status200OK };
+
         }
 
 
@@ -125,61 +111,53 @@ namespace CheckYourEligibility.WebApp.Controllers
         [HttpPost("/importFsmHomeOfficeData")]
         public async Task<ActionResult> ImportFsmHomeOfficeData(IFormFile file)
         {
+            List<FreeSchoolMealsHO> DataLoad;
+            if (file == null || file.ContentType.ToLower() != "text/csv")
+            {
+                return BadRequest(new MessageResponse { Data = $"{Admin.CsvfileRequired}" });
+            }
             try
             {
-                List<FreeSchoolMealsHO> DataLoad;
-                if (file == null || file.ContentType.ToLower() != "text/csv")
+
+                var config = new CsvConfiguration(CultureInfo.InvariantCulture)
                 {
-                    return BadRequest(new MessageResponse { Data = $"{Admin.CsvfileRequired}" });
-                }
-                try
+                    HasHeaderRecord = false,
+                    BadDataFound = null, //arg => badRows.Add(arg.Context.Parser.RawRecord),
+                    MissingFieldFound = null
+                };
+                using (var fileStream = file.OpenReadStream())
+
+                using (var csv = new CsvReader(new StreamReader(fileStream), config))
                 {
+                    csv.Context.RegisterClassMap<HomeOfficeRowMap>();
+                    var records = csv.GetRecords<HomeOfficeRow>();
 
-                    var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+                    DataLoad = records.Select(x => new FreeSchoolMealsHO
                     {
-                        HasHeaderRecord = false,
-                        BadDataFound = null, //arg => badRows.Add(arg.Context.Parser.RawRecord),
-                        MissingFieldFound = null
-                    };
-                    using (var fileStream = file.OpenReadStream())
-
-                    using (var csv = new CsvReader(new StreamReader(fileStream), config))
+                        FreeSchoolMealsHOID = Guid.NewGuid().ToString(),
+                        NASS = x.Nas,
+                        LastName = x.Surname,
+                        DateOfBirth = DateTime.ParseExact(x.Dob, "yyyyMMdd", CultureInfo.InvariantCulture)
+                    }).ToList();
+                    if (DataLoad == null || DataLoad.Count == 0)
                     {
-                        csv.Context.RegisterClassMap<HomeOfficeRowMap>();
-                        var records = csv.GetRecords<HomeOfficeRow>();
-
-                        DataLoad = records.Select(x => new FreeSchoolMealsHO
-                        {
-                            FreeSchoolMealsHOID = Guid.NewGuid().ToString(),
-                            NASS = x.Nas,
-                            LastName = x.Surname,
-                            DateOfBirth = DateTime.ParseExact(x.Dob, "yyyyMMdd", CultureInfo.InvariantCulture)
-                        }).ToList();
-                        if (DataLoad == null || DataLoad.Count == 0)
-                        {
-                            throw new InvalidDataException("Invalid file content.");
-                        }
+                        throw new InvalidDataException("Invalid file content.");
                     }
                 }
-                catch (Exception ex)
-                {
-                    _logger.LogError("ImportHomeOfficeData", ex);
-                    return new ObjectResult(new MessageResponse
-                    {
-                        Data = $"{file.FileName} - {JsonConvert.SerializeObject(new HomeOfficeRow())} :- {ex.Message}," +
-                        $"{ex.InnerException?.Message}"
-                    })
-                    { StatusCode = StatusCodes.Status400BadRequest };
-                }
-                await _service.ImportHomeOfficeData(DataLoad);
-                await AuditAdd(Domain.Enums.AuditType.Administration, string.Empty);
-                return new ObjectResult(new MessageResponse { Data = $"{file.FileName} - {Admin.HomeOfficeFileProcessed}" }) { StatusCode = StatusCodes.Status200OK };
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, ex.Message);
-                return StatusCode(500);
+                _logger.LogError("ImportHomeOfficeData", ex);
+                return new ObjectResult(new MessageResponse
+                {
+                    Data = $"{file.FileName} - {JsonConvert.SerializeObject(new HomeOfficeRow())} :- {ex.Message}," +
+                    $"{ex.InnerException?.Message}"
+                })
+                { StatusCode = StatusCodes.Status400BadRequest };
             }
+            await _service.ImportHomeOfficeData(DataLoad);
+            await AuditAdd(Domain.Enums.AuditType.Administration, string.Empty);
+            return new ObjectResult(new MessageResponse { Data = $"{file.FileName} - {Admin.HomeOfficeFileProcessed}" }) { StatusCode = StatusCodes.Status200OK };
         }
 
         /// <summary>
@@ -192,58 +170,52 @@ namespace CheckYourEligibility.WebApp.Controllers
         [HttpPost("/importFsmHMRCData")]
         public async Task<ActionResult> ImportFsmHMRCData(IFormFile file)
         {
+
+            List<FreeSchoolMealsHMRC> DataLoad = new();
+            if (file == null || file.ContentType.ToLower() != "text/xml")
+            {
+                return BadRequest(new MessageResponse { Data = $"{Admin.XmlfileRequired}" });
+            }
             try
             {
-                List<FreeSchoolMealsHMRC> DataLoad = new();
-                if (file == null || file.ContentType.ToLower() != "text/xml")
-                {
-                    return BadRequest(new MessageResponse { Data = $"{Admin.XmlfileRequired}" });
-                }
-                try
-                {
-                    using var fileStream = file.OpenReadStream();
-                    XElement po = XElement.Load(fileStream);
-                    IEnumerable<XElement> childElements =
-                        from el in po.Elements()
-                        select el;
-                    var EligiblePersons = childElements.FirstOrDefault(x => x.Name.LocalName == "EligiblePersons");
-                    if (EligiblePersons != null)
-                        DataLoad.AddRange(from XElement EligiblePerson in EligiblePersons.Nodes()
-                                          let elements = EligiblePerson.Elements()
-                                          let item = new FreeSchoolMealsHMRC()
-                                          {
-                                              FreeSchoolMealsHMRCID = elements.First(x => x.Name.LocalName == "NINO").Value,
-                                              DataType = Convert.ToInt32(elements.First(x => x.Name.LocalName == "DataType").Value),
-                                              Surname = elements.First(x => x.Name.LocalName == "Surname").Value,
-                                              DateOfBirth = DateTime.ParseExact(elements.First(x => x.Name.LocalName == "DateOfBirth").Value, "ddMMyyyy", CultureInfo.InvariantCulture)
-                                          }
-                                          select item);
+                using var fileStream = file.OpenReadStream();
+                XElement po = XElement.Load(fileStream);
+                IEnumerable<XElement> childElements =
+                    from el in po.Elements()
+                    select el;
+                var EligiblePersons = childElements.FirstOrDefault(x => x.Name.LocalName == "EligiblePersons");
+                if (EligiblePersons != null)
+                    DataLoad.AddRange(from XElement EligiblePerson in EligiblePersons.Nodes()
+                                      let elements = EligiblePerson.Elements()
+                                      let item = new FreeSchoolMealsHMRC()
+                                      {
+                                          FreeSchoolMealsHMRCID = elements.First(x => x.Name.LocalName == "NINO").Value,
+                                          DataType = Convert.ToInt32(elements.First(x => x.Name.LocalName == "DataType").Value),
+                                          Surname = elements.First(x => x.Name.LocalName == "Surname").Value,
+                                          DateOfBirth = DateTime.ParseExact(elements.First(x => x.Name.LocalName == "DateOfBirth").Value, "ddMMyyyy", CultureInfo.InvariantCulture)
+                                      }
+                                      select item);
 
-                    if (DataLoad == null || DataLoad.Count == 0)
-                    {
-                        throw new InvalidDataException("Invalid file no content.");
-                    }
-                }
-                catch (Exception ex)
+                if (DataLoad == null || DataLoad.Count == 0)
                 {
-                    _logger.LogError("ImportHMRCData", ex);
-                    return new ObjectResult(new MessageResponse
-                    {
-                        Data = $"{file.FileName} - {JsonConvert.SerializeObject(new FreeSchoolMealsHMRC())} :- {ex.Message}," +
-                        $"{ex.InnerException?.Message}"
-                    })
-                    { StatusCode = StatusCodes.Status400BadRequest };
+                    throw new InvalidDataException("Invalid file no content.");
                 }
-
-                await _service.ImportHMRCData(DataLoad);
-                await AuditAdd(Domain.Enums.AuditType.Administration, string.Empty);
-                return new ObjectResult(new MessageResponse { Data = $"{file.FileName} - {Admin.HMRCFileProcessed}" }) { StatusCode = StatusCodes.Status200OK };
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, ex.Message);
-                return StatusCode(500);
+                _logger.LogError("ImportHMRCData", ex);
+                return new ObjectResult(new MessageResponse
+                {
+                    Data = $"{file.FileName} - {JsonConvert.SerializeObject(new FreeSchoolMealsHMRC())} :- {ex.Message}," +
+                    $"{ex.InnerException?.Message}"
+                })
+                { StatusCode = StatusCodes.Status400BadRequest };
             }
+
+            await _service.ImportHMRCData(DataLoad);
+            await AuditAdd(Domain.Enums.AuditType.Administration, string.Empty);
+            return new ObjectResult(new MessageResponse { Data = $"{file.FileName} - {Admin.HMRCFileProcessed}" }) { StatusCode = StatusCodes.Status200OK };
+
         }
     }
 }

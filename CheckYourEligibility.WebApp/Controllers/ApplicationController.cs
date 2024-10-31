@@ -38,7 +38,7 @@ namespace CheckYourEligibility.WebApp.Controllers
         [HttpPost()]
         public async Task<ActionResult> Application([FromBody] ApplicationRequest model)
         {
-            if (model == null || model.Data == null )
+            if (model == null || model.Data == null)
             {
                 return BadRequest(new MessageResponse { Data = "Invalid request, data is required" });
             }
@@ -56,26 +56,19 @@ namespace CheckYourEligibility.WebApp.Controllers
             {
                 return BadRequest(new MessageResponse { Data = validationResults.ToString() });
             }
-            try
-            {
-                var response = await _applicationService.PostApplication(model.Data);
-                await AuditAdd(Domain.Enums.AuditType.Application, response.Id);
+            var response = await _applicationService.PostApplication(model.Data);
+            await AuditAdd(Domain.Enums.AuditType.Application, response.Id);
 
-                return new ObjectResult(new ApplicationSaveItemResponse
-                {
-                    Data = response,
-                    Links = new ApplicationResponseLinks
-                    {
-                        get_Application = $"{Domain.Constants.ApplicationLinks.GetLinkApplication}{response.Id}"
-                    }
-                })
-                { StatusCode = StatusCodes.Status201Created };
-            }
-            catch (Exception ex)
+            return new ObjectResult(new ApplicationSaveItemResponse
             {
-                _logger.LogError(ex, ex.Message);
-                return StatusCode(500);
-            }
+                Data = response,
+                Links = new ApplicationResponseLinks
+                {
+                    get_Application = $"{Domain.Constants.ApplicationLinks.GetLinkApplication}{response.Id}"
+                }
+            })
+            { StatusCode = StatusCodes.Status201Created };
+
         }
 
         /// <summary>
@@ -88,29 +81,21 @@ namespace CheckYourEligibility.WebApp.Controllers
         [HttpGet("{guid}")]
         public async Task<ActionResult> Application(string guid)
         {
-            try
+            var response = await _applicationService.GetApplication(guid);
+            if (response == null)
             {
-                var response = await _applicationService.GetApplication(guid);
-                if (response == null)
+                return NotFound(guid);
+            }
+            await AuditAdd(Domain.Enums.AuditType.Application, guid);
+            return new ObjectResult(new ApplicationItemResponse
+            {
+                Data = response,
+                Links = new ApplicationResponseLinks
                 {
-                    return NotFound(guid);
+                    get_Application = $"{Domain.Constants.ApplicationLinks.GetLinkApplication}{response.Id}"
                 }
-                await AuditAdd(Domain.Enums.AuditType.Application, guid);
-                return new ObjectResult(new ApplicationItemResponse
-                {
-                    Data = response,
-                    Links = new ApplicationResponseLinks
-                    {
-                        get_Application = $"{Domain.Constants.ApplicationLinks.GetLinkApplication}{response.Id}"
-                    }
-                })
-                { StatusCode = StatusCodes.Status200OK };
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, ex.Message);
-                return StatusCode(500);
-            }
+            })
+            { StatusCode = StatusCodes.Status200OK };
         }
 
         /// <summary>
@@ -123,27 +108,19 @@ namespace CheckYourEligibility.WebApp.Controllers
         [HttpPost("Search")]
         public async Task<ActionResult> ApplicationSearch([FromBody] ApplicationRequestSearch model)
         {
-            try
+            var response = await _applicationService.GetApplications(model);
+
+            if (response == null || !response.Data.Any())
             {
-                var response = await _applicationService.GetApplications(model);
-
-                if (response == null || !response.Data.Any())
-                {
-                    return NoContent();
-                }
-
-                await AuditAdd(Domain.Enums.AuditType.Application, string.Empty);
-
-                return new ObjectResult(response)
-                {
-                    StatusCode = StatusCodes.Status200OK
-                };
+                return NoContent();
             }
-            catch (Exception ex)
+
+            await AuditAdd(Domain.Enums.AuditType.Application, string.Empty);
+
+            return new ObjectResult(response)
             {
-                _logger.LogError(ex, ex.Message);
-                return StatusCode(500);
-            }
+                StatusCode = StatusCodes.Status200OK
+            };
         }
 
         /// <summary>
@@ -156,25 +133,19 @@ namespace CheckYourEligibility.WebApp.Controllers
         [HttpPatch("{guid}")]
         public async Task<ActionResult> ApplicationStatusUpdate(string guid, [FromBody] ApplicationStatusUpdateRequest model)
         {
-            try
+
+            var response = await _applicationService.UpdateApplicationStatus(guid, model.Data);
+            if (response == null)
             {
-                var response = await _applicationService.UpdateApplicationStatus(guid, model.Data);
-                if (response == null)
-                {
-                    return NotFound();
-                }
-                await AuditAdd(Domain.Enums.AuditType.Application, guid);
-                return new ObjectResult(new ApplicationStatusUpdateResponse
-                {
-                    Data = response.Data
-                })
-                { StatusCode = StatusCodes.Status200OK };
+                return NotFound();
             }
-            catch (Exception ex)
+            await AuditAdd(Domain.Enums.AuditType.Application, guid);
+            return new ObjectResult(new ApplicationStatusUpdateResponse
             {
-                _logger.LogError(ex, ex.Message);
-                return StatusCode(500);
-            }
+                Data = response.Data
+            })
+            { StatusCode = StatusCodes.Status200OK };
+
         }
 
     }

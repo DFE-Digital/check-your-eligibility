@@ -67,7 +67,7 @@ namespace CheckYourEligibility.Services
         }
 
         public async Task<PostCheckResult> PostCheck<T>(T data) where T : IEligibilityServiceType
-        {    
+        {
             var item = _mapper.Map<EligibilityCheck>(data);
 
             try

@@ -29,26 +29,18 @@ namespace CheckYourEligibility.WebApp.Controllers
         [HttpGet("search")]
         public async Task<ActionResult> Search(string query)
         {
-            try
+            if (string.IsNullOrWhiteSpace(query) || query.Length < 3)
             {
-                if (string.IsNullOrWhiteSpace(query) || query.Length < 3)
-                {
-                    return BadRequest(new MessageResponse { Data = "At least 3 characters are required to query." });
-                }
-
-                var results = await _service.Search(query);
-                await AuditAdd(Domain.Enums.AuditType.School, string.Empty);
-                if (results == null || !results.Any())
-                    return new ObjectResult(new SchoolSearchResponse { Data = results }) { StatusCode = StatusCodes.Status404NotFound };
-                else
-                {
-                    return new ObjectResult(new SchoolSearchResponse { Data = results }) { StatusCode = StatusCodes.Status200OK };
-                }
+                return BadRequest(new MessageResponse { Data = "At least 3 characters are required to query." });
             }
-            catch (Exception ex)
+
+            var results = await _service.Search(query);
+            await AuditAdd(Domain.Enums.AuditType.School, string.Empty);
+            if (results == null || !results.Any())
+                return new ObjectResult(new SchoolSearchResponse { Data = results }) { StatusCode = StatusCodes.Status404NotFound };
+            else
             {
-                _logger.LogError(ex, ex.Message);
-                return StatusCode(500);
+                return new ObjectResult(new SchoolSearchResponse { Data = results }) { StatusCode = StatusCodes.Status200OK };
             }
         }
     }
