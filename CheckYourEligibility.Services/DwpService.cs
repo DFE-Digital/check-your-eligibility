@@ -124,7 +124,7 @@ namespace CheckYourEligibility.Services
                     else
                     {
 
-                        _logger.LogError($"Get Citizen failed. uri:-{_httpClient.BaseAddress}{uri} Response:- {response.StatusCode} content:-{JsonConvert.SerializeObject(eligibilityCheck)}");
+                        _logger.LogError($"ECS check failed. uri:-{_httpClient.BaseAddress}{uri} Response:- {response.StatusCode} content:-{JsonConvert.SerializeObject(eligibilityCheck)}");
                     }
                 }
                 catch (Exception ex)

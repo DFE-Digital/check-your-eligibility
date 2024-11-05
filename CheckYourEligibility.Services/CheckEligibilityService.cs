@@ -13,6 +13,7 @@ using CheckYourEligibility.Domain.Requests.DWP;
 using CheckYourEligibility.Domain.Responses;
 using CheckYourEligibility.Services.Interfaces;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -34,11 +35,12 @@ namespace CheckYourEligibility.Services
         private QueueClient _queueClientStandard;
         private QueueClient _queueClientBulk;
         private const int SurnameCheckCharachters = 3;
-        private  readonly ILogger _logger;
+        private readonly ILogger _logger;
         private readonly IEligibilityCheckContext _db;
+        private readonly IConfiguration _configuration;
         protected readonly IMapper _mapper;
         protected readonly IAudit _audit;
-            
+
         private readonly IDwpService _dwpService;
         private readonly IHash _hashService;
         private string _groupId;
@@ -52,12 +54,13 @@ namespace CheckYourEligibility.Services
             _dwpService = Guard.Against.Null(dwpService);
             _audit = Guard.Against.Null(audit);
             _hashService = Guard.Against.Null(hashService);
+            _configuration = Guard.Against.Null(configuration);
 
-            setQueueStandard(configuration.GetValue<string>("QueueFsmCheckStandard"), queueClientService);
-            setQueueBulk(configuration.GetValue<string>("QueueFsmCheckBulk"), queueClientService);
+            setQueueStandard(_configuration.GetValue<string>("QueueFsmCheckStandard"), queueClientService);
+            setQueueBulk(_configuration.GetValue<string>("QueueFsmCheckBulk"), queueClientService);
         }
 
-        public async Task PostCheck<T>(T data, string groupId) where T : IEnumerable<IEligibilityServiceType> 
+        public async Task PostCheck<T>(T data, string groupId) where T : IEnumerable<IEligibilityServiceType>
         {
             _groupId = groupId;
             foreach (var item in data)
@@ -74,7 +77,7 @@ namespace CheckYourEligibility.Services
             {
                 var baseType = data as CheckEligibilityRequestDataBase;
                 item.CheckData = JsonConvert.SerializeObject(data);
-                
+
                 item.Type = baseType.Type;
 
                 item.Group = _groupId;
@@ -83,8 +86,8 @@ namespace CheckYourEligibility.Services
                 item.Updated = DateTime.UtcNow;
 
                 item.Status = CheckEligibilityStatus.queuedForProcessing;
-                
-                var checkHashResult = await  _hashService.Exists(JsonConvert.DeserializeObject<CheckProcessData>(item.CheckData));
+
+                var checkHashResult = await _hashService.Exists(JsonConvert.DeserializeObject<CheckProcessData>(item.CheckData));
                 if (checkHashResult != null)
                 {
                     item.Status = checkHashResult.Outcome;
@@ -95,7 +98,18 @@ namespace CheckYourEligibility.Services
                 await _db.SaveChangesAsync();
                 if (checkHashResult == null)
                 {
-                   await SendMessage(item);
+                    var queue = await SendMessage(item);
+                    if (string.IsNullOrEmpty(item.Group))
+                    {
+                        try
+                        {
+                            await ProcessQueue(queue).ConfigureAwait(false);
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, $"Queue processing of {queue}");
+                        }
+                    }
                 }
 
                 return new PostCheckResult { Id = item.EligibilityCheckID, Status = item.Status };
@@ -110,7 +124,7 @@ namespace CheckYourEligibility.Services
 
         public async Task<CheckEligibilityStatus?> GetStatus(string guid)
         {
-            var result = await _db.CheckEligibilities.FirstOrDefaultAsync(x=> x.EligibilityCheckID == guid);
+            var result = await _db.CheckEligibilities.FirstOrDefaultAsync(x => x.EligibilityCheckID == guid);
             if (result != null)
             {
                 return result.Status;
@@ -119,12 +133,12 @@ namespace CheckYourEligibility.Services
         }
 
         public async Task<CheckEligibilityStatus?> ProcessCheck(string guid, AuditData auditDataTemplate)
-        {         
+        {
             var result = await _db.CheckEligibilities.FirstOrDefaultAsync(x => x.EligibilityCheckID == guid);
-            
+
             if (result != null)
             {
-                var checkData = GetCheckProcessData(result.Type,result.CheckData);
+                var checkData = GetCheckProcessData(result.Type, result.CheckData);
                 if (result.Status != CheckEligibilityStatus.queuedForProcessing)
                 {
                     LogApiEvent(this.GetType().Name, guid, $"CheckItem not queuedForProcessing. {GetCurrentMethod()}");
@@ -172,16 +186,16 @@ namespace CheckYourEligibility.Services
 
         public async Task<T> GetBulkCheckResults<T>(string guid) where T : IList<CheckEligibilityItem>
         {
-            var resultList =  _db.CheckEligibilities
+            var resultList = _db.CheckEligibilities
                 .Where(x => x.Group == guid)
-                .OrderBy(x=>x.Sequence);
+                .OrderBy(x => x.Sequence);
             if (resultList != null && resultList.Any())
             {
                 var type = typeof(T);
                 if (type == typeof(IList<CheckEligibilityItem>))
                 {
                     var items = _mapper.Map<T>(resultList);
-                  
+
                     return items;
                 }
                 else
@@ -192,9 +206,9 @@ namespace CheckYourEligibility.Services
             return default;
         }
 
-        public  static string GetHash(CheckProcessData item)
+        public static string GetHash(CheckProcessData item)
         {
-            var key  = string.IsNullOrEmpty(item.NationalInsuranceNumber) ? item.NationalAsylumSeekerServiceNumber.ToUpper() : item.NationalInsuranceNumber.ToUpper();
+            var key = string.IsNullOrEmpty(item.NationalInsuranceNumber) ? item.NationalAsylumSeekerServiceNumber.ToUpper() : item.NationalInsuranceNumber.ToUpper();
             var input = $"{item.LastName.ToUpper()}{key}{item.DateOfBirth}{item.Type}";
             var inputBytes = Encoding.UTF8.GetBytes(input);
             var inputHash = SHA256.HashData(inputBytes);
@@ -219,11 +233,11 @@ namespace CheckYourEligibility.Services
         {
             var results = _db.CheckEligibilities
                 .Where(x => x.Group == guid)
-                .GroupBy(n=> n.Status)
-                .Select(n=> new {Status = n.Key, ct = n.Count()});
+                .GroupBy(n => n.Status)
+                .Select(n => new { Status = n.Key, ct = n.Count() });
             if (results.Any())
             {
-                return new BulkStatus {Total = results.Sum(s => s.ct), Complete = results.Where(a => a.Status != CheckEligibilityStatus.queuedForProcessing).Sum(s => s.ct) };
+                return new BulkStatus { Total = results.Sum(s => s.ct), Complete = results.Where(a => a.Status != CheckEligibilityStatus.queuedForProcessing).Sum(s => s.ct) };
             }
             return null;
         }
@@ -248,8 +262,9 @@ namespace CheckYourEligibility.Services
         }
 
         [ExcludeFromCodeCoverage(Justification = "Queue is external dependency.")]
-        private async Task SendMessage(EligibilityCheck item)
+        private async Task<string> SendMessage(EligibilityCheck item)
         {
+            var queueName = string.Empty;
             if (_queueClientStandard != null)
             {
                 if (item.Group.IsNullOrEmpty())
@@ -264,6 +279,7 @@ namespace CheckYourEligibility.Services
                                         }));
 
                     LogQueueCount(_queueClientStandard);
+                    queueName = _queueClientStandard.Name;
 
                 }
                 else
@@ -277,8 +293,10 @@ namespace CheckYourEligibility.Services
                                     SetStatusUrl = $"{CheckLinks.GetLink}{item.EligibilityCheckID}/status"
                                 }));
                     LogQueueCount(_queueClientBulk);
+                    queueName = _queueClientBulk.Name;
                 }
             }
+            return queueName;
         }
 
 
@@ -312,8 +330,8 @@ namespace CheckYourEligibility.Services
             }
             else
             {
-              result.EligibilityCheckHashID =  await _hashService.Create(checkData, checkResult, source, auditDataTemplate);
-              await _db.SaveChangesAsync();
+                result.EligibilityCheckHashID = await _hashService.Create(checkData, checkResult, source, auditDataTemplate);
+                await _db.SaveChangesAsync();
             }
 
             TrackMetric($"FSM Check:-{result.Status}", 1);
@@ -361,17 +379,17 @@ namespace CheckYourEligibility.Services
         {
             var checkReults = _db.FreeSchoolMealsHO.Where(x =>
            x.NASS == data.NationalAsylumSeekerServiceNumber
-           && x.DateOfBirth ==DateTime.ParseExact(data.DateOfBirth, "yyyy-MM-dd", null, DateTimeStyles.None)).Select(x => x.LastName);
+           && x.DateOfBirth == DateTime.ParseExact(data.DateOfBirth, "yyyy-MM-dd", null, DateTimeStyles.None)).Select(x => x.LastName);
             return CheckSurname(data.LastName, checkReults);
         }
 
-        private async Task<CheckEligibilityStatus> HMRC_Check(CheckProcessData data )
+        private async Task<CheckEligibilityStatus> HMRC_Check(CheckProcessData data)
         {
             var checkReults = _db.FreeSchoolMealsHMRC.Where(x =>
             x.FreeSchoolMealsHMRCID == data.NationalInsuranceNumber
-            && x.DateOfBirth ==DateTime.ParseExact(data.DateOfBirth, "yyyy-MM-dd", null, DateTimeStyles.None)).Select(x => x.Surname);
+            && x.DateOfBirth == DateTime.ParseExact(data.DateOfBirth, "yyyy-MM-dd", null, DateTimeStyles.None)).Select(x => x.Surname);
 
-            return CheckSurname(data.LastName, checkReults) ;
+            return CheckSurname(data.LastName, checkReults);
         }
 
         private async Task<CheckEligibilityStatus> DWP_Check(CheckProcessData data)
@@ -386,11 +404,11 @@ namespace CheckYourEligibility.Services
             {
                 checkResult = await DwpEcsFsmCheck(data, checkResult);
             }
-                
+
             return checkResult;
         }
 
-        
+
         private async Task<CheckEligibilityStatus> DwpEcsFsmCheck(CheckProcessData data, CheckEligibilityStatus checkResult)
         {
             //check for benefit
@@ -405,7 +423,7 @@ namespace CheckYourEligibility.Services
                 {
                     checkResult = CheckEligibilityStatus.notEligible;
                 }
-                else if (result.Status == "0" && result.ErrorCode == "0" && result.Qualifier== "No Trace - Check data")
+                else if (result.Status == "0" && result.ErrorCode == "0" && result.Qualifier == "No Trace - Check data")
                 {
                     //No Trace - Check data
                     _logger.LogError($"DwpParentNotFound:-{result.Status}, error code:-{result.ErrorCode} qualifier:-{result.Qualifier}. Request:-{JsonConvert.SerializeObject(data)}");
@@ -419,7 +437,7 @@ namespace CheckYourEligibility.Services
             }
             else
             {
-                _logger.LogError($"DwpError unknown Response null. Request:-{JsonConvert.SerializeObject(data)}");
+                _logger.LogError($"DwpError ECS unknown Response of null. Request:-{JsonConvert.SerializeObject(data)}");
                 checkResult = CheckEligibilityStatus.DwpError;
             }
 
@@ -482,7 +500,66 @@ namespace CheckYourEligibility.Services
             return CheckEligibilityStatus.parentNotFound;
         }
 
-        
+        public async Task ProcessQueue(string queName)
+        {
+
+            QueueClient queue;
+            if (queName == _configuration.GetValue<string>("QueueFsmCheckStandard"))
+            {
+                queue = _queueClientStandard;
+            }
+            else if (queName == _configuration.GetValue<string>("QueueFsmCheckBulk"))
+            {
+                queue = _queueClientBulk;
+            }
+            else
+            {
+                throw new Exception($"invalid queue {queName}.");
+            }
+            if (await queue.ExistsAsync())
+            {
+                QueueProperties properties = await queue.GetPropertiesAsync();
+                
+                while (properties.ApproximateMessagesCount > 0)
+                {
+                    QueueMessage[] retrievedMessage = await queue.ReceiveMessagesAsync(32);
+                    foreach (var item in retrievedMessage)
+                    {
+                        var checkData = JsonConvert.DeserializeObject<QueueMessageCheck>(Encoding.UTF8.GetString(item.Body));
+                        try
+                        {
+                            var result = await ProcessCheck(checkData.Guid, new AuditData
+                            {
+                                Type = AuditType.Check,
+                                typeId = checkData.Guid,
+                                authentication = queName,
+                                method = "processQue",
+                                source = "queueProcess",
+                                url = "."
+                            });
+                            if (result == null || result != CheckEligibilityStatus.queuedForProcessing || item.DequeueCount >1) {
+                                if (result == null || item.DequeueCount > 1)
+                                {
+                                    await UpdateEligibilityCheckStatus(checkData.Guid, new EligibilityCheckStatusData { Status = CheckEligibilityStatus.DwpError });
+                                }
+                                await queue.DeleteMessageAsync(item.MessageId, item.PopReceipt);
+                            }
+
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, "Queue processing");
+                            await queue.DeleteMessageAsync(item.MessageId, item.PopReceipt);
+                        }
+                        
+                    }
+                    properties = await queue.GetPropertiesAsync();
+                }
+
+            }
+        }
+
+
         #endregion
     }
 }

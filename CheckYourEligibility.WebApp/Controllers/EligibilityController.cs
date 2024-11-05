@@ -1,4 +1,5 @@
 ﻿using Ardalis.GuardClauses;
+using Azure;
 using CheckYourEligibility.Data.Migrations.Migrations;
 using CheckYourEligibility.Domain.Exceptions;
 using CheckYourEligibility.Domain.Requests;
@@ -35,6 +36,25 @@ namespace CheckYourEligibility.WebApp.Controllers
             _logger = Guard.Against.Null(logger);
             _checkService = Guard.Against.Null(checkService);
             _bulkUploadRecordCountLimit = configuration.GetValue<int>("BulkEligibilityCheckLimit");
+        }
+
+        /// <summary>
+        /// Processes check messages on the specified queue
+        /// </summary>
+        /// <param name="queue"></param>
+        /// <returns></returns>
+        [ProducesResponseType(typeof(CheckEligibilityResponse), (int)HttpStatusCode.Accepted)]
+        [ProducesResponseType((int)HttpStatusCode.BadRequest)]
+        [HttpPost("ProcessQueueMessages")]
+        public async Task<ActionResult> ProcessQueue(string queue)
+        {
+            if (string.IsNullOrEmpty(queue))
+            {
+                return BadRequest(new MessageResponse { Data = "Invalid Request." });
+            }
+            
+            await _checkService.ProcessQueue(queue);
+            return new OkObjectResult(new MessageResponse { Data = "Queue Processed." });
         }
 
         /// <summary>
