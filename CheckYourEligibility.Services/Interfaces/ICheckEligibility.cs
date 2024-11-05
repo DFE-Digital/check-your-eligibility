@@ -1,6 +1,7 @@
 ﻿using CheckYourEligibility.Domain.Enums;
 using CheckYourEligibility.Domain.Requests;
 using CheckYourEligibility.Domain.Responses;
+using Microsoft.AspNetCore.Mvc;
 
 namespace CheckYourEligibility.Services.Interfaces
 {
@@ -16,5 +17,6 @@ namespace CheckYourEligibility.Services.Interfaces
         Task<BulkStatus?> GetBulkStatus(string guid);
         Task<CheckEligibilityStatus?> ProcessCheck(string guid, AuditData? auditItem);
         Task<CheckEligibilityStatusResponse> UpdateEligibilityCheckStatus(string guid, EligibilityCheckStatusData data);
+        Task ProcessQueue(string queue);
     }
 }
