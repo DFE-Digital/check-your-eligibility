@@ -99,17 +99,17 @@ namespace CheckYourEligibility.Services
                 if (checkHashResult == null)
                 {
                     var queue = await SendMessage(item);
-                    if (string.IsNullOrEmpty(item.Group))
-                    {
-                        try
-                        {
-                            await ProcessQueue(queue).ConfigureAwait(false);
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger.LogError(ex, $"Queue processing of {queue}");
-                        }
-                    }
+                    ////if (string.IsNullOrEmpty(item.Group))
+                    ////{
+                    ////    try
+                    ////    {
+                    ////        await ProcessQueue(queue).ConfigureAwait(false);
+                    ////    }
+                    ////    catch (Exception ex)
+                    ////    {
+                    ////        _logger.LogError(ex, $"Queue processing of {queue}");
+                    ////    }
+                    ////}
                 }
 
                 return new PostCheckResult { Id = item.EligibilityCheckID, Status = item.Status };
