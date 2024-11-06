@@ -67,9 +67,9 @@ namespace CheckYourEligibility.Services
             }
             await _db.SaveChangesAsync();
 
-            var schools = data.Select(x => new School
+            var Establishment = data.Select(x => new Establishment
             {
-                SchoolId = x.Urn,
+                EstablishmentId = x.Urn,
                 EstablishmentName = x.EstablishmentName,
                 LocalAuthorityId = x.LaCode,
                 Locality = x.Locality,
@@ -81,9 +81,9 @@ namespace CheckYourEligibility.Services
             });
 
 
-            foreach (var sc in schools)
+            foreach (var sc in Establishment)
             {
-                var item = await _db.Schools.AsNoTracking().FirstOrDefaultAsync(x => x.SchoolId == sc.SchoolId);
+                var item = await _db.Establishments.AsNoTracking().FirstOrDefaultAsync(x => x.EstablishmentId == sc.EstablishmentId);
 
                 if (item != null)
                     try
@@ -95,7 +95,7 @@ namespace CheckYourEligibility.Services
                         _logger.LogError("db error", ex);
                     }
                 else
-                    _db.Schools.Add(sc);
+                    _db.Establishments.Add(sc);
             }
             await _db.SaveChangesAsync();
         }
@@ -120,9 +120,9 @@ namespace CheckYourEligibility.Services
         }
 
         [ExcludeFromCodeCoverage(Justification = "In memory db does not support execute update, direct updating causes concurrency error")]
-        private void SetScoolData(School? item)
+        private void SetScoolData(Establishment? item)
         {
-            _db.Schools.Where(b => b.SchoolId == item.SchoolId)
+            _db.Establishments.Where(b => b.EstablishmentId == item.EstablishmentId)
                  .ExecuteUpdate(setters => setters
                  .SetProperty(b => b.LocalAuthorityId, item.LocalAuthorityId)
                  .SetProperty(b => b.EstablishmentName, item.EstablishmentName)

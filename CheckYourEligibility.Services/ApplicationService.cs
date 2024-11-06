@@ -64,14 +64,14 @@ namespace CheckYourEligibility.Services
 
                 try
                 {
-                    var school = _db.Schools
+                    var establishment = _db.Establishments
                    .Include(x => x.LocalAuthority)
-                   .First(x => x.SchoolId == data.School);
-                    item.LocalAuthorityId = school.LocalAuthorityId;
+                   .First(x => x.EstablishmentId == data.Establishment);
+                    item.LocalAuthorityId = establishment.LocalAuthorityId;
                 }
                 catch (Exception ex)
                 {
-                    throw new Exception($"Unable to find school:- {data.School}, {ex.Message}");
+                    throw new Exception($"Unable to find school:- {data.Establishment}, {ex.Message}");
                 }
                
 
@@ -99,7 +99,7 @@ namespace CheckYourEligibility.Services
         {
             var result = await _db.Applications
                 .Include(x => x.Statuses)
-                .Include(x => x.School)
+                .Include(x => x.Establishment)
                 .ThenInclude(x => x.LocalAuthority)
                 .Include(x => x.User)
                 .Include(x => x.EligibilityCheckHash)
@@ -149,12 +149,12 @@ namespace CheckYourEligibility.Services
         {
             IQueryable<Application> results = results = _db.Applications
                .Include(x => x.Statuses)
-               .Include(x => x.School)
+               .Include(x => x.Establishment)
                .ThenInclude(x => x.LocalAuthority)
                .Include(x => x.User)
                .Where(x => x.Type == model.Data.Type);
-            if (model.Data?.School != null)
-                results = results.Where(x => x.SchoolId == model.Data.School);
+            if (model.Data?.Establishment != null)
+                results = results.Where(x => x.EstablishmentId == model.Data.Establishment);
            if (model.Data?.LocalAuthority != null)
                 results = results.Where(x => x.LocalAuthorityId == model.Data.LocalAuthority);
             if (status != null)
@@ -188,7 +188,7 @@ namespace CheckYourEligibility.Services
                 result.Updated = DateTime.UtcNow;
                 var updates = await _db.SaveChangesAsync();
                 TrackMetric($"Application Status Change {result.Status}", 1);
-                TrackMetric($"Application Status Change School:-{result.SchoolId} {result.Status}", 1);
+                TrackMetric($"Application Status Change Establishment:-{result.EstablishmentId} {result.Status}", 1);
                 TrackMetric($"Application Status Change La:-{result.LocalAuthorityId} {result.Status}", 1);
                 return new ApplicationStatusUpdateResponse { Data = new ApplicationStatusDataResponse { Status = result.Status.Value.ToString() } };
             }

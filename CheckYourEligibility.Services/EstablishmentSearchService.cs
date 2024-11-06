@@ -8,58 +8,58 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace CheckYourEligibility.Services
 {
-    public class SchoolSearchService : ISchoolsSearch
+    public class EstablishmentSearchService : IEstablishmentSearch
     {
         const int takeScoolResultsMax = 20;
 
         private readonly ILogger _logger;
         private readonly IEligibilityCheckContext _db;
 
-        public SchoolSearchService(ILoggerFactory logger, IEligibilityCheckContext dbContext)
+        public EstablishmentSearchService(ILoggerFactory logger, IEligibilityCheckContext dbContext)
         {
-            _logger = logger.CreateLogger("SchoolSearchService");
+            _logger = logger.CreateLogger("EstablishmentSearchService");
             _db = Guard.Against.Null(dbContext);
         }
 
         [ExcludeFromCodeCoverage(Justification = "memory only db breaks test in full run, works fine run locally")]
-          public async Task<IEnumerable<Domain.Responses.School>?> Search(string query)
+          public async Task<IEnumerable<Domain.Responses.Establishment>?> Search(string query)
         {
-            var results = new List<Domain.Responses.School>();
+            var results = new List<Domain.Responses.Establishment>();
 
             
-            if (int.TryParse(query, out var SchoolId))
+            if (int.TryParse(query, out var EstablishmentId))
             {
 
-                var schoolFromUrn = _db.Schools
+                var establishmentFromUrn = _db.Establishments
                     .Include(x => x.LocalAuthority)
-                    .FirstOrDefault(x => x.StatusOpen && x.SchoolId == SchoolId);
+                    .FirstOrDefault(x => x.StatusOpen && x.EstablishmentId == EstablishmentId);
                 
-                if (schoolFromUrn != null)
+                if (establishmentFromUrn != null)
                 {
-                    var item = new Domain.Responses.School()
+                    var item = new Domain.Responses.Establishment()
                     {
-                        Id = schoolFromUrn.SchoolId,
-                        Name = schoolFromUrn.EstablishmentName,
-                        Postcode = schoolFromUrn.Postcode,
-                        Locality = schoolFromUrn.Locality,
-                        County = schoolFromUrn.County,
-                        Street = schoolFromUrn.Street,
-                        Town = schoolFromUrn.Town,
-                        La = schoolFromUrn.LocalAuthority.LaName
+                        Id = establishmentFromUrn.EstablishmentId,
+                        Name = establishmentFromUrn.EstablishmentName,
+                        Postcode = establishmentFromUrn.Postcode,
+                        Locality = establishmentFromUrn.Locality,
+                        County = establishmentFromUrn.County,
+                        Street = establishmentFromUrn.Street,
+                        Town = establishmentFromUrn.Town,
+                        La = establishmentFromUrn.LocalAuthority.LaName
                     };
                     results.Add( item);
                 };
                 return results;
             }
-            var allSchools = _db.Schools.Where(x => x.StatusOpen
+            var allEstablishments = _db.Establishments.Where(x => x.StatusOpen
             && x.EstablishmentName.Contains(query))
                 .Include(x => x.LocalAuthority);
 
-            var queryResult = new List<School>();
+            var queryResult = new List<Establishment>();
             
             var lev = new NormalizedLevenshtein();
             double levenshteinDistance;
-            foreach (var item in allSchools)
+            foreach (var item in allEstablishments)
             {
                 levenshteinDistance = lev.Distance(query.ToUpper(), item.EstablishmentName.ToUpper());// lev.DistanceFrom(item.EstablishmentName);
                 if (levenshteinDistance < 20)
@@ -73,9 +73,9 @@ namespace CheckYourEligibility.Services
             return queryResult.Where(x => x.EstablishmentName.ToUpper().Contains(query.ToUpper()))
                 .OrderBy(x => x.LevenshteinDistance)
                 .ThenBy(x => x.EstablishmentName).Take(takeScoolResultsMax)
-                .Select(x => new Domain.Responses.School()
+                .Select(x => new Domain.Responses.Establishment()
                 {
-                    Id = x.SchoolId,
+                    Id = x.EstablishmentId,
                     Name = x.EstablishmentName,
                     Postcode = x.Postcode,
                     Locality = x.Locality,

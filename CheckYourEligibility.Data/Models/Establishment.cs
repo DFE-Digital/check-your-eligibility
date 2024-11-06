@@ -5,10 +5,10 @@ using System.Diagnostics.CodeAnalysis;
 namespace CheckYourEligibility.Data.Models
 {
     [ExcludeFromCodeCoverage(Justification = "Data Model.")]
-    public class School
+    public class Establishment
     {
         [Key]
-        public int SchoolId { get; set; }
+        public int EstablishmentId { get; set; }
         public string EstablishmentName { get; set; }
         public string Postcode { get; set; }
         public string Street { get; set; }

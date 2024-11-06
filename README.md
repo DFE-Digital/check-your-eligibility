@@ -117,6 +117,9 @@ Add-Migration UserReference -project CheckYourEligibility.Data.Migrations
 Add-Migration ApplicationParentEmail -project CheckYourEligibility.Data.Migrations
 Add-Migration DeCoupleCheck -project CheckYourEligibility.Data.Migrations
 Add-Migration SetApplicationType -project CheckYourEligibility.Data.Migrations
+Add-Migration ChangeSchoolToEstablishment -project CheckYourEligibility.Data.Migrations
+Add-Migration ApplicationSchool -project CheckYourEligibility.Data.Migrations
+
 
 
 ##### Update db to latest migration

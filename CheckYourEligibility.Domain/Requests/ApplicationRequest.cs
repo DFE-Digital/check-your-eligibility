@@ -11,7 +11,7 @@ namespace CheckYourEligibility.Domain.Requests
     public class ApplicationRequestData
     {
         public CheckEligibilityType Type { get; set; }
-        public int School { get; set; }
+        public int Establishment { get; set; }
         public string ParentFirstName { get; set; }
         public string ParentLastName { get; set; }
         public string ParentEmail { get; set; }

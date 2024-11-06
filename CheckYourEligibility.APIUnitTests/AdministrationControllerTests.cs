@@ -19,7 +19,7 @@ namespace CheckYourEligibility.APIUnitTests
     public class AdministrationControllerTests : TestBase.TestBase
     {
         private Mock<IAdministration> _mockService;
-        private Mock<ISchoolsSearch> _mockSchoolService;
+        private Mock<IEstablishmentSearch> _mockEstablishmentService;
         private ILogger<AdministrationController> _mockLogger;
         private AdministrationController _sut;
         private Mock<IAudit> _mockAuditService;
@@ -30,8 +30,8 @@ namespace CheckYourEligibility.APIUnitTests
             _mockService = new Mock<IAdministration>(MockBehavior.Strict);
             _mockLogger = Mock.Of<ILogger<AdministrationController>>();
             _mockAuditService = new Mock<IAudit>(MockBehavior.Strict);
-            _mockSchoolService = new Mock<ISchoolsSearch>(MockBehavior.Strict);
-            _sut = new AdministrationController(_mockLogger, _mockService.Object, _mockAuditService.Object,_mockSchoolService.Object);
+            _mockEstablishmentService = new Mock<IEstablishmentSearch>(MockBehavior.Strict);
+            _sut = new AdministrationController(_mockLogger, _mockService.Object, _mockAuditService.Object,_mockEstablishmentService.Object);
         }
 
         [TearDown]
@@ -46,10 +46,10 @@ namespace CheckYourEligibility.APIUnitTests
             // Arrange
             IAdministration service = null;
             IAudit auditService = null;
-            ISchoolsSearch schoolsSearch = null;
+            IEstablishmentSearch EstablishmentSearch = null;
 
             // Act
-            Action act = () => new AdministrationController(_mockLogger, service,auditService, schoolsSearch);
+            Action act = () => new AdministrationController(_mockLogger, service,auditService, EstablishmentSearch);
 
             // Assert
             act.Should().ThrowExactly<ArgumentNullException>().And.Message.Should().EndWithEquivalentOf("Value cannot be null. (Parameter 'service')");
