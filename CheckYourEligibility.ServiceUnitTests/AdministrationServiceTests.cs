@@ -94,7 +94,8 @@ namespace CheckYourEligibility.ServiceUnitTests
             };
             _fakeInMemoryDb.LocalAuthorities.Add(la);
             _fakeInMemoryDb.Establishments.Add(new Establishment { EstablishmentId =  existingData.Urn, EstablishmentName = existingData.EstablishmentName, LocalAuthority = la,
-                County = existingData.County, Postcode = existingData.Postcode, Locality = existingData.Locality, Street = existingData.Street,Town = existingData.Town, StatusOpen = true });
+                County = existingData.County, Postcode = existingData.Postcode, Locality = existingData.Locality, Street = existingData.Street,Town = existingData.Town, StatusOpen = true,
+                Type = existingData.Type });
 
             _fakeInMemoryDb.SaveChanges();
 
