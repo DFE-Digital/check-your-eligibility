@@ -119,6 +119,8 @@ Add-Migration DeCoupleCheck -project CheckYourEligibility.Data.Migrations
 Add-Migration SetApplicationType -project CheckYourEligibility.Data.Migrations
 Add-Migration ChangeSchoolToEstablishment -project CheckYourEligibility.Data.Migrations
 Add-Migration ApplicationSchool -project CheckYourEligibility.Data.Migrations
+Add-Migration EstablishmentType -project CheckYourEligibility.Data.Migrations
+
 
 
 

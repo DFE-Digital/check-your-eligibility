@@ -45,7 +45,8 @@ namespace CheckYourEligibility.Services
                         County = establishmentFromUrn.County,
                         Street = establishmentFromUrn.Street,
                         Town = establishmentFromUrn.Town,
-                        La = establishmentFromUrn.LocalAuthority.LaName
+                        La = establishmentFromUrn.LocalAuthority.LaName,
+                        Type =establishmentFromUrn.Type
                     };
                     results.Add( item);
                 };
@@ -83,7 +84,8 @@ namespace CheckYourEligibility.Services
                     Street = x.Street,
                     Town = x.Town,
                     La = x.LocalAuthority.LaName,
-                    Distance = x.LevenshteinDistance
+                    Distance = x.LevenshteinDistance,
+                    Type = x.Type,
                 });
 
         }

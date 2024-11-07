@@ -21,5 +21,9 @@ namespace CheckYourEligibility.Data.Models
 
         [NotMapped]
         public double? LevenshteinDistance { get; set; }
+
+        [Column(TypeName = "varchar(100)")]
+        public string Type { get; set; }
+
     }
 }
