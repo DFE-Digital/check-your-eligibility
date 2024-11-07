@@ -160,21 +160,6 @@ Cypress.Commands.add('createEligibilityCheckAndGetStatus', (loginUrl: string, lo
   });
 });
 
-function generateRandomLastName(length: number): string {
-  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
-  let result = '';
-  for (let i = 0; i < length; i++) {
-    result += characters.charAt(Math.floor(Math.random() * characters.length));
-  }
-  return result;
-}
-
-Cypress.Commands.add('updateLastName', (requestBody) => {
-  const randomLastName = generateRandomLastName(20);
-  const updatedRequestBody = { requestBody, data: { ...requestBody.data, lastName: randomLastName } };
-  cy.wrap(updatedRequestBody).as('updatedRequestBody');
-});
-
 Cypress.Commands.add('verifyPostApplicationResponse', (response, requestData) => {
   // Verify data properties
   expect(response).to.have.property('body');

@@ -1,9 +1,17 @@
 import { defineConfig } from "cypress";
+import { faker } from '@faker-js/faker'
 
 export default defineConfig({
   e2e: {
     setupNodeEvents(on, config) {
       // implement node event listeners here
+
+      on('task', {
+        getLastName: (): string => {
+          return faker.person.lastName();
+        },
+      });
+      return config;
     },
     specPattern: [      
       "cypress/API/Authorisation/**.cy.ts",

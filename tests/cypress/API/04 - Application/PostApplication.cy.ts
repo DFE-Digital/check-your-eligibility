@@ -8,7 +8,7 @@ describe('Verify POST application responses', () => {
             parentFirstName: 'Homer',
             parentLastName: 'Simpson',
             parentEmail: 'homer@example.com',
-            parentNationalInsuranceNumber: 'AB123456C',
+            parentNationalInsuranceNumber: 'NN123456C',
             parentNationalAsylumSeekerServiceNumber: '',
             parentDateOfBirth: '1990-01-01',
             childFirstName: 'Jane',

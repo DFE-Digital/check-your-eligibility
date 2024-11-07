@@ -8,6 +8,7 @@ describe('GET eligibility soft check by Guid', () => {
         //Get token
         getandVerifyBearerToken('api/Login', validLoginRequestBody).then((token) => {
             //Make post request for eligibility check
+            cy.log(Cypress.env('lastName'));
             cy.apiRequest('POST', 'EligibilityCheck/FreeSchoolMeals', validHMRCRequestBody, token).then((response) => {
                 cy.verifyApiResponseCode(response, 202);
                 //extract Guid

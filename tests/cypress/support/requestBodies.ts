@@ -4,33 +4,33 @@ export const validLoginRequestBody = {
     password: Cypress.env('JWT_PASSWORD')
 };
 
-export const validHMRCRequestBody = {
+export const validHMRCRequestBody = ({
     data: {
-        nationalInsuranceNumber: 'AB123456C',
-        lastName: 'SMITH',
+        nationalInsuranceNumber: 'NN123456C',
+        lastName: Cypress.env('lastName'),
         dateOfBirth: '2000-01-01',
         nationalAsylumSeekerServiceNumber: ''
     }
-};
+});
 
-export const validHomeOfficeRequestBody = {
+export const validHomeOfficeRequestBody = ({
     data: {
         nationalInsuranceNumber: '',
-        lastName: 'Simpson',
+        lastName: Cypress.env('lastName'),
         dateOfBirth: '1990-01-01',
-        nationalAsylumSeekerServiceNumber: 'AB123456C'
-    }
-};
+        nationalAsylumSeekerServiceNumber: 'NN123456C'
+    },
+});
 
 
-export const ValidApplicationRequestBody = {
+export const ValidApplicationRequestBody = ({
     data: {
         id: 'string',
         reference: 'string',
         localAuthority: 0,
         school: 0,
         parentFirstName: 'John',
-        parentLastName: 'Doe',
+        parentLastName: Cypress.env('lastName'),
         parentNationalInsuranceNumber: 'string',
         parentNationalAsylumSeekerServiceNumber: 'string',
         parentDateOfBirth: '1970-01-01',
@@ -41,4 +41,4 @@ export const ValidApplicationRequestBody = {
     links: {
         get_Application: 'string'
     }
-};
+});

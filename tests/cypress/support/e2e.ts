@@ -16,5 +16,11 @@
 // Import commands.js using ES2015 syntax:
 import './commands'
 import 'cypress-plugin-api'
+
+before(() => {
+    cy.task('getLastName').then((lastName) => {
+        Cypress.env('lastName', lastName as string);
+    });
+})
 // Alternatively you can use CommonJS syntax:
 // require('./commands')

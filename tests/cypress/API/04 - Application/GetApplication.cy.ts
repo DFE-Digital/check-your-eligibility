@@ -12,7 +12,7 @@ describe('GET eligibility soft check by Guid', () => {
             parentFirstName: 'Homer',
             parentLastName: 'Simpson',
             parentEmail: 'Homer@example.com',
-            parentNationalInsuranceNumber: 'AB123456C',
+            parentNationalInsuranceNumber: 'NN123456B',
             parentNationalAsylumSeekerServiceNumber: '',
             parentDateOfBirth: '1990-01-01',
             childFirstName: 'Jane',
