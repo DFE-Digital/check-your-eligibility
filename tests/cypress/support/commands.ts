@@ -1,6 +1,5 @@
 // cypress/support/commands.ts
 /// <reference types="cypress" />
-
 declare namespace Cypress {
   interface Chainable<Subject = any> {
     saveBearerToken(): Chainable<any>;
@@ -148,7 +147,7 @@ Cypress.Commands.add('createEligibilityCheckAndGetStatus', (loginUrl: string, lo
     return cy.apiRequest('POST', eligibilityCheckUrl, eligibilityCheckRequestBody, token).then((response) => {
       cy.verifyApiResponseCode(response, 202);
       cy.extractGuid(response);
-
+      cy.wait(3000);
       return cy.get('@Guid').then((eligibilityCheckId) => {
         return cy.apiRequest('GET', `EligibilityCheck/${eligibilityCheckId}/Status`, {}, token).then((newResponse) => {
           cy.verifyApiResponseCode(newResponse, 200);
@@ -159,6 +158,14 @@ Cypress.Commands.add('createEligibilityCheckAndGetStatus', (loginUrl: string, lo
     });
   });
 });
+
+
+// Cypress.Commands.add('updateLastName', (requestBody) => {
+//   var randomLastName = faker.person.lastName().toUpperCase();
+//   requestBody.data.lastName = randomLastName;
+//   cy.wrap(requestBody).as('updatedRequestBody');
+//   return cy.wrap(requestBody)
+// })
 
 Cypress.Commands.add('verifyPostApplicationResponse', (response, requestData) => {
   // Verify data properties

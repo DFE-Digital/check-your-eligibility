@@ -4,26 +4,40 @@ export const validLoginRequestBody = {
     password: Cypress.env('JWT_PASSWORD')
 };
 
-export const validHMRCRequestBody = ({
-    data: {
-        nationalInsuranceNumber: 'NN123456C',
-        lastName: Cypress.env('lastName'),
-        dateOfBirth: '2000-01-01',
-        nationalAsylumSeekerServiceNumber: ''
+export function validHMRCRequestBody() {
+    return {
+        data: {
+            nationalInsuranceNumber: 'NN123456C',
+            lastName: Cypress.env('lastName'),
+            dateOfBirth: '2000-01-01',
+            nationalAsylumSeekerServiceNumber: ''
+        }
     }
-});
+}
 
-export const validHomeOfficeRequestBody = ({
-    data: {
-        nationalInsuranceNumber: '',
-        lastName: Cypress.env('lastName'),
-        dateOfBirth: '1990-01-01',
-        nationalAsylumSeekerServiceNumber: 'NN123456C'
-    },
-});
+export function validHomeOfficeRequestBody () {
+    return {
+        data: {
+            nationalInsuranceNumber: '',
+            lastName: Cypress.env('lastName'),
+            dateOfBirth: '1990-01-01',
+            nationalAsylumSeekerServiceNumber: 'AB123456C'
+        }
+    }
+};
 
+export function notEligibleHomeOfficeRequestBody () {
+    return { 
+        data: {
+            nationalInsuranceNumber: 'PP123456C',
+            lastName: 'Jacob',
+            dateOfBirth: '1990-01-01',
+            nationalAsylumSeekerServiceNumber: ''
+        }
+    }
+}
 
-export const ValidApplicationRequestBody = ({
+export const ValidApplicationRequestBody = {
     data: {
         id: 'string',
         reference: 'string',
@@ -41,4 +55,4 @@ export const ValidApplicationRequestBody = ({
     links: {
         get_Application: 'string'
     }
-});
+};

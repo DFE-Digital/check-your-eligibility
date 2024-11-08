@@ -6,11 +6,8 @@ export default defineConfig({
     setupNodeEvents(on, config) {
       // implement node event listeners here
 
-      on('task', {
-        getLastName: (): string => {
-          return faker.person.lastName();
-        },
-      });
+      const generatedLastName = faker.person.lastName().toUpperCase();
+      config.env.lastName = generatedLastName;
       return config;
     },
     specPattern: [      
