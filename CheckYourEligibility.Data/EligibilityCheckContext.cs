@@ -16,7 +16,7 @@ public class EligibilityCheckContext : DbContext, IEligibilityCheckContext
     public virtual  DbSet<EligibilityCheck> CheckEligibilities { get; set; }
     public virtual DbSet<FreeSchoolMealsHMRC> FreeSchoolMealsHMRC { get; set; }
     public virtual DbSet<FreeSchoolMealsHO> FreeSchoolMealsHO { get; set; }
-    public virtual DbSet<School> Schools { get; set; }
+    public virtual DbSet<Establishment> Establishments { get; set; }
     public virtual DbSet<LocalAuthority> LocalAuthorities { get; set; }
     public virtual DbSet<Application> Applications { get; set; }
     public virtual DbSet<CheckYourEligibility.Data.Models.ApplicationStatus> ApplicationStatuses { get; set; }
@@ -44,7 +44,7 @@ public class EligibilityCheckContext : DbContext, IEligibilityCheckContext
            v => v.ToString(),
            v => (CheckEligibilityType)Enum.Parse(typeof(CheckEligibilityType), v));
 
-        modelBuilder.Entity<School>()
+        modelBuilder.Entity<Establishment>()
        .HasOne(e => e.LocalAuthority);
 
         modelBuilder.Entity<Application>()

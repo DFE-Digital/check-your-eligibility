@@ -7,7 +7,7 @@ namespace CheckYourEligibility.Domain.Responses
     {
         public string Id { get; set; }
         public string Reference { get; set; }
-        public ApplicationSchool School { get; set; }
+        public ApplicationEstablishment Establishment { get; set; }
         public string ParentFirstName { get; set; }
         public string ParentLastName { get; set; }
         public string ParentEmail { get; set; }
@@ -23,14 +23,14 @@ namespace CheckYourEligibility.Domain.Responses
 
         public ApplicationHash? CheckOutcome { get; set; }
 
-        public class ApplicationSchool
+        public class ApplicationEstablishment
         {
             public int Id { get; set; }
             public string Name { get; set; }
 
-            public SchoolLocalAuthority LocalAuthority { get; set; }
+            public EstablishmentLocalAuthority LocalAuthority { get; set; }
 
-            public class SchoolLocalAuthority
+            public class EstablishmentLocalAuthority
             {
                 public int Id { get; set; }
                 public string Name { get; set; }

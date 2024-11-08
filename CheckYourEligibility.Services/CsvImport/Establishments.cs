@@ -16,6 +16,7 @@ namespace CheckYourEligibility.Services.CsvImport
         public string Town { get; set; }
         public string County { get; set; }
         public string Status { get; set; }
+        public string Type { get; set; }
     }
 
     [ExcludeFromCodeCoverage]
@@ -33,6 +34,7 @@ namespace CheckYourEligibility.Services.CsvImport
             Map(m => m.Town).Index(62);
             Map(m => m.County).Index(63);
             Map(m => m.Status).Index(10);
+            Map(m => m.Type).Index(6);
         }
     }
 }

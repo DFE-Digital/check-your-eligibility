@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CheckYourEligibility.Data.Migrations.Migrations
 {
     [DbContext(typeof(EligibilityCheckContext))]
-    partial class EligibilityCheckContextModelSnapshot : ModelSnapshot
+    [Migration("20241106153133_ChangeSchoolToEstablishment")]
+    partial class ChangeSchoolToEstablishment
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -43,9 +46,6 @@ namespace CheckYourEligibility.Data.Migrations.Migrations
                     b.Property<string>("EligibilityCheckHashID")
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<int>("EstablishmentId")
-                        .HasColumnType("int");
-
                     b.Property<int>("LocalAuthorityId")
                         .HasColumnType("int");
 
@@ -74,6 +74,9 @@ namespace CheckYourEligibility.Data.Migrations.Migrations
                         .IsRequired()
                         .HasColumnType("varchar(8)");
 
+                    b.Property<int>("SchoolId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Status")
                         .HasColumnType("varchar(100)");
 
@@ -91,7 +94,7 @@ namespace CheckYourEligibility.Data.Migrations.Migrations
 
                     b.HasIndex("EligibilityCheckHashID");
 
-                    b.HasIndex("EstablishmentId");
+                    b.HasIndex("SchoolId");
 
                     b.HasIndex("UserId");
 
@@ -271,10 +274,6 @@ namespace CheckYourEligibility.Data.Migrations.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Type")
-                        .IsRequired()
-                        .HasColumnType("varchar(100)");
-
                     b.HasKey("EstablishmentId");
 
                     b.HasIndex("LocalAuthorityId");
@@ -367,9 +366,9 @@ namespace CheckYourEligibility.Data.Migrations.Migrations
                         .WithMany()
                         .HasForeignKey("EligibilityCheckHashID");
 
-                    b.HasOne("CheckYourEligibility.Data.Models.Establishment", "Establishment")
+                    b.HasOne("CheckYourEligibility.Data.Models.Establishment", "School")
                         .WithMany()
-                        .HasForeignKey("EstablishmentId")
+                        .HasForeignKey("SchoolId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -379,7 +378,7 @@ namespace CheckYourEligibility.Data.Migrations.Migrations
 
                     b.Navigation("EligibilityCheckHash");
 
-                    b.Navigation("Establishment");
+                    b.Navigation("School");
 
                     b.Navigation("User");
                 });

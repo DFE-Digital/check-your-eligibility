@@ -21,8 +21,8 @@ namespace CheckYourEligibility.Data.Models
 
         public int LocalAuthorityId { get; set; }
 
-        public virtual School School { get; set; }
-        public int SchoolId { get; set; }
+        public virtual Establishment Establishment { get; set; }
+        public int EstablishmentId { get; set; }
 
         [Column(TypeName = "varchar(100)")]
         public string ParentFirstName { get; set; }

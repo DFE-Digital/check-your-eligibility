@@ -1,6 +1,6 @@
 ﻿namespace CheckYourEligibility.Domain.Responses
 {
-    public class School
+    public class Establishment
     {
         public int Id { get; set; }
         public string Name { get; set; }
@@ -11,5 +11,6 @@
         public string County { get; set; }
         public string La { get; set; }
         public double? Distance { get; set; }
+        public string Type { get; set; }
     }
 }

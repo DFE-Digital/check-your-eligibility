@@ -24,14 +24,14 @@ namespace CheckYourEligibility.WebApp.Controllers
     {
         private readonly ILogger<AdministrationController> _logger;
         private readonly IAdministration _service;
-        private readonly ISchoolsSearch _schoolSearch;
+        private readonly IEstablishmentSearch _establishmentsSearch;
 
-        public AdministrationController(ILogger<AdministrationController> logger, IAdministration service, IAudit audit, ISchoolsSearch schoolsSearch)
+        public AdministrationController(ILogger<AdministrationController> logger, IAdministration service, IAudit audit, IEstablishmentSearch establishmentsSearch)
             : base(audit)
         {
             _logger = Guard.Against.Null(logger);
             _service = Guard.Against.Null(service);
-            _schoolSearch = Guard.Against.Null(schoolsSearch); ;
+            _establishmentsSearch = Guard.Against.Null(establishmentsSearch); ;
         }
 
         /// <summary>
@@ -49,7 +49,7 @@ namespace CheckYourEligibility.WebApp.Controllers
         }
 
         /// <summary>
-        /// Imports School Establishments
+        /// Imports Establishments
         /// </summary>
         /// <param name="file"></param>
         /// <returns></returns>

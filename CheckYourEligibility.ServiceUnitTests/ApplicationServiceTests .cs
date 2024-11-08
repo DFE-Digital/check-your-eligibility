@@ -20,7 +20,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using static Microsoft.ApplicationInsights.MetricDimensionNames.TelemetryContext;
 using static System.Runtime.InteropServices.JavaScript.JSType;
-using School = CheckYourEligibility.Data.Models.School;
+using Establishment = CheckYourEligibility.Data.Models.Establishment;
 
 namespace CheckYourEligibility.ServiceUnitTests
 {
@@ -36,7 +36,7 @@ namespace CheckYourEligibility.ServiceUnitTests
         private Mock<IAudit> _moqAudit;
 
         Data.Models.User User;
-        School School;
+        Establishment Establishment;
 
         [SetUp]
         public void Setup()
@@ -104,7 +104,7 @@ namespace CheckYourEligibility.ServiceUnitTests
         {
             // Arrange
             await ClearDownData();
-            await CreateUserSchoolAndLa();
+            await CreateUserEstablishmentAndLa();
             var request = await CreateApplication(CheckEligibilityType.FreeSchoolMeals, CheckEligibilityStatus.eligible);
 
             request.ParentLastName = "";
@@ -124,7 +124,7 @@ namespace CheckYourEligibility.ServiceUnitTests
         {
             // Arrange
             await ClearDownData();
-            await CreateUserSchoolAndLa();
+            await CreateUserEstablishmentAndLa();
             var request = await CreateApplication(CheckEligibilityType.FreeSchoolMeals, CheckEligibilityStatus.eligible);
 
             // Act
@@ -134,14 +134,14 @@ namespace CheckYourEligibility.ServiceUnitTests
             response.Result.Should().BeOfType<ApplicationResponse>();
         }
         [Test]
-        public async Task Given_PostApplication_InvalidSchool_Should_Return_Exception()
+        public async Task Given_PostApplication_InvalidEstablishment_Should_Return_Exception()
         {
             //
             await ClearDownData();
-            await CreateUserSchoolAndLa();
+            await CreateUserEstablishmentAndLa();
 
             var request = await CreateApplication(CheckEligibilityType.FreeSchoolMeals, CheckEligibilityStatus.notEligible);
-            request.School = -1;
+            request.Establishment = -1;
             try
             {
                 await _sut.PostApplication(request);
@@ -158,7 +158,7 @@ namespace CheckYourEligibility.ServiceUnitTests
         {
             //
             await ClearDownData();
-            await CreateUserSchoolAndLa();
+            await CreateUserEstablishmentAndLa();
 
             var request = await CreateApplication(CheckEligibilityType.FreeSchoolMeals, CheckEligibilityStatus.notEligible);
 
@@ -189,7 +189,7 @@ namespace CheckYourEligibility.ServiceUnitTests
         {
             // Arrange
             await ClearDownData();
-            await CreateUserSchoolAndLa();
+            await CreateUserEstablishmentAndLa();
 
             var request = await CreateApplication(CheckEligibilityType.FreeSchoolMeals, CheckEligibilityStatus.notEligible);
             var response = _sut.PostApplication(request);
@@ -226,7 +226,7 @@ namespace CheckYourEligibility.ServiceUnitTests
         {
             // Arrange
             await ClearDownData();
-            await CreateUserSchoolAndLa();
+            await CreateUserEstablishmentAndLa();
 
             var request = await CreateApplication(CheckEligibilityType.FreeSchoolMeals, CheckEligibilityStatus.notEligible);
 
@@ -263,7 +263,7 @@ namespace CheckYourEligibility.ServiceUnitTests
         public async Task Given_ValidRequest_GetApplications_MultipleStatuses_Should_Return_results()
         {
             await ClearDownData();
-            await CreateUserSchoolAndLa();
+            await CreateUserEstablishmentAndLa();
 
             var request = await CreateApplication(CheckEligibilityType.FreeSchoolMeals, CheckEligibilityStatus.notEligible);
 
@@ -276,7 +276,7 @@ namespace CheckYourEligibility.ServiceUnitTests
                 Data = new ApplicationRequestSearchData
                 {
                     Statuses = [statusItem],
-                    School = School.SchoolId
+                    Establishment = Establishment.EstablishmentId
                 }
             };
 
@@ -292,7 +292,7 @@ namespace CheckYourEligibility.ServiceUnitTests
         {
             // Arrange
             await ClearDownData();
-            await CreateUserSchoolAndLa();
+            await CreateUserEstablishmentAndLa();
 
             var request = await CreateApplication(CheckEligibilityType.FreeSchoolMeals, CheckEligibilityStatus.notEligible);
 
@@ -305,8 +305,8 @@ namespace CheckYourEligibility.ServiceUnitTests
                 Data = new ApplicationRequestSearchData
                 {
                     Statuses = [statusItem],
-                    School = School.SchoolId,
-                    LocalAuthority = School.LocalAuthorityId,
+                    Establishment = Establishment.EstablishmentId,
+                    LocalAuthority = Establishment.LocalAuthorityId,
                     ParentDateOfBirth = postApplicationResponse.ParentDateOfBirth,
                     ParentLastName = postApplicationResponse.ParentLastName,
                     ParentNationalAsylumSeekerServiceNumber = postApplicationResponse.ParentNationalAsylumSeekerServiceNumber,
@@ -328,7 +328,7 @@ namespace CheckYourEligibility.ServiceUnitTests
         {
             // Arrange
             await ClearDownData();
-            await CreateUserSchoolAndLa();
+            await CreateUserEstablishmentAndLa();
 
             var request = await CreateApplicationWithNas(CheckEligibilityType.FreeSchoolMeals, CheckEligibilityStatus.notEligible);
 
@@ -341,8 +341,8 @@ namespace CheckYourEligibility.ServiceUnitTests
                 Data = new ApplicationRequestSearchData
                 {
                     Statuses = [statusItem],
-                    School = School.SchoolId,
-                    LocalAuthority = School.LocalAuthorityId,
+                    Establishment = Establishment.EstablishmentId,
+                    LocalAuthority = Establishment.LocalAuthorityId,
                     ParentDateOfBirth = postApplicationResponse.ParentDateOfBirth,
                     ParentLastName = postApplicationResponse.ParentLastName,
                     ParentNationalAsylumSeekerServiceNumber = postApplicationResponse.ParentNationalAsylumSeekerServiceNumber,
@@ -365,7 +365,7 @@ namespace CheckYourEligibility.ServiceUnitTests
         {
             // Arrange
             await ClearDownData();
-            await CreateUserSchoolAndLa();
+            await CreateUserEstablishmentAndLa();
 
             var request = await CreateApplication(CheckEligibilityType.FreeSchoolMeals, CheckEligibilityStatus.notEligible);
 
@@ -375,7 +375,7 @@ namespace CheckYourEligibility.ServiceUnitTests
             {
                 Data = new ApplicationRequestSearchData
                 {
-                    School = School.SchoolId
+                    Establishment = Establishment.EstablishmentId
                 }
             };
 
@@ -391,7 +391,7 @@ namespace CheckYourEligibility.ServiceUnitTests
         {
             // Arrange
             await ClearDownData();
-            await CreateUserSchoolAndLa();
+            await CreateUserEstablishmentAndLa();
 
             var request = await CreateApplication(CheckEligibilityType.FreeSchoolMeals, CheckEligibilityStatus.notEligible);
 
@@ -409,7 +409,7 @@ namespace CheckYourEligibility.ServiceUnitTests
         {
             // Arrange
             await ClearDownData();
-            await CreateUserSchoolAndLa();
+            await CreateUserEstablishmentAndLa();
             var request = await CreateApplication(CheckEligibilityType.FreeSchoolMeals, CheckEligibilityStatus.notEligible);
             await _sut.PostApplication(request);
 
@@ -433,7 +433,7 @@ namespace CheckYourEligibility.ServiceUnitTests
         {
             // Arrange
             await ClearDownData();
-            await CreateUserSchoolAndLa();
+            await CreateUserEstablishmentAndLa();
 
             var request = await CreateApplication(CheckEligibilityType.FreeSchoolMeals, CheckEligibilityStatus.notEligible);
 
@@ -469,14 +469,14 @@ namespace CheckYourEligibility.ServiceUnitTests
             new AuditData { Type = AuditType.Check });
         }
 
-        private async Task CreateUserSchoolAndLa()
+        private async Task CreateUserEstablishmentAndLa()
         {
             var la = _fixture.Create<LocalAuthority>();
-            School = _fixture.Create<School>();
-            School.LocalAuthorityId = la.LocalAuthorityId;
+            Establishment = _fixture.Create<Establishment>();
+            Establishment.LocalAuthorityId = la.LocalAuthorityId;
          
             _fakeInMemoryDb.LocalAuthorities.Add(la);
-            _fakeInMemoryDb.Schools.Add(School);
+            _fakeInMemoryDb.Establishments.Add(Establishment);
             User = _fixture.Create<Data.Models.User>();
             _fakeInMemoryDb.Users.Add(User);
             await _fakeInMemoryDb.SaveChangesAsync();
@@ -492,7 +492,7 @@ namespace CheckYourEligibility.ServiceUnitTests
             request.ChildDateOfBirth = "2007-02-01";
             request.ParentNationalAsylumSeekerServiceNumber = null;
             request.UserId = User.UserID;
-            request.School = School.SchoolId;
+            request.Establishment = Establishment.EstablishmentId;
 
             await AddHash(new CheckProcessData
             {
@@ -516,7 +516,7 @@ namespace CheckYourEligibility.ServiceUnitTests
             request.ChildDateOfBirth = "2007-02-01";
             request.ParentNationalInsuranceNumber = null;
             request.UserId = User.UserID;
-            request.School = School.SchoolId;
+            request.Establishment = Establishment.EstablishmentId;
 
             await AddHash(new CheckProcessData
             {
@@ -536,7 +536,7 @@ namespace CheckYourEligibility.ServiceUnitTests
         private async Task ClearDownData()
         {
             _fakeInMemoryDb.Applications.RemoveRange(_fakeInMemoryDb.Applications);
-            _fakeInMemoryDb.Schools.RemoveRange(_fakeInMemoryDb.Schools);
+            _fakeInMemoryDb.Establishments.RemoveRange(_fakeInMemoryDb.Establishments);
             _fakeInMemoryDb.LocalAuthorities.RemoveRange(_fakeInMemoryDb.LocalAuthorities);
             _fakeInMemoryDb.Users.RemoveRange(_fakeInMemoryDb.Users);
             _fakeInMemoryDb.SaveChanges();

@@ -4,8 +4,8 @@ using CheckYourEligibility.Domain.Responses;
 
 namespace CheckYourEligibility.Services.Interfaces
 {
-    public interface ISchoolsSearch
+    public interface IEstablishmentSearch
     {
-        Task<IEnumerable<School>?> Search(string query);
+        Task<IEnumerable<Establishment>?> Search(string query);
     }
 }
