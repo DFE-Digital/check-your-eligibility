@@ -39,13 +39,14 @@ describe('Verify Eligibility Check Statuses', () => {
 
     })
   })
-  // it('Verify queuedForProcessing status is returned', () => {
-  //   cy.updateLastName(NotEligibleHomeOfficeRequestBody).then((updatedRequestBody) => {
-  //     cy.createEligibilityCheckAndGetStatus('api/Login', validLoginRequestBody, 'EligibilityCheck/FreeSchoolMeals', updatedRequestBody)
-  //     cy.get('@status').then((status: any) => {
-  //       expect(status).to.equal('queuedForProcessing')
-  //     })
 
-  //   })
-  // })
+  it('Verify queuedForProcessing status is returned', () => {
+    cy.updateLastName(notEligibleRequestBody).then((updatedRequestBody) => {
+      cy.createEligibilityCheckAndGetStatus('api/Login', validLoginRequestBody, 'EligibilityCheck/FreeSchoolMeals', updatedRequestBody)
+      cy.get('@status').then((status: any) => {
+        expect(status).to.equal('queuedForProcessing')
+      })
+
+    })
+  })
 })

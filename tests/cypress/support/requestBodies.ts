@@ -15,6 +15,18 @@ export function validHMRCRequestBody() {
     }
 }
 
+export function invalidHMRCRequestBody() {
+    return {
+        data: {
+            nationalInsuranceNumber: 'PPG123456C',
+            lastName: 'Smith',
+            dateOfBirth: '2000-01-01',
+            nationalAsylumSeekerServiceNumber: ''
+        }
+    }
+}
+
+
 export function validHomeOfficeRequestBody () {
     return {
         data: {
@@ -37,22 +49,54 @@ export function notEligibleHomeOfficeRequestBody () {
     }
 }
 
-export const ValidApplicationRequestBody = {
-    data: {
-        id: 'string',
-        reference: 'string',
-        localAuthority: 0,
-        school: 0,
-        parentFirstName: 'John',
-        parentLastName: Cypress.env('lastName'),
-        parentNationalInsuranceNumber: 'string',
-        parentNationalAsylumSeekerServiceNumber: 'string',
-        parentDateOfBirth: '1970-01-01',
-        childFirstName: 'Jane',
-        childLastName: 'Doe',
-        childDateOfBirth: '2010-01-01'
-    },
-    links: {
-        get_Application: 'string'
+export function invalidDOBRequestBody() {
+    return {
+        data: {
+            nationalInsuranceNumber: 'AB123456C',
+            lastName: 'Smith',
+            dateOfBirth: '01/01/19',
+            nationalAsylumSeekerServiceNumber: ''
+        }
     }
-};
+}
+
+export function invalidLastNameRequestBody() {
+    return {
+        data: {
+            nationalInsuranceNumber: 'AB123456C',
+            lastName: '',
+            dateOfBirth: '2000-01-01',
+            nationalAsylumSeekerServiceNumber: ''
+        }
+    }
+}
+
+export function noNIAndNASSNRequestBody() {
+    return {
+        data: {
+            nationalInsuranceNumber: '',
+            lastName: 'Smith',
+            dateOfBirth: '1990-01-01',
+            nationalAsylumSeekerServiceNumber: ''
+        }
+    }
+}
+
+export function validApplicationRequestBody() {
+    return {
+        Data: {
+            type: "FreeSchoolMeals",
+            School: 123456,
+            ParentFirstName: Cypress.env('lastName'),
+            ParentLastName: "Web",
+            ParentNationalInsuranceNumber: "NN668767B",
+            ParentNationalAsylumSeekerServiceNumber: null,
+            ParentDateOfBirth: "1967-03-07",
+            ChildFirstName: "Alexa",
+            ChildLastName: "Crittenden",
+            ChildDateOfBirth: "2007-08-14",
+            UserId: "bc2b0328-9bf6-4a2f-901d-ea694c2b0839",
+            ParentEmail :"PostmanTest@test.com"
+        }
+    }
+}

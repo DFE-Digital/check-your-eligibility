@@ -147,7 +147,7 @@ Cypress.Commands.add('createEligibilityCheckAndGetStatus', (loginUrl: string, lo
     return cy.apiRequest('POST', eligibilityCheckUrl, eligibilityCheckRequestBody, token).then((response) => {
       cy.verifyApiResponseCode(response, 202);
       cy.extractGuid(response);
-      cy.wait(3000);
+      cy.wait(5000);
       return cy.get('@Guid').then((eligibilityCheckId) => {
         return cy.apiRequest('GET', `EligibilityCheck/${eligibilityCheckId}/Status`, {}, token).then((newResponse) => {
           cy.verifyApiResponseCode(newResponse, 200);
@@ -160,12 +160,12 @@ Cypress.Commands.add('createEligibilityCheckAndGetStatus', (loginUrl: string, lo
 });
 
 
-// Cypress.Commands.add('updateLastName', (requestBody) => {
-//   var randomLastName = faker.person.lastName().toUpperCase();
-//   requestBody.data.lastName = randomLastName;
-//   cy.wrap(requestBody).as('updatedRequestBody');
-//   return cy.wrap(requestBody)
-// })
+Cypress.Commands.add('updateLastName', (requestBody) => {
+  const randomLetters = Math.random().toString(36).substring(2, 7);
+  requestBody.data.lastName = randomLetters;
+  cy.wrap(requestBody).as('updatedRequestBody');
+  return cy.wrap(requestBody)
+})
 
 Cypress.Commands.add('verifyPostApplicationResponse', (response, requestData) => {
   // Verify data properties
@@ -185,15 +185,15 @@ Cypress.Commands.add('verifyPostApplicationResponse', (response, requestData) =>
   expect(responseData).to.have.property('reference');
   expect(responseData.school).to.have.property('localAuthority');
   expect(responseData).to.have.property('school');
-  expect(responseData).to.have.property('parentFirstName', requestData.data.parentFirstName);
-  expect(responseData).to.have.property('parentLastName', requestData.data.parentLastName);
-  expect(responseData).to.have.property('parentEmail', requestData.data.parentEmail);
-  expect(responseData).to.have.property('parentNationalInsuranceNumber', requestData.data.parentNationalInsuranceNumber);
-  expect(responseData).to.have.property('parentNationalAsylumSeekerServiceNumber', requestData.data.parentNationalAsylumSeekerServiceNumber);
-  expect(responseData).to.have.property('parentDateOfBirth', requestData.data.parentDateOfBirth);
-  expect(responseData).to.have.property('childFirstName', requestData.data.childFirstName);
-  expect(responseData).to.have.property('childLastName', requestData.data.childLastName);
-  expect(responseData).to.have.property('childDateOfBirth', requestData.data.childDateOfBirth);
+  expect(responseData).to.have.property('parentFirstName', requestData.Data.ParentFirstName);
+  expect(responseData).to.have.property('parentLastName', requestData.Data.ParentLastName);
+  expect(responseData).to.have.property('parentEmail', requestData.Data.ParentEmail);
+  expect(responseData).to.have.property('parentNationalInsuranceNumber', requestData.Data.ParentNationalInsuranceNumber);
+  expect(responseData).to.have.property('parentNationalAsylumSeekerServiceNumber', requestData.Data.ParentNationalAsylumSeekerServiceNumber);
+  expect(responseData).to.have.property('parentDateOfBirth', requestData.Data.ParentDateOfBirth);
+  expect(responseData).to.have.property('childFirstName', requestData.Data.ChildFirstName);
+  expect(responseData).to.have.property('childLastName', requestData.Data.ChildLastName);
+  expect(responseData).to.have.property('childDateOfBirth', requestData.Data.ChildDateOfBirth);
   expect(responseData).to.have.property('status');
   expect(responseData).to.have.property('user');
   expect(responseData).to.have.property('created');
@@ -202,9 +202,7 @@ Cypress.Commands.add('verifyPostApplicationResponse', (response, requestData) =>
 
 
 Cypress.Commands.add('verifyGetApplicationResponse', (response, expectedData) => {
-  expectedData = expectedData.data
 
-  // Verify data properties
   expect(response).to.have.property('body');
   expect(response.body).to.have.property('data');
   expect(response.body).to.have.property('links');
@@ -219,7 +217,6 @@ Cypress.Commands.add('verifyGetApplicationResponse', (response, expectedData) =>
     Object.keys(responseLinks).length;
   cy.verifyTotalElements(totalElements, 22);
 
-  // Verify response data matches expected data
   expect(responseData).to.have.property('id');
   expect(responseData).to.have.property('reference');
   expect(responseData).to.have.property('school');
@@ -228,15 +225,15 @@ Cypress.Commands.add('verifyGetApplicationResponse', (response, expectedData) =>
   expect(responseData.school).to.have.property('localAuthority');
   expect(responseData.school.localAuthority).to.have.property('id');
   expect(responseData.school.localAuthority).to.have.property('name');
-  expect(responseData).to.have.property('parentFirstName', expectedData.parentFirstName);
-  expect(responseData).to.have.property('parentLastName', expectedData.parentLastName);
-  expect(responseData).to.have.property('parentEmail', expectedData.parentEmail);
-  expect(responseData).to.have.property('parentNationalInsuranceNumber', expectedData.parentNationalInsuranceNumber);
-  expect(responseData).to.have.property('parentNationalAsylumSeekerServiceNumber', expectedData.parentNationalAsylumSeekerServiceNumber);
-  expect(responseData).to.have.property('parentDateOfBirth', expectedData.parentDateOfBirth);
-  expect(responseData).to.have.property('childFirstName', expectedData.childFirstName);
-  expect(responseData).to.have.property('childLastName', expectedData.childLastName);
-  expect(responseData).to.have.property('childDateOfBirth', expectedData.childDateOfBirth);
+  expect(responseData).to.have.property('parentFirstName', expectedData.Data.ParentFirstName);
+  expect(responseData).to.have.property('parentLastName', expectedData.Data.ParentLastName);
+  expect(responseData).to.have.property('parentEmail', expectedData.Data.ParentEmail);
+  expect(responseData).to.have.property('parentNationalInsuranceNumber', expectedData.Data.ParentNationalInsuranceNumber);
+  expect(responseData).to.have.property('parentNationalAsylumSeekerServiceNumber', expectedData.Data.ParentNationalAsylumSeekerServiceNumber);
+  expect(responseData).to.have.property('parentDateOfBirth', expectedData.Data.ParentDateOfBirth);
+  expect(responseData).to.have.property('childFirstName', expectedData.Data.ChildFirstName);
+  expect(responseData).to.have.property('childLastName', expectedData.Data.ChildLastName);
+  expect(responseData).to.have.property('childDateOfBirth', expectedData.Data.ChildDateOfBirth);
   expect(responseData).to.have.property('status');
   expect(responseData).to.have.property('user');
   expect(responseData).to.have.property('created');

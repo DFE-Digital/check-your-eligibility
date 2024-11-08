@@ -1,45 +1,29 @@
 import { getandVerifyBearerToken } from '../../support/apiHelpers';
-import { validLoginRequestBody } from '../../support/requestBodies';
+import { validLoginRequestBody, validApplicationRequestBody } from '../../support/requestBodies';
 
 describe('Verify POST application responses', () => {
-    const baseApplicationRequestBody = {
-        data: {
-            school: 123456,
-            parentFirstName: 'Homer',
-            parentLastName: 'Simpson',
-            parentEmail: 'homer@example.com',
-            parentNationalInsuranceNumber: 'NN123456C',
-            parentNationalAsylumSeekerServiceNumber: '',
-            parentDateOfBirth: '1990-01-01',
-            childFirstName: 'Jane',
-            childLastName: 'Smith',
-            childDateOfBirth: '2005-01-01',
-            userID: Cypress.env('USER_ID'),
-            type: 'FreeSchoolMeals'
-        }
-    };
+    const validBaseApplicationRequest = validApplicationRequestBody();
 
     it('Verify 201 Created response is returned with valid application', () => {
         getandVerifyBearerToken('api/Login', validLoginRequestBody).then((token) => {
-            cy.apiRequest('POST', 'Application', baseApplicationRequestBody, token).then((response) => {
+            cy.apiRequest('POST', 'Application', validBaseApplicationRequest, token).then((response) => {
                 // Assert the status and statusText
                 cy.verifyApiResponseCode(response, 201);
 
                 // Assert the response body data
-                cy.verifyPostApplicationResponse(response, baseApplicationRequestBody);
+                cy.verifyPostApplicationResponse(response, validBaseApplicationRequest);
             });
         });
     });
 
     it('Verify 400 Bad request response is returned with invalid application (no parent last name)', () => {
         const invalidApplicationNoLastNameRequestBody = {
-            ...baseApplicationRequestBody,
+            ...validBaseApplicationRequest,
             data: {
-                ...baseApplicationRequestBody.data,
+                ...validBaseApplicationRequest.Data,
                 parentLastName: ''
             }
         };
-
         getandVerifyBearerToken('api/Login', validLoginRequestBody).then((token) => {
             cy.apiRequest('POST', 'Application', invalidApplicationNoLastNameRequestBody, token).then((response) => {
                 // Assert the status and statusText
@@ -51,27 +35,14 @@ describe('Verify POST application responses', () => {
 });
 
 describe('Verify invalid application request responses', () => {
-    const baseApplicationRequestBody = {
-        data: {
-            school: 107126,
-            parentFirstName: 'Homer',
-            parentLastName: 'Simpson',
-            parentEmail: 'homer@example.com',
-            parentNationalInsuranceNumber: '',
-            parentNationalAsylumSeekerServiceNumber: 'AB123456C',
-            parentDateOfBirth: '1985-01-01',
-            childFirstName: 'Jane',
-            childLastName: 'Simpson',
-            childDateOfBirth: '2005-01-01',
-            type: 'FreeSchoolMeals'
-        }
-    };
+
+    const validBaseApplicationRequest = validApplicationRequestBody();
 
     it('Verify 400 Bad request response is returned with invalid child last name', () => {
         const invalidApplicationNoChildLastNameRequestBody = {
-            ...baseApplicationRequestBody,
+            ...validBaseApplicationRequest,
             data: {
-                ...baseApplicationRequestBody.data,
+                ...validBaseApplicationRequest.Data,
                 childLastName: ''
             }
         };
@@ -86,9 +57,9 @@ describe('Verify invalid application request responses', () => {
 
     it('Verify 400 Bad request response is returned with invalid child DOB', () => {
         const invalidApplicationInvalidChildDOBRequestBody = {
-            ...baseApplicationRequestBody,
+            ...validBaseApplicationRequest,
             data: {
-                ...baseApplicationRequestBody.data,
+                ...validBaseApplicationRequest.Data,
                 childDateOfBirth: '01'
             }
         };
