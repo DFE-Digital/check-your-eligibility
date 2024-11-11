@@ -1,7 +1,7 @@
 // /FreeSchoolMeals/Application/Search
 
 import { getandVerifyBearerToken } from '../../support/apiHelpers';
-import { validLoginRequestBody, validHMRCRequestBody, ValidApplicationRequestBody } from '../../support/requestBodies';
+import { validLoginRequestBody} from '../../support/requestBodies';
 import { ApplicationData } from '../../support/interfaces';
 
 
@@ -17,7 +17,7 @@ describe('Update Application Status', () => {
         {
           id: "bf96e60e-2030-4682-9742-0bd97787d6e2",
           reference: "62719512",
-          school: {
+          establishment: {
             id: 100020,
             name: "Primrose Hill School",
             localAuthority: {
@@ -45,6 +45,7 @@ describe('Update Application Status', () => {
             //Make post request for eligibility check
             cy.apiRequest('POST', 'Application/Search', body, token).then((response) => {
                 // Assert the status and statusText
+                cy.log(JSON.stringify(response))
                 cy.verifyApiResponseCode(response, 200);
                 cy.verifyApplicationSearchResponse(response, expectedApplicationsData)
             })

@@ -147,7 +147,7 @@ Cypress.Commands.add('createEligibilityCheckAndGetStatus', (loginUrl: string, lo
     return cy.apiRequest('POST', eligibilityCheckUrl, eligibilityCheckRequestBody, token).then((response) => {
       cy.verifyApiResponseCode(response, 202);
       cy.extractGuid(response);
-      cy.wait(5000);
+      cy.wait(6000);
       return cy.get('@Guid').then((eligibilityCheckId) => {
         return cy.apiRequest('GET', `EligibilityCheck/${eligibilityCheckId}/Status`, {}, token).then((newResponse) => {
           cy.verifyApiResponseCode(newResponse, 200);
@@ -183,8 +183,8 @@ Cypress.Commands.add('verifyPostApplicationResponse', (response, requestData) =>
   // Assertions to verify response data matches request data
   expect(responseData).to.have.property('id');
   expect(responseData).to.have.property('reference');
-  expect(responseData.school).to.have.property('localAuthority');
-  expect(responseData).to.have.property('school');
+  expect(responseData.establishment).to.have.property('localAuthority');
+  expect(responseData).to.have.property('establishment');
   expect(responseData).to.have.property('parentFirstName', requestData.Data.ParentFirstName);
   expect(responseData).to.have.property('parentLastName', requestData.Data.ParentLastName);
   expect(responseData).to.have.property('parentEmail', requestData.Data.ParentEmail);
@@ -212,19 +212,19 @@ Cypress.Commands.add('verifyGetApplicationResponse', (response, expectedData) =>
 
   // Verify total number of elements
   const totalElements = Object.keys(responseData).length +
-    Object.keys(responseData.school).length +
-    Object.keys(responseData.school.localAuthority).length +
+    Object.keys(responseData.establishment).length +
+    Object.keys(responseData.establishment.localAuthority).length +
     Object.keys(responseLinks).length;
   cy.verifyTotalElements(totalElements, 22);
 
   expect(responseData).to.have.property('id');
   expect(responseData).to.have.property('reference');
-  expect(responseData).to.have.property('school');
-  expect(responseData.school).to.have.property('id');
-  expect(responseData.school).to.have.property('name');
-  expect(responseData.school).to.have.property('localAuthority');
-  expect(responseData.school.localAuthority).to.have.property('id');
-  expect(responseData.school.localAuthority).to.have.property('name');
+  expect(responseData).to.have.property('establishment');
+  expect(responseData.establishment).to.have.property('id');
+  expect(responseData.establishment).to.have.property('name');
+  expect(responseData.establishment).to.have.property('localAuthority');
+  expect(responseData.establishment.localAuthority).to.have.property('id');
+  expect(responseData.establishment.localAuthority).to.have.property('name');
   expect(responseData).to.have.property('parentFirstName', expectedData.Data.ParentFirstName);
   expect(responseData).to.have.property('parentLastName', expectedData.Data.ParentLastName);
   expect(responseData).to.have.property('parentEmail', expectedData.Data.ParentEmail);
@@ -294,12 +294,12 @@ Cypress.Commands.add('verifyApplicationSearchResponse', (response, expectedDataA
   const expectedData = expectedDataArray[0];
   expect(expectedData).to.have.property('id', expectedData.id);
   expect(expectedData).to.have.property('reference', expectedData.reference);
-  expect(expectedData).to.have.property('school');
-  expect(expectedData.school).to.have.property('id', expectedData.school.id);
-  expect(expectedData.school).to.have.property('name', expectedData.school.name);
-  expect(expectedData.school).to.have.property('localAuthority');
-  expect(expectedData.school.localAuthority).to.have.property('id', expectedData.school.localAuthority.id);
-  expect(expectedData.school.localAuthority).to.have.property('name', expectedData.school.localAuthority.name);
+  expect(expectedData).to.have.property('establishment');
+  expect(expectedData.establishment).to.have.property('id', expectedData.establishment.id);
+  expect(expectedData.establishment).to.have.property('name', expectedData.establishment.name);
+  expect(expectedData.establishment).to.have.property('localAuthority');
+  expect(expectedData.establishment.localAuthority).to.have.property('id', expectedData.establishment.localAuthority.id);
+  expect(expectedData.establishment.localAuthority).to.have.property('name', expectedData.establishment.localAuthority.name);
   expect(expectedData).to.have.property('parentFirstName', expectedData.parentFirstName);
   expect(expectedData).to.have.property('parentLastName', expectedData.parentLastName);
   expect(expectedData).to.have.property('parentNationalInsuranceNumber', expectedData.parentNationalInsuranceNumber);

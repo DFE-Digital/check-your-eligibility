@@ -86,7 +86,7 @@ export function validApplicationRequestBody() {
     return {
         Data: {
             type: "FreeSchoolMeals",
-            School: 123456,
+            Establishment: 123456,
             ParentFirstName: Cypress.env('lastName'),
             ParentLastName: "Web",
             ParentNationalInsuranceNumber: "NN668767B",
