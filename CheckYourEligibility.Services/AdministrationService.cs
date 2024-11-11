@@ -38,7 +38,7 @@ namespace CheckYourEligibility.Services
             await _db.SaveChangesAsync();
         }
 
-        [ExcludeFromCodeCoverage(Justification ="Use of bulk operations")]
+        [ExcludeFromCodeCoverage(Justification = "Use of bulk operations")]
         public async Task ImportEstablishments(IEnumerable<EstablishmentRow> data)
         {
             //remove records where la is 0
@@ -59,17 +59,17 @@ namespace CheckYourEligibility.Services
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError("db error",ex);
+                        _logger.LogError("db error", ex);
                     }
-                    
+
                 else
                     _db.LocalAuthorities.Add(la);
             }
             await _db.SaveChangesAsync();
 
-            var schools = data.Select(x => new School
+            var Establishment = data.Select(x => new Establishment
             {
-                SchoolId = x.Urn,
+                EstablishmentId = x.Urn,
                 EstablishmentName = x.EstablishmentName,
                 LocalAuthorityId = x.LaCode,
                 Locality = x.Locality,
@@ -78,26 +78,35 @@ namespace CheckYourEligibility.Services
                 Street = x.Street,
                 Town = x.Town,
                 County = x.County,
+                Type = x.Type
             });
 
-
-            foreach (var sc in schools)
+            try
             {
-                var item = await _db.Schools.AsNoTracking().FirstOrDefaultAsync(x => x.SchoolId == sc.SchoolId);
 
-                if (item != null)
-                    try
-                    {
-                        SetScoolData(sc);
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError("db error", ex);
-                    }
-                else
-                    _db.Schools.Add(sc);
+
+                foreach (var sc in Establishment)
+                {
+                    var item = await _db.Establishments.AsNoTracking().FirstOrDefaultAsync(x => x.EstablishmentId == sc.EstablishmentId);
+
+                    if (item != null)
+                        try
+                        {
+                            SetEstablishmentData(sc);
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError($"db error {item.EstablishmentId} {item.EstablishmentName}", ex);
+                        }
+                    else
+                        _db.Establishments.Add(sc);
+                }
+                await _db.SaveChangesAsync();
             }
-            await _db.SaveChangesAsync();
+            catch (Exception)
+            {
+                //fall through
+            }
         }
 
         
@@ -120,9 +129,9 @@ namespace CheckYourEligibility.Services
         }
 
         [ExcludeFromCodeCoverage(Justification = "In memory db does not support execute update, direct updating causes concurrency error")]
-        private void SetScoolData(School? item)
+        private void SetEstablishmentData(Establishment? item)
         {
-            _db.Schools.Where(b => b.SchoolId == item.SchoolId)
+            _db.Establishments.Where(b => b.EstablishmentId == item.EstablishmentId)
                  .ExecuteUpdate(setters => setters
                  .SetProperty(b => b.LocalAuthorityId, item.LocalAuthorityId)
                  .SetProperty(b => b.EstablishmentName, item.EstablishmentName)
@@ -131,7 +140,10 @@ namespace CheckYourEligibility.Services
                  .SetProperty(b => b.Postcode, item.Postcode)
                  .SetProperty(b => b.County, item.County)
                  .SetProperty(b => b.Locality, item.Locality)
-                 .SetProperty(b => b.Town, item.Town));
+                 .SetProperty(b => b.Town, item.Town)
+                 .SetProperty(b => b.Type, item.Type)
+
+                 );
         }
     }
 }

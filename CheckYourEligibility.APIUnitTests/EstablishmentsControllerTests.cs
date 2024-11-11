@@ -12,20 +12,20 @@ using NUnit.Framework.Internal;
 
 namespace CheckYourEligibility.APIUnitTests
 {
-    public class SchoolsControllerTests : TestBase.TestBase
+    public class EstablishmentsControllerTests : TestBase.TestBase
     {
-        private Mock<ISchoolsSearch> _mockService;
-        private ILogger<SchoolsController> _mockLogger;
-        private SchoolsController _sut;
+        private Mock<IEstablishmentSearch> _mockService;
+        private ILogger<EstablishmentsController> _mockLogger;
+        private EstablishmentsController _sut;
         private Mock<IAudit> _mockAuditService;
 
         [SetUp]
         public void Setup()
         {
-            _mockService = new Mock<ISchoolsSearch>(MockBehavior.Strict);
-            _mockLogger = Mock.Of<ILogger<SchoolsController>>();
+            _mockService = new Mock<IEstablishmentSearch>(MockBehavior.Strict);
+            _mockLogger = Mock.Of<ILogger<EstablishmentsController>>();
             _mockAuditService = new Mock<IAudit>(MockBehavior.Strict);
-            _sut = new SchoolsController(_mockLogger, _mockService.Object, _mockAuditService.Object);
+            _sut = new EstablishmentsController(_mockLogger, _mockService.Object, _mockAuditService.Object);
         }
 
         [TearDown]
@@ -38,11 +38,11 @@ namespace CheckYourEligibility.APIUnitTests
         public void Constructor_throws_argumentNullException_when_service_is_null()
         {
             // Arrange
-            ISchoolsSearch service = null;
+            IEstablishmentSearch service = null;
             IAudit auditService = null;
 
             // Act
-            Action act = () => new SchoolsController(_mockLogger, service,auditService);
+            Action act = () => new EstablishmentsController(_mockLogger, service,auditService);
 
             // Assert
             act.Should().ThrowExactly<ArgumentNullException>().And.Message.Should().EndWithEquivalentOf("Value cannot be null. (Parameter 'service')");
@@ -53,11 +53,11 @@ namespace CheckYourEligibility.APIUnitTests
         {
             // Arrange
             var query = _fixture.Create<string>();
-            var result = _fixture.CreateMany<Domain.Responses.School>();
+            var result = _fixture.CreateMany<Domain.Responses.Establishment>();
             _mockService.Setup(cs => cs.Search(query)).ReturnsAsync(result);
             _mockAuditService.Setup(cs => cs.AuditAdd(It.IsAny<AuditData>())).ReturnsAsync(Guid.NewGuid().ToString());
 
-            var expectedResult = new ObjectResult(new SchoolSearchResponse { Data = result }) { StatusCode = StatusCodes.Status200OK };
+            var expectedResult = new ObjectResult(new EstablishmentSearchResponse { Data = result }) { StatusCode = StatusCodes.Status200OK };
 
             // Act
             var response = _sut.Search(query);
@@ -84,11 +84,11 @@ namespace CheckYourEligibility.APIUnitTests
         {
             // Arrange
             var query = _fixture.Create<string>();
-            var result = Enumerable.Empty<Domain.Responses.School>(); 
+            var result = Enumerable.Empty<Domain.Responses.Establishment>(); 
             _mockService.Setup(cs => cs.Search(query)).ReturnsAsync(result);
             _mockAuditService.Setup(cs => cs.AuditAdd(It.IsAny<AuditData>())).ReturnsAsync(Guid.NewGuid().ToString());
 
-            var expectedResult = new ObjectResult(new SchoolSearchResponse { Data = result }) { StatusCode = StatusCodes.Status404NotFound };
+            var expectedResult = new ObjectResult(new EstablishmentSearchResponse { Data = result }) { StatusCode = StatusCodes.Status404NotFound };
 
             // Act
             var response = _sut.Search(query);

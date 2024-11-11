@@ -11,19 +11,19 @@ namespace CheckYourEligibility.WebApp.Controllers
     [ApiController]
     [Route("[controller]")]
     [Authorize]
-    public class SchoolsController : BaseController
+    public class EstablishmentsController : BaseController
     {
-        private readonly ILogger<SchoolsController> _logger;
-        private readonly ISchoolsSearch _service;
+        private readonly ILogger<EstablishmentsController> _logger;
+        private readonly IEstablishmentSearch _service;
 
-        public SchoolsController(ILogger<SchoolsController> logger, ISchoolsSearch service, IAudit audit)
+        public EstablishmentsController(ILogger<EstablishmentsController> logger, IEstablishmentSearch service, IAudit audit)
             : base(audit)
         {
             _logger = Guard.Against.Null(logger);
             _service = Guard.Against.Null(service);
         }
 
-        [ProducesResponseType(typeof(IEnumerable<School>), (int)HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(IEnumerable<Establishment>), (int)HttpStatusCode.OK)]
         [ProducesResponseType((int)HttpStatusCode.NotFound)]
         [ProducesResponseType((int)HttpStatusCode.BadRequest)]
         [HttpGet("search")]
@@ -35,12 +35,12 @@ namespace CheckYourEligibility.WebApp.Controllers
             }
 
             var results = await _service.Search(query);
-            await AuditAdd(Domain.Enums.AuditType.School, string.Empty);
+            await AuditAdd(Domain.Enums.AuditType.Establishment, string.Empty);
             if (results == null || !results.Any())
-                return new ObjectResult(new SchoolSearchResponse { Data = results }) { StatusCode = StatusCodes.Status404NotFound };
+                return new ObjectResult(new EstablishmentSearchResponse { Data = results }) { StatusCode = StatusCodes.Status404NotFound };
             else
             {
-                return new ObjectResult(new SchoolSearchResponse { Data = results }) { StatusCode = StatusCodes.Status200OK };
+                return new ObjectResult(new EstablishmentSearchResponse { Data = results }) { StatusCode = StatusCodes.Status200OK };
             }
         }
     }
