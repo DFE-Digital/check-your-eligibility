@@ -11,8 +11,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CheckYourEligibility.Data.Migrations.Migrations
 {
     [DbContext(typeof(EligibilityCheckContext))]
-    [Migration("20241107110201_EstablishmentType")]
-    partial class EstablishmentType
+    [Migration("20241111123419_ChangeSchoolToEstablishmentMigration")]
+    partial class ChangeSchoolToEstablishmentMigration
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

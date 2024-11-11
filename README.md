@@ -117,9 +117,8 @@ Add-Migration UserReference -project CheckYourEligibility.Data.Migrations
 Add-Migration ApplicationParentEmail -project CheckYourEligibility.Data.Migrations
 Add-Migration DeCoupleCheck -project CheckYourEligibility.Data.Migrations
 Add-Migration SetApplicationType -project CheckYourEligibility.Data.Migrations
-Add-Migration ChangeSchoolToEstablishment -project CheckYourEligibility.Data.Migrations
-Add-Migration ApplicationSchool -project CheckYourEligibility.Data.Migrations
-Add-Migration EstablishmentType -project CheckYourEligibility.Data.Migrations
+
+Add-Migration ChangeSchoolToEstablishmentMigration -project CheckYourEligibility.Data.Migrations
 
 
 
@@ -132,6 +131,7 @@ update-database  -project CheckYourEligibility.Data.Migrations
 Get-Migration
 
 Remove-Migration -Force -project CheckYourEligibility.Data.Migrations
+Remove-Migration  -project CheckYourEligibility.Data.Migrations
 
 ##### Run specific migration
 update-database -migration BaseMigration -project CheckYourEligibility.Data.Migrations
