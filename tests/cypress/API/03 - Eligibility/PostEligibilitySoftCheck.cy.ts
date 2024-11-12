@@ -1,31 +1,17 @@
 ///FreeSchoolMeals
 import { getandVerifyBearerToken } from '../../support/apiHelpers';
-import { validLoginRequestBody} from '../../support/requestBodies';
+import { validLoginRequestBody, validHMRCRequestBody, validHomeOfficeRequestBody, invalidHMRCRequestBody, invalidDOBRequestBody, invalidLastNameRequestBody, noNIAndNASSNRequestBody} from '../../support/requestBodies';
 
 
 describe('Post Eligibility Check - Valid Requests', () => {
 
-  const validHMRCRequestBody = {
-    data: {
-      nationalInsuranceNumber: 'AB123456C',
-      lastName: 'Smith',
-      dateOfBirth: '2000-01-01',
-      nationalAsylumSeekerServiceNumber: ''
-    }
-  };
+  const validHMRCRequest = validHMRCRequestBody();
+  const validHomeOfficeRequest = validHomeOfficeRequestBody();
 
-  const validHomeOfficeRequestBody = {
-    data: {
-      nationalInsuranceNumber: '',
-      lastName: 'Simpson',
-      dateOfBirth: '1990-01-01',
-      nationalAsylumSeekerServiceNumber: '240712349'
-    }
-  };
 
   it('Verify 202 Accepted response is returned with valid HMRC data', () => {
     getandVerifyBearerToken('api/Login', validLoginRequestBody).then((token) => {
-      cy.apiRequest('POST', 'EligibilityCheck/FreeSchoolMeals', validHMRCRequestBody, token).then((response) => {
+      cy.apiRequest('POST', 'EligibilityCheck/FreeSchoolMeals', validHMRCRequest, token).then((response) => {
         // Assert the status and statusText
         cy.verifyApiResponseCode(response, 202)
 
@@ -38,7 +24,7 @@ describe('Post Eligibility Check - Valid Requests', () => {
 
   it('Verify 202 Accepted response is returned with valid Home Office data', () => {
     getandVerifyBearerToken('api/Login', validLoginRequestBody).then((token) => {
-      cy.apiRequest('POST', 'EligibilityCheck/FreeSchoolMeals', validHomeOfficeRequestBody, token).then((response) => {
+      cy.apiRequest('POST', 'EligibilityCheck/FreeSchoolMeals', validHomeOfficeRequest, token).then((response) => {
         // Assert the status and statusText
         cy.verifyApiResponseCode(response, 202)
         // Assert the response body data
@@ -49,18 +35,16 @@ describe('Post Eligibility Check - Valid Requests', () => {
 })
 
 describe('Post Eligibility Check - Invalid Requests', () => {
+
+  const invalidHMRCRequest = invalidHMRCRequestBody();
+  const invalidDOBRequest = invalidDOBRequestBody();
+  const invalidLastNameRequest = invalidLastNameRequestBody();
+  const noNIAndNASSRequest = noNIAndNASSNRequestBody();
+
   it('Verify 400 Bad Request response is returned with invalid National Insurance number', () => {
 
-    const InvalidNationalInsuranceRequestBody = {
-      data: {
-        nationalInsuranceNumber: 'AAG123456C',
-        lastName: 'Smith',
-        dateOfBirth: '2000-01-01',
-        nationalAsylumSeekerServiceNumber: ''
-      }
-    };
     getandVerifyBearerToken('api/Login', validLoginRequestBody).then((token) => {
-      cy.apiRequest('POST', 'EligibilityCheck/FreeSchoolMeals', InvalidNationalInsuranceRequestBody, token).then((response) => {
+      cy.apiRequest('POST', 'EligibilityCheck/FreeSchoolMeals', invalidHMRCRequest, token).then((response) => {
         cy.verifyApiResponseCode(response, 400)
         expect(response.body).to.have.property('data', 'Invalid National Insurance Number');
       });
@@ -68,16 +52,9 @@ describe('Post Eligibility Check - Invalid Requests', () => {
   });
 
   it('Verify 400 Bad Request response is returned with invalid date of birth', () => {
-    const InvalidDOBRequestBody = {
-      data: {
-        nationalInsuranceNumber: 'AB123456C',
-        lastName: 'Smith',
-        dateOfBirth: '01/01/19',
-        nationalAsylumSeekerServiceNumber: ''
-      }
-    };
+
     getandVerifyBearerToken('api/Login', validLoginRequestBody).then((token) => {
-      cy.apiRequest('POST', 'EligibilityCheck/FreeSchoolMeals', InvalidDOBRequestBody, token).then((response) => {
+      cy.apiRequest('POST', 'EligibilityCheck/FreeSchoolMeals', invalidDOBRequest, token).then((response) => {
         cy.verifyApiResponseCode(response, 400)
         expect(response.body).to.have.property('data', 'Date of birth is required:- (yyyy-mm-dd)');
       });
@@ -85,16 +62,9 @@ describe('Post Eligibility Check - Invalid Requests', () => {
   });
 
   it('Verify 400 Bad Request response is returned with invalid last name', () => {
-    const InvalidLastNameRequestBody = {
-      data: {
-        nationalInsuranceNumber: 'AB123456C',
-        lastName: '',
-        dateOfBirth: '2000-01-01',
-        nationalAsylumSeekerServiceNumber: ''
-      }
-    };
+
     getandVerifyBearerToken('api/Login', validLoginRequestBody).then((token) => {
-      cy.apiRequest('POST', 'EligibilityCheck/FreeSchoolMeals', InvalidLastNameRequestBody, token).then((response) => {
+      cy.apiRequest('POST', 'EligibilityCheck/FreeSchoolMeals', invalidLastNameRequest, token).then((response) => {
         cy.verifyApiResponseCode(response, 400)
         expect(response.body).to.have.property('data', 'LastName is required');
       });
@@ -102,17 +72,9 @@ describe('Post Eligibility Check - Invalid Requests', () => {
   });
 
   it('Verify 400 Bad Request response is returned with invalid NI and Nass number', () => {
-    const NoNIAndNASSNRequestBody = {
-      data: {
-        nationalInsuranceNumber: '',
-        lastName: 'Smith',
-        dateOfBirth: '1990-01-01',
-        nationalAsylumSeekerServiceNumber: ''
-      }
-    };
 
     getandVerifyBearerToken('api/Login', validLoginRequestBody).then((token) => {
-      cy.apiRequest('POST', 'EligibilityCheck/FreeSchoolMeals', NoNIAndNASSNRequestBody, token).then((response) => {
+      cy.apiRequest('POST', 'EligibilityCheck/FreeSchoolMeals', noNIAndNASSRequest, token).then((response) => {
         cy.verifyApiResponseCode(response, 400)
         expect(response.body).to.have.property('data', 'National Insurance Number or National Asylum Seeker Service Number is required');
       });

@@ -5,7 +5,7 @@ export interface LocalAuthority {
     name: string;
   }
   
-  export interface School {
+  export interface Establishment {
     id: number;
     name: string;
     localAuthority: LocalAuthority;
@@ -14,7 +14,7 @@ export interface LocalAuthority {
   export interface ApplicationData {
     id: string;
     reference: string;
-    school: School;
+    establishment: Establishment;
     parentFirstName: string;
     parentLastName: string;
     parentNationalInsuranceNumber: string;

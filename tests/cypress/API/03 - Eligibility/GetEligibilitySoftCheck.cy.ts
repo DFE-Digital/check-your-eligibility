@@ -8,7 +8,9 @@ describe('GET eligibility soft check by Guid', () => {
         //Get token
         getandVerifyBearerToken('api/Login', validLoginRequestBody).then((token) => {
             //Make post request for eligibility check
-            cy.apiRequest('POST', 'EligibilityCheck/FreeSchoolMeals', validHMRCRequestBody, token).then((response) => {
+            cy.log(Cypress.env('lastName'));
+            const requestBody = validHMRCRequestBody();
+            cy.apiRequest('POST', 'EligibilityCheck/FreeSchoolMeals', requestBody, token).then((response) => {
                 cy.verifyApiResponseCode(response, 202);
                 //extract Guid
                 cy.extractGuid(response);
@@ -18,7 +20,8 @@ describe('GET eligibility soft check by Guid', () => {
                     cy.apiRequest('GET', `EligibilityCheck/${Guid}`, {}, token).then((newResponse) => {
                         // Assert the response 
                         cy.verifyApiResponseCode(newResponse, 200)
-                        cy.verifyGetEligibilityCheckResponseData(newResponse, validHMRCRequestBody)
+                        // requestBody.data.lastName = requestBody.data.lastName.toUpperCase();
+                        cy.verifyGetEligibilityCheckResponseData(newResponse, requestBody)
                     })
                 });
             });
