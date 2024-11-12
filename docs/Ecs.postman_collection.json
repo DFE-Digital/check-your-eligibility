@@ -59,7 +59,7 @@
 									"key": "file",
 									"contentType": "text/csv",
 									"type": "file",
-									"src": []
+									"src": "/C:/Users/RCRITTENDEN/OneDrive - Department for Education/Downloads/GIAS_establishmentData.csv"
 								}
 							]
 						},
@@ -1679,7 +1679,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"Data\": {\r\n        \"type\": \"FreeSchoolMeals\",\r\n        \"School\": 123456,\r\n        \"ParentFirstName\": \"ecsProd\",\r\n        \"ParentLastName\": \"Web\",\r\n        \"ParentNationalInsuranceNumber\": \"NN668767B\",\r\n        \"ParentNationalAsylumSeekerServiceNumber\": null,\r\n        \"ParentDateOfBirth\": \"1967-03-07\",\r\n        \"ChildFirstName\": \"Alexa\",\r\n        \"ChildLastName\": \"Crittenden\",\r\n        \"ChildDateOfBirth\": \"2007-08-14\",\r\n        \"UserId\": \"d28b2477-6989-4e73-b7f9-98d47df0a1ea\",\r\n        \"ParentEmail\" :\"PostmanTest@test.com\"\r\n    }\r\n}"
+							"raw": "{\r\n    \"Data\": {\r\n        \"type\": \"FreeSchoolMeals\",\r\n        \"Establishment\": 123456,\r\n        \"ParentFirstName\": \"ecsProd\",\r\n        \"ParentLastName\": \"Simpson\",\r\n        \"ParentNationalInsuranceNumber\": \"AB123456C\",\r\n        \"ParentNationalAsylumSeekerServiceNumber\": null,\r\n        \"ParentDateOfBirth\": \"1990-01-01\",\r\n        \"ChildFirstName\": \"Alexa\",\r\n        \"ChildLastName\": \"Crittenden\",\r\n        \"ChildDateOfBirth\": \"2007-08-14\",\r\n        \"UserId\": \"78194d83-b137-48be-9a2f-9fce7bd3d220\",\r\n        \"ParentEmail\" :\"PostmanTest@test.com\"\r\n    }\r\n}"
 						},
 						"url": {
 							"raw": "{{baseUrl}}/Application",
@@ -1790,15 +1790,14 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n \"pageNumber\": 1,\r\n  \"pageSize\": 50000,\r\n  \"data\": {\r\n    \"localAuthority\": null,\r\n    \"school\": 123456,\r\n    \"status\": null,\r\n    \"parentLastName\": null,\r\n    \"parentNationalInsuranceNumber\": null,\r\n    \"parentNationalAsylumSeekerServiceNumber\": null,\r\n    \"parentDateOfBirth\": null,\r\n    \"childLastName\": null,\r\n    \"childDateOfBirth\": null\r\n  }\r\n}"
+							"raw": "{\r\n \"pageNumber\": 1,\r\n  \"pageSize\": 50000,\r\n  \"data\": {\r\n    \"type\": \"FreeSchoolMeals\",\r\n    \"localAuthority\": null,\r\n    \"Establishment\": 123456,\r\n    \"status\": null,\r\n    \"parentLastName\": null,\r\n    \"parentNationalInsuranceNumber\": null,\r\n    \"parentNationalAsylumSeekerServiceNumber\": null,\r\n    \"parentDateOfBirth\": null,\r\n    \"childLastName\": null,\r\n    \"childDateOfBirth\": null\r\n  }\r\n}"
 						},
 						"url": {
-							"raw": "{{baseUrl}}/FreeSchoolMeals/Application/Search",
+							"raw": "{{baseUrl}}/Application/Search",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
-								"FreeSchoolMeals",
 								"Application",
 								"Search"
 							]
@@ -1890,12 +1889,12 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/Schools/search?query=king",
+							"raw": "{{baseUrl}}/Establishments/search?query=king",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
-								"Schools",
+								"Establishments",
 								"search"
 							],
 							"query": [
