@@ -147,7 +147,7 @@ Cypress.Commands.add('createEligibilityCheckAndGetStatus', (loginUrl: string, lo
     return cy.apiRequest('POST', eligibilityCheckUrl, eligibilityCheckRequestBody, token).then((response) => {
       cy.verifyApiResponseCode(response, 202);
       cy.extractGuid(response);
-      cy.wait(6000);
+      cy.wait(20000);
       return cy.get('@Guid').then((eligibilityCheckId) => {
         return cy.apiRequest('GET', `EligibilityCheck/${eligibilityCheckId}/Status`, {}, token).then((newResponse) => {
           cy.verifyApiResponseCode(newResponse, 200);
