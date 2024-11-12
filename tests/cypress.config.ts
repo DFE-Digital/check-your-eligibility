@@ -16,6 +16,7 @@ export default defineConfig({
       "cypress/API/Application/**.cy.ts",
       "cypress/API/Schools/**.cy.ts",
       "cypress/API/**/*cy.ts",],
+      baseUrl: process.env.CYPRESS_API_HOST,
     viewportWidth: 1600,
     viewportHeight: 1800,
     },
