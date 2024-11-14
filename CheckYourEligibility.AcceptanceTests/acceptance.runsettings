@@ -1,0 +1,8 @@
+﻿<?xml version='1.0' encoding='utf-8'?>
+<RunSettings>
+  <TestRunParameters>
+    <Parameter name="serviceUrl" value="https://dev.eligibility-checking-engine.education.gov.uk" />
+	  <Parameter name="apiUserName" value="Richard" />
+	  <Parameter name="apiPassword" value="h#wt[_4E9-tObg" />  
+  </TestRunParameters>
+</RunSettings>
