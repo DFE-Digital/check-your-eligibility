@@ -1,31 +1,25 @@
-﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http.Headers;
-using System.Net.Http;
-using System.Net;
-using System.Text;
-using System.Threading.Tasks;
+﻿using CheckYourEligibility.AcceptanceTests.Models;
 using CheckYourEligibility.Domain;
-using System.Diagnostics.CodeAnalysis;
-using static System.Runtime.InteropServices.JavaScript.JSType;
+using Newtonsoft.Json;
+using System.Net;
+using System.Net.Http.Headers;
 
 namespace CheckYourEligibility.AcceptanceTests
 {
 
-    public class ApiEndPoint
+    public class Api
     {
         private readonly string _serviceUrl;
-        private readonly string _endPoint;
         private readonly HttpClient _httpClient;
-        private string _BearerToken;
 
-        public ApiEndPoint()
+        public readonly EligibilityCheckContext Db;
+
+        public Api()
         {
             _serviceUrl = TestContext.Parameters["serviceUrl"];
             TestContext.Out.WriteLine($"Service url: {_serviceUrl}");
             _httpClient = new HttpClient() { BaseAddress = new Uri(_serviceUrl) }; 
+            Db = new EligibilityCheckContext();
         }
 
         public async Task Login()

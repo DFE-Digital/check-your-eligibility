@@ -1,3 +1,4 @@
+using CheckYourEligibility.AcceptanceTests.Models;
 using CheckYourEligibility.Domain;
 using CheckYourEligibility.Domain.Enums;
 using CheckYourEligibility.Domain.Requests;
@@ -11,15 +12,15 @@ namespace CheckYourEligibility.AcceptanceTests
 {
     public class CheckTest
     {
-        private ApiEndPoint _endpoint;
+        private Api _api;
         static Random rd = new Random();
 
         [SetUp]
         public async Task Setup()
         {
 
-            _endpoint = new ApiEndPoint();
-            await _endpoint.Login();
+            _api = new Api();
+            await _api.Login();
         }
         
         internal static string CreateString(int stringLength)
@@ -43,7 +44,6 @@ namespace CheckYourEligibility.AcceptanceTests
         [TestCase(CheckEligibilityStatus.DwpError, "RH668767A")]
         public async Task CheckEligibility_fsm_status_should_be_expectedStatus(CheckEligibilityStatus expectedStatus, string magicNi)
         {
-            
             //arrange
             var data = new CheckEligibilityRequest_Fsm
             {
@@ -56,7 +56,7 @@ namespace CheckYourEligibility.AcceptanceTests
             };
 
             //act
-            var responseCheck = await _endpoint.ApiDataPostAsynch("/EligibilityCheck/FreeSchoolMeals", data, new CheckEligibilityResponse());
+            var responseCheck = await _api.ApiDataPostAsynch("/EligibilityCheck/FreeSchoolMeals", data, new CheckEligibilityResponse());
             responseCheck.Data.Should();
             responseCheck.Data.Status.Should().Be(CheckEligibilityStatus.queuedForProcessing.ToString());
 
@@ -64,7 +64,7 @@ namespace CheckYourEligibility.AcceptanceTests
             var attempts = 0;
             while (status == CheckEligibilityStatus.queuedForProcessing)
             {
-                var responseStatus = await _endpoint.ApiDataGetAsynch($"{responseCheck.Links.Get_EligibilityCheckStatus}", new CheckEligibilityStatusResponse());
+                var responseStatus = await _api.ApiDataGetAsynch($"{responseCheck.Links.Get_EligibilityCheckStatus}", new CheckEligibilityStatusResponse());
                 Enum.TryParse(responseStatus.Data.Status, out CheckEligibilityStatus statusCheck);
                 status = statusCheck;
 
@@ -75,6 +75,12 @@ namespace CheckYourEligibility.AcceptanceTests
                     break;
                 }
             }
+            //clean up
+            var id = responseCheck.Links.Get_EligibilityCheck.Replace("/EligibilityCheck/","");
+            var checkitem = _api.Db.EligibilityCheck.First(h => h.EligibilityCheckId == id);
+            _api.Db.EligibilityCheckHashes.Remove(_api.Db.EligibilityCheckHashes.First(h => h.EligibilityCheckHashId == checkitem.EligibilityCheckHashId));
+            _api.Db.EligibilityCheck.Remove(checkitem);
+            _api.Db.SaveChanges();
 
             //assert
             status.Should().Be(expectedStatus);
