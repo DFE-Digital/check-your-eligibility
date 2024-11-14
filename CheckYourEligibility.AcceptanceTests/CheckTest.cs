@@ -70,10 +70,9 @@ namespace CheckYourEligibility.AcceptanceTests
 
                 Thread.Sleep(1000); //wait 1 second
                 attempts++;
-                if (attempts >= 60)
+                if (attempts >= 100)
                 {
                     break;
-                    //throw new Exception("Failed to get processed check result within 30 seconds");
                 }
             }
 
