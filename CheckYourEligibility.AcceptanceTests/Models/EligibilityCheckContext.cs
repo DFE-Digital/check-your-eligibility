@@ -36,9 +36,10 @@ public partial class EligibilityCheckContext : DbContext
     public virtual DbSet<LocalAuthorities> LocalAuthorities { get; set; }
 
     public virtual DbSet<Users> Users { get; set; }
+    public string ConnectionString { get;  set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        => optionsBuilder.UseSqlServer(TestContext.Parameters["dbConnection"]);
+        => optionsBuilder.UseSqlServer(ConnectionString);
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<ApplicationStatuses>(entity =>

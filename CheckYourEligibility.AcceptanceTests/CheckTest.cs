@@ -4,6 +4,7 @@ using CheckYourEligibility.Domain.Enums;
 using CheckYourEligibility.Domain.Requests;
 using CheckYourEligibility.Domain.Responses;
 using FluentAssertions;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Net;
 using static System.Runtime.InteropServices.JavaScript.JSType;
@@ -61,6 +62,20 @@ namespace CheckYourEligibility.AcceptanceTests
             responseCheck.Data.Status.Should().Be(CheckEligibilityStatus.queuedForProcessing.ToString());
 
             Enum.TryParse(responseCheck.Data.Status, out CheckEligibilityStatus status);
+            if (_api.RunLocal)
+            {
+                var processRespopnse = await _api.ApiDataPutAsynch(responseCheck.Links.Put_EligibilityCheckProcess, new CheckEligibilityStatusResponse());
+                if (expectedStatus == CheckEligibilityStatus.DwpError)
+                {
+                    await _api.ApiDataPatchAsynch(responseCheck.Links.Get_EligibilityCheckStatus, new EligibilityStatusUpdateRequest { Data = new EligibilityCheckStatusData { Status = CheckEligibilityStatus.DwpError } }, new CheckEligibilityStatusResponse());
+                }
+                status = CheckEligibilityStatus.DwpError;
+            }
+            else
+            {
+                var processQueue = await _api.ApiDataPostAsynch($"/EligibilityCheck/ProcessQueueMessages?queue={_api.StandardQueue}", data, new OkObjectResult(""));
+            }
+
             var attempts = 0;
             while (status == CheckEligibilityStatus.queuedForProcessing)
             {
@@ -77,8 +92,22 @@ namespace CheckYourEligibility.AcceptanceTests
             }
             //clean up
             var id = responseCheck.Links.Get_EligibilityCheck.Replace("/EligibilityCheck/","");
+
             var checkitem = _api.Db.EligibilityCheck.First(h => h.EligibilityCheckId == id);
-            _api.Db.EligibilityCheckHashes.Remove(_api.Db.EligibilityCheckHashes.First(h => h.EligibilityCheckHashId == checkitem.EligibilityCheckHashId));
+            if (checkitem.Status != CheckEligibilityStatus.queuedForProcessing.ToString())
+            {
+                if (checkitem.EligibilityCheckHashId != null)
+                {
+                    var hash = _api.Db.EligibilityCheckHashes.First(h => h.EligibilityCheckHashId == checkitem.EligibilityCheckHashId);
+                    var application = _api.Db.Applications.FirstOrDefault(h => h.EligibilityCheckHashId == hash.EligibilityCheckHashId);
+                    if (application != null)
+                    {
+                        _api.Db.Applications.Remove(application);
+                    }
+                    _api.Db.EligibilityCheckHashes.Remove(hash);
+                }
+            }
+                        
             _api.Db.EligibilityCheck.Remove(checkitem);
             _api.Db.SaveChanges();
 
