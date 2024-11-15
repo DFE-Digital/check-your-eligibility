@@ -1,8 +1,11 @@
+using Azure.Core;
 using CheckYourEligibility.Domain.Enums;
+using CheckYourEligibility.Domain.Exceptions;
 using CheckYourEligibility.Domain.Requests;
 using CheckYourEligibility.Domain.Responses;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 using System.Diagnostics.CodeAnalysis;
 
 namespace CheckYourEligibility.AcceptanceTests
@@ -132,7 +135,6 @@ namespace CheckYourEligibility.AcceptanceTests
 
             //act
             var responseCheck = await _api.ApiDataPostAsynch("/EligibilityCheck/FreeSchoolMeals", data, new CheckEligibilityResponse());
-            responseCheck.Data.Should();
             responseCheck.Data.Status.Should().Be(CheckEligibilityStatus.queuedForProcessing.ToString());
 
             Enum.TryParse(responseCheck.Data.Status, out CheckEligibilityStatus status);
@@ -192,6 +194,54 @@ namespace CheckYourEligibility.AcceptanceTests
 
             //clean up
             CleanUpCheckData(checkId);
+        }
+
+        [Test]
+        public async Task CheckEligibility_fsm_returns_BadRequest_Ni_missing()
+        {
+            //arrange
+            var data = new CheckEligibilityRequest_Fsm
+            {
+                Data = new CheckEligibilityRequestData_Fsm
+                {
+                    LastName = CreateString(30),
+                    DateOfBirth = "1990-12-15",
+                    NationalInsuranceNumber = "",
+                }
+            };
+
+            try
+            {
+               var response = await _api.ApiDataPostAsynch("/EligibilityCheck/FreeSchoolMeals", data, new CheckEligibilityResponse());
+            }
+            catch (Exception ex)
+            {
+                ex.Message.Should().BeEquivalentTo("Api error BadRequest, /EligibilityCheck/FreeSchoolMeals,{\"data\":\"National Insurance Number or National Asylum Seeker Service Number is required\"}");
+            }
+        }
+
+        [Test]
+        public async Task CheckEligibility_fsm_returns_BadRequest_Ni_bad()
+        {
+            //arrange
+            var data = new CheckEligibilityRequest_Fsm
+            {
+                Data = new CheckEligibilityRequestData_Fsm
+                {
+                    LastName = CreateString(30),
+                    DateOfBirth = "1990-12-15",
+                    NationalInsuranceNumber = "123",
+                }
+            };
+
+            try
+            {
+                var response = await _api.ApiDataPostAsynch("/EligibilityCheck/FreeSchoolMeals", data, new CheckEligibilityResponse());
+            }
+            catch (Exception ex)
+            {
+                ex.Message.Should().BeEquivalentTo("Api error BadRequest, /EligibilityCheck/FreeSchoolMeals,{\"data\":\"Invalid National Insurance Number\"}");
+            }
         }
 
     }
