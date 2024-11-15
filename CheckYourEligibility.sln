@@ -30,7 +30,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CheckYourEligibility.Servic
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Acceptance", "Acceptance", "{E3269BAF-DEE4-4DCC-81CE-93FD618C6937}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CheckYourEligibility.AcceptanceTests", "CheckYourEligibility.AcceptanceTests\CheckYourEligibility.AcceptanceTests.csproj", "{FAC224DE-BB7A-44FE-9278-DD6FF12657CB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CheckYourEligibility.AcceptanceRun", "CheckYourEligibility.AcceptanceTests\CheckYourEligibility.AcceptanceRun.csproj", "{FAC224DE-BB7A-44FE-9278-DD6FF12657CB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
