@@ -3,12 +3,13 @@ using Azure.Security.KeyVault.Secrets;
 using CheckYourEligibility.AcceptanceTests.Models;
 using CheckYourEligibility.Domain;
 using Newtonsoft.Json;
+using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Net.Http.Headers;
 
 namespace CheckYourEligibility.AcceptanceTests
 {
-
+    [ExcludeFromCodeCoverage]
     public class Api
     {
         private readonly string _serviceUrl;

@@ -1,16 +1,13 @@
-using CheckYourEligibility.AcceptanceTests.Models;
-using CheckYourEligibility.Domain;
 using CheckYourEligibility.Domain.Enums;
 using CheckYourEligibility.Domain.Requests;
 using CheckYourEligibility.Domain.Responses;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System.Net;
-using static System.Runtime.InteropServices.JavaScript.JSType;
+using System.Diagnostics.CodeAnalysis;
 
 namespace CheckYourEligibility.AcceptanceTests
 {
+    [ExcludeFromCodeCoverage]
     public class CheckTest
     {
         private Api _api;
