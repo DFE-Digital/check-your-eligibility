@@ -60,6 +60,24 @@ namespace CheckYourEligibility.AcceptanceTests
             _api.Db.SaveChanges();
         }
 
+        [Test]
+        public async Task CheckEligibility_fsm_returns_BadRequest_Returns_BadRequestObjectResult()
+        {
+            //arrange
+            var data = new CheckEligibilityRequest_Fsm
+            {
+                Data = new CheckEligibilityRequestData_Fsm
+                {
+                    LastName = CreateString(30),
+                    DateOfBirth = "1990-12-15",
+                    NationalInsuranceNumber = "123",
+                }
+            };
+
+            var response = await _api.ApiDataPostAsynch("/EligibilityCheck/FreeSchoolMeals", data, new BadRequestObjectResult(""));
+            response.StatusCode.Should().Be(StatusCodes.Status400BadRequest);
+        }
+
 
         [Test]
         [TestCase(CheckEligibilityStatus.eligible, "NN668767B")]
@@ -276,23 +294,7 @@ namespace CheckYourEligibility.AcceptanceTests
         }
 
 
-        [Test]
-        public async Task CheckEligibility_fsm_returns_BadRequest_Returns_BadRequestObjectResult()
-        {
-            //arrange
-            var data = new CheckEligibilityRequest_Fsm
-            {
-                Data = new CheckEligibilityRequestData_Fsm
-                {
-                    LastName = CreateString(30),
-                    DateOfBirth = "1990-12-15",
-                    NationalInsuranceNumber = "123",
-                }
-            };
-
-            var response = await _api.ApiDataPostAsynch("/EligibilityCheck/FreeSchoolMeals", data, new BadRequestObjectResult(""));
-            response.StatusCode.Should().Be(StatusCodes.Status400BadRequest);
-        }
+       
 
     }
 }
