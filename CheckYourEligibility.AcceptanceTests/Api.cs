@@ -2,6 +2,8 @@
 using Azure.Security.KeyVault.Secrets;
 using CheckYourEligibility.AcceptanceTests.Models;
 using CheckYourEligibility.Domain;
+using CheckYourEligibility.Domain.Responses;
+using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using System.Diagnostics.CodeAnalysis;
 using System.Net;
@@ -262,7 +264,11 @@ namespace CheckYourEligibility.AcceptanceTests
                 {
                     responseMessage = await task.Content.ReadAsStringAsync();
                 }
-                   
+                if (task.StatusCode == HttpStatusCode.BadRequest)
+                {
+                    var r = new BadRequestObjectResult(new MessageResponse { Data = responseMessage });
+                    return (T2)(object)r;
+                }
                 throw new Exception($"Api error {task.StatusCode}, {uri},{responseMessage}");
             }
 
