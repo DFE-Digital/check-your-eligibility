@@ -44,7 +44,7 @@ namespace CheckYourEligibility.Services
                 var hashCheck = GetHash(data.Type, item);
                 if (hashCheck == null)
                 {
-                    throw new Exception($"No Check found. Type:- {data.Type} {JsonConvert.SerializeObject(data)}");
+                    throw new Exception($"No Check found. Type:- {data.Type}");
                 }
                 item.ApplicationID = Guid.NewGuid().ToString();
                 item.Type = hashCheck.Type;

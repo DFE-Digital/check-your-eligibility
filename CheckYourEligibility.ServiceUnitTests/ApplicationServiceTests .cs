@@ -112,7 +112,7 @@ namespace CheckYourEligibility.ServiceUnitTests
             _fakeInMemoryDb.SaveChanges();
 
             // Act
-            var message = $"No Check found. Type:- {request.Type} {JsonConvert.SerializeObject(request)}";
+            var message = $"No Check found. Type:- {request.Type}";
             Func<Task> act = async () => await _sut.PostApplication(request);
             
             // Assert
@@ -275,7 +275,7 @@ namespace CheckYourEligibility.ServiceUnitTests
             {
                 Data = new ApplicationRequestSearchData
                 {
-                    Statuses = [statusItem],
+                    Statuses = new[]{statusItem},
                     Establishment = Establishment.EstablishmentId
                 }
             };
@@ -304,7 +304,7 @@ namespace CheckYourEligibility.ServiceUnitTests
             {
                 Data = new ApplicationRequestSearchData
                 {
-                    Statuses = [statusItem],
+                    Statuses = new[]{statusItem},
                     Establishment = Establishment.EstablishmentId,
                     LocalAuthority = Establishment.LocalAuthorityId,
                     ParentDateOfBirth = postApplicationResponse.ParentDateOfBirth,
@@ -340,7 +340,7 @@ namespace CheckYourEligibility.ServiceUnitTests
             {
                 Data = new ApplicationRequestSearchData
                 {
-                    Statuses = [statusItem],
+                    Statuses = new []{statusItem},
                     Establishment = Establishment.EstablishmentId,
                     LocalAuthority = Establishment.LocalAuthorityId,
                     ParentDateOfBirth = postApplicationResponse.ParentDateOfBirth,

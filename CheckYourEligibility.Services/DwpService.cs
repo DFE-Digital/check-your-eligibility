@@ -124,19 +124,19 @@ namespace CheckYourEligibility.Services
                     else
                     {
 
-                        _logger.LogError($"ECS check failed. uri:-{_httpClient.BaseAddress}{uri} Response:- {response.StatusCode} content:-{JsonConvert.SerializeObject(eligibilityCheck)}");
+                        _logger.LogError($"ECS check failed. uri:-{_httpClient.BaseAddress}{uri} Response:- {response.StatusCode}");
                     }
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, $"ECS check failed. uri:-{_httpClient.BaseAddress}{uri} content:-{JsonConvert.SerializeObject(eligibilityCheck)}");
+                    _logger.LogError(ex, $"ECS check failed. uri:-{_httpClient.BaseAddress}{uri}");
                 
                 }
             }
             catch (Exception ex)
             {
 
-                _logger.LogError(ex, $"ECS check failed.  content:-{JsonConvert.SerializeObject(eligibilityCheck)}");
+                _logger.LogError(ex, $"ECS check failed.");
             }
             return null;
         }
@@ -299,20 +299,20 @@ namespace CheckYourEligibility.Services
                     }
                     else if(response.StatusCode == HttpStatusCode.UnprocessableEntity)
                     {
-                        _logger.LogInformation($"DWP Duplicate matches found for {JsonConvert.SerializeObject(requestBody)}");
+                        _logger.LogInformation($"DWP Duplicate matches found");
                         TrackMetric($"DWP Duplicate Matches Found", 1);
                         return CheckEligibilityStatus.DwpError.ToString();
                     }
                     else
                     {
-                        _logger.LogInformation($"Get Citizen failed. uri:-{_httpClient.BaseAddress}{uri} Response:- {response.StatusCode} content:-{JsonConvert.SerializeObject(requestBody)}");
+                        _logger.LogInformation($"Get Citizen failed. uri:-{_httpClient.BaseAddress}{uri} Response:- {response.StatusCode}");
                         return CheckEligibilityStatus.DwpError.ToString();
                     }
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex,$"Get Citizen failed. uri:-{_httpClient.BaseAddress}{uri} content:-{JsonConvert.SerializeObject(requestBody)}");
+                _logger.LogError(ex,$"Get Citizen failed. uri:-{_httpClient.BaseAddress}{uri}");
                 return CheckEligibilityStatus.DwpError.ToString();
             }
             

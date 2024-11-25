@@ -99,24 +99,12 @@ namespace CheckYourEligibility.Services
                 if (checkHashResult == null)
                 {
                     var queue = await SendMessage(item);
-                    ////if (string.IsNullOrEmpty(item.Group))
-                    ////{
-                    ////    try
-                    ////    {
-                    ////        await ProcessQueue(queue).ConfigureAwait(false);
-                    ////    }
-                    ////    catch (Exception ex)
-                    ////    {
-                    ////        _logger.LogError(ex, $"Queue processing of {queue}");
-                    ////    }
-                    ////}
                 }
 
                 return new PostCheckResult { Id = item.EligibilityCheckID, Status = item.Status };
             }
             catch (Exception ex)
             {
-                LogApiEvent(this.GetType().Name, data, item);
                 _logger.LogError(ex, "Db post");
                 throw;
             }
@@ -141,7 +129,6 @@ namespace CheckYourEligibility.Services
                 var checkData = GetCheckProcessData(result.Type, result.CheckData);
                 if (result.Status != CheckEligibilityStatus.queuedForProcessing)
                 {
-                    LogApiEvent(this.GetType().Name, guid, $"CheckItem not queuedForProcessing. {GetCurrentMethod()}");
                     throw new ProcessCheckException($"Error checkItem {guid} not queuedForProcessing. {result.Status}");
                 }
 
@@ -156,10 +143,6 @@ namespace CheckYourEligibility.Services
                         break;
                 }
                 return result.Status;
-            }
-            else
-            {
-                LogApiEvent(this.GetType().Name, guid, "failed to find checkItem.");
             }
             return null;
         }
@@ -325,7 +308,6 @@ namespace CheckYourEligibility.Services
             {
                 // Revert status back and do not save changes
                 result.Status = CheckEligibilityStatus.queuedForProcessing;
-                LogApiEvent(this.GetType().Name, guid, "Dwp Error", $"There has been an error calling DWP, Request GUID:-{guid} ");
                 TrackMetric($"Dwp Error", 1);
             }
             else
@@ -425,19 +407,17 @@ namespace CheckYourEligibility.Services
                 }
                 else if (result.Status == "0" && result.ErrorCode == "0" && result.Qualifier == "No Trace - Check data")
                 {
-                    //No Trace - Check data
-                    _logger.LogError($"DwpParentNotFound:-{result.Status}, error code:-{result.ErrorCode} qualifier:-{result.Qualifier}. Request:-{JsonConvert.SerializeObject(data)}");
                     checkResult = CheckEligibilityStatus.parentNotFound;
                 }
                 else
                 {
-                    _logger.LogError($"DwpError unknown Response status code:-{result.Status}, error code:-{result.ErrorCode} qualifier:-{result.Qualifier}. Request:-{JsonConvert.SerializeObject(data)}");
+                    _logger.LogError($"DwpError unknown Response status code:-{result.Status}, error code:-{result.ErrorCode} qualifier:-{result.Qualifier}");
                     checkResult = CheckEligibilityStatus.DwpError;
                 }
             }
             else
             {
-                _logger.LogError($"DwpError ECS unknown Response of null. Request:-{JsonConvert.SerializeObject(data)}");
+                _logger.LogError($"DwpError ECS unknown Response of null");
                 checkResult = CheckEligibilityStatus.DwpError;
             }
 
@@ -483,7 +463,7 @@ namespace CheckYourEligibility.Services
                 }
                 else
                 {
-                    _logger.LogError($"DwpError unknown Response status code:-{result.StatusCode}. Request:-{JsonConvert.SerializeObject(citizenRequest.Data)}");
+                    _logger.LogError($"DwpError unknown Response status code:-{result.StatusCode}.");
                     checkResult = CheckEligibilityStatus.DwpError;
                 }
             }

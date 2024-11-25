@@ -1,8 +1,6 @@
 using Azure.Identity;
 using CheckYourEligibility.Data.Mappings;
 using CheckYourEligibility.WebApp;
-using CheckYourEligibility.WebApp.Middleware;
-using CheckYourEligibility.WebApp.Middleware.CheckYourEligibility.WebApp.Middleware;
 using CheckYourEligibility.WebApp.Telemetry;
 using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
@@ -155,11 +153,6 @@ app.UseHttpsRedirection();
 // 2.3. Authentication & Authorization
 app.UseAuthentication();
 app.UseAuthorization();
-
-// 2.4. Custom Middlewares
-app.UseMiddleware<ExceptionLoggingMiddleware>();
-app.UseMiddleware<RequestBodyLoggingMiddleware>();
-app.UseMiddleware<ResponseBodyLoggingMiddleware>();
 
 // 2.5. Swagger Middleware
 app.UseSwagger();
