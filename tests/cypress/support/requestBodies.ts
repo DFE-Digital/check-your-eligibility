@@ -41,10 +41,10 @@ export function validHomeOfficeRequestBody () {
 export function notEligibleHomeOfficeRequestBody () {
     return { 
         data: {
-            nationalInsuranceNumber: 'PP123456C',
+            nationalInsuranceNumber: '',
             lastName: 'Jacob',
             dateOfBirth: '1990-01-01',
-            nationalAsylumSeekerServiceNumber: ''
+            nationalAsylumSeekerServiceNumber: '111111111'
         }
     }
 }
@@ -82,20 +82,40 @@ export function noNIAndNASSNRequestBody() {
     }
 }
 
+export function validApplicationSupportRequestBody() {
+    return {
+        data: {
+            nationalInsuranceNumber: 'NN668767B',
+            lastName: Cypress.env('lastName'),
+            dateOfBirth: '1967-03-07',
+            nationalAsylumSeekerServiceNumber: ''
+        }
+    }
+}
+
+export function validUserRequestBody() {
+    return {
+        data: {
+            email: 'mar@ten.com',
+            reference: 'lolz'
+        }
+    }
+}
+
 export function validApplicationRequestBody() {
     return {
         Data: {
             type: "FreeSchoolMeals",
             Establishment: 123456,
-            ParentFirstName: Cypress.env('lastName'),
-            ParentLastName: "Web",
+            ParentFirstName: "Lebb",
+            ParentLastName: Cypress.env('lastName'),
             ParentNationalInsuranceNumber: "NN668767B",
             ParentNationalAsylumSeekerServiceNumber: null,
             ParentDateOfBirth: "1967-03-07",
             ChildFirstName: "Alexa",
             ChildLastName: "Crittenden",
             ChildDateOfBirth: "2007-08-14",
-            UserId: "bc2b0328-9bf6-4a2f-901d-ea694c2b0839",
+            UserId: "bc2b0328-9bf6-4a2f-901d-ea694c2b0838",
             ParentEmail :"PostmanTest@test.com"
         }
     }

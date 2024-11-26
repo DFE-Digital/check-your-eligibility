@@ -1,17 +1,25 @@
 import { getandVerifyBearerToken } from '../../support/apiHelpers';
-import { validLoginRequestBody, validApplicationRequestBody } from '../../support/requestBodies';
+import { validLoginRequestBody, validApplicationRequestBody, validApplicationSupportRequestBody, validUserRequestBody } from '../../support/requestBodies';
 
 describe('Verify POST application responses', () => {
     const validBaseApplicationRequest = validApplicationRequestBody();
 
     it('Verify 201 Created response is returned with valid application', () => {
         getandVerifyBearerToken('api/Login', validLoginRequestBody).then((token) => {
-            cy.apiRequest('POST', 'Application', validBaseApplicationRequest, token).then((response) => {
-                // Assert the status and statusText
-                cy.verifyApiResponseCode(response, 201);
+            const requestBody = validApplicationSupportRequestBody();
+            cy.apiRequest('POST', 'EligibilityCheck/FreeSchoolMeals', requestBody, token).then((response) => {
+                cy.verifyApiResponseCode(response, 202);
+                cy.apiRequest('POST', '/Users', validUserRequestBody(), token).then((response) => {
+                    validBaseApplicationRequest.Data.UserId = response.Data;
+                    //Make post request for eligibility check
+                    cy.apiRequest('POST', 'Application', validBaseApplicationRequest, token).then((response) => {
+                        // Assert the status and statusText
+                        cy.verifyApiResponseCode(response, 201);
 
-                // Assert the response body data
-                cy.verifyPostApplicationResponse(response, validBaseApplicationRequest);
+                        // Assert the response body data
+                        cy.verifyPostApplicationResponse(response, validBaseApplicationRequest);
+                    });
+                });
             });
         });
     });

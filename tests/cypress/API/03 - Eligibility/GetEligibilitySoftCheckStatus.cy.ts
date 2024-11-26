@@ -7,7 +7,6 @@ const notEligibleRequestBody = notEligibleHomeOfficeRequestBody();
 
 describe('GET eligibility soft check  Status ', () => {
   it('Verify 200 Success response is returned with valid guid', () => {
-    
     cy.createEligibilityCheckAndGetStatus('api/Login', validLoginRequestBody, 'EligibilityCheck/FreeSchoolMeals', validRequestBody);
   });
 
