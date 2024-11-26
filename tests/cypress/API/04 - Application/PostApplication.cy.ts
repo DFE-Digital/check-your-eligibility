@@ -11,6 +11,8 @@ describe('Verify POST application responses', () => {
                 cy.verifyApiResponseCode(response, 202);
                 cy.apiRequest('POST', '/Users', validUserRequestBody(), token).then((response) => {
                     validBaseApplicationRequest.Data.UserId = response.Data;
+                    cy.wait(60000);
+
                     //Make post request for eligibility check
                     cy.apiRequest('POST', 'Application', validBaseApplicationRequest, token).then((response) => {
                         // Assert the status and statusText

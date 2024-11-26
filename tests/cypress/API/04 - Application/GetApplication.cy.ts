@@ -21,6 +21,8 @@ describe('GET eligibility soft check by Guid', () => {
                 cy.verifyApiResponseCode(response, 202);
                 cy.apiRequest('POST', '/Users', validUserRequestBody(), token).then((response) => {
                     validApplicationRequest.Data.UserId = response.Data;
+                    cy.wait(60000);
+
                     //Make post request for eligibility check
                     cy.apiRequest('POST', 'Application', validApplicationRequest, token).then((response) => {
                         cy.verifyApiResponseCode(response, 201);
