@@ -891,6 +891,8 @@ namespace CheckYourEligibility.ServiceUnitTests
             var groupId = Guid.NewGuid().ToString();
             var item = _fixture.Create<EligibilityCheck>();
             item.Group = groupId;
+            item.Type = CheckEligibilityType.FreeSchoolMeals;
+            item.CheckData = """{"nationalInsuranceNumber": "AB123456C", "lastName": "Something", "dateOfBirth": "2000-01-01", "nationalAsylumSeekerServiceNumber": null}""";
             _fakeInMemoryDb.CheckEligibilities.Add(item);
             _fakeInMemoryDb.SaveChangesAsync();
 
@@ -899,6 +901,11 @@ namespace CheckYourEligibility.ServiceUnitTests
 
             // Assert
             response.Result.Should().BeOfType<List<CheckEligibilityItem>>();
+
+            response.Result.First().DateOfBirth.Should().Contain("2000-01-01");
+            response.Result.First().NationalInsuranceNumber.Should().Contain("AB123456C");
+            response.Result.First().LastName.Should().Contain("SOMETHING");
+            response.Result.First().NationalAsylumSeekerServiceNumber.Should().BeNull();
         }
 
         [Test]
