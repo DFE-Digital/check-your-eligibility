@@ -169,6 +169,7 @@ namespace CheckYourEligibility.Services
 
         public async Task<T> GetBulkCheckResults<T>(string guid) where T : IList<CheckEligibilityItem>
         {
+            IList<CheckEligibilityItem> items = new List<CheckEligibilityItem>();
             var resultList = _db.CheckEligibilities
                 .Where(x => x.Group == guid)
                 .OrderBy(x => x.Sequence);
@@ -177,9 +178,21 @@ namespace CheckYourEligibility.Services
                 var type = typeof(T);
                 if (type == typeof(IList<CheckEligibilityItem>))
                 {
-                    var items = _mapper.Map<T>(resultList);
+                    foreach(var result in resultList)
+                    {
+                        CheckProcessData data = GetCheckProcessData(result.Type, result.CheckData);
+                        items.Add(new CheckEligibilityItem()
+                        {
+                            Status = result.Status.ToString(),
+                            Created = result.Created,
+                            NationalInsuranceNumber = data.NationalInsuranceNumber,
+                            LastName = data.LastName,
+                            DateOfBirth = data.DateOfBirth,
+                            NationalAsylumSeekerServiceNumber = data.NationalAsylumSeekerServiceNumber
+                        });
+                    }
 
-                    return items;
+                    return (T)items;
                 }
                 else
                 {
@@ -517,7 +530,7 @@ namespace CheckYourEligibility.Services
                                 source = "queueProcess",
                                 url = "."
                             });
-                            if (result == null || result != CheckEligibilityStatus.queuedForProcessing || item.DequeueCount >1) {
+                            if (result == null || result != CheckEligibilityStatus.queuedForProcessing || item.DequeueCount > 1) {
                                 if (result == null || item.DequeueCount > 1)
                                 {
                                     await UpdateEligibilityCheckStatus(checkData.Guid, new EligibilityCheckStatusData { Status = CheckEligibilityStatus.DwpError });
