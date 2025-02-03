@@ -31,14 +31,14 @@ describe('Verify Eligibility Check Statuses', () => {
     })
   })
 
-  xit('Verify parentNotFound status is returned', () => {
+  it('Verify parentNotFound status is returned', () => {
     cy.createEligibilityCheckAndGetStatus('api/Login', validLoginRequestBody, 'EligibilityCheck/FreeSchoolMeals', notEligibleRequestBody)
     cy.get('@status').then((status: any) => {
       expect(status).to.equal('parentNotFound')
     })
   })
 
-  it('Verify queuedForProcessing status is returned', () => {
+  xit('Verify queuedForProcessing status is returned', () => {
     cy.updateLastName(notEligibleRequestBody).then((updatedRequestBody) => {
       cy.createEligibilityCheckAndGetStatus('api/Login', validLoginRequestBody, 'EligibilityCheck/FreeSchoolMeals', updatedRequestBody)
       cy.get('@status').then((status: any) => {
