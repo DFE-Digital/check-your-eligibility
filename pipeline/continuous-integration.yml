@@ -38,8 +38,73 @@ stages:
           resultsFolder: '$(build.ArtifactStagingDirectory)/Test/Results'
           otherConsoleOptions: '/collect:"Code Coverage;Format=Cobertura"'  # <<<< this is the important bit
           codeCoverageEnabled: True
+          
+      - task: CopyFiles@2
+        inputs:
+          SourceFolder: 'tests'
+          Contents: '**'
+          TargetFolder: '$(Build.ArtifactStagingDirectory)/tests'
 
       - task: PublishCodeCoverageResults@1
         inputs:
           codeCoverageTool: 'Cobertura'
           summaryFileLocation: '$(build.ArtifactStagingDirectory)/Test/Results/**/*.xml'
+          
+  - stage: DeployAppCypress
+    displayName: Deploy App Cypress
+    jobs:
+      - deployment: cypressdeploy
+        displayName: Deploy App Cypress
+        pool:
+          name: Azure Pipelines
+          vmImage: 'ubuntu-latest'
+        environment: CYPRESS
+        strategy:
+          runOnce:
+            preDeploy:
+              steps:
+                - task: DownloadPipelineArtifact@2
+                  inputs:
+                    buildType: 'current'
+                    targetPath: '$(Pipeline.Workspace)'
+            deploy:
+              steps:
+                - task: AzureRmWebAppDeployment@4
+                  inputs:
+                    ConnectionType: 'AzureRM'
+                    azureSubscription: 's203d.azdo.deployment'
+                    appType: 'webApp'
+                    WebAppName: 'ece-dev-as-cypress'
+                    packageForLinux: '$(Pipeline.Workspace)/checkYourEligibilityAPI/CheckYourEligibility.WebApp.zip'
+                - task: Bash@3
+                  inputs:
+                    targetType: inline
+                    script: |
+                      cd $(Pipeline.Workspace)/checkYourEligibilityAPI/tests
+                      npm install
+                - task: Bash@3
+                  displayName: 'RunTests'
+                  inputs:
+                    targetType: inline
+                    script: |
+                      cd $(Pipeline.Workspace)/checkYourEligibilityAPI/tests
+                      export CYPRESS_API_HOST="$(CYPRESS_API_HOST_DEV)"
+                      export CYPRESS_JWT_USERNAME=$(JWT_USERNAME_DEV)
+                      export CYPRESS_JWT_PASSWORD='$(JWT_PASSWORD_DEV)'
+                      export CYPRESS_USER_ID="${USER_ID}"
+                      npm run e2e:electron
+                - task: Bash@3
+                  condition: always()
+                  displayName: 'Generate report'
+                  inputs:
+                    targetType: inline
+                    script: |
+                      cd $(Pipeline.Workspace)/checkYourEligibilityAPI/tests
+                      npm run combine:reports
+
+                - task: PublishTestResults@2
+                  condition: always()
+                  displayName: 'Publish test results'
+                  inputs:
+                    testResultsFiles: '**/combined-report.xml'
+                    searchFolder: 'tests'
