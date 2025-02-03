@@ -7,6 +7,7 @@ Before you begin, ensure that you have the following installed:
 •	Node.js (version 12 or higher)
 •	npm (Node Package Manager)
 
+
 Setup Instructions
 
 1. Open Project in Visual Studio Code
