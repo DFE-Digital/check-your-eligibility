@@ -41,17 +41,34 @@ stages:
           resultsFolder: '$(build.ArtifactStagingDirectory)/Test/Results'
           otherConsoleOptions: '/collect:"Code Coverage;Format=Cobertura"'  # <<<< this is the important bit
           codeCoverageEnabled: True
-          
+
+      - task: PublishCodeCoverageResults@1
+        inputs:
+          codeCoverageTool: 'Cobertura'
+          summaryFileLocation: '$(build.ArtifactStagingDirectory)/Test/Results/**/*.xml'
+
+      - task: DotNetCoreCLI@2
+        inputs:
+          command: publish
+          publishWebProjects: True
+          arguments: '--configuration $(BuildConfiguration) --output $(Build.ArtifactStagingDirectory)'
+          zipAfterPublish: True
+
+      - task: PublishCodeCoverageResults@1
+        inputs:
+          codeCoverageTool: 'Cobertura'
+          summaryFileLocation: '$(build.ArtifactStagingDirectory)/Test/Results/**/*.xml'
+
       - task: CopyFiles@2
         inputs:
           SourceFolder: 'tests'
           Contents: '**'
           TargetFolder: '$(Build.ArtifactStagingDirectory)/tests'
 
-      - task: PublishCodeCoverageResults@1
+      - task: PublishPipelineArtifact@1
         inputs:
-          codeCoverageTool: 'Cobertura'
-          summaryFileLocation: '$(build.ArtifactStagingDirectory)/Test/Results/**/*.xml'
+          targetPath: '$(Build.ArtifactStagingDirectory)'
+          artifactName: 'checkYourEligibilityAPI'
           
   - stage: DeployAppCypress
     displayName: Deploy App Cypress
