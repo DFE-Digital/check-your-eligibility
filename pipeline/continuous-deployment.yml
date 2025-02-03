@@ -210,7 +210,6 @@ stages:
           export CYPRESS_API_HOST="$(CYPRESS_API_HOST_TEST)"
           export CYPRESS_JWT_USERNAME=$(JWT_USERNAME_TEST)
           export CYPRESS_JWT_PASSWORD='$(JWT_PASSWORD_TEST)'
-          export CYPRESS_USER_ID="${USER_ID}"
           npm run e2e:electron
 
       - task: Bash@3
@@ -290,7 +289,6 @@ stages:
                 export CYPRESS_API_HOST="$(CYPRESS_API_HOST_PP)"
                 export CYPRESS_JWT_USERNAME=$(JWT_USERNAME_PP)
                 export CYPRESS_JWT_PASSWORD='$(JWT_PASSWORD_PP)'
-                export CYPRESS_USER_ID="${USER_ID}"
                 npm run e2e:electron
 
           - task: Bash@3
