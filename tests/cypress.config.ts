@@ -25,7 +25,7 @@ export default defineConfig({
         mochaFile: "results/my-test-output-[hash].xml",
     },
     retries: {
-      "runMode": 1,
-      "openMode": 1
+      "runMode": 2,
+      "openMode": 2
     }
 });

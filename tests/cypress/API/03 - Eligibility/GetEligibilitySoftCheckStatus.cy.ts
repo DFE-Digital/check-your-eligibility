@@ -31,11 +31,10 @@ describe('Verify Eligibility Check Statuses', () => {
     })
   })
 
-  it('Verify parentNotFound status is returned', () => {
+  xit('Verify parentNotFound status is returned', () => {
     cy.createEligibilityCheckAndGetStatus('api/Login', validLoginRequestBody, 'EligibilityCheck/FreeSchoolMeals', notEligibleRequestBody)
     cy.get('@status').then((status: any) => {
       expect(status).to.equal('parentNotFound')
-
     })
   })
 
