@@ -25,13 +25,13 @@ inside populate the following fields
     "USER_ID": ""
 }
 
-3. Open Cypress
+5. Open Cypress
 Launch Cypress using the following command:
 CYPRESS_BASE_URL="{Desired url}" npx cypress open
 Cypress UI will be launched. Click on "E2E Testing" to see all the tests available.
 Select to run the tests via electron
 
-5. Running Tests
+6. Running Tests
 You can run your Cypress tests in two ways:
 
 Interactive Mode
