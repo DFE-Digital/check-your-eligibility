@@ -26,10 +26,9 @@ namespace CheckYourEligibility.AcceptanceTests
 
         public Api()
         {
-
-            if (Environment.GetEnvironmentVariable("KEY_VAULT_NAME") != null)
+            if (Environment.GetEnvironmentVariable("API_KEY_VAULT_NAME") != null)
             {
-                var keyVaultName = Environment.GetEnvironmentVariable("KEY_VAULT_NAME");
+                var keyVaultName = Environment.GetEnvironmentVariable("API_KEY_VAULT_NAME");
                 var kvUri = $"https://{keyVaultName}.vault.azure.net";
                 var client = new SecretClient(new Uri(kvUri), new DefaultAzureCredential());
 

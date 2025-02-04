@@ -90,7 +90,7 @@ stages:
             - task: AzureCLI@2
               displayName: 'Run Migrations'
               env:
-                KEY_VAULT_NAME: ece-dev-kv-api
+                API_KEY_VAULT_NAME: ece-dev-kv-api
               inputs:
                 azureSubscription: 's203d.azdo.deployment'
                 scriptType: 'ps'
@@ -169,7 +169,7 @@ stages:
             - task: AzureCLI@2
               displayName: 'Run Migrations'
               env:
-                KEY_VAULT_NAME: ece-test-kv-api
+                API_KEY_VAULT_NAME: ece-test-kv-api
               inputs:
                 azureSubscription: 's203t.azdo.deployment'
                 scriptType: 'ps'
@@ -248,7 +248,7 @@ stages:
             - task: AzureCLI@2
               displayName: 'Run Migrations'
               env:
-                KEY_VAULT_NAME: ece-pp-kv-api
+                API_KEY_VAULT_NAME: ece-pp-kv-api
               inputs:
                 azureSubscription: 's203t.azdo.deployment'
                 scriptType: 'ps'
@@ -327,7 +327,7 @@ stages:
                 - task: AzureCLI@2
                   displayName: 'Run Migrations'
                   env:
-                    KEY_VAULT_NAME: ece-kv-api
+                    API_KEY_VAULT_NAME: ece-kv-api
                   inputs:
                     azureSubscription: 's203p.azdo.deployment'
                     scriptType: 'ps'
