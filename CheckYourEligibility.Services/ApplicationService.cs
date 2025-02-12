@@ -174,6 +174,18 @@ namespace CheckYourEligibility.Services
                 results = results.Where(x => x.ChildDateOfBirth == DateTime.ParseExact(model.Data.ChildDateOfBirth, "yyyy-MM-dd", CultureInfo.InvariantCulture));
             if (!string.IsNullOrEmpty(model.Data?.Reference))
                 results = results.Where(x => x.Reference == model.Data.Reference);
+            if (!string.IsNullOrEmpty(model.Data?.Keyword))
+                results = results.Where(
+                    x => 
+                        x.Reference.Contains(model.Data.Keyword) || 
+                        x.ChildFirstName.Contains(model.Data.Keyword) || 
+                        x.ChildLastName.Contains(model.Data.Keyword) ||
+                        x.ParentFirstName.Contains(model.Data.Keyword) ||
+                        x.ParentLastName.Contains(model.Data.Keyword) ||
+                        x.ParentNationalInsuranceNumber.Contains(model.Data.Keyword) ||
+                        x.ParentNationalAsylumSeekerServiceNumber.Contains(model.Data.Keyword) ||
+                        x.ParentEmail.Contains(model.Data.Keyword)
+                );
             return results.OrderBy(x=>x.Created).ToList();
         }
 
