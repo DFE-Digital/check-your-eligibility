@@ -8,5 +8,6 @@ namespace CheckYourEligibility.Services.Interfaces
     public interface IAudit
     {
         Task<string> AuditAdd(AuditData auditData);
+        AuditData? AuditDataGet(AuditType type, string id);
     }
 }
