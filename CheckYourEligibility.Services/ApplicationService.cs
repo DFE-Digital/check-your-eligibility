@@ -9,6 +9,7 @@ using CheckYourEligibility.Domain.Requests;
 using CheckYourEligibility.Domain.Responses;
 using CheckYourEligibility.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Azure;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using NetTopologySuite.Index.HPRtree;
@@ -73,7 +74,7 @@ namespace CheckYourEligibility.Services
                 {
                     throw new Exception($"Unable to find school:- {data.Establishment}, {ex.Message}");
                 }
-               
+
 
                 await _db.Applications.AddAsync(item);
                 await AddStatusHistory(item, Domain.Enums.ApplicationStatus.Entitled);
@@ -107,7 +108,7 @@ namespace CheckYourEligibility.Services
             if (result != null)
             {
                 var item = _mapper.Map<ApplicationResponse>(result);
-                item.CheckOutcome = new ApplicationResponse.ApplicationHash { Outcome = result.EligibilityCheckHash?.Outcome.ToString()};
+                item.CheckOutcome = new ApplicationResponse.ApplicationHash { Outcome = result.EligibilityCheckHash?.Outcome.ToString() };
                 return item;
             }
 
@@ -120,12 +121,12 @@ namespace CheckYourEligibility.Services
             if (model.Data.Statuses != null)
                 foreach (var status in model.Data.Statuses)
                 {
-                   var resultsForStatus =GetSearchResults(model,status);
-                   results = results.Union(resultsForStatus);
+                    var resultsForStatus = GetSearchResults(model, status);
+                    results = results.Union(resultsForStatus);
                 }
             else
             {
-                results = GetSearchResults(model,null);
+                results = GetSearchResults(model, null);
             }
 
             // Calculate total records and total pages
@@ -155,7 +156,7 @@ namespace CheckYourEligibility.Services
                .Where(x => x.Type == model.Data.Type);
             if (model.Data?.Establishment != null)
                 results = results.Where(x => x.EstablishmentId == model.Data.Establishment);
-           if (model.Data?.LocalAuthority != null)
+            if (model.Data?.LocalAuthority != null)
                 results = results.Where(x => x.LocalAuthorityId == model.Data.LocalAuthority);
             if (status != null)
                 results = results.Where(x => x.Status == status);
@@ -174,11 +175,13 @@ namespace CheckYourEligibility.Services
                 results = results.Where(x => x.ChildDateOfBirth == DateTime.ParseExact(model.Data.ChildDateOfBirth, "yyyy-MM-dd", CultureInfo.InvariantCulture));
             if (!string.IsNullOrEmpty(model.Data?.Reference))
                 results = results.Where(x => x.Reference == model.Data.Reference);
+            if (model.Data?.DateRange != null)
+                results = results.Where(x => x.Created > model.Data.DateRange.DateFrom && x.Created < model.Data.DateRange.DateTo);
             if (!string.IsNullOrEmpty(model.Data?.Keyword))
                 results = results.Where(
-                    x => 
-                        x.Reference.Contains(model.Data.Keyword) || 
-                        x.ChildFirstName.Contains(model.Data.Keyword) || 
+                    x =>
+                        x.Reference.Contains(model.Data.Keyword) ||
+                        x.ChildFirstName.Contains(model.Data.Keyword) ||
                         x.ChildLastName.Contains(model.Data.Keyword) ||
                         x.ParentFirstName.Contains(model.Data.Keyword) ||
                         x.ParentLastName.Contains(model.Data.Keyword) ||
@@ -186,7 +189,7 @@ namespace CheckYourEligibility.Services
                         x.ParentNationalAsylumSeekerServiceNumber.Contains(model.Data.Keyword) ||
                         x.ParentEmail.Contains(model.Data.Keyword)
                 );
-            return results.OrderBy(x=>x.Created).ToList();
+            return results.OrderBy(x => x.Created).ToList();
         }
 
         public async Task<ApplicationStatusUpdateResponse> UpdateApplicationStatus(string guid, ApplicationStatusData data)

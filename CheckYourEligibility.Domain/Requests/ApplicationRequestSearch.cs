@@ -27,5 +27,12 @@ namespace CheckYourEligibility.Domain.Requests
         public string? ChildDateOfBirth { get; set; }
         public string? Keyword { get; set; }
         public string? Reference { get; set; }
+        public DateRange? DateRange { get; set; }
+    }
+
+    public class DateRange
+    {
+        public DateTime DateFrom { get; set; }
+        public DateTime DateTo { get; set; }
     }
 }
