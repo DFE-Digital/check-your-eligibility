@@ -1,5 +1,6 @@
 ﻿using Ardalis.GuardClauses;
 using CheckYourEligibility.Domain;
+using CheckYourEligibility.WebApp.UseCases;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
@@ -9,73 +10,70 @@ using System.Diagnostics.Eventing.Reader;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace CheckYourEligibility.WebApp.Controllers
 {
-    [ExcludeFromCodeCoverage]
+    // [ExcludeFromCodeCoverage]
     [Route("api/[controller]")]
     [ApiController]
     public class LoginController : Controller
     {
         private IConfiguration _config;
         private readonly ILogger<LoginController> _logger;
+        private readonly IAuthenticateUserUseCase _authenticateUserUseCase;
 
-        public LoginController(IConfiguration config, ILogger<LoginController> logger)
+        public LoginController(IConfiguration config, ILogger<LoginController> logger, IAuthenticateUserUseCase authenticateUserUseCase)
         {
             _config = config;
             _logger = Guard.Against.Null(logger);
+            _authenticateUserUseCase = Guard.Against.Null(authenticateUserUseCase);
         }
+        
         [AllowAnonymous]
         [HttpPost]
-        public IActionResult Login([FromBody] SystemUser login)
+        public async Task<IActionResult> Login([FromBody] SystemUser login)
         {
-            IActionResult response = Unauthorized();
-            var user = AuthenticateUser(login);
-
-            if (user != null)
+            var key = _config["Jwt:Key"];
+            if (key == null)
             {
-                var tokenString = GenerateJSONWebToken(user, out var expires);
-                response = Ok(new JwtAuthResponse{ Token = tokenString, Expires = expires });
-               _logger.LogInformation($"{login.Username} authenticated");
+                _logger.LogError("Jwt:Key is required");
+                return Unauthorized();
+            }
+
+            var issuer = _config["Jwt:Issuer"];
+            if (issuer == null)
+            {
+                _logger.LogError("Jwt:Issuer is required");
+                return Unauthorized();
+            }
+
+            var userPassword = _config.GetSection($"Jwt:Users:{login.Username}").Get<string>();
+            if (userPassword == null)
+            {
+                _logger.LogError("UserPassword is required");
+                return Unauthorized();
+            }
+
+            var jwtConfig = new JwtConfig
+            {
+                Key = key,
+                Issuer = issuer,
+                UserPassword = userPassword
+            };
+
+            var response = await _authenticateUserUseCase.Execute(login, jwtConfig);
+            if (response != null)
+            {
+                _logger.LogInformation($"{login.Username} authenticated");
+                return Ok(response);
             }
             else
             {
                 _logger.LogError($"{login.Username} InvalidUser");
+                return Unauthorized();
             }
 
-            return response;
-        }
-        private string GenerateJSONWebToken(Domain.SystemUser userInfo, out DateTime  expires)
-        {
-            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]));
-            var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
-
-            var claims = new[] {
-                new Claim(JwtRegisteredClaimNames.Sub, userInfo.Username),
-                new Claim("EcsApi", "apiCustomClaim"),
-                new Claim(JwtRegisteredClaimNames.Email, "ecs@ecs.com"),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
-            };
-
-            expires = DateTime.UtcNow.AddMinutes(120);
-            var token = new JwtSecurityToken(_config["Jwt:Issuer"],
-              _config["Jwt:Issuer"],
-              claims,
-              expires: expires,
-              signingCredentials: credentials);
-           
-            return new JwtSecurityTokenHandler().WriteToken(token);
-        }
-
-        private SystemUser AuthenticateUser(SystemUser login)
-        {
-            //Validate the User Credentials
-            var password = _config.GetSection($"Jwt:Users:{login.Username}").Get<string>();
-
-            if (login.Password == password && !password.IsNullOrEmpty()) {
-                return new SystemUser { Username = login.Username };
-            }
-            return null;
         }
     }
 }

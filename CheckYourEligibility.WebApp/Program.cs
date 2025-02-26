@@ -111,6 +111,7 @@ builder.Services.AddExternalServices(builder.Configuration);
 
 // Use cases
 builder.Services.AddScoped<ICreateOrUpdateUserUseCase, CreateOrUpdateUserUseCase>();
+builder.Services.AddScoped<IAuthenticateUserUseCase, AuthenticateUserUseCase>();
 
 // Configure IIS and Kestrel server options
 builder.Services.Configure<IISServerOptions>(options =>
