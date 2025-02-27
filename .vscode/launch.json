@@ -1,0 +1,21 @@
+{
+    "configurations": [
+        {
+            "type": "coreclr",
+            "request": "launch",
+            "name": "Launch CheckYourEligibility.WebApp",
+            "program": "${workspaceFolder}/CheckYourEligibility.WebApp/bin/Debug/net8.0/CheckYourEligibility.WebApp.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/CheckYourEligibility.WebApp",
+            "stopAtEntry": false,
+            "preLaunchTask": "build"
+        }
+    ],
+    "inputs": [
+        {
+            "type": "promptString",
+            "id": "programPath",
+            "description": "Path to your program"
+        }
+    ]
+}

@@ -3,84 +3,82 @@ using CheckYourEligibility.Domain.Requests;
 using CheckYourEligibility.Domain.Responses;
 using CheckYourEligibility.Services.Interfaces;
 using CheckYourEligibility.WebApp.Controllers;
+using CheckYourEligibility.WebApp.UseCases;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Moq;
-using NUnit.Framework.Internal;
 
 namespace CheckYourEligibility.APIUnitTests
 {
     public class UsersControllerTests : TestBase.TestBase
     {
-        private Mock<IUsers> _mockService;
+        private Mock<ICreateOrUpdateUserUseCase> _mockCreateOrUpdateUserUseCase;
         private ILogger<UsersController> _mockLogger;
         private UsersController _sut;
         private Mock<IAudit> _mockAuditService;
+        private Fixture _fixture;
 
         [SetUp]
         public void Setup()
         {
-            _mockService = new Mock<IUsers>(MockBehavior.Strict);
+            _mockCreateOrUpdateUserUseCase = new Mock<ICreateOrUpdateUserUseCase>(MockBehavior.Strict);
             _mockLogger = Mock.Of<ILogger<UsersController>>();
             _mockAuditService = new Mock<IAudit>(MockBehavior.Strict);
-            _sut = new UsersController(_mockLogger, _mockService.Object, _mockAuditService.Object);
+            _sut = new UsersController(_mockLogger, _mockCreateOrUpdateUserUseCase.Object, _mockAuditService.Object);
+            _fixture = new Fixture();
         }
 
         [TearDown]
         public void Teardown()
         {
-            _mockService.VerifyAll();
+            _mockCreateOrUpdateUserUseCase.VerifyAll();
         }
 
         [Test]
         public void Constructor_throws_argumentNullException_when_service_is_null()
         {
             // Arrange
-            IUsers service = null;
+            ICreateOrUpdateUserUseCase createOrUpdateUserUseCase = null;
             IAudit auditService = null;
 
             // Act
-            Action act = () => new UsersController(_mockLogger, service, auditService);
+            Action act = () => new UsersController(_mockLogger, createOrUpdateUserUseCase, auditService);
 
             // Assert
-            act.Should().ThrowExactly<ArgumentNullException>().And.Message.Should().EndWithEquivalentOf("Value cannot be null. (Parameter 'service')");
+            act.Should().ThrowExactly<ArgumentNullException>().And.Message.Should().EndWithEquivalentOf("Value cannot be null. (Parameter 'createOrUpdateUserUseCase')");
         }
 
         [Test]
-        public void Given_valid_Request_Post_Should_Return_Status201Created()
+        public async Task Given_valid_Request_Post_Should_Return_Status201Created()
         {
             // Arrange
             var request = _fixture.Create<UserCreateRequest>();
-            var id = _fixture.Create<Guid>().ToString();
-            _mockService.Setup(cs => cs.Create(request.Data)).ReturnsAsync(id);
-            _mockAuditService.Setup(cs => cs.AuditAdd(It.IsAny<AuditData>())).ReturnsAsync(Guid.NewGuid().ToString());
+            var response = _fixture.Create<UserSaveItemResponse>();
+            _mockCreateOrUpdateUserUseCase.Setup(cs => cs.Execute(request)).ReturnsAsync(response);
 
-            var expectedResult = new ObjectResult(new UserSaveItemResponse
-            {
-                Data = id
-            })
+            var expectedResult = new ObjectResult(response)
             { StatusCode = StatusCodes.Status201Created };
 
             // Act
-            var response = _sut.User(request);
+            var result = await _sut.User(request);
 
             // Assert
-            response.Result.Should().BeEquivalentTo(expectedResult);
+            result.Should().BeEquivalentTo(expectedResult);
         }
 
         [Test]
-        public void Given_InValidRequest_Should_Return_Status400BadRequest()
+        public async Task Given_InValidRequest_Should_Return_Status400BadRequest()
         {
             // Arrange
             var request = new UserCreateRequest();
-            
+
             // Act
-            var response = _sut.User(request);
+            var result = await _sut.User(request);
 
             // Assert
-            response.Result.Should().BeOfType(typeof(BadRequestObjectResult));
+            result.Should().BeOfType<BadRequestObjectResult>();
         }
     }
 }

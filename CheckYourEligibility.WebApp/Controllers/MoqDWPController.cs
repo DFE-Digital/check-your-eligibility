@@ -1,29 +1,28 @@
 ﻿using Ardalis.GuardClauses;
-using CheckYourEligibility.Domain.Constants;
 using CheckYourEligibility.Domain.Requests.DWP;
 using CheckYourEligibility.Domain.Responses;
 using CheckYourEligibility.Domain.Responses.DWP;
-using CheckYourEligibility.Services.Interfaces;
+using CheckYourEligibility.WebApp.UseCases;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using System.ComponentModel.DataAnnotations;
 using System.Net;
-using System.Xml.Linq;
 
 namespace CheckYourEligibility.WebApp.Controllers
 {
-
     [ApiController]
     [Route("[controller]/v2/citizens/")]
     public class MoqDWPController : Controller
     {
-        private readonly ILogger<EligibilityCheckController> _logger;
-        private readonly ICheckEligibility _service;
+        private readonly ILogger<MoqDWPController> _logger;
+        private readonly IMatchCitizenUseCase _matchCitizenUseCase;
+        private readonly IGetCitizenClaimsUseCase _getCitizenClaimsUseCase;
 
-        public MoqDWPController(ILogger<EligibilityCheckController> logger, ICheckEligibility service)
+        public MoqDWPController(ILogger<MoqDWPController> logger, IMatchCitizenUseCase matchCitizenUseCase, IGetCitizenClaimsUseCase getCitizenClaimsUseCase)
         {
             _logger = Guard.Against.Null(logger);
-            _service = Guard.Against.Null(service);
+            _matchCitizenUseCase = Guard.Against.Null(matchCitizenUseCase);
+            _getCitizenClaimsUseCase = Guard.Against.Null(getCitizenClaimsUseCase);
         }
 
         [ProducesResponseType(typeof(DwpMatchResponse), (int)HttpStatusCode.OK)]
@@ -37,37 +36,24 @@ namespace CheckYourEligibility.WebApp.Controllers
             [FromHeader(Name = "context")][Required] string context = "abc-1-ab-x12888"
             )
         {
-
-
-            if (model?.Data?.Attributes?.LastName.ToUpper() == MogDWPValues.validCitizenSurnameEligible.ToUpper()
-                || model?.Data?.Attributes?.LastName.ToUpper() == MogDWPValues.validCitizenSurnameNotEligible.ToUpper())
+            try
             {
-                return new ObjectResult(new DwpMatchResponse()
+                var response = await _matchCitizenUseCase.Execute(model);
+                if (response != null)
                 {
-                    Data = new DwpMatchResponse.DwpResponse_Data
-                    {
-                        Id = model?.Data?.Attributes?.LastName.ToUpper() == MogDWPValues.validCitizenSurnameEligible.ToUpper() ? MogDWPValues.validCitizenEligibleGuid : MogDWPValues.validCitizenNotEligibleGuid,
-                        Type = "MatchResult",
-                        Attributes = new DwpMatchResponse.DwpResponse_Attributes { MatchingScenario = "FSM" }
-                    }
-                    ,
-                    Jsonapi = new DwpMatchResponse.DwpResponse_Jsonapi { Version = "2.0" }
-                })
-                { StatusCode = StatusCodes.Status200OK };
+                    return new ObjectResult(response) { StatusCode = StatusCodes.Status200OK };
+                }
+                else
+                {
+                    return NotFound();
+                }
             }
-            else if (model?.Data?.Attributes?.LastName.ToUpper() == MogDWPValues.validCitizenSurnameDuplicatesFound.ToUpper())
+            catch (InvalidOperationException)
             {
                 return UnprocessableEntity();
             }
-            else
-            {
-                return NotFound();
-            }
-
         }
 
-
-        //Benefit type is not currently being used as I cant figure out how to pass in an array on a get Request, so all claims are returned
         [ProducesResponseType(typeof(DwpClaimsResponse), (int)HttpStatusCode.OK)]
         [ProducesResponseType((int)HttpStatusCode.BadRequest)]
         [HttpGet("{Guid}/Claims")]
@@ -78,41 +64,21 @@ namespace CheckYourEligibility.WebApp.Controllers
            [FromHeader(Name = "correlation-id")][Required] string correlationId = "4c6a63f1-1924-4911-b45c-95dbad8b6c37",
            [FromHeader(Name = "context")][Required] string context = "abc-1-ab-x12888")
         {
-            if (Guid == MogDWPValues.validCitizenEligibleGuid)
+            try
             {
-                var response = JsonConvert.DeserializeObject<DwpClaimsResponse>(GetClaimResponse(BenefitType));
-
-                return new ObjectResult(response)
-                { StatusCode = StatusCodes.Status200OK };
+                var response = await _getCitizenClaimsUseCase.Execute(Guid, BenefitType);
+                if (response != null)
+                {
+                    return new ObjectResult(response) { StatusCode = StatusCodes.Status200OK };
+                }
+                else
+                {
+                    return NotFound();
+                }
             }
-            else if (Guid == MogDWPValues.validCitizenNotEligibleGuid)
-            {
-                return new NotFoundResult();
-            }
-            else
+            catch (ArgumentException)
             {
                 return BadRequest();
-            }
-        }
-
-        private string GetClaimResponse(string benefitType)
-        {
-            Enum.TryParse(benefitType, out DwpBenefitType dwpBenefitType);
-
-            switch (dwpBenefitType)
-            {
-                case DwpBenefitType.employment_support_allowance_income_based:
-                // return Properties.Resources.;
-                case DwpBenefitType.job_seekers_allowance_income_based:
-                // return Properties.Resources.;
-                case DwpBenefitType.pensions_credit:
-                    return Properties.Resources.DwpClaims_pensions_credit;
-                case DwpBenefitType.income_support:
-                    return Properties.Resources.DwpClaims_income_support;
-                case DwpBenefitType.universal_credit:
-                    return Properties.Resources.DwpClaims_universal_credit;
-                default:
-                    return Properties.Resources.DwpClaims_all;
             }
         }
     }

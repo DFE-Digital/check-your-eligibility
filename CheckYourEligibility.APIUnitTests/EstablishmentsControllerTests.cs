@@ -1,100 +1,99 @@
 using AutoFixture;
-using CheckYourEligibility.Domain.Requests;
 using CheckYourEligibility.Domain.Responses;
 using CheckYourEligibility.Services.Interfaces;
 using CheckYourEligibility.WebApp.Controllers;
+using CheckYourEligibility.WebApp.UseCases;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Moq;
-using NUnit.Framework.Internal;
 
 namespace CheckYourEligibility.APIUnitTests
 {
     public class EstablishmentsControllerTests : TestBase.TestBase
     {
-        private Mock<IEstablishmentSearch> _mockService;
+        private Mock<ISearchEstablishmentsUseCase> _mockSearchUseCase;
         private ILogger<EstablishmentsController> _mockLogger;
         private EstablishmentsController _sut;
         private Mock<IAudit> _mockAuditService;
+        private Fixture _fixture;
 
         [SetUp]
         public void Setup()
         {
-            _mockService = new Mock<IEstablishmentSearch>(MockBehavior.Strict);
+            _mockSearchUseCase = new Mock<ISearchEstablishmentsUseCase>(MockBehavior.Strict);
             _mockLogger = Mock.Of<ILogger<EstablishmentsController>>();
             _mockAuditService = new Mock<IAudit>(MockBehavior.Strict);
-            _sut = new EstablishmentsController(_mockLogger, _mockService.Object, _mockAuditService.Object);
+            _sut = new EstablishmentsController(_mockLogger, _mockSearchUseCase.Object, _mockAuditService.Object);
+            _fixture = new Fixture();
         }
 
         [TearDown]
         public void Teardown()
         {
-            _mockService.VerifyAll();
+            _mockSearchUseCase.VerifyAll();
         }
 
         [Test]
         public void Constructor_throws_argumentNullException_when_service_is_null()
         {
             // Arrange
-            IEstablishmentSearch service = null;
+            ISearchEstablishmentsUseCase searchUseCase = null;
             IAudit auditService = null;
 
             // Act
-            Action act = () => new EstablishmentsController(_mockLogger, service,auditService);
+            Action act = () => new EstablishmentsController(_mockLogger, searchUseCase, auditService);
 
             // Assert
-            act.Should().ThrowExactly<ArgumentNullException>().And.Message.Should().EndWithEquivalentOf("Value cannot be null. (Parameter 'service')");
+            act.Should().ThrowExactly<ArgumentNullException>().And.Message.Should().EndWithEquivalentOf("Value cannot be null. (Parameter 'searchUseCase')");
         }
 
         [Test]
-        public void Given_Search_Should_Return_Status200OK()
+        public async Task Given_Search_Should_Return_Status200OK()
         {
             // Arrange
             var query = _fixture.Create<string>();
-            var result = _fixture.CreateMany<Domain.Responses.Establishment>();
-            _mockService.Setup(cs => cs.Search(query)).ReturnsAsync(result);
-            _mockAuditService.Setup(cs => cs.AuditAdd(It.IsAny<AuditData>())).ReturnsAsync(Guid.NewGuid().ToString());
+            var result = _fixture.CreateMany<Establishment>().ToList();
+            _mockSearchUseCase.Setup(cs => cs.Execute(query)).ReturnsAsync(result);
 
             var expectedResult = new ObjectResult(new EstablishmentSearchResponse { Data = result }) { StatusCode = StatusCodes.Status200OK };
 
             // Act
-            var response = _sut.Search(query);
+            var response = await _sut.Search(query);
 
             // Assert
-            response.Result.Should().BeEquivalentTo(expectedResult);
+            response.Should().BeEquivalentTo(expectedResult);
         }
 
         [Test]
-        public void Given_Search_Should_Return_Status400BadRequest()
+        public async Task Given_Search_Should_Return_Status400BadRequest()
         {
             // Arrange
             var query = "A";
 
             // Act
-            var response = _sut.Search(query);
+            var response = await _sut.Search(query);
 
             // Assert
-            response.Result.Should().BeOfType(typeof(BadRequestObjectResult));
+            response.Should().BeOfType<BadRequestObjectResult>();
         }
 
         [Test]
-        public void Given_Search_Should_Return_Status404NotFound()
+        public async Task Given_Search_Should_Return_Status404NotFound()
         {
             // Arrange
             var query = _fixture.Create<string>();
-            var result = Enumerable.Empty<Domain.Responses.Establishment>(); 
-            _mockService.Setup(cs => cs.Search(query)).ReturnsAsync(result);
-            _mockAuditService.Setup(cs => cs.AuditAdd(It.IsAny<AuditData>())).ReturnsAsync(Guid.NewGuid().ToString());
+            var result = Enumerable.Empty<Establishment>();
+            _mockSearchUseCase.Setup(cs => cs.Execute(query)).ReturnsAsync(result);
 
             var expectedResult = new ObjectResult(new EstablishmentSearchResponse { Data = result }) { StatusCode = StatusCodes.Status404NotFound };
 
             // Act
-            var response = _sut.Search(query);
+            var response = await _sut.Search(query);
 
             // Assert
-            response.Result.Should().BeEquivalentTo(expectedResult);
+            response.Should().BeEquivalentTo(expectedResult);
         }
     }
 }
