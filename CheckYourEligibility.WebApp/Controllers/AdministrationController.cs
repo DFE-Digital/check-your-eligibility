@@ -1,37 +1,48 @@
 ﻿// Ignore Spelling: Fsm
 
 using Ardalis.GuardClauses;
-using CheckYourEligibility.Data.Models;
 using CheckYourEligibility.Domain.Constants;
 using CheckYourEligibility.Domain.Responses;
-using CheckYourEligibility.Services.CsvImport;
 using CheckYourEligibility.Services.Interfaces;
-using CsvHelper;
-using CsvHelper.Configuration;
+using CheckYourEligibility.WebApp.UseCases;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
-using System.Globalization;
 using System.Net;
-using System.Xml.Linq;
 
 namespace CheckYourEligibility.WebApp.Controllers
 {
+    /// <summary>
+    /// Administration Controller
+    /// </summary>
     [ApiController]
     [Route("[controller]")]
     [Authorize]
     public class AdministrationController : BaseController
     {
-        private readonly ILogger<AdministrationController> _logger;
-        private readonly IAdministration _service;
-        private readonly IEstablishmentSearch _establishmentsSearch;
+        private readonly ICleanUpEligibilityChecksUseCase _cleanUpEligibilityChecksUseCase;
+        private readonly IImportEstablishmentsUseCase _importEstablishmentsUseCase;
+        private readonly IImportFsmHomeOfficeDataUseCase _importFsmHomeOfficeDataUseCase;
+        private readonly IImportFsmHMRCDataUseCase _importFsmHMRCDataUseCase;
 
-        public AdministrationController(ILogger<AdministrationController> logger, IAdministration service, IAudit audit, IEstablishmentSearch establishmentsSearch)
-            : base(audit)
+        /// <summary>
+        /// Constructor for AdministrationController
+        /// </summary>
+        /// <param name="cleanUpEligibilityChecksUseCase"></param>
+        /// <param name="importEstablishmentsUseCase"></param>
+        /// <param name="importFsmHomeOfficeDataUseCase"></param>
+        /// <param name="importFsmHMRCDataUseCase"></param>
+        /// <param name="audit"></param>
+        public AdministrationController(
+            ICleanUpEligibilityChecksUseCase cleanUpEligibilityChecksUseCase,
+            IImportEstablishmentsUseCase importEstablishmentsUseCase,
+            IImportFsmHomeOfficeDataUseCase importFsmHomeOfficeDataUseCase,
+            IImportFsmHMRCDataUseCase importFsmHMRCDataUseCase,
+            IAudit audit) : base(audit)
         {
-            _logger = Guard.Against.Null(logger);
-            _service = Guard.Against.Null(service);
-            _establishmentsSearch = Guard.Against.Null(establishmentsSearch); ;
+            _cleanUpEligibilityChecksUseCase = Guard.Against.Null(cleanUpEligibilityChecksUseCase);
+            _importEstablishmentsUseCase = Guard.Against.Null(importEstablishmentsUseCase);
+            _importFsmHomeOfficeDataUseCase = Guard.Against.Null(importFsmHomeOfficeDataUseCase);
+            _importFsmHMRCDataUseCase = Guard.Against.Null(importFsmHMRCDataUseCase);
         }
 
         /// <summary>
@@ -42,10 +53,8 @@ namespace CheckYourEligibility.WebApp.Controllers
         [HttpPut("/cleanUpEligibilityChecks")]
         public async Task<ActionResult> CleanUpEligibilityChecks()
         {
-            await _service.CleanUpEligibilityChecks();
-            await AuditAdd(Domain.Enums.AuditType.Administration, string.Empty);
+            await _cleanUpEligibilityChecksUseCase.Execute();
             return new ObjectResult(new MessageResponse { Data = $"{Admin.EligibilityChecksCleanse}" }) { StatusCode = StatusCodes.Status200OK };
-
         }
 
         /// <summary>
@@ -57,50 +66,16 @@ namespace CheckYourEligibility.WebApp.Controllers
         [HttpPost("/importEstablishments")]
         public async Task<ActionResult> ImportEstablishments(IFormFile file)
         {
-            List<EstablishmentRow> DataLoad;
-            if (file == null || file.ContentType.ToLower() != "text/csv")
-            {
-                return BadRequest(new MessageResponse { Data = $"{Admin.CsvfileRequired}" });
-            }
             try
             {
-                var config = new CsvConfiguration(CultureInfo.InvariantCulture)
-                {
-                    HasHeaderRecord = true,
-                    BadDataFound = null,
-                    MissingFieldFound = null
-                };
-                using (var fileStream = file.OpenReadStream())
-
-                using (var csv = new CsvReader(new StreamReader(fileStream), config))
-                {
-                    csv.Context.RegisterClassMap<EstablishmentRowMap>();
-                    DataLoad = csv.GetRecords<EstablishmentRow>().ToList();
-
-                    if (DataLoad == null || !DataLoad.Any())
-                    {
-                        throw new InvalidDataException("Invalid file content.");
-                    }
-                }
+                await _importEstablishmentsUseCase.Execute(file);
+                return new ObjectResult(new MessageResponse { Data = $"{file.FileName} - {Admin.EstablishmentFileProcessed}" }) { StatusCode = StatusCodes.Status200OK };
             }
-            catch (Exception ex)
+            catch (InvalidDataException ex)
             {
-                _logger.LogError("ImportEstablishmentData", ex);
-                return new ObjectResult(new MessageResponse
-                {
-                    Data = $"{file.FileName} - {JsonConvert.SerializeObject(new EstablishmentRow())} :- {ex.Message}," +
-                    $"{ex.InnerException?.Message}"
-                })
-                { StatusCode = StatusCodes.Status400BadRequest };
+                return new ObjectResult(new MessageResponse { Data = ex.Message }) { StatusCode = StatusCodes.Status400BadRequest };
             }
-
-            await _service.ImportEstablishments(DataLoad);
-
-            await AuditAdd(Domain.Enums.AuditType.Administration, string.Empty);
-            return new ObjectResult(new MessageResponse { Data = $"{file.FileName} - {Admin.EstablishmentFileProcessed}" }) { StatusCode = StatusCodes.Status200OK };
-
         }
-
 
         /// <summary>
         /// Truncates FsmHomeOfficeData and imports a new data set from CSV input
@@ -111,53 +86,15 @@ namespace CheckYourEligibility.WebApp.Controllers
         [HttpPost("/importFsmHomeOfficeData")]
         public async Task<ActionResult> ImportFsmHomeOfficeData(IFormFile file)
         {
-            List<FreeSchoolMealsHO> DataLoad;
-            if (file == null || file.ContentType.ToLower() != "text/csv")
-            {
-                return BadRequest(new MessageResponse { Data = $"{Admin.CsvfileRequired}" });
-            }
             try
             {
-
-                var config = new CsvConfiguration(CultureInfo.InvariantCulture)
-                {
-                    HasHeaderRecord = false,
-                    BadDataFound = null, //arg => badRows.Add(arg.Context.Parser.RawRecord),
-                    MissingFieldFound = null
-                };
-                using (var fileStream = file.OpenReadStream())
-
-                using (var csv = new CsvReader(new StreamReader(fileStream), config))
-                {
-                    csv.Context.RegisterClassMap<HomeOfficeRowMap>();
-                    var records = csv.GetRecords<HomeOfficeRow>();
-
-                    DataLoad = records.Select(x => new FreeSchoolMealsHO
-                    {
-                        FreeSchoolMealsHOID = Guid.NewGuid().ToString(),
-                        NASS = x.Nas,
-                        LastName = x.Surname,
-                        DateOfBirth = DateTime.ParseExact(x.Dob, "yyyyMMdd", CultureInfo.InvariantCulture)
-                    }).ToList();
-                    if (DataLoad == null || DataLoad.Count == 0)
-                    {
-                        throw new InvalidDataException("Invalid file content.");
-                    }
-                }
+                await _importFsmHomeOfficeDataUseCase.Execute(file);
+                return new ObjectResult(new MessageResponse { Data = $"{file.FileName} - {Admin.HomeOfficeFileProcessed}" }) { StatusCode = StatusCodes.Status200OK };
             }
-            catch (Exception ex)
+            catch (InvalidDataException ex)
             {
-                _logger.LogError("ImportHomeOfficeData", ex);
-                return new ObjectResult(new MessageResponse
-                {
-                    Data = $"{file.FileName} - {JsonConvert.SerializeObject(new HomeOfficeRow())} :- {ex.Message}," +
-                    $"{ex.InnerException?.Message}"
-                })
-                { StatusCode = StatusCodes.Status400BadRequest };
+                return new ObjectResult(new MessageResponse { Data = ex.Message }) { StatusCode = StatusCodes.Status400BadRequest };
             }
-            await _service.ImportHomeOfficeData(DataLoad);
-            await AuditAdd(Domain.Enums.AuditType.Administration, string.Empty);
-            return new ObjectResult(new MessageResponse { Data = $"{file.FileName} - {Admin.HomeOfficeFileProcessed}" }) { StatusCode = StatusCodes.Status200OK };
         }
 
         /// <summary>
@@ -170,52 +107,15 @@ namespace CheckYourEligibility.WebApp.Controllers
         [HttpPost("/importFsmHMRCData")]
         public async Task<ActionResult> ImportFsmHMRCData(IFormFile file)
         {
-
-            List<FreeSchoolMealsHMRC> DataLoad = new();
-            if (file == null || file.ContentType.ToLower() != "text/xml")
-            {
-                return BadRequest(new MessageResponse { Data = $"{Admin.XmlfileRequired}" });
-            }
             try
             {
-                using var fileStream = file.OpenReadStream();
-                XElement po = XElement.Load(fileStream);
-                IEnumerable<XElement> childElements =
-                    from el in po.Elements()
-                    select el;
-                var EligiblePersons = childElements.FirstOrDefault(x => x.Name.LocalName == "EligiblePersons");
-                if (EligiblePersons != null)
-                    DataLoad.AddRange(from XElement EligiblePerson in EligiblePersons.Nodes()
-                                      let elements = EligiblePerson.Elements()
-                                      let item = new FreeSchoolMealsHMRC()
-                                      {
-                                          FreeSchoolMealsHMRCID = elements.First(x => x.Name.LocalName == "NINO").Value,
-                                          DataType = Convert.ToInt32(elements.First(x => x.Name.LocalName == "DataType").Value),
-                                          Surname = elements.First(x => x.Name.LocalName == "Surname").Value,
-                                          DateOfBirth = DateTime.ParseExact(elements.First(x => x.Name.LocalName == "DateOfBirth").Value, "ddMMyyyy", CultureInfo.InvariantCulture)
-                                      }
-                                      select item);
-
-                if (DataLoad == null || DataLoad.Count == 0)
-                {
-                    throw new InvalidDataException("Invalid file no content.");
-                }
+                await _importFsmHMRCDataUseCase.Execute(file);
+                return new ObjectResult(new MessageResponse { Data = $"{file.FileName} - {Admin.HMRCFileProcessed}" }) { StatusCode = StatusCodes.Status200OK };
             }
-            catch (Exception ex)
+            catch (InvalidDataException ex)
             {
-                _logger.LogError("ImportHMRCData", ex);
-                return new ObjectResult(new MessageResponse
-                {
-                    Data = $"{file.FileName} - {JsonConvert.SerializeObject(new FreeSchoolMealsHMRC())} :- {ex.Message}," +
-                    $"{ex.InnerException?.Message}"
-                })
-                { StatusCode = StatusCodes.Status400BadRequest };
+                return new ObjectResult(new MessageResponse { Data = ex.Message }) { StatusCode = StatusCodes.Status400BadRequest };
             }
-
-            await _service.ImportHMRCData(DataLoad);
-            await AuditAdd(Domain.Enums.AuditType.Administration, string.Empty);
-            return new ObjectResult(new MessageResponse { Data = $"{file.FileName} - {Admin.HMRCFileProcessed}" }) { StatusCode = StatusCodes.Status200OK };
-
         }
     }
 }

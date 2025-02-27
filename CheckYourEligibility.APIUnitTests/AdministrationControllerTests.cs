@@ -1,25 +1,23 @@
-using AutoFixture;
-using CheckYourEligibility.Data.Models;
 using CheckYourEligibility.Domain.Constants;
-using CheckYourEligibility.Domain.Requests;
 using CheckYourEligibility.Domain.Responses;
-using CheckYourEligibility.Services.CsvImport;
 using CheckYourEligibility.Services.Interfaces;
 using CheckYourEligibility.WebApp.Controllers;
+using CheckYourEligibility.WebApp.UseCases;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Moq;
-using Newtonsoft.Json;
 using NUnit.Framework.Internal;
 
 namespace CheckYourEligibility.APIUnitTests
 {
     public class AdministrationControllerTests : TestBase.TestBase
     {
-        private Mock<IAdministration> _mockService;
-        private Mock<IEstablishmentSearch> _mockEstablishmentService;
+        private Mock<ICleanUpEligibilityChecksUseCase> _mockCleanUpEligibilityChecksUseCase;
+        private Mock<IImportEstablishmentsUseCase> _mockImportEstablishmentsUseCase;
+        private Mock<IImportFsmHomeOfficeDataUseCase> _mockImportFsmHomeOfficeDataUseCase;
+        private Mock<IImportFsmHMRCDataUseCase> _mockImportFsmHMRCDataUseCase;
         private ILogger<AdministrationController> _mockLogger;
         private AdministrationController _sut;
         private Mock<IAudit> _mockAuditService;
@@ -27,57 +25,71 @@ namespace CheckYourEligibility.APIUnitTests
         [SetUp]
         public void Setup()
         {
-            _mockService = new Mock<IAdministration>(MockBehavior.Strict);
+            _mockCleanUpEligibilityChecksUseCase = new Mock<ICleanUpEligibilityChecksUseCase>(MockBehavior.Strict);
+            _mockImportEstablishmentsUseCase = new Mock<IImportEstablishmentsUseCase>(MockBehavior.Strict);
+            _mockImportFsmHomeOfficeDataUseCase = new Mock<IImportFsmHomeOfficeDataUseCase>(MockBehavior.Strict);
+            _mockImportFsmHMRCDataUseCase = new Mock<IImportFsmHMRCDataUseCase>(MockBehavior.Strict);
             _mockLogger = Mock.Of<ILogger<AdministrationController>>();
             _mockAuditService = new Mock<IAudit>(MockBehavior.Strict);
-            _mockEstablishmentService = new Mock<IEstablishmentSearch>(MockBehavior.Strict);
-            _sut = new AdministrationController(_mockLogger, _mockService.Object, _mockAuditService.Object,_mockEstablishmentService.Object);
+            _sut = new AdministrationController(
+                _mockCleanUpEligibilityChecksUseCase.Object,
+                _mockImportEstablishmentsUseCase.Object,
+                _mockImportFsmHomeOfficeDataUseCase.Object,
+                _mockImportFsmHMRCDataUseCase.Object,
+                _mockAuditService.Object);
         }
 
         [TearDown]
         public void Teardown()
         {
-            _mockService.VerifyAll();
+            _mockCleanUpEligibilityChecksUseCase.VerifyAll();
+            _mockImportEstablishmentsUseCase.VerifyAll();
+            _mockImportFsmHomeOfficeDataUseCase.VerifyAll();
+            _mockImportFsmHMRCDataUseCase.VerifyAll();
         }
 
         [Test]
-        public void Constructor_throws_argumentNullException_when_service_is_null()
+        public void Constructor_throws_argumentNullException_when_useCase_is_null()
         {
             // Arrange
-            IAdministration service = null;
-            IAudit auditService = null;
-            IEstablishmentSearch EstablishmentSearch = null;
+            ICleanUpEligibilityChecksUseCase cleanUpEligibilityChecksUseCase = null;
+            IImportEstablishmentsUseCase importEstablishmentsUseCase = null;
+            IImportFsmHomeOfficeDataUseCase importFsmHomeOfficeDataUseCase = null;
+            IImportFsmHMRCDataUseCase importFsmHMRCDataUseCase = null;
 
             // Act
-            Action act = () => new AdministrationController(_mockLogger, service,auditService, EstablishmentSearch);
+            Action act = () => new AdministrationController(
+                cleanUpEligibilityChecksUseCase,
+                importEstablishmentsUseCase,
+                importFsmHomeOfficeDataUseCase,
+                importFsmHMRCDataUseCase,
+                _mockAuditService.Object);
 
             // Assert
-            act.Should().ThrowExactly<ArgumentNullException>().And.Message.Should().EndWithEquivalentOf("Value cannot be null. (Parameter 'service')");
+            act.Should().ThrowExactly<ArgumentNullException>().And.Message.Should().Contain("Value cannot be null.");
         }
 
         [Test]
-        public void Given_CleanUpEligibilityChecks_Should_Return_Status200OK()
+        public async Task Given_CleanUpEligibilityChecks_Should_Return_Status200OK()
         {
             // Arrange
-            _mockService.Setup(cs => cs.CleanUpEligibilityChecks()).Returns(Task.CompletedTask);
-            _mockAuditService.Setup(cs => cs.AuditAdd(It.IsAny<AuditData>())).ReturnsAsync(Guid.NewGuid().ToString());
+            _mockCleanUpEligibilityChecksUseCase.Setup(cs => cs.Execute()).Returns(Task.CompletedTask);
 
             var expectedResult = new ObjectResult(new MessageResponse { Data = $"{Admin.EligibilityChecksCleanse}" }) { StatusCode = StatusCodes.Status200OK };
 
             // Act
-            var response = _sut.CleanUpEligibilityChecks();
+            var response = await _sut.CleanUpEligibilityChecks();
 
             // Assert
-            response.Result.Should().BeEquivalentTo(expectedResult);
+            response.Should().BeEquivalentTo(expectedResult);
         }
 
         [Test]
-        public void Given_ImportEstablishments_Should_Return_Status200OK()
+        public async Task Given_ImportEstablishments_Should_Return_Status200OK()
         {
             // Arrange
-            _mockService.Setup(cs => cs.ImportEstablishments(It.IsAny<IEnumerable<EstablishmentRow>>())).Returns(Task.CompletedTask);
-            _mockAuditService.Setup(cs => cs.AuditAdd(It.IsAny<AuditData>())).ReturnsAsync(Guid.NewGuid().ToString());
-            
+            _mockImportEstablishmentsUseCase.Setup(cs => cs.Execute(It.IsAny<IFormFile>())).Returns(Task.CompletedTask);
+
             var content = Properties.Resources.small_gis;
             var fileName = "test.csv";
             var stream = new MemoryStream();
@@ -86,7 +98,6 @@ namespace CheckYourEligibility.APIUnitTests
             writer.Flush();
             stream.Position = 0;
 
-            //create FormFile with desired data
             var file = new FormFile(stream, 0, stream.Length, fileName, fileName)
             {
                 Headers = new HeaderDictionary(),
@@ -95,31 +106,37 @@ namespace CheckYourEligibility.APIUnitTests
             var expectedResult = new ObjectResult(new MessageResponse { Data = $"{file.FileName} - {Admin.EstablishmentFileProcessed}" }) { StatusCode = StatusCodes.Status200OK };
 
             // Act
-            var response = _sut.ImportEstablishments(file);
+            var response = await _sut.ImportEstablishments(file);
 
             // Assert
-            response.Result.Should().BeEquivalentTo(expectedResult);
+            response.Should().BeEquivalentTo(expectedResult);
         }
 
-
         [Test]
-        public void Given_ImportEstablishments_Should_Return_Status400BadRequest()
+        public async Task Given_ImportEstablishments_Should_Return_Status400BadRequest()
         {
             // Arrange
             var expectedResult = new ObjectResult(new MessageResponse { Data = $"{Admin.CsvfileRequired}" }) { StatusCode = StatusCodes.Status400BadRequest };
 
+            // Setup mock to throw InvalidDataException
+            _mockImportEstablishmentsUseCase
+                .Setup(u => u.Execute(It.IsAny<IFormFile>()))
+                .Throws(new InvalidDataException($"{Admin.CsvfileRequired}"));
+
             // Act
-            var response = _sut.ImportEstablishments(null);
+            var response = await _sut.ImportEstablishments(null);
 
             // Assert
-            response.Result.Should().BeEquivalentTo(expectedResult);
+            response.Should().BeEquivalentTo(expectedResult);
         }
 
         [Test]
-        public void Given_ImportEstablishments_Should_Return_Status400BadData()
+        public async Task Given_ImportFsmHomeOfficeData_Should_Return_Status200OK()
         {
             // Arrange
-            var content = "SomeContent";
+            _mockImportFsmHomeOfficeDataUseCase.Setup(cs => cs.Execute(It.IsAny<IFormFile>())).Returns(Task.CompletedTask);
+
+            var content = Properties.Resources.HO_Data_small;
             var fileName = "test.csv";
             var stream = new MemoryStream();
             var writer = new StreamWriter(stream);
@@ -127,66 +144,6 @@ namespace CheckYourEligibility.APIUnitTests
             writer.Flush();
             stream.Position = 0;
 
-            //create FormFile with desired data
-            var file = new FormFile(stream, 0, stream.Length, fileName, fileName)
-            {
-                Headers = new HeaderDictionary(),
-                ContentType = "text/csv"
-            };
-            var ex = new InvalidDataException("Invalid file content.");
-            var expectedResult = new ObjectResult(new MessageResponse { Data = $"{file.FileName} - {JsonConvert.SerializeObject(new EstablishmentRow())} :- {ex.Message}," }) { StatusCode = StatusCodes.Status400BadRequest };
-
-            // Act
-            var response = _sut.ImportEstablishments(file);
-
-            // Assert
-            response.Result.Should().BeEquivalentTo(expectedResult);
-        }
-
-        [Test]
-        public void Given_ImportEstablishments_Should_Return_Status400BadDataNoContent()
-        {
-            // Arrange
-            var content = "";
-            var fileName = "test.csv";
-            var stream = new MemoryStream();
-            var writer = new StreamWriter(stream);
-            writer.Write(content);
-            writer.Flush();
-            stream.Position = 0;
-
-            //create FormFile with desired data
-            var file = new FormFile(stream, 0, stream.Length, fileName, fileName)
-            {
-                Headers = new HeaderDictionary(),
-                ContentType = "text/csv"
-            };
-            var ex = new InvalidDataException("Invalid file content.");
-            var expectedResult = new ObjectResult(new MessageResponse { Data = $"{file.FileName} - {JsonConvert.SerializeObject(new EstablishmentRow())} :- {ex.Message}," }) { StatusCode = StatusCodes.Status400BadRequest };
-
-            // Act
-            var response = _sut.ImportEstablishments(file);
-
-            // Assert
-            response.Result.Should().BeEquivalentTo(expectedResult);
-        }
-
-        [Test]
-        public void Given_HomeOfficeData_Should_Return_Status200OK()
-        {
-            // Arrange
-            _mockService.Setup(cs => cs.ImportHomeOfficeData(It.IsAny<IEnumerable<FreeSchoolMealsHO>>())).Returns(Task.CompletedTask);
-            _mockAuditService.Setup(cs => cs.AuditAdd(It.IsAny<AuditData>())).ReturnsAsync(Guid.NewGuid().ToString());
-            
-            var content = Properties.Resources.HO_Data_small; ;
-            var fileName = "test.csv";
-            var stream = new MemoryStream();
-            var writer = new StreamWriter(stream);
-            writer.Write(content);
-            writer.Flush();
-            stream.Position = 0;
-
-            //create FormFile with desired data
             var file = new FormFile(stream, 0, stream.Length, fileName, fileName)
             {
                 Headers = new HeaderDictionary(),
@@ -195,90 +152,37 @@ namespace CheckYourEligibility.APIUnitTests
             var expectedResult = new ObjectResult(new MessageResponse { Data = $"{file.FileName} - {Admin.HomeOfficeFileProcessed}" }) { StatusCode = StatusCodes.Status200OK };
 
             // Act
-            var response = _sut.ImportFsmHomeOfficeData(file);
+            var response = await _sut.ImportFsmHomeOfficeData(file);
 
             // Assert
-            response.Result.Should().BeEquivalentTo(expectedResult);
+            response.Should().BeEquivalentTo(expectedResult);
         }
 
         [Test]
-        public void Given_HomeOfficeData_Should_Return_Status400BadRequest()
+        public async Task Given_ImportFsmHomeOfficeData_Should_Return_Status400BadRequest()
         {
             // Arrange
             var expectedResult = new ObjectResult(new MessageResponse { Data = $"{Admin.CsvfileRequired}" }) { StatusCode = StatusCodes.Status400BadRequest };
 
+            // Setup mock to throw InvalidDataException
+            _mockImportFsmHomeOfficeDataUseCase
+                .Setup(u => u.Execute(It.IsAny<IFormFile>()))
+                .Throws(new InvalidDataException($"{Admin.CsvfileRequired}"));
+
             // Act
-            var response = _sut.ImportFsmHomeOfficeData(null);
+            var response = await _sut.ImportFsmHomeOfficeData(null);
 
             // Assert
-            response.Result.Should().BeEquivalentTo(expectedResult);
+            response.Should().BeEquivalentTo(expectedResult);
         }
 
         [Test]
-        public void Given_HomeOfficeData_Should_Return_Status400BadData()
+        public async Task Given_ImportFsmHMRCData_Should_Return_Status200OK()
         {
             // Arrange
-            var content = "SomeContent";
-            var fileName = "test.csv";
-            var stream = new MemoryStream();
-            var writer = new StreamWriter(stream);
-            writer.Write(content);
-            writer.Flush();
-            stream.Position = 0;
+            _mockImportFsmHMRCDataUseCase.Setup(cs => cs.Execute(It.IsAny<IFormFile>())).Returns(Task.CompletedTask);
 
-            //create FormFile with desired data
-            var file = new FormFile(stream, 0, stream.Length, fileName, fileName)
-            {
-                Headers = new HeaderDictionary(),
-                ContentType = "text/csv"
-            };
-            var ex = new InvalidDataException("String '' was not recognized as a valid DateTime.");
-            var expectedResult = new ObjectResult(new MessageResponse { Data = $"{file.FileName} - {JsonConvert.SerializeObject(new HomeOfficeRow())} :- {ex.Message}," }) { StatusCode = StatusCodes.Status400BadRequest };
-
-            // Act
-            var response =  _sut.ImportFsmHomeOfficeData(file);
-
-            // Assert
-            response.Result.Should().BeEquivalentTo(expectedResult);
-        }
-
-        [Test]
-        public void Given_HomeOfficeData_Should_Return_Status400BadDataNoContent()
-        {
-            // Arrange
-            var content = "";
-            var fileName = "test.csv";
-            var stream = new MemoryStream();
-            var writer = new StreamWriter(stream);
-            writer.Write(content);
-            writer.Flush();
-            stream.Position = 0;
-
-            //create FormFile with desired data
-            var file = new FormFile(stream, 0, stream.Length, fileName, fileName)
-            {
-                Headers = new HeaderDictionary(),
-                ContentType = "text/csv"
-            };
-            var ex = new InvalidDataException("Invalid file content.");
-            var expectedResult = new ObjectResult(new MessageResponse { Data = $"{file.FileName} - {JsonConvert.SerializeObject(new HomeOfficeRow())} :- {ex.Message}," }) { StatusCode = StatusCodes.Status400BadRequest };
-
-            // Act
-            var response = _sut.ImportFsmHomeOfficeData(file);
-
-            // Assert
-            response.Result.Should().BeEquivalentTo(expectedResult);
-        }
-
-
-        [Test]
-        public void Given_ImportFsmHMRCData_Should_Return_Status200OK()
-        {
-            // Arrange
-            _mockService.Setup(cs => cs.ImportHMRCData(It.IsAny<IEnumerable<FreeSchoolMealsHMRC>>())).Returns(Task.CompletedTask);
-            _mockAuditService.Setup(cs => cs.AuditAdd(It.IsAny<AuditData>())).ReturnsAsync(Guid.NewGuid().ToString());
-
-            var content = Properties.Resources.exampleHMRC; ;
+            var content = Properties.Resources.exampleHMRC;
             var fileName = "test.xml";
             var stream = new MemoryStream();
             var writer = new StreamWriter(stream);
@@ -286,7 +190,6 @@ namespace CheckYourEligibility.APIUnitTests
             writer.Flush();
             stream.Position = 0;
 
-            //create FormFile with desired data
             var file = new FormFile(stream, 0, stream.Length, fileName, fileName)
             {
                 Headers = new HeaderDictionary(),
@@ -295,79 +198,28 @@ namespace CheckYourEligibility.APIUnitTests
             var expectedResult = new ObjectResult(new MessageResponse { Data = $"{file.FileName} - {Admin.HMRCFileProcessed}" }) { StatusCode = StatusCodes.Status200OK };
 
             // Act
-            var response = _sut.ImportFsmHMRCData(file);
+            var response = await _sut.ImportFsmHMRCData(file);
 
             // Assert
-            response.Result.Should().BeEquivalentTo(expectedResult);
+            response.Should().BeEquivalentTo(expectedResult);
         }
 
         [Test]
-        public void Given_ImportFsmHMRCData_Should_Return_Status400BadRequest()
+        public async Task Given_ImportFsmHMRCData_Should_Return_Status400BadRequest()
         {
             // Arrange
             var expectedResult = new ObjectResult(new MessageResponse { Data = $"{Admin.XmlfileRequired}" }) { StatusCode = StatusCodes.Status400BadRequest };
 
-            // Act
-            var response = _sut.ImportFsmHMRCData(null);
-
-            // Assert
-            response.Result.Should().BeEquivalentTo(expectedResult);
-        }
-
-        [Test]
-        public void Given_ImportFsmHMRCData_Should_Return_Status400BadData()
-        {
-            // Arrange
-            var content = "SomeContent";
-            var fileName = "test.xml";
-            var stream = new MemoryStream();
-            var writer = new StreamWriter(stream);
-            writer.Write(content);
-            writer.Flush();
-            stream.Position = 0;
-
-            //create FormFile with desired data
-            var file = new FormFile(stream, 0, stream.Length, fileName, fileName)
-            {
-                Headers = new HeaderDictionary(),
-                ContentType = "text/xml"
-            };
-            var ex = new Exception("Data at the root level is invalid. Line 1, position 1.");
-            var expectedResult = new ObjectResult(new MessageResponse { Data = $"{file.FileName} - {JsonConvert.SerializeObject(new FreeSchoolMealsHMRC())} :- {ex.Message}," }) { StatusCode = StatusCodes.Status400BadRequest };
+            // Setup mock to throw InvalidDataException
+            _mockImportFsmHMRCDataUseCase
+                .Setup(u => u.Execute(It.IsAny<IFormFile>()))
+                .Throws(new InvalidDataException($"{Admin.XmlfileRequired}"));
 
             // Act
-            var response = _sut.ImportFsmHMRCData(file);
+            var response = await _sut.ImportFsmHMRCData(null);
 
             // Assert
-            response.Result.Should().BeEquivalentTo(expectedResult);
-        }
-
-        [Test]
-        public void Given_ImportFsmHMRCData_Should_Return_Status400BadDataNoContent()
-        {
-            // Arrange
-            var content = Properties.Resources.exampleHMRC_empty;
-            var fileName = "test.xml";
-            var stream = new MemoryStream();
-            var writer = new StreamWriter(stream);
-            writer.Write(content);
-            writer.Flush();
-            stream.Position = 0;
-
-            //create FormFile with desired data
-            var file = new FormFile(stream, 0, stream.Length, fileName, fileName)
-            {
-                Headers = new HeaderDictionary(),
-                ContentType = "text/xml"
-            };
-            var ex = new InvalidDataException("Invalid file no content.");
-            var expectedResult = new ObjectResult(new MessageResponse { Data = $"{file.FileName} - {JsonConvert.SerializeObject(new FreeSchoolMealsHMRC())} :- {ex.Message}," }) { StatusCode = StatusCodes.Status400BadRequest };
-
-            // Act
-            var response = _sut.ImportFsmHMRCData(file);
-
-            // Assert
-            response.Result.Should().BeEquivalentTo(expectedResult);
+            response.Should().BeEquivalentTo(expectedResult);
         }
     }
 }
