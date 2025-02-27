@@ -114,6 +114,7 @@ builder.Services.AddScoped<ICreateOrUpdateUserUseCase, CreateOrUpdateUserUseCase
 builder.Services.AddScoped<IAuthenticateUserUseCase, AuthenticateUserUseCase>();
 builder.Services.AddScoped<IMatchCitizenUseCase, MatchCitizenUseCase>();
 builder.Services.AddScoped<IGetCitizenClaimsUseCase, GetCitizenClaimsUseCase>();
+builder.Services.AddScoped<ISearchEstablishmentsUseCase, SearchEstablishmentsUseCase>();
 
 // Configure IIS and Kestrel server options
 builder.Services.Configure<IISServerOptions>(options =>
