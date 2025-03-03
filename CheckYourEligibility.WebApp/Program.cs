@@ -7,8 +7,12 @@ using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.Azure;
 using Microsoft.OpenApi.Models;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Text.Json.Serialization;
+using Azure.Extensions.AspNetCore.Configuration.Secrets;
 
+CultureInfo.DefaultThreadCurrentCulture = new CultureInfo("en-GB");
+CultureInfo.DefaultThreadCurrentUICulture = new CultureInfo("en-GB");
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -99,7 +103,14 @@ if (Environment.GetEnvironmentVariable("API_KEY_VAULT_NAME") != null)
     var keyVaultName = Environment.GetEnvironmentVariable("API_KEY_VAULT_NAME");
     var kvUri = $"https://{keyVaultName}.vault.azure.net";
 
-    builder.Configuration.AddAzureKeyVault(new Uri(kvUri), new DefaultAzureCredential());
+    builder.Configuration.AddAzureKeyVault(
+        new Uri(kvUri), 
+        new DefaultAzureCredential(),
+        new AzureKeyVaultConfigurationOptions()
+        {
+            ReloadInterval = TimeSpan.FromSeconds(60*10)
+        }
+    );
 }
 
 // Register Database and other services
