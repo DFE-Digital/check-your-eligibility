@@ -2,6 +2,7 @@
 using CheckYourEligibility.Domain.Requests;
 using CheckYourEligibility.Domain.Responses;
 using CheckYourEligibility.Services.Interfaces;
+using CheckYourEligibility.WebApp.UseCases;
 using FeatureManagement.Domain.Validation;
 using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
@@ -10,22 +11,31 @@ using System.Net;
 
 namespace CheckYourEligibility.WebApp.Controllers
 {
-    //EligibilityController
-
     [ApiController]
     [Route("[controller]")]
     [Authorize]
     public class ApplicationController : BaseController
     {
-        private readonly IApplication _applicationService;
+        private readonly ICreateApplicationUseCase _createApplicationUseCase;
+        private readonly IGetApplicationUseCase _getApplicationUseCase;
+        private readonly ISearchApplicationsUseCase _searchApplicationsUseCase;
+        private readonly IUpdateApplicationStatusUseCase _updateApplicationStatusUseCase;
         private readonly ILogger<EligibilityCheckController> _logger;
 
-
-        public ApplicationController(ILogger<EligibilityCheckController> logger, IApplication applicationService, IAudit audit)
-            : base( audit)
+        public ApplicationController(
+            ILogger<EligibilityCheckController> logger,
+            ICreateApplicationUseCase createApplicationUseCase,
+            IGetApplicationUseCase getApplicationUseCase,
+            ISearchApplicationsUseCase searchApplicationsUseCase,
+            IUpdateApplicationStatusUseCase updateApplicationStatusUseCase,
+            IAudit audit)
+            : base(audit)
         {
             _logger = Guard.Against.Null(logger);
-            _applicationService = Guard.Against.Null(applicationService);
+            _createApplicationUseCase = Guard.Against.Null(createApplicationUseCase);
+            _getApplicationUseCase = Guard.Against.Null(getApplicationUseCase);
+            _searchApplicationsUseCase = Guard.Against.Null(searchApplicationsUseCase);
+            _updateApplicationStatusUseCase = Guard.Against.Null(updateApplicationStatusUseCase);
         }
 
         /// <summary>
@@ -38,41 +48,19 @@ namespace CheckYourEligibility.WebApp.Controllers
         [HttpPost()]
         public async Task<ActionResult> Application([FromBody] ApplicationRequest model)
         {
-            if (model == null || model.Data == null)
+            try
             {
-                return BadRequest(new MessageResponse { Data = "Invalid request, data is required" });
+                var response = await _createApplicationUseCase.Execute(model);
+                return new ObjectResult(response) { StatusCode = StatusCodes.Status201Created };
             }
-            if (model.Data.Type == Domain.Enums.CheckEligibilityType.None)
+            catch (ValidationException ex)
             {
-                return BadRequest(new MessageResponse { Data = $"Invalid request, Valid Type is required{model.Data.Type}" });
+                return BadRequest(new MessageResponse { Data = ex.Message });
             }
-            model.Data.ParentNationalInsuranceNumber = model.Data.ParentNationalInsuranceNumber?.ToUpper();
-            model.Data.ParentNationalAsylumSeekerServiceNumber = model.Data.ParentNationalAsylumSeekerServiceNumber?.ToUpper();
-
-            var validator = new ApplicationRequestValidator();
-            var validationResults = validator.Validate(model);
-
-            if (!validationResults.IsValid)
-            {
-                return BadRequest(new MessageResponse { Data = validationResults.ToString() });
-            }
-            var response = await _applicationService.PostApplication(model.Data);
-            await AuditAdd(Domain.Enums.AuditType.Application, response.Id);
-
-            return new ObjectResult(new ApplicationSaveItemResponse
-            {
-                Data = response,
-                Links = new ApplicationResponseLinks
-                {
-                    get_Application = $"{Domain.Constants.ApplicationLinks.GetLinkApplication}{response.Id}"
-                }
-            })
-            { StatusCode = StatusCodes.Status201Created };
-
         }
 
         /// <summary>
-        /// Gets an Application
+        /// Gets an application by guid
         /// </summary>
         /// <param name="guid"></param>
         /// <returns></returns>
@@ -81,21 +69,12 @@ namespace CheckYourEligibility.WebApp.Controllers
         [HttpGet("{guid}")]
         public async Task<ActionResult> Application(string guid)
         {
-            var response = await _applicationService.GetApplication(guid);
+            var response = await _getApplicationUseCase.Execute(guid);
             if (response == null)
             {
                 return NotFound(guid);
             }
-            await AuditAdd(Domain.Enums.AuditType.Application, guid);
-            return new ObjectResult(new ApplicationItemResponse
-            {
-                Data = response,
-                Links = new ApplicationResponseLinks
-                {
-                    get_Application = $"{Domain.Constants.ApplicationLinks.GetLinkApplication}{response.Id}"
-                }
-            })
-            { StatusCode = StatusCodes.Status200OK };
+            return new ObjectResult(response) { StatusCode = StatusCodes.Status200OK };
         }
 
         /// <summary>
@@ -108,24 +87,18 @@ namespace CheckYourEligibility.WebApp.Controllers
         [HttpPost("Search")]
         public async Task<ActionResult> ApplicationSearch([FromBody] ApplicationRequestSearch model)
         {
-            var response = await _applicationService.GetApplications(model);
-
-            if (response == null || !response.Data.Any())
+            var response = await _searchApplicationsUseCase.Execute(model);
+            if (response == null)
             {
                 return NoContent();
             }
-
-            await AuditAdd(Domain.Enums.AuditType.Application, string.Empty);
-
-            return new ObjectResult(response)
-            {
-                StatusCode = StatusCodes.Status200OK
-            };
+            return new ObjectResult(response) { StatusCode = StatusCodes.Status200OK };
         }
 
         /// <summary>
-        /// Updates an application status
+        /// Updates the status of an application
         /// </summary>
+        /// <param name="guid"></param>
         /// <param name="model"></param>
         /// <returns></returns>
         [ProducesResponseType(typeof(ApplicationStatusUpdateResponse), (int)HttpStatusCode.OK)]
@@ -133,20 +106,12 @@ namespace CheckYourEligibility.WebApp.Controllers
         [HttpPatch("{guid}")]
         public async Task<ActionResult> ApplicationStatusUpdate(string guid, [FromBody] ApplicationStatusUpdateRequest model)
         {
-
-            var response = await _applicationService.UpdateApplicationStatus(guid, model.Data);
+            var response = await _updateApplicationStatusUseCase.Execute(guid, model);
             if (response == null)
             {
                 return NotFound();
             }
-            await AuditAdd(Domain.Enums.AuditType.Application, guid);
-            return new ObjectResult(new ApplicationStatusUpdateResponse
-            {
-                Data = response.Data
-            })
-            { StatusCode = StatusCodes.Status200OK };
-
+            return new ObjectResult(response) { StatusCode = StatusCodes.Status200OK };
         }
-
     }
- }
+}
