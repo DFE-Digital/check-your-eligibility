@@ -1,4 +1,5 @@
-﻿using CsvHelper.Configuration;
+﻿using CheckYourEligibility.Domain.Constants;
+using CsvHelper.Configuration;
 using System.Diagnostics.CodeAnalysis;
 
 namespace CheckYourEligibility.Services.CsvImport
@@ -24,17 +25,17 @@ namespace CheckYourEligibility.Services.CsvImport
     {
         public EstablishmentRowMap()
         {
-            Map(m => m.Urn).Index(0);
-            Map(m => m.LaCode).Index(1);
-            Map(m => m.LaName).Index(2);
-            Map(m => m.EstablishmentName).Index(4);
-            Map(m => m.Postcode).Index(64);
-            Map(m => m.Street).Index(59);
-            Map(m => m.Locality).Index(60);
-            Map(m => m.Town).Index(62);
-            Map(m => m.County).Index(63);
-            Map(m => m.Status).Index(10);
-            Map(m => m.Type).Index(6);
+            Map(m => m.Urn).Name(CSVHeaders.URN);
+            Map(m => m.LaCode).Name(CSVHeaders.LA_Code);
+            Map(m => m.LaName).Name(CSVHeaders.LA_Name);
+            Map(m => m.EstablishmentName).Name(CSVHeaders.EstablishmentName);
+            Map(m => m.Postcode).Name(CSVHeaders.Postcode);
+            Map(m => m.Street).Name(CSVHeaders.Street);
+            Map(m => m.Locality).Name(CSVHeaders.Locality);
+            Map(m => m.Town).Name(CSVHeaders.Town);
+            Map(m => m.County).Name(CSVHeaders.County_Name);
+            Map(m => m.Status).Name(CSVHeaders.EstablishmentStatus_Name);
+            Map(m => m.Type).Name(CSVHeaders.TypeOfEstablishment_Name);
         }
     }
 }
