@@ -96,8 +96,11 @@ stages:
                 scriptType: 'ps'
                 scriptLocation: 'inlineScript'
                 inlineScript: |
+                  ip=$(curl ipinfo.io/ip)
+                  az sql server firewall-rule create -g rg --server server --name ADO-Deploy --start-ip-address $ip --end-ip-address $ip
                   $(Pipeline.Workspace)/checkYourEligibilityAPI/efbundle.exe
-                  
+                  az sql server firewall-rule delete -g rg --server server --name ADO-Deploy          
+          
           deploy:
             steps:
             - task: AzureRmWebAppDeployment@4
@@ -175,8 +178,11 @@ stages:
                 scriptType: 'ps'
                 scriptLocation: 'inlineScript'
                 inlineScript: |
+                  ip=$(curl ipinfo.io/ip)
+                  az sql server firewall-rule create -g rg --server server --name ADO-Deploy --start-ip-address $ip --end-ip-address $ip
                   $(Pipeline.Workspace)/checkYourEligibilityAPI/efbundle.exe
-                  
+                  az sql server firewall-rule delete -g rg --server server --name ADO-Deploy
+          
           deploy:
             steps:
             - task: AzureRmWebAppDeployment@4
@@ -254,8 +260,11 @@ stages:
                 scriptType: 'ps'
                 scriptLocation: 'inlineScript'
                 inlineScript: |
+                  ip=$(curl ipinfo.io/ip)
+                  az sql server firewall-rule create -g rg --server server --name ADO-Deploy --start-ip-address $ip --end-ip-address $ip
                   $(Pipeline.Workspace)/checkYourEligibilityAPI/efbundle.exe
-                  
+                  az sql server firewall-rule delete -g rg --server server --name ADO-Deploy          
+          
           deploy:
             steps:
             - task: AzureRmWebAppDeployment@4
@@ -310,37 +319,40 @@ stages:
   - stage: DeployApp
     displayName: Deploy App Production
     jobs:
-      - deployment: deploy
-        displayName: Deploy App Production
-        pool:
-          name: Azure Pipelines
-          vmImage: 'windows-latest'
-        environment: PROD
-        strategy:
-          runOnce:
-            preDeploy:
-              steps:
-                - task: DownloadPipelineArtifact@2
-                  inputs:
-                    buildType: 'current'
-                    targetPath: '$(Pipeline.Workspace)'
-                - task: AzureCLI@2
-                  displayName: 'Run Migrations'
-                  env:
-                    API_KEY_VAULT_NAME: ece-kv-api
-                  inputs:
-                    azureSubscription: 's203p.azdo.deployment'
-                    scriptType: 'ps'
-                    scriptLocation: 'inlineScript'
-                    inlineScript: |
-                      $(Pipeline.Workspace)/checkYourEligibilityAPI/efbundle.exe
-            
-            deploy:
-              steps:
-                - task: AzureRmWebAppDeployment@4
-                  inputs:
-                    ConnectionType: 'AzureRM'
-                    azureSubscription: 's203p.azdo.deployment'
-                    appType: 'webApp'
-                    WebAppName: 'ece-as'
-                    packageForLinux: '$(Pipeline.Workspace)/checkYourEligibilityAPI/CheckYourEligibility.WebApp.zip'
+    - deployment: deploy
+      displayName: Deploy App Production
+      pool:
+        name: Azure Pipelines
+        vmImage: 'windows-latest'
+      environment: PROD
+      strategy:
+        runOnce:
+          preDeploy:
+            steps:
+            - task: DownloadPipelineArtifact@2
+              inputs:
+                buildType: 'current'
+                targetPath: '$(Pipeline.Workspace)'
+            - task: AzureCLI@2
+              displayName: 'Run Migrations'
+              env:
+                API_KEY_VAULT_NAME: ece-kv-api
+              inputs:
+                azureSubscription: 's203p.azdo.deployment'
+                scriptType: 'ps'
+                scriptLocation: 'inlineScript'
+                inlineScript: |
+                  ip=$(curl ipinfo.io/ip)
+                  az sql server firewall-rule create -g rg --server server --name ADO-Deploy --start-ip-address $ip --end-ip-address $ip
+                  $(Pipeline.Workspace)/checkYourEligibilityAPI/efbundle.exe
+                  az sql server firewall-rule delete -g rg --server server --name ADO-Deploy
+          
+          deploy:
+            steps:
+            - task: AzureRmWebAppDeployment@4
+              inputs:
+                ConnectionType: 'AzureRM'
+                azureSubscription: 's203p.azdo.deployment'
+                appType: 'webApp'
+                WebAppName: 'ece-as'
+                packageForLinux: '$(Pipeline.Workspace)/checkYourEligibilityAPI/CheckYourEligibility.WebApp.zip'
