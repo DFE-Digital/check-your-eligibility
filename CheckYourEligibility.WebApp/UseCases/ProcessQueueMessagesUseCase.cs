@@ -37,7 +37,7 @@ namespace CheckYourEligibility.WebApp.UseCases
             }
             
             await _checkService.ProcessQueue(queue);
-            _logger.LogInformation($"Queue {queue} processed successfully");
+            _logger.LogInformation($"Queue {queue.Replace(Environment.NewLine, "").Replace("\n", "").Replace("\r", "")} processed successfully");
             return new MessageResponse { Data = "Queue Processed." };
         }
     }

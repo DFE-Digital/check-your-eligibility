@@ -47,12 +47,12 @@ namespace CheckYourEligibility.WebApp.UseCases
             var response = await _checkService.GetBulkStatus(guid);
             if (response == null)
             {
-                _logger.LogWarning($"Bulk upload with ID {guid} not found");
+                _logger.LogWarning($"Bulk upload with ID {guid.Replace(Environment.NewLine, "").Replace("\n", "").Replace("\r", "")} not found");
                 useCaseExecutionResult.SetNotFound(guid);
                 return useCaseExecutionResult;
             }
 
-            _logger.LogInformation($"Retrieved bulk upload progress for group ID: {guid}");
+            _logger.LogInformation($"Retrieved bulk upload progress for group ID: {guid.Replace(Environment.NewLine, "").Replace("\n", "").Replace("\r", "")}");
             
             useCaseExecutionResult.SetSuccess(new CheckEligibilityBulkStatusResponse()
             {

@@ -58,7 +58,7 @@ namespace CheckYourEligibility.WebApp.UseCases
             var response = await _checkService.UpdateEligibilityCheckStatus(guid, model.Data);
             if (response == null)
             {
-                _logger.LogWarning($"Failed to update eligibility check status for ID {guid}");
+                _logger.LogWarning($"Failed to update eligibility check status for ID {guid.Replace(Environment.NewLine, "").Replace("\n", "").Replace("\r", "")}");
                 useCaseExecutionResult.SetNotFound(guid);
                 return useCaseExecutionResult;
             }
@@ -69,7 +69,7 @@ namespace CheckYourEligibility.WebApp.UseCases
                 await _auditService.AuditAdd(auditData);
             }
 
-            _logger.LogInformation($"Updated eligibility check status for ID: {guid}");
+            _logger.LogInformation($"Updated eligibility check status for ID: {guid.Replace(Environment.NewLine, "").Replace("\n", "").Replace("\r", "")}");
             
             useCaseExecutionResult.SetSuccess(new CheckEligibilityStatusResponse
             {

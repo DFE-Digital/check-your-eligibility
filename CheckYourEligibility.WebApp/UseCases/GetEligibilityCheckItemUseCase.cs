@@ -51,7 +51,7 @@ namespace CheckYourEligibility.WebApp.UseCases
             var response = await _checkService.GetItem<CheckEligibilityItem>(guid);
             if (response == null)
             {
-                _logger.LogWarning($"Eligibility check with ID {guid} not found");
+                _logger.LogWarning($"Eligibility check with ID {guid.Replace(Environment.NewLine, "").Replace("\n", "").Replace("\r", "")} not found");
                 useCaseExecutionResult.SetNotFound(guid);
                 return useCaseExecutionResult;
             }
@@ -62,7 +62,7 @@ namespace CheckYourEligibility.WebApp.UseCases
                 await _auditService.AuditAdd(auditData);
             }
 
-            _logger.LogInformation($"Retrieved eligibility check details for ID: {guid}");
+            _logger.LogInformation($"Retrieved eligibility check details for ID: {guid.Replace(Environment.NewLine, "").Replace("\n", "").Replace("\r", "")}");
             
             useCaseExecutionResult.SetSuccess(new CheckEligibilityItemResponse()
             {

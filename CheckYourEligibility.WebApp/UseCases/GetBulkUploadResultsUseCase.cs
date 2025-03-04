@@ -48,7 +48,7 @@ namespace CheckYourEligibility.WebApp.UseCases
             var response = await _checkService.GetBulkCheckResults<IList<CheckEligibilityItem>>(guid);
             if (response == null)
             {
-                _logger.LogWarning($"Bulk upload results with ID {guid} not found");
+                _logger.LogWarning($"Bulk upload results with ID {guid.Replace(Environment.NewLine, "").Replace("\n", "").Replace("\r", "")} not found");
                 useCaseExecutionResult.SetNotFound(guid);
                 return useCaseExecutionResult;
             }
@@ -59,7 +59,7 @@ namespace CheckYourEligibility.WebApp.UseCases
                 await _auditService.AuditAdd(auditData);
             }
 
-            _logger.LogInformation($"Retrieved bulk upload results for group ID: {guid}");
+            _logger.LogInformation($"Retrieved bulk upload results for group ID: {guid.Replace(Environment.NewLine, "").Replace("\n", "").Replace("\r", "")}");
             
             useCaseExecutionResult.SetSuccess(new CheckEligibilityBulkResponse()
             {

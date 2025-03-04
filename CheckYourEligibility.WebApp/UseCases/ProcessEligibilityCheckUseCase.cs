@@ -55,7 +55,7 @@ namespace CheckYourEligibility.WebApp.UseCases
                 
                 if (response == null)
                 {
-                    _logger.LogWarning($"Eligibility check with ID {guid} not found");
+                    _logger.LogWarning($"Eligibility check with ID {guid.Replace(Environment.NewLine, "").Replace("\n", "").Replace("\r", "")} not found");
                     useCaseExecutionResult.SetNotFound(guid);
                     return useCaseExecutionResult;
                 }
@@ -66,7 +66,7 @@ namespace CheckYourEligibility.WebApp.UseCases
                     await _auditService.AuditAdd(auditData);
                 }
 
-                _logger.LogInformation($"Processed eligibility check with ID: {guid}, status: {response.Value}");
+                _logger.LogInformation($"Processed eligibility check with ID: {guid.Replace(Environment.NewLine, "").Replace("\n", "").Replace("\r", "")}, status: {response.Value}");
                 
                 var resultResponse = new CheckEligibilityStatusResponse() 
                 { 
@@ -87,7 +87,7 @@ namespace CheckYourEligibility.WebApp.UseCases
             }
             catch (ProcessCheckException ex)
             {
-                _logger.LogError(ex, $"Error processing eligibility check with ID: {guid}");
+                _logger.LogError(ex, $"Error processing eligibility check with ID: {guid.Replace(Environment.NewLine, "").Replace("\n", "").Replace("\r", "")}");
                 useCaseExecutionResult.SetFailure("Failed to process eligibility check.");
             }
             
