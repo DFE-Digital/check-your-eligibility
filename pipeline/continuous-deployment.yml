@@ -96,8 +96,7 @@ stages:
                 scriptType: 'ps'
                 scriptLocation: 'inlineScript'
                 inlineScript: |
-                  ip=$(curl ipinfo.io/ip)
-                  az sql server firewall-rule create -g rg --server ece-dev-database --name ADO-Deploy --start-ip-address $ip --end-ip-address $ip
+                  az sql server firewall-rule create -g rg --server ece-dev-database --name ADO-Deploy --start-ip-address $(curl ipinfo.io/ip) --end-ip-address $(curl ipinfo.io/ip)
                   $(Pipeline.Workspace)/checkYourEligibilityAPI/efbundle.exe
                   az sql server firewall-rule delete -g rg --server ece-dev-database --name ADO-Deploy          
           
@@ -178,8 +177,7 @@ stages:
                 scriptType: 'ps'
                 scriptLocation: 'inlineScript'
                 inlineScript: |
-                  ip=$(curl ipinfo.io/ip)
-                  az sql server firewall-rule create -g rg --server ece-test-database --name ADO-Deploy --start-ip-address $ip --end-ip-address $ip
+                  az sql server firewall-rule create -g rg --server ece-test-database --name ADO-Deploy --start-ip-address $(curl ipinfo.io/ip) --end-ip-address $(curl ipinfo.io/ip)
                   $(Pipeline.Workspace)/checkYourEligibilityAPI/efbundle.exe
                   az sql server firewall-rule delete -g rg --server ece-test-database --name ADO-Deploy
           
@@ -260,8 +258,7 @@ stages:
                 scriptType: 'ps'
                 scriptLocation: 'inlineScript'
                 inlineScript: |
-                  ip=$(curl ipinfo.io/ip)
-                  az sql server firewall-rule create -g rg --server ece-pp-database --name ADO-Deploy --start-ip-address $ip --end-ip-address $ip
+                  az sql server firewall-rule create -g rg --server ece-pp-database --name ADO-Deploy --start-ip-address $(curl ipinfo.io/ip) --end-ip-address $(curl ipinfo.io/ip)
                   $(Pipeline.Workspace)/checkYourEligibilityAPI/efbundle.exe
                   az sql server firewall-rule delete -g rg --server ece-pp-database --name ADO-Deploy          
           
@@ -342,8 +339,7 @@ stages:
                 scriptType: 'ps'
                 scriptLocation: 'inlineScript'
                 inlineScript: |
-                  ip=$(curl ipinfo.io/ip)
-                  az sql server firewall-rule create -g rg --server ece-database --name ADO-Deploy --start-ip-address $ip --end-ip-address $ip
+                  az sql server firewall-rule create -g rg --server ece-database --name ADO-Deploy --start-ip-address $(curl ipinfo.io/ip) --end-ip-address $(curl ipinfo.io/ip)
                   $(Pipeline.Workspace)/checkYourEligibilityAPI/efbundle.exe
                   az sql server firewall-rule delete -g rg --server ece-database --name ADO-Deploy
           
