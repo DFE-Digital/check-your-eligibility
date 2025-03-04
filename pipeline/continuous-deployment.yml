@@ -93,7 +93,7 @@ stages:
                 API_KEY_VAULT_NAME: ece-dev-kv-api
               inputs:
                 azureSubscription: 's203d.azdo.deployment'
-                scriptType: 'ps'
+                scriptType: 'bash'
                 scriptLocation: 'inlineScript'
                 inlineScript: |
                   az sql server firewall-rule create -g s203d01-core1 --server ece-dev-database --name ADO-Deploy --start-ip-address $(curl ipinfo.io/ip) --end-ip-address $(curl ipinfo.io/ip)
@@ -174,7 +174,7 @@ stages:
                 API_KEY_VAULT_NAME: ece-test-kv-api
               inputs:
                 azureSubscription: 's203t.azdo.deployment'
-                scriptType: 'ps'
+                scriptType: 'bash'
                 scriptLocation: 'inlineScript'
                 inlineScript: |
                   az sql server firewall-rule create -g s203t01-core1 --server ece-test-database --name ADO-Deploy --start-ip-address $(curl ipinfo.io/ip) --end-ip-address $(curl ipinfo.io/ip)
@@ -255,7 +255,7 @@ stages:
                 API_KEY_VAULT_NAME: ece-pp-kv-api
               inputs:
                 azureSubscription: 's203t.azdo.deployment'
-                scriptType: 'ps'
+                scriptType: 'bash'
                 scriptLocation: 'inlineScript'
                 inlineScript: |
                   az sql server firewall-rule create -g s203t02-core1 --server ece-pp-database --name ADO-Deploy --start-ip-address $(curl ipinfo.io/ip) --end-ip-address $(curl ipinfo.io/ip)
@@ -336,7 +336,7 @@ stages:
                 API_KEY_VAULT_NAME: ece-kv-api
               inputs:
                 azureSubscription: 's203p.azdo.deployment'
-                scriptType: 'ps'
+                scriptType: 'bash'
                 scriptLocation: 'inlineScript'
                 inlineScript: |
                   az sql server firewall-rule create -g s203p01-core1 --server ece-database --name ADO-Deploy --start-ip-address $(curl ipinfo.io/ip) --end-ip-address $(curl ipinfo.io/ip)
