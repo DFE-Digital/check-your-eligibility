@@ -2,6 +2,7 @@ using Azure.Identity;
 using CheckYourEligibility.Data.Mappings;
 using CheckYourEligibility.WebApp;
 using CheckYourEligibility.WebApp.Telemetry;
+using CheckYourEligibility.WebApp.UseCases;
 using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.Azure;
@@ -118,6 +119,30 @@ builder.Services.AddDatabase(builder.Configuration);
 builder.Services.AddAzureClients(builder.Configuration);
 builder.Services.AddServices();
 builder.Services.AddExternalServices(builder.Configuration);
+
+// Use cases
+builder.Services.AddScoped<ICreateOrUpdateUserUseCase, CreateOrUpdateUserUseCase>();
+builder.Services.AddScoped<IAuthenticateUserUseCase, AuthenticateUserUseCase>();
+builder.Services.AddScoped<IMatchCitizenUseCase, MatchCitizenUseCase>();
+builder.Services.AddScoped<IGetCitizenClaimsUseCase, GetCitizenClaimsUseCase>();
+builder.Services.AddScoped<ISearchEstablishmentsUseCase, SearchEstablishmentsUseCase>();
+builder.Services.AddScoped<ICleanUpEligibilityChecksUseCase, CleanUpEligibilityChecksUseCase>();
+builder.Services.AddScoped<IImportEstablishmentsUseCase, ImportEstablishmentsUseCase>();
+builder.Services.AddScoped<IImportFsmHomeOfficeDataUseCase, ImportFsmHomeOfficeDataUseCase>();
+builder.Services.AddScoped<IImportFsmHMRCDataUseCase, ImportFsmHMRCDataUseCase>();
+builder.Services.AddScoped<ICreateApplicationUseCase, CreateApplicationUseCase>();
+builder.Services.AddScoped<IGetApplicationUseCase, GetApplicationUseCase>();
+builder.Services.AddScoped<ISearchApplicationsUseCase, SearchApplicationsUseCase>();
+builder.Services.AddScoped<IUpdateApplicationStatusUseCase, UpdateApplicationStatusUseCase>();
+builder.Services.AddScoped<IProcessQueueMessagesUseCase, ProcessQueueMessagesUseCase>();
+builder.Services.AddScoped<ICheckEligibilityForFSMUseCase, CheckEligibilityForFSMUseCase>();
+builder.Services.AddScoped<ICheckEligibilityBulkUseCase, CheckEligibilityBulkUseCase>();
+builder.Services.AddScoped<IGetBulkUploadProgressUseCase, GetBulkUploadProgressUseCase>();
+builder.Services.AddScoped<IGetBulkUploadResultsUseCase, GetBulkUploadResultsUseCase>();
+builder.Services.AddScoped<IGetEligibilityCheckStatusUseCase, GetEligibilityCheckStatusUseCase>();
+builder.Services.AddScoped<IUpdateEligibilityCheckStatusUseCase, UpdateEligibilityCheckStatusUseCase>();
+builder.Services.AddScoped<IProcessEligibilityCheckUseCase, ProcessEligibilityCheckUseCase>();
+builder.Services.AddScoped<IGetEligibilityCheckItemUseCase, GetEligibilityCheckItemUseCase>();
 
 // Configure IIS and Kestrel server options
 builder.Services.Configure<IISServerOptions>(options =>

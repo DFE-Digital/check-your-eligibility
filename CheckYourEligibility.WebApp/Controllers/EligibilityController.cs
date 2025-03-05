@@ -1,41 +1,62 @@
 ﻿using Ardalis.GuardClauses;
-using Azure;
-using CheckYourEligibility.Data.Migrations.Migrations;
 using CheckYourEligibility.Domain.Exceptions;
 using CheckYourEligibility.Domain.Requests;
 using CheckYourEligibility.Domain.Responses;
 using CheckYourEligibility.Services.Interfaces;
-using FeatureManagement.Domain.Validation;
-using FluentValidation;
-using FluentValidation.Results;
+using CheckYourEligibility.WebApp.UseCases;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
-using System.Text;
-using CheckEligibilityStatusResponse = CheckYourEligibility.Domain.Responses.CheckEligibilityStatusResponse;
-using StatusValue = CheckYourEligibility.Domain.Responses.StatusValue;
 
 namespace CheckYourEligibility.WebApp.Controllers
 {
-    //EligibilityController
-
     [ApiController]
     [Route("[controller]")]
     [Authorize]
     public class EligibilityCheckController : BaseController
     {
-        private readonly ICheckEligibility _checkService;
-        
         private readonly ILogger<EligibilityCheckController> _logger;
         private readonly int _bulkUploadRecordCountLimit;
 
+        // Use case services
+        private readonly IProcessQueueMessagesUseCase _processQueueMessagesUseCase;
+        private readonly ICheckEligibilityForFSMUseCase _checkEligibilityForFsmUseCase;
+        private readonly ICheckEligibilityBulkUseCase _checkEligibilityBulkUseCase;
+        private readonly IGetBulkUploadProgressUseCase _getBulkUploadProgressUseCase;
+        private readonly IGetBulkUploadResultsUseCase _getBulkUploadResultsUseCase;
+        private readonly IGetEligibilityCheckStatusUseCase _getEligibilityCheckStatusUseCase;
+        private readonly IUpdateEligibilityCheckStatusUseCase _updateEligibilityCheckStatusUseCase;
+        private readonly IProcessEligibilityCheckUseCase _processEligibilityCheckUseCase;
+        private readonly IGetEligibilityCheckItemUseCase _getEligibilityCheckItemUseCase;
 
-        public EligibilityCheckController(ILogger<EligibilityCheckController> logger, ICheckEligibility checkService, IAudit audit, IConfiguration configuration)
-            : base( audit)
+        public EligibilityCheckController(
+            ILogger<EligibilityCheckController> logger,
+            IAudit audit,
+            IConfiguration configuration,
+            IProcessQueueMessagesUseCase processQueueMessagesUseCase,
+            ICheckEligibilityForFSMUseCase checkEligibilityForFsmUseCase,
+            ICheckEligibilityBulkUseCase checkEligibilityBulkUseCase,
+            IGetBulkUploadProgressUseCase getBulkUploadProgressUseCase,
+            IGetBulkUploadResultsUseCase getBulkUploadResultsUseCase,
+            IGetEligibilityCheckStatusUseCase getEligibilityCheckStatusUseCase,
+            IUpdateEligibilityCheckStatusUseCase updateEligibilityCheckStatusUseCase,
+            IProcessEligibilityCheckUseCase processEligibilityCheckUseCase,
+            IGetEligibilityCheckItemUseCase getEligibilityCheckItemUseCase)
+            : base(audit)
         {
             _logger = Guard.Against.Null(logger);
-            _checkService = Guard.Against.Null(checkService);
             _bulkUploadRecordCountLimit = configuration.GetValue<int>("BulkEligibilityCheckLimit");
+
+            // Initialize use cases
+            _processQueueMessagesUseCase = Guard.Against.Null(processQueueMessagesUseCase);
+            _checkEligibilityForFsmUseCase = Guard.Against.Null(checkEligibilityForFsmUseCase);
+            _checkEligibilityBulkUseCase = Guard.Against.Null(checkEligibilityBulkUseCase);
+            _getBulkUploadProgressUseCase = Guard.Against.Null(getBulkUploadProgressUseCase);
+            _getBulkUploadResultsUseCase = Guard.Against.Null(getBulkUploadResultsUseCase);
+            _getEligibilityCheckStatusUseCase = Guard.Against.Null(getEligibilityCheckStatusUseCase);
+            _updateEligibilityCheckStatusUseCase = Guard.Against.Null(updateEligibilityCheckStatusUseCase);
+            _processEligibilityCheckUseCase = Guard.Against.Null(processEligibilityCheckUseCase);
+            _getEligibilityCheckItemUseCase = Guard.Against.Null(getEligibilityCheckItemUseCase);
         }
 
         /// <summary>
@@ -43,37 +64,39 @@ namespace CheckYourEligibility.WebApp.Controllers
         /// </summary>
         /// <param name="queue"></param>
         /// <returns></returns>
-        [ProducesResponseType(typeof(CheckEligibilityResponse), (int)HttpStatusCode.Accepted)]
+        [ProducesResponseType(typeof(MessageResponse), (int)HttpStatusCode.OK)]
         [ProducesResponseType((int)HttpStatusCode.BadRequest)]
         [HttpPost("ProcessQueueMessages")]
         public async Task<ActionResult> ProcessQueue(string queue)
         {
-            if (string.IsNullOrEmpty(queue))
+            var result = await _processQueueMessagesUseCase.Execute(queue);
+
+            if (result.Data == "Invalid Request.")
             {
-                return BadRequest(new MessageResponse { Data = "Invalid Request." });
+                return BadRequest(result);
             }
-            
-            await _checkService.ProcessQueue(queue);
-            return new OkObjectResult(new MessageResponse { Data = "Queue Processed." });
+
+            return new OkObjectResult(result);
         }
 
         /// <summary>
         /// Posts a FSM Eligibility Check to the processing queue
         /// </summary>
-        /// <param name="CheckEligibilityRequest"></param>
+        /// <param name="model"></param>
         /// <remarks>If the check has already been submitted, then the stored Hash is returned</remarks>
-        /// <links cref="https://stackoverflow.com/questions/61896978/asp-net-core-swaggerresponseexample-not-outputting-specified-example"/>
         [ProducesResponseType(typeof(CheckEligibilityResponse), (int)HttpStatusCode.Accepted)]
         [ProducesResponseType((int)HttpStatusCode.BadRequest)]
         [HttpPost("FreeSchoolMeals")]
         public async Task<ActionResult> CheckEligibility([FromBody] CheckEligibilityRequest_Fsm model)
         {
-            if (model == null || model.Data == null)
+            var result = await _checkEligibilityForFsmUseCase.Execute(model);
+
+            if (!result.IsValid)
             {
-                return BadRequest(new MessageResponse { Data = "Invalid Request, data is required." });
+                return BadRequest(new MessageResponse { Data = result.ValidationErrors });
             }
 
-            return await PostCheck(model);
+            return new ObjectResult(result.Response) { StatusCode = StatusCodes.Status202Accepted };
         }
 
         /// <summary>
@@ -81,21 +104,19 @@ namespace CheckYourEligibility.WebApp.Controllers
         /// </summary>
         /// <param name="model"></param>
         /// <returns></returns>
-        [ProducesResponseType(typeof(CheckEligibilityResponse), (int)HttpStatusCode.Accepted)]
+        [ProducesResponseType(typeof(CheckEligibilityResponseBulk), (int)HttpStatusCode.Accepted)]
         [ProducesResponseType((int)HttpStatusCode.BadRequest)]
         [HttpPost("/EligibilityCheck/FreeSchoolMeals/Bulk")]
         public async Task<ActionResult> CheckEligibilityBulk([FromBody] CheckEligibilityRequestBulk_Fsm model)
         {
-            if (model == null || model.Data == null)
+            var result = await _checkEligibilityBulkUseCase.Execute(model, _bulkUploadRecordCountLimit);
+
+            if (!result.IsValid)
             {
-                return BadRequest(new MessageResponse { Data = "Invalid Request, data is required." });
-            }
-            if (model.Data.Count() > _bulkUploadRecordCountLimit)
-            {
-                return BadRequest(new MessageResponse { Data = $"Invalid Request, data limit of {_bulkUploadRecordCountLimit} exceeded, {model.Data.Count()} records." });
+                return BadRequest(new MessageResponse { Data = result.ValidationErrors });
             }
 
-            return await ProcessBulk(model);
+            return new ObjectResult(result.Response) { StatusCode = StatusCodes.Status202Accepted };
         }
 
         /// <summary>
@@ -108,19 +129,19 @@ namespace CheckYourEligibility.WebApp.Controllers
         [HttpGet("Bulk/{guid}/CheckProgress")]
         public async Task<ActionResult> BulkUploadProgress(string guid)
         {
-            var response = await _checkService.GetBulkStatus(guid);
-            if (response == null)
+            var result = await _getBulkUploadProgressUseCase.Execute(guid);
+
+            if (result.IsNotFound)
             {
                 return NotFound(guid);
             }
 
-            return new ObjectResult(new CheckEligibilityBulkStatusResponse()
+            if (!result.IsValid)
             {
-                Data = response,
-                Links = new BulkCheckResponseLinks()
-                { Get_BulkCheck_Results = $"{Domain.Constants.CheckLinks.BulkCheckLink}{guid}{Domain.Constants.CheckLinks.BulkCheckResults}" }
-            })
-            { StatusCode = StatusCodes.Status200OK };
+                return BadRequest(new MessageResponse { Data = result.ValidationErrors });
+            }
+
+            return new ObjectResult(result.Response) { StatusCode = StatusCodes.Status200OK };
         }
 
         /// <summary>
@@ -133,20 +154,20 @@ namespace CheckYourEligibility.WebApp.Controllers
         [HttpGet("Bulk/{guid}/Results")]
         public async Task<ActionResult> BulkUploadResults(string guid)
         {
-            var response = await _checkService.GetBulkCheckResults<IList<CheckEligibilityItem>>(guid);
-            if (response == null)
+            var result = await _getBulkUploadResultsUseCase.Execute(guid);
+
+            if (result.IsNotFound)
             {
                 return NotFound(guid);
             }
-            await AuditAdd(Domain.Enums.AuditType.CheckBulkResults, guid);
-            return new ObjectResult(new CheckEligibilityBulkResponse()
+
+            if (!result.IsValid)
             {
-                Data = response as List<CheckEligibilityItem>,
-            })
-            { StatusCode = StatusCodes.Status200OK };
+                return BadRequest(new MessageResponse { Data = result.ValidationErrors });
+            }
 
+            return new ObjectResult(result.Response) { StatusCode = StatusCodes.Status200OK };
         }
-
 
         /// <summary>
         /// Gets an FSM an Eligibility Check status
@@ -158,19 +179,25 @@ namespace CheckYourEligibility.WebApp.Controllers
         [HttpGet("{guid}/Status")]
         public async Task<ActionResult> CheckEligibilityStatus(string guid)
         {
-            var response = await _checkService.GetStatus(guid);
-            if (response == null)
+            var result = await _getEligibilityCheckStatusUseCase.Execute(guid);
+
+            if (result.IsNotFound)
             {
                 return NotFound(guid);
             }
-            await AuditAdd(Domain.Enums.AuditType.Check, guid);
 
-            return new ObjectResult(new CheckEligibilityStatusResponse() { Data = new StatusValue() { Status = response.Value.ToString() } }) { StatusCode = StatusCodes.Status200OK };
+            if (!result.IsValid)
+            {
+                return BadRequest(new MessageResponse { Data = result.ValidationErrors });
+            }
+
+            return new ObjectResult(result.Response) { StatusCode = StatusCodes.Status200OK };
         }
 
         /// <summary>
         /// Updates an Eligibility check status
         /// </summary>
+        /// <param name="guid"></param>
         /// <param name="model"></param>
         /// <returns></returns>
         [ProducesResponseType(typeof(CheckEligibilityStatusResponse), (int)HttpStatusCode.OK)]
@@ -178,20 +205,19 @@ namespace CheckYourEligibility.WebApp.Controllers
         [HttpPatch("{guid}/Status")]
         public async Task<ActionResult> EligibilityCheckStatusUpdate(string guid, [FromBody] EligibilityStatusUpdateRequest model)
         {
-            var response = await _checkService.UpdateEligibilityCheckStatus(guid, model.Data);
-            if (response == null)
+            var result = await _updateEligibilityCheckStatusUseCase.Execute(guid, model);
+
+            if (result.IsNotFound)
             {
                 return NotFound();
             }
 
-            await AuditAdd(Domain.Enums.AuditType.Check, guid);
-
-            return new ObjectResult(new CheckEligibilityStatusResponse
+            if (!result.IsValid)
             {
-                Data = response.Data
-            })
-            { StatusCode = StatusCodes.Status200OK };
+                return BadRequest(new MessageResponse { Data = result.ValidationErrors });
+            }
 
+            return new ObjectResult(result.Response) { StatusCode = StatusCodes.Status200OK };
         }
 
         /// <summary>
@@ -209,24 +235,24 @@ namespace CheckYourEligibility.WebApp.Controllers
         {
             try
             {
-                var auditItemTemplate = AuditDataGet(Domain.Enums.AuditType.Check, string.Empty);
-                var response = await _checkService.ProcessCheck(guid, auditItemTemplate);
-                if (response == null)
+                var result = await _processEligibilityCheckUseCase.Execute(guid);
+
+                if (result.IsNotFound)
                 {
                     return NotFound(guid);
                 }
 
-                await AuditAdd(Domain.Enums.AuditType.Check, guid);
+                if (!result.IsValid && !result.IsServiceUnavailable)
+                {
+                    return BadRequest(new MessageResponse { Data = result.ValidationErrors });
+                }
 
-                if (response.Value == Domain.Enums.CheckEligibilityStatus.queuedForProcessing)
+                if (result.IsServiceUnavailable)
                 {
-                    return new ObjectResult(new CheckEligibilityStatusResponse() { Data = new StatusValue() { Status = response.Value.ToString() } }) { StatusCode = StatusCodes.Status503ServiceUnavailable };
+                    return new ObjectResult(result.Response) { StatusCode = StatusCodes.Status503ServiceUnavailable };
                 }
-                else
-                {
-                    return new ObjectResult(new CheckEligibilityStatusResponse() { Data = new StatusValue() { Status = response.Value.ToString() } }) { StatusCode = StatusCodes.Status200OK };
-                }
-                
+
+                return new ObjectResult(result.Response) { StatusCode = StatusCodes.Status200OK };
             }
             catch (ProcessCheckException)
             {
@@ -244,131 +270,19 @@ namespace CheckYourEligibility.WebApp.Controllers
         [HttpGet("{guid}")]
         public async Task<ActionResult> EligibilityCheck(string guid)
         {
-            var response = await _checkService.GetItem<CheckEligibilityItem>(guid);
-            if (response == null)
+            var result = await _getEligibilityCheckItemUseCase.Execute(guid);
+
+            if (result.IsNotFound)
             {
                 return NotFound(guid);
             }
-            await AuditAdd(Domain.Enums.AuditType.Check, guid);
-            return new ObjectResult(new CheckEligibilityItemResponse()
+
+            if (!result.IsValid)
             {
-                Data = response,
-                Links = new CheckEligibilityResponseLinks
-                {
-                    Get_EligibilityCheck = $"{Domain.Constants.CheckLinks.GetLink}{guid}",
-                    Put_EligibilityCheckProcess = $"{Domain.Constants.CheckLinks.ProcessLink}{guid}",
-                    Get_EligibilityCheckStatus = $"{Domain.Constants.CheckLinks.GetLink}{guid}/Status"
-                }
-            })
-            { StatusCode = StatusCodes.Status200OK };
-        }
-
-        public async Task<ActionResult> PostCheck<T>(T model)
-        {
-            switch (model)
-            {
-                case CheckEligibilityRequest_Fsm requestData:
-                    {
-                        var validationResults = Validate_Fsm(requestData);
-                        if (!validationResults.IsValid)
-                            return BadRequest(new MessageResponse { Data = validationResults.ToString() });
-
-                        var response = await _checkService.PostCheck(requestData.Data);
-                        return await GetPostResponse(response);
-                    }
-                default:
-                    throw new Exception($"Unknown request type:-{model.GetType()}");
-            }
-        }
-
-        private async Task<ActionResult> GetPostResponse(PostCheckResult response)
-        {
-            await AuditAdd(Domain.Enums.AuditType.Check, response.Id);
-
-            return new ObjectResult(new CheckEligibilityResponse()
-            {
-                Data = new StatusValue() { Status = response.Status.ToString() },
-                Links = new CheckEligibilityResponseLinks
-                {
-                    Get_EligibilityCheck = $"{Domain.Constants.CheckLinks.GetLink}{response.Id}",
-                    Put_EligibilityCheckProcess = $"{Domain.Constants.CheckLinks.ProcessLink}{response.Id}",
-                    Get_EligibilityCheckStatus = $"{Domain.Constants.CheckLinks.GetLink}{response.Id}/Status"
-                }
-            })
-            { StatusCode = StatusCodes.Status202Accepted };
-        }
-
-        private static ValidationResult Validate_Fsm(CheckEligibilityRequest_Fsm model)
-        {
-            model.Data.NationalInsuranceNumber = model.Data.NationalInsuranceNumber?.ToUpper();
-            model.Data.NationalAsylumSeekerServiceNumber = model.Data.NationalAsylumSeekerServiceNumber?.ToUpper();
-
-            var validator = new CheckEligibilityRequestDataValidator_Fsm();
-            var validationResults = validator.Validate(model.Data);
-            return validationResults;
-        }
-
-        private async Task<ActionResult> ProcessBulk<T>(T model) where T : CheckEligibilityRequestBulk_Fsm
-        {
-            StringBuilder validationResultsItems = ValidateBulkItems(model);
-
-            if (validationResultsItems.Length > 0)
-            {
-                return BadRequest(new MessageResponse { Data = validationResultsItems.ToString() });
+                return BadRequest(new MessageResponse { Data = result.ValidationErrors });
             }
 
-            var groupId = Guid.NewGuid().ToString();
-            switch (model)
-            {
-                case CheckEligibilityRequestBulk_Fsm request:
-                    await _checkService.PostCheck(request.Data, groupId);
-                    break;
-                default:
-                    break;
-            }
-
-            await AuditAdd(Domain.Enums.AuditType.BulkCheck, groupId);
-
-            return new ObjectResult(new CheckEligibilityResponseBulk()
-            {
-                Data = new StatusValue() { Status = $"{Domain.Constants.Messages.Processing}" },
-                Links = new CheckEligibilityResponseBulkLinks
-                {
-                    Get_Progress_Check = $"{Domain.Constants.CheckLinks.BulkCheckLink}{groupId}{Domain.Constants.CheckLinks.BulkCheckProgress}",
-                    Get_BulkCheck_Results = $"{Domain.Constants.CheckLinks.BulkCheckLink}{groupId}{Domain.Constants.CheckLinks.BulkCheckResults}"
-                }
-            })
-            { StatusCode = StatusCodes.Status202Accepted };
+            return new ObjectResult(result.Response) { StatusCode = StatusCodes.Status200OK };
         }
-
-        private static StringBuilder ValidateBulkItems<T>(T model)
-        {
-            var validationResultsItems = new StringBuilder();
-            switch (model)
-            {
-                case CheckEligibilityRequestBulk_Fsm requestData:
-                    {
-
-                        var validator = new CheckEligibilityRequestDataValidator_Fsm();
-                        var sequence = 1;
-
-                        foreach (var item in requestData.Data)
-                        {
-                            item.NationalInsuranceNumber = item.NationalInsuranceNumber?.ToUpper();
-                            item.NationalAsylumSeekerServiceNumber = item.NationalAsylumSeekerServiceNumber?.ToUpper();
-                            item.Sequence = sequence;
-                            var validationResults = validator.Validate(item);
-                            if (!validationResults.IsValid)
-                            {
-                                validationResultsItems.AppendLine($"Item:-{sequence}, {validationResults.ToString()}");
-                            }
-                            sequence++;
-                        }
-                        break;
-                    }
-            }
-            return validationResultsItems;
-        }
-
     }
- }
+}

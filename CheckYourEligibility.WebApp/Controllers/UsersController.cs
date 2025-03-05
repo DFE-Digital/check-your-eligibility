@@ -2,6 +2,7 @@
 using CheckYourEligibility.Domain.Requests;
 using CheckYourEligibility.Domain.Responses;
 using CheckYourEligibility.Services.Interfaces;
+using CheckYourEligibility.WebApp.UseCases;
 using FeatureManagement.Domain.Validation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -15,13 +16,13 @@ namespace CheckYourEligibility.WebApp.Controllers
     public class UsersController : BaseController
     {
         private readonly ILogger<UsersController> _logger;
-        private readonly IUsers _service;
+        private readonly ICreateOrUpdateUserUseCase _createOrUpdateUserUseCase;
 
-        public UsersController(ILogger<UsersController> logger, IUsers service, IAudit audit)
+        public UsersController(ILogger<UsersController> logger, ICreateOrUpdateUserUseCase createOrUpdateUserUseCase, IAudit audit)
             : base(audit)
         {
             _logger = Guard.Against.Null(logger);
-            _service = Guard.Against.Null(service);
+            _createOrUpdateUserUseCase = Guard.Against.Null(createOrUpdateUserUseCase);
         }
 
         /// <summary>
@@ -39,13 +40,8 @@ namespace CheckYourEligibility.WebApp.Controllers
                 return BadRequest(new MessageResponse { Data = "Invalid request, data is required." });
             }
 
-            var response = await _service.Create(model.Data);
-            await AuditAdd(Domain.Enums.AuditType.User, response);
-            return new ObjectResult(new UserSaveItemResponse
-            {
-                Data = response
-            })
-            { StatusCode = StatusCodes.Status201Created };
+            var response = await _createOrUpdateUserUseCase.Execute(model);
+            return new ObjectResult(response) { StatusCode = StatusCodes.Status201Created };
 
         }
     }

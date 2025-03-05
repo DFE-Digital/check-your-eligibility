@@ -1,14 +1,18 @@
 // Ignore Spelling: Levenshtein
 
+using System.Net;
+using System.Security.Claims;
 using AutoFixture;
 using AutoMapper;
 using CheckYourEligibility.Data.Mappings;
 using CheckYourEligibility.Data.Models;
+using CheckYourEligibility.Domain.Enums;
 using CheckYourEligibility.Domain.Exceptions;
 using CheckYourEligibility.Domain.Requests;
 using CheckYourEligibility.Services;
 using CheckYourEligibility.Services.Interfaces;
 using FluentAssertions;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -22,6 +26,7 @@ namespace CheckYourEligibility.ServiceUnitTests
     {
         private IEligibilityCheckContext _fakeInMemoryDb;
         private IMapper _mapper;
+        private IHttpContextAccessor _httpContextAccessor;
         private IConfiguration _configuration;
         private AuditService _sut;
 
@@ -36,6 +41,7 @@ namespace CheckYourEligibility.ServiceUnitTests
 
             var config = new MapperConfiguration(cfg => cfg.AddProfile<MappingProfile>());
             _mapper = config.CreateMapper();
+            _httpContextAccessor = new HttpContextAccessor();
             var configForSmsApi = new Dictionary<string, string>
             {
                 {"QueueFsmCheckStandard", "notSet"},
@@ -46,8 +52,8 @@ namespace CheckYourEligibility.ServiceUnitTests
                 .AddInMemoryCollection(configForSmsApi)
                 .Build();
             var webJobsConnection = "DefaultEndpointsProtocol=https;AccountName=none;AccountKey=none;EndpointSuffix=core.windows.net";
-         
-            _sut = new AuditService(new NullLoggerFactory(), _fakeInMemoryDb, _mapper);
+
+            _sut = new AuditService(new NullLoggerFactory(), _fakeInMemoryDb, _mapper, _httpContextAccessor);
 
         }
 
@@ -61,7 +67,7 @@ namespace CheckYourEligibility.ServiceUnitTests
         {
             // Arrange
             // Act
-            Action act = () => new ApplicationService(new NullLoggerFactory(), null, _mapper,null);
+            Action act = () => new ApplicationService(new NullLoggerFactory(), null, _mapper, null);
 
             // Assert
             act.Should().ThrowExactly<ArgumentNullException>().And.Message.Should().EndWithEquivalentOf("Value cannot be null. (Parameter 'dbContext')");
@@ -72,7 +78,7 @@ namespace CheckYourEligibility.ServiceUnitTests
         {
             // Arrange
             var request = _fixture.Create<AuditData>();
-           
+
             // Act
             var response = _sut.AuditAdd(request);
 
@@ -84,9 +90,9 @@ namespace CheckYourEligibility.ServiceUnitTests
         public void Given_DB_Add_Should_ThrowException()
         {
             // Arrange
-           var db= new Mock<IEligibilityCheckContext>(MockBehavior.Strict);
-           var svc =  new AuditService(new NullLoggerFactory(), db.Object, _mapper);
-            db.Setup(x => x.Audits.AddAsync(It.IsAny<Audit>(),  It.IsAny<CancellationToken>())).ThrowsAsync(new Exception());
+            var db = new Mock<IEligibilityCheckContext>(MockBehavior.Strict);
+            var svc = new AuditService(new NullLoggerFactory(), db.Object, _mapper, _httpContextAccessor);
+            db.Setup(x => x.Audits.AddAsync(It.IsAny<Audit>(), It.IsAny<CancellationToken>())).ThrowsAsync(new Exception());
             var request = _fixture.Create<AuditData>();
 
             // Act
@@ -94,6 +100,58 @@ namespace CheckYourEligibility.ServiceUnitTests
 
             // Assert
             act.Should().ThrowExactlyAsync<Exception>();
+        }
+
+        [Test]
+        public void Given_ValidRequest_AuditDataGet_Should_Return_AuditData()
+        {
+            // Arrange
+            var type = AuditType.User; // Replace with a valid AuditType
+            var id = "test-id";
+            var httpContext = new DefaultHttpContext();
+            httpContext.Connection.RemoteIpAddress = IPAddress.Parse("127.0.0.1");
+            httpContext.Request.Host = new HostString("localhost");
+            httpContext.Request.Path = "/test-path";
+            httpContext.Request.Method = "GET";
+            var claims = new List<Claim>
+            {
+                new Claim("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier", "test-user")
+            };
+            httpContext.User = new ClaimsPrincipal(new ClaimsIdentity(claims));
+            _httpContextAccessor.HttpContext = httpContext;
+
+            // Act
+            var result = _sut.AuditDataGet(type, id);
+
+            // Assert
+            result.Should().NotBeNull();
+            result.Type.Should().Be(type);
+            result.typeId.Should().Be(id);
+            result.url.Should().Be("localhost/test-path");
+            result.method.Should().Be("GET");
+            result.source.Should().Be("127.0.0.1");
+            result.authentication.Should().Be("test-user");
+        }
+
+        [Test]
+        public void Given_NullHttpContext_AuditDataGet_Should_Return_DefaultAuditData()
+        {
+            // Arrange
+            var type = AuditType.Application;
+            var id = "test-id";
+            _httpContextAccessor.HttpContext = null;
+
+            // Act
+            var result = _sut.AuditDataGet(type, id);
+
+            // Assert
+            result.Should().NotBeNull();
+            result.Type.Should().Be(type);
+            result.typeId.Should().Be(id);
+            result.url.Should().Be("Unknown");
+            result.method.Should().Be("Unknown");
+            result.source.Should().Be("Unknown");
+            result.authentication.Should().Be("Unknown");
         }
     }
 }
