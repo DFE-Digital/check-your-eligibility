@@ -1,7 +1,17 @@
 
-export const validLoginRequestBody = {
+// 2 valid request bodies for the login endpoint
+// 1 with username and password
+// 1 with client_id, client_secret and scope
+
+export const validLoginRequestBodyWithUsernameAndPassword = {
     username: Cypress.env('JWT_USERNAME'),
     password: Cypress.env('JWT_PASSWORD')
+};
+
+export const validLoginRequestBodyWithClientDetails = {
+    clientId: Cypress.env('JWT_CLIENT_ID'),
+    clientSecret: Cypress.env('JWT_CLIENT_SECRET'),
+    scope: Cypress.env('JWT_SCOPE')
 };
 
 export function validHMRCRequestBody() {
