@@ -19,11 +19,42 @@ npm install cypress@13.8.1 --save-dev
 4. Configure Environment Variables
 Create a cypress.env.json file. (DO NOT COMMIT THIS FILE).
 inside populate the following fields 
+```
 {
+    "JWT_CLIENT_ID": "",
+    "JWT_CLIENT_SECRET": "",
     "JWT_USERNAME": "",
-    "JWT_PASSWORD": "",
-    "USER_ID": ""
+    "JWT_PASSWORD": ""
 }
+```
+
+For the values needed in the dev environment, please contact the lead developer.
+
+When testing locally these values can be dummy values. The values should match that in the appsettings.json or the appsettings.development.json file.
+```
+"Jwt": {
+        "Key": "your_complex_key",
+        "Issuer": "dfe",
+        "Clients": {
+            "DUMMY_CLIENT_ID": {
+                "Secret": "DUMMY_CLIENT_SECRET",
+                "Scopes": "DUMMY_SCOPES"
+            }
+        },
+        "Users": {
+            "DUMMY_USERNAME": "DUMMY_PASSWORD"
+        }
+    }
+```
+For the above app settings, the corresponding `cypress.env.json` will be
+```
+{
+    "JWT_CLIENT_ID": "DUMMY_CLIENT_ID",
+    "JWT_CLIENT_SECRET": "DUMMY_CLIENT_SECRET",
+    "JWT_USERNAME": "DUMMY_USERNAME",
+    "JWT_PASSWORD": "DUMMY_PASSWORD"
+}
+```
 
 5. Open Cypress
 Launch Cypress using the following command:
