@@ -3,14 +3,6 @@ using CheckYourEligibility.Domain;
 using CheckYourEligibility.WebApp.UseCases;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
-using Newtonsoft.Json;
-using System.Diagnostics.CodeAnalysis;
-using System.Diagnostics.Eventing.Reader;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CheckYourEligibility.WebApp.Controllers
 {
@@ -29,10 +21,33 @@ namespace CheckYourEligibility.WebApp.Controllers
             _logger = Guard.Against.Null(logger);
             _authenticateUserUseCase = Guard.Against.Null(authenticateUserUseCase);
         }
-        
+
         [AllowAnonymous]
         [HttpPost]
-        public async Task<IActionResult> Login([FromBody] SystemUser login)
+        [Consumes("application/json")]
+        public async Task<IActionResult> LoginJson([FromBody] SystemUser credentials)
+        {
+            if (!credentials.IsValidGrantType())
+            {
+                _logger.LogWarning(credentials.GetInvalidGrantTypeMessage().Replace(Environment.NewLine, ""));
+            }
+            return await AuthenticateUser(credentials);
+        }
+
+        [AllowAnonymous]
+        [HttpPost]
+        [Consumes("application/x-www-form-urlencoded")]
+        public async Task<IActionResult> LoginForm([FromForm] SystemUser credentials)
+        {
+
+            if (!credentials.IsValidGrantType())
+            {
+                _logger.LogWarning(credentials.GetInvalidGrantTypeMessage().Replace(Environment.NewLine, ""));
+            }
+            return await AuthenticateUser(credentials);
+        }
+
+        private async Task<IActionResult> AuthenticateUser(SystemUser credentials)
         {
             var key = _config["Jwt:Key"];
             if (key == null)
@@ -48,32 +63,56 @@ namespace CheckYourEligibility.WebApp.Controllers
                 return Unauthorized();
             }
 
-            var userPassword = _config.GetSection($"Jwt:Users:{login.Username}").Get<string>();
-            if (userPassword == null)
+            // Initialize the credentials to set Identifier and Secret
+            credentials.InitializeCredentials();
+
+            if (!credentials.IsValid())
             {
-                _logger.LogError("UserPassword is required");
-                return Unauthorized();
+                _logger.LogError("Either ClientId/ClientSecret pair or Username/Password pair must be provided");
+                return BadRequest("Either ClientId/ClientSecret pair or Username/Password pair must be provided");
+            }
+
+
+            var secret = _config.GetSection($"Jwt:Clients:{credentials.Identifier}")["Secret"];
+            if (secret == null)
+            {
+                // Try legacy user config path for backward compatibility
+                secret = _config.GetSection($"Jwt:Users:{credentials.Identifier}").Get<string>();
+                if (secret == null)
+                {
+                    _logger.LogError($"Authentication secret not found for identifier: {credentials.Identifier.Replace(Environment.NewLine, "")}");
+                    return Unauthorized();
+                }
             }
 
             var jwtConfig = new JwtConfig
             {
                 Key = key,
                 Issuer = issuer,
-                UserPassword = userPassword
+                ExpectedSecret = secret
             };
 
-            var response = await _authenticateUserUseCase.Execute(login, jwtConfig);
+            if (!string.IsNullOrEmpty(credentials.ClientId) && !string.IsNullOrEmpty(credentials.Scope))
+            {
+                jwtConfig.AllowedScopes = _config.GetSection($"Jwt:Clients:{credentials.Identifier}")["Scope"];
+                if (string.IsNullOrEmpty(jwtConfig.AllowedScopes))
+                {
+                    _logger.LogError($"Allowed scopes not found for client: {credentials.Identifier.Replace(Environment.NewLine, "")}");
+                    return Unauthorized();
+                }
+            }
+
+            var response = await _authenticateUserUseCase.Execute(credentials, jwtConfig);
             if (response != null)
             {
-                _logger.LogInformation($"{login.Username.Replace(Environment.NewLine, "").Replace("\n", "").Replace("\r", "")} authenticated");
+                 _logger.LogInformation($"{credentials.Identifier.Replace(Environment.NewLine, "").Replace("\n", "").Replace("\r", "")} authenticated");
                 return Ok(response);
             }
             else
             {
-                _logger.LogError($"{login.Username.Replace(Environment.NewLine, "").Replace("\n", "").Replace("\r", "")} InvalidUser");
+                _logger.LogWarning($"{credentials.Identifier.Replace(Environment.NewLine, "").Replace("\n", "").Replace("\r", "")} authentication failed");
                 return Unauthorized();
             }
-
         }
     }
 }
