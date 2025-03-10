@@ -29,7 +29,7 @@ namespace CheckYourEligibility.WebApp.Controllers
         {
             if (!credentials.IsValidGrantType())
             {
-                _logger.LogWarning(credentials.GetInvalidGrantTypeMessage());
+                _logger.LogWarning(credentials.GetInvalidGrantTypeMessage().Replace(Environment.NewLine, ""));
             }
             return await AuthenticateUser(credentials);
         }
@@ -42,7 +42,7 @@ namespace CheckYourEligibility.WebApp.Controllers
 
             if (!credentials.IsValidGrantType())
             {
-                _logger.LogWarning(credentials.GetInvalidGrantTypeMessage());
+                _logger.LogWarning(credentials.GetInvalidGrantTypeMessage().Replace(Environment.NewLine, ""));
             }
             return await AuthenticateUser(credentials);
         }
@@ -105,12 +105,12 @@ namespace CheckYourEligibility.WebApp.Controllers
             var response = await _authenticateUserUseCase.Execute(credentials, jwtConfig);
             if (response != null)
             {
-                _logger.LogInformation($"Authentication successful for identifier: {credentials.Identifier.Replace(Environment.NewLine, "")}");
+                 _logger.LogInformation($"{credentials.Username.Replace(Environment.NewLine, "").Replace("\n", "").Replace("\r", "")} authenticated");
                 return Ok(response);
             }
             else
             {
-                _logger.LogError($"Authentication failed for identifier: {credentials.Identifier.Replace(Environment.NewLine, "")}");
+                _logger.LogWarning($"{credentials.Username.Replace(Environment.NewLine, "").Replace("\n", "").Replace("\r", "")} authentication failed");
                 return Unauthorized();
             }
         }
