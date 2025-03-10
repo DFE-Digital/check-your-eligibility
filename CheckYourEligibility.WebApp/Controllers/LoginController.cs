@@ -105,12 +105,12 @@ namespace CheckYourEligibility.WebApp.Controllers
             var response = await _authenticateUserUseCase.Execute(credentials, jwtConfig);
             if (response != null)
             {
-                 _logger.LogInformation($"{credentials.Username.Replace(Environment.NewLine, "").Replace("\n", "").Replace("\r", "")} authenticated");
+                 _logger.LogInformation($"{credentials.Identifier.Replace(Environment.NewLine, "").Replace("\n", "").Replace("\r", "")} authenticated");
                 return Ok(response);
             }
             else
             {
-                _logger.LogWarning($"{credentials.Username.Replace(Environment.NewLine, "").Replace("\n", "").Replace("\r", "")} authentication failed");
+                _logger.LogWarning($"{credentials.Identifier.Replace(Environment.NewLine, "").Replace("\n", "").Replace("\r", "")} authentication failed");
                 return Unauthorized();
             }
         }
