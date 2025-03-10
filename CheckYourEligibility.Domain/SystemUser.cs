@@ -5,6 +5,7 @@
         // Primary identifiers (OAuth2 standard names)
         public string? Identifier { get; set; }  // Can store either client_id or username
         public string? Secret { get; set; }      // Can store either client_secret or password
+        public string? Scope { get; set; }
 
         public string? ClientId { get; set; }
         public string? ClientSecret { get; set; }

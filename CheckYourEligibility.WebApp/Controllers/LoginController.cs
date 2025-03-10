@@ -77,6 +77,16 @@ namespace CheckYourEligibility.WebApp.Controllers
                 ExpectedSecret = secret
             };
 
+            if (!string.IsNullOrEmpty(credentials.ClientId) && !string.IsNullOrEmpty(credentials.Scope))
+            {
+                jwtConfig.AllowedScopes = _config.GetSection($"Jwt:Clients:{credentials.Identifier}")["Scope"];
+                if (string.IsNullOrEmpty(jwtConfig.AllowedScopes))
+                {
+                    _logger.LogError($"Allowed scopes not found for client: {credentials.Identifier.Replace(Environment.NewLine, "")}");
+                    return Unauthorized();
+                }
+            }
+
             var response = await _authenticateUserUseCase.Execute(credentials, jwtConfig);
             if (response != null)
             {

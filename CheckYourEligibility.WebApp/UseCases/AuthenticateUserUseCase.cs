@@ -55,7 +55,7 @@ namespace CheckYourEligibility.WebApp.UseCases
                 credentials.InitializeCredentials();
             }
 
-            var client = AuthenticateClient(credentials.Identifier, credentials.Secret, jwtConfig.ExpectedSecret);
+            var client = AuthenticateClient(credentials.Identifier, credentials.Secret, jwtConfig.ExpectedSecret, credentials.Scope);
             if (client == null)
             {
                 return null;
@@ -84,13 +84,36 @@ namespace CheckYourEligibility.WebApp.UseCases
             return new JwtAuthResponse { Token = tokenString, Expires = expires };
         }
 
-        private static SystemUser AuthenticateClient(string identifier, string secret, string expectedSecret)
+        private static SystemUser AuthenticateClient(string identifier, string secret, string expectedSecret, string scope = "default")
         {
             if (!string.IsNullOrEmpty(identifier) && secret == expectedSecret && !string.IsNullOrEmpty(expectedSecret))
             {
-                return new SystemUser { Identifier = identifier };
+                return new SystemUser
+                {
+                    Identifier = identifier,
+                    Scope = scope
+                };
             }
             return null;
+        }
+
+        private static bool ValidateScopes(string requestedScopes, string allowedScopes)
+        {
+            if (string.IsNullOrEmpty(requestedScopes))
+            {
+                return true; // No scopes were requested, so it's valid
+            }
+
+            if (string.IsNullOrEmpty(allowedScopes))
+            {
+                return false; // Scopes were requested but client has no allowed scopes
+            }
+
+            var requestedScopesList = requestedScopes.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            var allowedScopesList = allowedScopes.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+            // Check if each requested scope is in the allowed scopes list
+            return requestedScopesList.All(scope => allowedScopesList.Contains(scope));
         }
 
         private static string GenerateJSONWebToken(SystemUser client, JwtConfig jwtConfig, out DateTime expires)
@@ -100,18 +123,31 @@ namespace CheckYourEligibility.WebApp.UseCases
                 var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtConfig.Key));
                 var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
-                var claims = new[] {
+                // Validate scopes if both requested and expected scopes exist
+                if (!string.IsNullOrEmpty(client.Scope) && !string.IsNullOrEmpty(jwtConfig.AllowedScopes) &&
+                    !ValidateScopes(client.Scope, jwtConfig.AllowedScopes))
+                {
+                    expires = DateTime.MinValue;
+                    return null; // Invalid scopes
+                }
+
+                var claimsList = new List<Claim>
+                {
                     new Claim(JwtRegisteredClaimNames.Sub, client.Identifier),
-                    new Claim("EcsApi", "apiCustomClaim"),
-                    new Claim(JwtRegisteredClaimNames.Email, "ecs@ecs.com"),
                     new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
                 };
+
+                // Only include scope claim if scope was provided
+                if (!string.IsNullOrEmpty(client.Scope) && client.Scope != "default")
+                {
+                    claimsList.Add(new Claim("scope", client.Scope));
+                }
 
                 expires = DateTime.UtcNow.AddMinutes(120);
                 var token = new JwtSecurityToken(
                     issuer: jwtConfig.Issuer,
                     audience: jwtConfig.Issuer,
-                    claims: claims,
+                    claims: claimsList,
                     expires: expires,
                     signingCredentials: credentials);
 
