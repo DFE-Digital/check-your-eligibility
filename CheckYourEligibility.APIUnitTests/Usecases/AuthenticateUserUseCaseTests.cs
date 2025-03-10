@@ -43,6 +43,7 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             login.ClientSecret = null;
             login.Username = "test_username";
             login.Password = "correct_password";
+            login.Scope = null;
             login.InitializeCredentials();
             var jwtConfig = _fixture.Create<JwtConfig>();
             jwtConfig.ExpectedSecret = "correct_password";
@@ -85,7 +86,7 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
         {
             // Arrange
             var login = new SystemUser();
-            login.Username = "test_username"; 
+            login.Username = "test_username";
             login.Password = "correct_password";
             login.InitializeCredentials();
             var jwtConfig = _fixture.Create<JwtConfig>();
@@ -108,6 +109,7 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             login.ClientSecret = null;
             login.Username = "test_username";
             login.Password = "correct_password";
+            login.Scope = null;
             login.InitializeCredentials();
             var jwtConfig = _fixture.Create<JwtConfig>();
             jwtConfig.ExpectedSecret = "correct_password";
@@ -154,6 +156,7 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             login.Password = null;
             login.ClientId = "test_client";
             login.ClientSecret = "correct_password";
+            login.Scope = null;
             login.InitializeCredentials(); // This should set Identifier to ClientId
 
             var jwtConfig = _fixture.Create<JwtConfig>();
@@ -204,6 +207,7 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             login.Password = "correct_password";
             login.ClientId = "test_client"; // This should take precedence
             login.ClientSecret = "correct_password";
+            login.Scope = null;
             login.InitializeCredentials();
 
             var jwtConfig = _fixture.Create<JwtConfig>();
@@ -232,6 +236,7 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             var login = _fixture.Create<SystemUser>();
             login.Username = "test_username";
             login.Password = "correct_password";
+            login.Scope = null;
             login.ClientId = null;
             login.ClientSecret = null;
             login.InitializeCredentials();
@@ -262,6 +267,7 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             var login = _fixture.Create<SystemUser>();
             login.Username = null;
             login.Password = null;
+            login.Scope = null;
             login.ClientId = "test_client";
             login.ClientSecret = "correct_password";
             login.InitializeCredentials();
@@ -379,6 +385,7 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             var login = _fixture.Create<SystemUser>();
             login.ClientId = null;
             login.ClientSecret = null;
+            login.Scope = null;
             login.Username = "test_username";
             login.Password = "correct_password";
             login.InitializeCredentials();
@@ -403,6 +410,7 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             var login = _fixture.Create<SystemUser>();
             login.ClientId = null;
             login.ClientSecret = null;
+            login.Scope = null;
             login.Username = "test_username";
             login.Password = "correct_password";
             login.InitializeCredentials();
@@ -431,6 +439,7 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             // Explicitly don't call InitializeCredentials() here
             login.Identifier = null; // This would normally be set by InitializeCredentials
             login.Secret = null;     // This would normally be set by InitializeCredentials
+            login.Scope = null;
             login.ClientId = "test_client";
             login.ClientSecret = "correct_password";
 
@@ -458,6 +467,7 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             var login = _fixture.Create<SystemUser>();
             login.ClientId = null;
             login.ClientSecret = null;
+            login.Scope = null;
             login.Username = "test_username";
             login.Password = "correct_password";
             login.InitializeCredentials();
@@ -486,6 +496,255 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             token.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Email)?.Value.Should().Be("ecs@ecs.com");
             token.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Jti).Should().NotBeNull();
 
+            token.Issuer.Should().Be("test_issuer");
+            token.Audiences.Should().Contain("test_issuer");
+
+            // Verify expiration is set to 120 minutes from now
+            var expectedExpiry = DateTime.UtcNow.AddMinutes(120);
+            token.ValidTo.Should().BeCloseTo(expectedExpiry, TimeSpan.FromSeconds(5));
+        }
+
+        // ...existing code...
+
+        [Test]
+        public async Task Execute_Should_Include_Scope_Claim_When_Scope_Is_Provided()
+        {
+            // Arrange
+            var login = _fixture.Create<SystemUser>();
+            login.ClientId = null;
+            login.ClientSecret = null;
+            login.Username = "test_username";
+            login.Password = "correct_password";
+            login.Scope = "read write";
+            login.InitializeCredentials();
+
+            var jwtConfig = _fixture.Create<JwtConfig>();
+            jwtConfig.ExpectedSecret = "correct_password";
+            jwtConfig.Key = "test_key_12345678901234567890123456789012";
+            jwtConfig.AllowedScopes = "read write delete";
+
+            var auditData = _fixture.Create<AuditData>();
+            _mockAuditService.Setup(a => a.AuditDataGet(Domain.Enums.AuditType.User, login.Identifier)).Returns(auditData);
+            _mockAuditService.Setup(a => a.AuditAdd(auditData)).ReturnsAsync(_fixture.Create<string>());
+
+            // Act
+            var result = await _sut.Execute(login, jwtConfig);
+
+            // Assert
+            result.Should().NotBeNull();
+
+            var handler = new JwtSecurityTokenHandler();
+            var token = handler.ReadJwtToken(result.Token);
+
+            token.Claims.FirstOrDefault(c => c.Type == "scope")?.Value.Should().Be("read write");
+        }
+
+        [Test]
+        public async Task Execute_Should_Not_Include_Scope_Claim_When_Scope_Is_Default()
+        {
+            // Arrange
+            var login = _fixture.Create<SystemUser>();
+
+            login.Username = "test_username";
+            login.Password = "correct_password";
+            login.Scope = "default";
+            login.ClientId = null;
+            login.ClientSecret = null;
+            login.InitializeCredentials();
+
+            var jwtConfig = _fixture.Create<JwtConfig>();
+            jwtConfig.ExpectedSecret = "correct_password";
+            jwtConfig.Key = "test_key_12345678901234567890123456789012";
+            jwtConfig.AllowedScopes = "read write";
+
+            var auditData = _fixture.Create<AuditData>();
+            _mockAuditService.Setup(a => a.AuditDataGet(Domain.Enums.AuditType.User, login.Identifier)).Returns(auditData);
+            _mockAuditService.Setup(a => a.AuditAdd(auditData)).ReturnsAsync(_fixture.Create<string>());
+
+            // Act
+            var result = await _sut.Execute(login, jwtConfig);
+
+            // Assert
+            result.Should().NotBeNull();
+
+            var handler = new JwtSecurityTokenHandler();
+            var token = handler.ReadJwtToken(result.Token);
+
+            token.Claims.FirstOrDefault(c => c.Type == "scope").Should().BeNull();
+        }
+
+        [Test]
+        public async Task Execute_Should_Not_Include_Scope_Claim_When_Scope_Is_Empty()
+        {
+            // Arrange
+            var login = _fixture.Create<SystemUser>();
+
+            login.Username = "test_username";
+            login.Password = "correct_password";
+            login.Scope = "";
+            login.ClientId = null;
+            login.ClientSecret = null;
+            login.InitializeCredentials();
+
+            var jwtConfig = _fixture.Create<JwtConfig>();
+            jwtConfig.ExpectedSecret = "correct_password";
+            jwtConfig.Key = "test_key_12345678901234567890123456789012";
+
+            var auditData = _fixture.Create<AuditData>();
+            _mockAuditService.Setup(a => a.AuditDataGet(Domain.Enums.AuditType.User, login.Identifier)).Returns(auditData);
+            _mockAuditService.Setup(a => a.AuditAdd(auditData)).ReturnsAsync(_fixture.Create<string>());
+
+            // Act
+            var result = await _sut.Execute(login, jwtConfig);
+
+            // Assert
+            result.Should().NotBeNull();
+
+            var handler = new JwtSecurityTokenHandler();
+            var token = handler.ReadJwtToken(result.Token);
+
+            token.Claims.FirstOrDefault(c => c.Type == "scope").Should().BeNull();
+        }
+
+        [Test]
+        public async Task Execute_Should_Return_Null_When_Requested_Scopes_Are_Not_Allowed()
+        {
+            // Arrange
+            var login = _fixture.Create<SystemUser>();
+            login.Username = "test_username";
+            login.Password = "correct_password";
+            login.Scope = "read delete"; // delete is not allowed
+            login.InitializeCredentials();
+
+            var jwtConfig = _fixture.Create<JwtConfig>();
+            jwtConfig.ExpectedSecret = "correct_password";
+            jwtConfig.Key = "test_key_12345678901234567890123456789012";
+            jwtConfig.AllowedScopes = "read write"; // only read and write are allowed
+
+            // Act
+            var result = await _sut.Execute(login, jwtConfig);
+
+            // Assert
+            result.Should().BeNull();
+        }
+
+        [Test]
+        public async Task Execute_Should_Allow_Authentication_When_No_Scopes_Requested()
+        {
+            // Arrange
+            var login = _fixture.Create<SystemUser>();
+
+            login.ClientId = null;
+            login.ClientSecret = null;
+            login.Username = "test_username";
+            login.Password = "correct_password";
+            login.Scope = null; // No scopes requested
+            login.InitializeCredentials();
+
+            var jwtConfig = _fixture.Create<JwtConfig>();
+            jwtConfig.ExpectedSecret = "correct_password";
+            jwtConfig.Key = "test_key_12345678901234567890123456789012";
+            jwtConfig.AllowedScopes = "read write";
+
+            var auditData = _fixture.Create<AuditData>();
+            _mockAuditService.Setup(a => a.AuditDataGet(Domain.Enums.AuditType.User, login.Identifier)).Returns(auditData);
+            _mockAuditService.Setup(a => a.AuditAdd(auditData)).ReturnsAsync(_fixture.Create<string>());
+
+            // Act
+            var result = await _sut.Execute(login, jwtConfig);
+
+            // Assert
+            result.Should().NotBeNull();
+        }
+
+        [Test]
+        public async Task Execute_Should_Deny_Authentication_When_Scopes_Requested_But_None_Allowed()
+        {
+            // Arrange
+            var login = _fixture.Create<SystemUser>();
+            login.Username = "test_username";
+            login.Password = "correct_password";
+            login.Scope = "read write"; // Scopes requested
+            login.InitializeCredentials();
+
+            var jwtConfig = _fixture.Create<JwtConfig>();
+            jwtConfig.ExpectedSecret = "correct_password";
+            jwtConfig.Key = "test_key_12345678901234567890123456789012";
+            jwtConfig.AllowedScopes = ""; // No scopes allowed
+
+            // Act
+            var result = await _sut.Execute(login, jwtConfig);
+
+            // Assert
+            result.Should().BeNull();
+        }
+
+        [Test]
+        public async Task Execute_Should_Deny_Authentication_When_Scopes_Requested_But_AllowedScopes_Is_Null()
+        {
+            // Arrange
+            var login = _fixture.Create<SystemUser>();
+            login.Username = "test_username";
+            login.Password = "correct_password";
+            login.Scope = "read write"; // Scopes requested
+            login.ClientId = null;
+            login.ClientSecret = null;
+            login.InitializeCredentials();
+
+            var jwtConfig = _fixture.Create<JwtConfig>();
+            jwtConfig.ExpectedSecret = "correct_password";
+            jwtConfig.Key = "test_key_12345678901234567890123456789012";
+            jwtConfig.AllowedScopes = null; // AllowedScopes is null
+
+            // Act
+            var result = await _sut.Execute(login, jwtConfig);
+
+            // Assert
+            result.Should().BeNull();
+        }
+
+        [Test]
+        public async Task Execute_Should_Generate_Token_With_Updated_Claims_Structure()
+        {
+            // Arrange
+            var login = _fixture.Create<SystemUser>();
+            login.ClientId = null;
+            login.ClientSecret = null;
+            login.Username = "test_username";
+            login.Password = "correct_password";
+            login.Scope = "read write"; // Include scope for testing
+            login.InitializeCredentials();
+
+            var jwtConfig = _fixture.Create<JwtConfig>();
+            jwtConfig.ExpectedSecret = "correct_password";
+            jwtConfig.Key = "test_key_12345678901234567890123456789012";
+            jwtConfig.Issuer = "test_issuer";
+            jwtConfig.AllowedScopes = "read write admin";
+
+            var auditData = _fixture.Create<AuditData>();
+            _mockAuditService.Setup(a => a.AuditDataGet(Domain.Enums.AuditType.User, login.Identifier)).Returns(auditData);
+            _mockAuditService.Setup(a => a.AuditAdd(auditData)).ReturnsAsync(_fixture.Create<string>());
+
+            // Act
+            var result = await _sut.Execute(login, jwtConfig);
+
+            // Assert
+            result.Should().NotBeNull();
+
+            // Decode token to verify claims
+            var handler = new JwtSecurityTokenHandler();
+            var token = handler.ReadJwtToken(result.Token);
+
+            // Check expected claims are present
+            token.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Sub)?.Value.Should().Be("test_username");
+            token.Claims.FirstOrDefault(c => c.Type == "scope")?.Value.Should().Be("read write");
+            token.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Jti).Should().NotBeNull();
+
+            // Check removed claims are not present
+            token.Claims.FirstOrDefault(c => c.Type == "EcsApi").Should().BeNull();
+            token.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Email).Should().BeNull();
+
+            // Check token properties
             token.Issuer.Should().Be("test_issuer");
             token.Audiences.Should().Contain("test_issuer");
 

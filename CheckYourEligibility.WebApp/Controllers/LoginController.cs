@@ -3,14 +3,6 @@ using CheckYourEligibility.Domain;
 using CheckYourEligibility.WebApp.UseCases;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
-using Newtonsoft.Json;
-using System.Diagnostics.CodeAnalysis;
-using System.Diagnostics.Eventing.Reader;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CheckYourEligibility.WebApp.Controllers
 {
@@ -32,7 +24,30 @@ namespace CheckYourEligibility.WebApp.Controllers
 
         [AllowAnonymous]
         [HttpPost]
-        public async Task<IActionResult> Login([FromBody] SystemUser credentials)
+        [Consumes("application/json")]
+        public async Task<IActionResult> LoginJson([FromBody] SystemUser credentials)
+        {
+            if (!credentials.IsValidGrantType())
+            {
+                _logger.LogWarning(credentials.GetInvalidGrantTypeMessage());
+            }
+            return await AuthenticateUser(credentials);
+        }
+
+        [AllowAnonymous]
+        [HttpPost]
+        [Consumes("application/x-www-form-urlencoded")]
+        public async Task<IActionResult> LoginForm([FromForm] SystemUser credentials)
+        {
+
+            if (!credentials.IsValidGrantType())
+            {
+                _logger.LogWarning(credentials.GetInvalidGrantTypeMessage());
+            }
+            return await AuthenticateUser(credentials);
+        }
+
+        private async Task<IActionResult> AuthenticateUser(SystemUser credentials)
         {
             var key = _config["Jwt:Key"];
             if (key == null)

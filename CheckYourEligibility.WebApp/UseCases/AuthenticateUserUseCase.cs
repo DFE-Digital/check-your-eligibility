@@ -99,7 +99,7 @@ namespace CheckYourEligibility.WebApp.UseCases
 
         private static bool ValidateScopes(string requestedScopes, string allowedScopes)
         {
-            if (string.IsNullOrEmpty(requestedScopes))
+            if (string.IsNullOrEmpty(requestedScopes) || requestedScopes == "default")
             {
                 return true; // No scopes were requested, so it's valid
             }
@@ -124,8 +124,7 @@ namespace CheckYourEligibility.WebApp.UseCases
                 var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
                 // Validate scopes if both requested and expected scopes exist
-                if (!string.IsNullOrEmpty(client.Scope) && !string.IsNullOrEmpty(jwtConfig.AllowedScopes) &&
-                    !ValidateScopes(client.Scope, jwtConfig.AllowedScopes))
+                if (!ValidateScopes(client.Scope, jwtConfig.AllowedScopes))
                 {
                     expires = DateTime.MinValue;
                     return null; // Invalid scopes
