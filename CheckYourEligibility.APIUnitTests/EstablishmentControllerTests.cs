@@ -11,11 +11,11 @@ using Moq;
 
 namespace CheckYourEligibility.APIUnitTests
 {
-    public class EstablishmentsControllerTests : TestBase.TestBase
+    public class EstablishmentControllerTests : TestBase.TestBase
     {
         private Mock<ISearchEstablishmentsUseCase> _mockSearchUseCase;
-        private ILogger<EstablishmentsController> _mockLogger;
-        private EstablishmentsController _sut;
+        private ILogger<EstablishmentController> _mockLogger;
+        private EstablishmentController _sut;
         private Mock<IAudit> _mockAuditService;
         private Fixture _fixture;
 
@@ -23,9 +23,9 @@ namespace CheckYourEligibility.APIUnitTests
         public void Setup()
         {
             _mockSearchUseCase = new Mock<ISearchEstablishmentsUseCase>(MockBehavior.Strict);
-            _mockLogger = Mock.Of<ILogger<EstablishmentsController>>();
+            _mockLogger = Mock.Of<ILogger<EstablishmentController>>();
             _mockAuditService = new Mock<IAudit>(MockBehavior.Strict);
-            _sut = new EstablishmentsController(_mockLogger, _mockSearchUseCase.Object, _mockAuditService.Object);
+            _sut = new EstablishmentController(_mockLogger, _mockSearchUseCase.Object, _mockAuditService.Object);
             _fixture = new Fixture();
         }
 
@@ -43,7 +43,7 @@ namespace CheckYourEligibility.APIUnitTests
             IAudit auditService = null;
 
             // Act
-            Action act = () => new EstablishmentsController(_mockLogger, searchUseCase, auditService);
+            Action act = () => new EstablishmentController(_mockLogger, searchUseCase, auditService);
 
             // Assert
             act.Should().ThrowExactly<ArgumentNullException>().And.Message.Should().EndWithEquivalentOf("Value cannot be null. (Parameter 'searchUseCase')");

@@ -12,11 +12,11 @@ using Moq;
 
 namespace CheckYourEligibility.APIUnitTests
 {
-    public class UsersControllerTests : TestBase.TestBase
+    public class UserControllerTests : TestBase.TestBase
     {
         private Mock<ICreateOrUpdateUserUseCase> _mockCreateOrUpdateUserUseCase;
-        private ILogger<UsersController> _mockLogger;
-        private UsersController _sut;
+        private ILogger<UserController> _mockLogger;
+        private UserController _sut;
         private Mock<IAudit> _mockAuditService;
         private Fixture _fixture;
 
@@ -24,9 +24,9 @@ namespace CheckYourEligibility.APIUnitTests
         public void Setup()
         {
             _mockCreateOrUpdateUserUseCase = new Mock<ICreateOrUpdateUserUseCase>(MockBehavior.Strict);
-            _mockLogger = Mock.Of<ILogger<UsersController>>();
+            _mockLogger = Mock.Of<ILogger<UserController>>();
             _mockAuditService = new Mock<IAudit>(MockBehavior.Strict);
-            _sut = new UsersController(_mockLogger, _mockCreateOrUpdateUserUseCase.Object, _mockAuditService.Object);
+            _sut = new UserController(_mockLogger, _mockCreateOrUpdateUserUseCase.Object, _mockAuditService.Object);
             _fixture = new Fixture();
         }
 
@@ -44,7 +44,7 @@ namespace CheckYourEligibility.APIUnitTests
             IAudit auditService = null;
 
             // Act
-            Action act = () => new UsersController(_mockLogger, createOrUpdateUserUseCase, auditService);
+            Action act = () => new UserController(_mockLogger, createOrUpdateUserUseCase, auditService);
 
             // Assert
             act.Should().ThrowExactly<ArgumentNullException>().And.Message.Should().EndWithEquivalentOf("Value cannot be null. (Parameter 'createOrUpdateUserUseCase')");

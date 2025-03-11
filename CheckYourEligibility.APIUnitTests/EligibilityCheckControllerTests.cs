@@ -165,7 +165,7 @@ namespace CheckYourEligibility.APIUnitTests
             // Assert
             response.Should().BeOfType<BadRequestObjectResult>();
             var badRequestResult = (BadRequestObjectResult)response;
-            ((MessageResponse)badRequestResult.Value).Data.Should().Be("Validation error");
+            ((ErrorResponse)badRequestResult.Value).Errors.First().Title.Should().Be("Validation error");
         }
 
         [Test]
@@ -205,7 +205,7 @@ namespace CheckYourEligibility.APIUnitTests
             // Assert
             response.Should().BeOfType<BadRequestObjectResult>();
             var badRequestResult = (BadRequestObjectResult)response;
-            ((MessageResponse)badRequestResult.Value).Data.Should().Be("Validation error");
+            ((ErrorResponse)badRequestResult.Value).Errors.First().Title.Should().Be("Validation error");
         }
 
         [Test]
@@ -245,7 +245,7 @@ namespace CheckYourEligibility.APIUnitTests
             // Assert
             response.Should().BeOfType<NotFoundObjectResult>();
             var notFoundResult = (NotFoundObjectResult)response;
-            notFoundResult.Value.Should().Be(guid);
+            ((ErrorResponse)notFoundResult.Value).Errors.First().Title.Should().Be(guid);
         }
 
         [Test]
@@ -264,7 +264,7 @@ namespace CheckYourEligibility.APIUnitTests
             // Assert
             response.Should().BeOfType<BadRequestObjectResult>();
             var badRequestResult = (BadRequestObjectResult)response;
-            ((MessageResponse)badRequestResult.Value).Data.Should().Be("Validation error");
+            ((ErrorResponse)badRequestResult.Value).Errors.First().Title.Should().Be("Validation error");
         }
 
         [Test]
@@ -304,7 +304,7 @@ namespace CheckYourEligibility.APIUnitTests
             // Assert
             response.Should().BeOfType<NotFoundObjectResult>();
             var notFoundResult = (NotFoundObjectResult)response;
-            notFoundResult.Value.Should().Be(guid);
+            ((ErrorResponse)notFoundResult.Value).Errors.First().Title.Should().Be(guid);
         }
 
         [Test]
@@ -323,7 +323,7 @@ namespace CheckYourEligibility.APIUnitTests
             // Assert
             response.Should().BeOfType<BadRequestObjectResult>();
             var badRequestResult = (BadRequestObjectResult)response;
-            ((MessageResponse)badRequestResult.Value).Data.Should().Be("Validation error");
+            ((ErrorResponse)badRequestResult.Value).Errors.First().Title.Should().Be("Validation error");
         }
 
         [Test]
@@ -363,7 +363,7 @@ namespace CheckYourEligibility.APIUnitTests
             // Assert
             response.Should().BeOfType<NotFoundObjectResult>();
             var notFoundResult = (NotFoundObjectResult)response;
-            notFoundResult.Value.Should().Be(guid);
+            ((ErrorResponse)notFoundResult.Value).Errors.First().Title.Should().Be(guid);
         }
 
         [Test]
@@ -382,7 +382,7 @@ namespace CheckYourEligibility.APIUnitTests
             // Assert
             response.Should().BeOfType<BadRequestObjectResult>();
             var badRequestResult = (BadRequestObjectResult)response;
-            ((MessageResponse)badRequestResult.Value).Data.Should().Be("Validation error");
+            ((ErrorResponse)badRequestResult.Value).Errors.First().Title.Should().Be("Validation error");
         }
 
         [Test]
@@ -421,7 +421,7 @@ namespace CheckYourEligibility.APIUnitTests
             var response = await _sut.EligibilityCheckStatusUpdate(guid, request);
 
             // Assert
-            response.Should().BeOfType<NotFoundResult>();
+            response.Should().BeOfType<NotFoundObjectResult>();
         }
 
         [Test]
@@ -441,7 +441,7 @@ namespace CheckYourEligibility.APIUnitTests
             // Assert
             response.Should().BeOfType<BadRequestObjectResult>();
             var badRequestResult = (BadRequestObjectResult)response;
-            ((MessageResponse)badRequestResult.Value).Data.Should().Be("Validation error");
+            ((ErrorResponse)badRequestResult.Value).Errors.First().Title.Should().Be("Validation error");
         }
 
         [Test]
@@ -482,7 +482,7 @@ namespace CheckYourEligibility.APIUnitTests
             // Assert
             response.Should().BeOfType<NotFoundObjectResult>();
             var notFoundResult = (NotFoundObjectResult)response;
-            notFoundResult.Value.Should().Be(guid);
+            notFoundResult.Value.Equals(new ErrorResponse(){Errors = [new Error(){Title = guid}]});
         }
 
         [Test]
@@ -501,7 +501,7 @@ namespace CheckYourEligibility.APIUnitTests
             // Assert
             response.Should().BeOfType<BadRequestObjectResult>();
             var badRequestResult = (BadRequestObjectResult)response;
-            ((MessageResponse)badRequestResult.Value).Data.Should().Be("Validation error");
+            ((ErrorResponse)badRequestResult.Value).Errors.First().Title.Should().Be("Validation error");
         }
 
         [Test]
@@ -561,7 +561,7 @@ namespace CheckYourEligibility.APIUnitTests
             // Assert
             response.Should().BeOfType<BadRequestObjectResult>();
             var badRequestResult = (BadRequestObjectResult)response;
-            badRequestResult.Value.Should().Be(guid);
+            ((ErrorResponse)badRequestResult.Value).Errors.First().Title.Should().Be(guid);
         }
 
         [Test]
@@ -580,7 +580,7 @@ namespace CheckYourEligibility.APIUnitTests
             // Assert
             response.Should().BeOfType<NotFoundObjectResult>();
             var notFoundResult = (NotFoundObjectResult)response;
-            notFoundResult.Value.Should().Be(guid);
+            ((ErrorResponse)notFoundResult.Value).Errors.First().Title.Should().Be(guid);
         }
 
         [Test]
@@ -599,7 +599,7 @@ namespace CheckYourEligibility.APIUnitTests
             // Assert
             response.Should().BeOfType<BadRequestObjectResult>();
             var badRequestResult = (BadRequestObjectResult)response;
-            ((MessageResponse)badRequestResult.Value).Data.Should().Be("Validation error");
+            ((ErrorResponse)badRequestResult.Value).Errors.First().Title.Should().Be("Validation error");
         }
 
         [Test]

@@ -9,12 +9,12 @@ using Moq;
 
 namespace CheckYourEligibility.APIUnitTests
 {
-    public class LoginControllerTests : TestBase.TestBase
+    public class Oauth2ControllerTests : TestBase.TestBase
     {
         private Mock<IAuthenticateUserUseCase> _mockAuthenticateUserUseCase;
         private IConfigurationRoot _configuration;
-        private ILogger<LoginController> _mockLogger;
-        private LoginController _sut;
+        private ILogger<Oauth2Controller> _mockLogger;
+        private Oauth2Controller _sut;
 
         // User credentials
         private SystemUser validUser;
@@ -56,8 +56,8 @@ namespace CheckYourEligibility.APIUnitTests
                 .Build();
 
             _mockAuthenticateUserUseCase = new Mock<IAuthenticateUserUseCase>(MockBehavior.Strict);
-            _mockLogger = Mock.Of<ILogger<LoginController>>();
-            _sut = new LoginController(_configuration, _mockLogger, _mockAuthenticateUserUseCase.Object);
+            _mockLogger = Mock.Of<ILogger<Oauth2Controller>>();
+            _sut = new Oauth2Controller(_configuration, _mockLogger, _mockAuthenticateUserUseCase.Object);
 
             // Setup authentication for user credentials
             _mockAuthenticateUserUseCase
@@ -105,7 +105,7 @@ namespace CheckYourEligibility.APIUnitTests
         {
             // Arrange
             // Act
-            Action act = () => new LoginController(_configuration, null, null);
+            Action act = () => new Oauth2Controller(_configuration, null, null);
 
             // Assert
             act.Should().ThrowExactly<ArgumentNullException>().And.Message.Should().EndWithEquivalentOf("Value cannot be null. (Parameter 'logger')");
@@ -143,7 +143,7 @@ namespace CheckYourEligibility.APIUnitTests
             var response = await _sut.LoginJson(request);
 
             // Assert
-            response.Should().BeOfType<UnauthorizedResult>();
+            response.Should().BeOfType<UnauthorizedObjectResult>();
 
             // Verify
             _mockAuthenticateUserUseCase.Verify(cs => cs.Execute(
@@ -209,7 +209,7 @@ namespace CheckYourEligibility.APIUnitTests
             var response = await _sut.LoginJson(request);
 
             // Assert
-            response.Should().BeOfType<UnauthorizedResult>();
+            response.Should().BeOfType<UnauthorizedObjectResult>();
 
             // Verify
             _mockAuthenticateUserUseCase.Verify(cs => cs.Execute(
@@ -245,13 +245,13 @@ namespace CheckYourEligibility.APIUnitTests
             _configuration = new ConfigurationBuilder()
                 .AddInMemoryCollection(configUser)
                 .Build();
-            _sut = new LoginController(_configuration, _mockLogger, _mockAuthenticateUserUseCase.Object);
+            _sut = new Oauth2Controller(_configuration, _mockLogger, _mockAuthenticateUserUseCase.Object);
 
             // Act
             var response = await _sut.LoginJson(validUser);
 
             // Assert
-            response.Should().BeOfType<UnauthorizedResult>();
+            response.Should().BeOfType<UnauthorizedObjectResult>();
         }
 
         [Test]
@@ -266,13 +266,13 @@ namespace CheckYourEligibility.APIUnitTests
             _configuration = new ConfigurationBuilder()
                 .AddInMemoryCollection(configUser)
                 .Build();
-            _sut = new LoginController(_configuration, _mockLogger, _mockAuthenticateUserUseCase.Object);
+            _sut = new Oauth2Controller(_configuration, _mockLogger, _mockAuthenticateUserUseCase.Object);
 
             // Act
             var response = await _sut.LoginJson(validUser);
 
             // Assert
-            response.Should().BeOfType<UnauthorizedResult>();
+            response.Should().BeOfType<UnauthorizedObjectResult>();
         }
 
         [Test]
@@ -287,13 +287,13 @@ namespace CheckYourEligibility.APIUnitTests
             _configuration = new ConfigurationBuilder()
                 .AddInMemoryCollection(configUser)
                 .Build();
-            _sut = new LoginController(_configuration, _mockLogger, _mockAuthenticateUserUseCase.Object);
+            _sut = new Oauth2Controller(_configuration, _mockLogger, _mockAuthenticateUserUseCase.Object);
 
             // Act
             var response = await _sut.LoginJson(validUser);
 
             // Assert
-            response.Should().BeOfType<UnauthorizedResult>();
+            response.Should().BeOfType<UnauthorizedObjectResult>();
         }
 
         [Test]
@@ -308,13 +308,13 @@ namespace CheckYourEligibility.APIUnitTests
             _configuration = new ConfigurationBuilder()
                 .AddInMemoryCollection(configUser)
                 .Build();
-            _sut = new LoginController(_configuration, _mockLogger, _mockAuthenticateUserUseCase.Object);
+            _sut = new Oauth2Controller(_configuration, _mockLogger, _mockAuthenticateUserUseCase.Object);
 
             // Act
             var response = await _sut.LoginJson(validClient);
 
             // Assert
-            response.Should().BeOfType<UnauthorizedResult>();
+            response.Should().BeOfType<UnauthorizedObjectResult>();
         }
 
         [Test]
@@ -349,7 +349,7 @@ namespace CheckYourEligibility.APIUnitTests
             var response = await _sut.LoginForm(request);
 
             // Assert
-            response.Should().BeOfType<UnauthorizedResult>();
+            response.Should().BeOfType<UnauthorizedObjectResult>();
         }
 
         [Test]
@@ -390,13 +390,13 @@ namespace CheckYourEligibility.APIUnitTests
                 .AddInMemoryCollection(configData)
                 .Build();
 
-            _sut = new LoginController(configWithoutScope, _mockLogger, _mockAuthenticateUserUseCase.Object);
+            _sut = new Oauth2Controller(configWithoutScope, _mockLogger, _mockAuthenticateUserUseCase.Object);
 
             // Act
             var response = await _sut.LoginJson(clientWithInvalidScope);
 
             // Assert
-            response.Should().BeOfType<UnauthorizedResult>();
+            response.Should().BeOfType<UnauthorizedObjectResult>();
         }
 
         [Test]

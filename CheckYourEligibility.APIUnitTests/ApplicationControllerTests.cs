@@ -112,7 +112,7 @@ namespace CheckYourEligibility.APIUnitTests
             // Assert
             response.Should().BeOfType<BadRequestObjectResult>();
             var badRequestResult = response as BadRequestObjectResult;
-            badRequestResult.Value.Should().BeOfType<MessageResponse>();
+            badRequestResult.Value.Should().BeOfType<ErrorResponse>();
         }
 
         [Test]
@@ -157,7 +157,7 @@ namespace CheckYourEligibility.APIUnitTests
             // Arrange
             var guid = _fixture.Create<string>();
             _mockGetApplicationUseCase.Setup(cs => cs.Execute(guid)).ReturnsAsync((ApplicationItemResponse)null);
-            var expectedResult = new NotFoundObjectResult(guid);
+            var expectedResult = new NotFoundObjectResult(new ErrorResponse() {Errors = [new Error() { Title = guid}]});
 
             // Act
             var response = await _sut.Application(guid);
@@ -178,21 +178,6 @@ namespace CheckYourEligibility.APIUnitTests
 
             // Act
             var response = await _sut.Application(guid);
-
-            // Assert
-            response.Should().BeEquivalentTo(expectedResult);
-        }
-
-        [Test]
-        public async Task Given_InValid_ApplicationSearch_Should_Return_Status204NoContent()
-        {
-            // Arrange
-            var model = _fixture.Create<ApplicationRequestSearch>();
-            _mockSearchApplicationsUseCase.Setup(cs => cs.Execute(model)).ReturnsAsync((ApplicationSearchResponse)null);
-            var expectedResult = new NoContentResult();
-
-            // Act
-            var response = await _sut.ApplicationSearch(model);
 
             // Assert
             response.Should().BeEquivalentTo(expectedResult);
