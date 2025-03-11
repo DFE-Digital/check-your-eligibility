@@ -120,5 +120,7 @@ stages:
                 condition: always()
                 displayName: 'Publish test results'
                 inputs:
-                  testResultsFiles: '**/combined-report.xml'
+                  testResultsFiles: |
+                    **/combined-report.xml
+                    **/screenshots/
                   searchFolder: '$(Pipeline.Workspace)/checkYourEligibilityAPI/tests'
