@@ -1,4 +1,5 @@
 using CheckYourEligibility.Domain;
+using CheckYourEligibility.Domain.Responses;
 using CheckYourEligibility.WebApp.Controllers;
 using CheckYourEligibility.WebApp.UseCases;
 using FluentAssertions;
@@ -31,9 +32,9 @@ namespace CheckYourEligibility.APIUnitTests
             // Initialize test users and clients
             validUser = new SystemUser { Username = "Test", Password = "letmein" };
             invalidUser = new SystemUser { Username = "invalidUser", Password = "wrongPassword" };
-            validClient = new SystemUser { ClientId = "client1", ClientSecret = "secret1" };
-            validClientWithScope = new SystemUser { ClientId = "client1", ClientSecret = "secret1", Scope = "read write" };
-            invalidClient = new SystemUser { ClientId = "invalidClient", ClientSecret = "wrongSecret" };
+            validClient = new SystemUser { client_id = "client1", client_secret = "secret1" };
+            validClientWithScope = new SystemUser { client_id = "client1", client_secret = "secret1", scope = "read write" };
+            invalidClient = new SystemUser { client_id = "invalidClient", client_secret = "wrongSecret" };
 
             var configData = new Dictionary<string, string>
             {
@@ -42,9 +43,9 @@ namespace CheckYourEligibility.APIUnitTests
                 {$"Jwt:Users:{invalidUser.Username}", $"{invalidUser.Password}"},
                 
                 // Client credentials config
-                {$"Jwt:Clients:{validClient.ClientId}:Secret", $"{validClient.ClientSecret}"},
-                {$"Jwt:Clients:{validClientWithScope.ClientId}:Scope", "read write"},
-                {$"Jwt:Clients:{invalidClient.ClientId}:Secret", $"{invalidClient.ClientSecret}"},
+                {$"Jwt:Clients:{validClient.client_id}:Secret", $"{validClient.client_secret}"},
+                {$"Jwt:Clients:{validClientWithScope.client_id}:Scope", "read write"},
+                {$"Jwt:Clients:{invalidClient.client_id}:Secret", $"{invalidClient.client_secret}"},
                 
                 // JWT config
                 {"Jwt:Key", "This_ismySecretKeyforEcsjwtLogin"},
@@ -75,21 +76,21 @@ namespace CheckYourEligibility.APIUnitTests
             // Setup authentication for client credentials
             _mockAuthenticateUserUseCase
                 .Setup(cs => cs.Execute(It.Is<SystemUser>(u =>
-                    u.ClientId == validClient.ClientId && u.ClientSecret == validClient.ClientSecret),
+                    u.client_id == validClient.client_id && u.client_secret == validClient.client_secret),
                     It.IsAny<JwtConfig>()))
                 .ReturnsAsync(new JwtAuthResponse { Token = "validClientToken" });
 
             _mockAuthenticateUserUseCase
                 .Setup(cs => cs.Execute(It.Is<SystemUser>(u =>
-                    u.ClientId == validClientWithScope.ClientId &&
-                    u.ClientSecret == validClientWithScope.ClientSecret &&
-                    u.Scope == validClientWithScope.Scope),
+                    u.client_id == validClientWithScope.client_id &&
+                    u.client_secret == validClientWithScope.client_secret &&
+                    u.scope == validClientWithScope.scope),
                     It.IsAny<JwtConfig>()))
                 .ReturnsAsync(new JwtAuthResponse { Token = "validClientTokenWithScope" });
 
             _mockAuthenticateUserUseCase
                 .Setup(cs => cs.Execute(It.Is<SystemUser>(u =>
-                    u.ClientId == invalidClient.ClientId && u.ClientSecret == invalidClient.ClientSecret),
+                    u.client_id == invalidClient.client_id && u.client_secret == invalidClient.client_secret),
                     It.IsAny<JwtConfig>()))
                 .ReturnsAsync((JwtAuthResponse)null);
         }
@@ -169,7 +170,7 @@ namespace CheckYourEligibility.APIUnitTests
 
             // Verify
             _mockAuthenticateUserUseCase.Verify(cs => cs.Execute(
-                It.Is<SystemUser>(u => u.ClientId == validClient.ClientId && u.ClientSecret == validClient.ClientSecret),
+                It.Is<SystemUser>(u => u.client_id == validClient.client_id && u.client_secret == validClient.client_secret),
                 It.IsAny<JwtConfig>()),
                 Times.Once);
         }
@@ -192,9 +193,9 @@ namespace CheckYourEligibility.APIUnitTests
             // Verify
             _mockAuthenticateUserUseCase.Verify(cs => cs.Execute(
                 It.Is<SystemUser>(u =>
-                    u.ClientId == validClientWithScope.ClientId &&
-                    u.ClientSecret == validClientWithScope.ClientSecret &&
-                    u.Scope == validClientWithScope.Scope),
+                    u.client_id == validClientWithScope.client_id &&
+                    u.client_secret == validClientWithScope.client_secret &&
+                    u.scope == validClientWithScope.scope),
                 It.Is<JwtConfig>(c => c.AllowedScopes == "read write")),
                 Times.Once);
         }
@@ -213,7 +214,7 @@ namespace CheckYourEligibility.APIUnitTests
 
             // Verify
             _mockAuthenticateUserUseCase.Verify(cs => cs.Execute(
-                It.Is<SystemUser>(u => u.ClientId == invalidClient.ClientId && u.ClientSecret == invalidClient.ClientSecret),
+                It.Is<SystemUser>(u => u.client_id == invalidClient.client_id && u.client_secret == invalidClient.client_secret),
                 It.IsAny<JwtConfig>()),
                 Times.Once);
         }
@@ -230,7 +231,7 @@ namespace CheckYourEligibility.APIUnitTests
             // Assert
             response.Should().BeOfType<BadRequestObjectResult>();
             var badRequestResult = (BadRequestObjectResult)response;
-            badRequestResult.Value.Should().Be("Either ClientId/ClientSecret pair or Username/Password pair must be provided");
+            ((ErrorResponse)badRequestResult.Value).Errors.First().Title.Should().Be("Either client_id/client_secret pair or Username/Password pair must be provided");
         }
 
         [Test]
@@ -297,7 +298,7 @@ namespace CheckYourEligibility.APIUnitTests
         }
 
         [Test]
-        public async Task Login_returns_Unauthorized_when_ClientSecret_is_missing()
+        public async Task Login_returns_Unauthorized_when_client_secret_is_missing()
         {
             // Arrange
             var configUser = new Dictionary<string, string>
@@ -364,7 +365,7 @@ namespace CheckYourEligibility.APIUnitTests
             // Assert
             response.Should().BeOfType<BadRequestObjectResult>();
             var badRequestResult = (BadRequestObjectResult)response;
-            badRequestResult.Value.Should().Be("Either ClientId/ClientSecret pair or Username/Password pair must be provided");
+            ((ErrorResponse)badRequestResult.Value).Errors.First().Title.Should().Be("Either client_id/client_secret pair or Username/Password pair must be provided");
         }
 
         [Test]
@@ -373,14 +374,14 @@ namespace CheckYourEligibility.APIUnitTests
             // Arrange
             var clientWithInvalidScope = new SystemUser
             {
-                ClientId = "client1",
-                ClientSecret = "secret1",
-                Scope = "admin" // Scope that doesn't match configuration
+                client_id = "client1",
+                client_secret = "secret1",
+                scope = "admin" // Scope that doesn't match configuration
             };
 
             var configData = new Dictionary<string, string>
             {
-                {$"Jwt:Clients:{clientWithInvalidScope.ClientId}:Secret", $"{clientWithInvalidScope.ClientSecret}"},
+                {$"Jwt:Clients:{clientWithInvalidScope.client_id}:Secret", $"{clientWithInvalidScope.client_secret}"},
                 // No scope configuration for this client
                 {"Jwt:Key", "This_ismySecretKeyforEcsjwtLogin"},
                 {"Jwt:Issuer", "ece.com"},
@@ -465,8 +466,8 @@ namespace CheckYourEligibility.APIUnitTests
             // Arrange
             var request = new SystemUser
             {
-                ClientId = validClient.ClientId,
-                ClientSecret = validClient.ClientSecret,
+                client_id = validClient.client_id,
+                client_secret = validClient.client_secret,
                 grant_type = "client_credentials" // Valid grant type
             };
 
@@ -482,8 +483,8 @@ namespace CheckYourEligibility.APIUnitTests
             // Verify
             _mockAuthenticateUserUseCase.Verify(cs => cs.Execute(
                 It.Is<SystemUser>(u =>
-                    u.ClientId == validClient.ClientId &&
-                    u.ClientSecret == validClient.ClientSecret &&
+                    u.client_id == validClient.client_id &&
+                    u.client_secret == validClient.client_secret &&
                     u.grant_type == "client_credentials"),
                 It.IsAny<JwtConfig>()),
                 Times.Once);

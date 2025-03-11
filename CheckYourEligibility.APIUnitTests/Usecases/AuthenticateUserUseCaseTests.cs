@@ -39,11 +39,11 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
         {
             // Arrange
             var login = _fixture.Create<SystemUser>();
-            login.ClientId = null;
-            login.ClientSecret = null;
+            login.client_id = null;
+            login.client_secret = null;
             login.Username = "test_username";
             login.Password = "correct_password";
-            login.Scope = null;
+            login.scope = null;
             login.InitializeCredentials();
             var jwtConfig = _fixture.Create<JwtConfig>();
             jwtConfig.ExpectedSecret = "correct_password";
@@ -105,11 +105,11 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
         {
             // Arrange
             var login = _fixture.Create<SystemUser>();
-            login.ClientId = null;
-            login.ClientSecret = null;
+            login.client_id = null;
+            login.client_secret = null;
             login.Username = "test_username";
             login.Password = "correct_password";
-            login.Scope = null;
+            login.scope = null;
             login.InitializeCredentials();
             var jwtConfig = _fixture.Create<JwtConfig>();
             jwtConfig.ExpectedSecret = "correct_password";
@@ -154,10 +154,10 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             var login = _fixture.Create<SystemUser>();
             login.Username = null;
             login.Password = null;
-            login.ClientId = "test_client";
-            login.ClientSecret = "correct_password";
-            login.Scope = null;
-            login.InitializeCredentials(); // This should set Identifier to ClientId
+            login.client_id = "test_client";
+            login.client_secret = "correct_password";
+            login.scope = null;
+            login.InitializeCredentials(); // This should set Identifier to client_id
 
             var jwtConfig = _fixture.Create<JwtConfig>();
             jwtConfig.ExpectedSecret = "correct_password";
@@ -184,9 +184,9 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             var login = _fixture.Create<SystemUser>();
             login.Username = null;
             login.Password = null;
-            login.ClientId = "test_client";
-            login.ClientSecret = "wrong_password";
-            login.InitializeCredentials(); // This should set Identifier to ClientId
+            login.client_id = "test_client";
+            login.client_secret = "wrong_password";
+            login.InitializeCredentials(); // This should set Identifier to client_id
 
             var jwtConfig = _fixture.Create<JwtConfig>();
             jwtConfig.ExpectedSecret = "correct_password";
@@ -199,15 +199,15 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
         }
 
         [Test]
-        public async Task Execute_Should_Prioritize_ClientId_Over_Username_When_Both_Are_Present()
+        public async Task Execute_Should_Prioritize_client_id_Over_Username_When_Both_Are_Present()
         {
             // Arrange
             var login = _fixture.Create<SystemUser>();
             login.Username = "test_username";
             login.Password = "correct_password";
-            login.ClientId = "test_client"; // This should take precedence
-            login.ClientSecret = "correct_password";
-            login.Scope = null;
+            login.client_id = "test_client"; // This should take precedence
+            login.client_secret = "correct_password";
+            login.scope = null;
             login.InitializeCredentials();
 
             var jwtConfig = _fixture.Create<JwtConfig>();
@@ -216,7 +216,7 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
 
             var auditData = _fixture.Create<AuditData>();
 
-            // Verify Identifier is set to ClientId, not Username
+            // Verify Identifier is set to client_id, not Username
             _mockAuditService.Setup(a => a.AuditDataGet(Domain.Enums.AuditType.User, "test_client")).Returns(auditData);
             _mockAuditService.Setup(a => a.AuditAdd(auditData)).ReturnsAsync(_fixture.Create<string>());
 
@@ -226,19 +226,19 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             // Assert
             result.Should().NotBeNull();
             result.Token.Should().NotBeNullOrEmpty();
-            login.Identifier.Should().Be("test_client"); // Verify identifier was set to ClientId
+            login.Identifier.Should().Be("test_client"); // Verify identifier was set to client_id
         }
 
         [Test]
-        public async Task Execute_Should_Fallback_To_Username_When_ClientId_Is_Not_Present()
+        public async Task Execute_Should_Fallback_To_Username_When_client_id_Is_Not_Present()
         {
             // Arrange
             var login = _fixture.Create<SystemUser>();
             login.Username = "test_username";
             login.Password = "correct_password";
-            login.Scope = null;
-            login.ClientId = null;
-            login.ClientSecret = null;
+            login.scope = null;
+            login.client_id = null;
+            login.client_secret = null;
             login.InitializeCredentials();
 
             var jwtConfig = _fixture.Create<JwtConfig>();
@@ -267,9 +267,9 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             var login = _fixture.Create<SystemUser>();
             login.Username = null;
             login.Password = null;
-            login.Scope = null;
-            login.ClientId = "test_client";
-            login.ClientSecret = "correct_password";
+            login.scope = null;
+            login.client_id = "test_client";
+            login.client_secret = "correct_password";
             login.InitializeCredentials();
 
             var jwtConfig = _fixture.Create<JwtConfig>();
@@ -295,8 +295,8 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             // Arrange
             var user = new SystemUser
             {
-                ClientId = "test_client",
-                ClientSecret = "test_secret",
+                client_id = "test_client",
+                client_secret = "test_secret",
                 Username = null,
                 Password = null
             };
@@ -314,8 +314,8 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             // Arrange
             var user = new SystemUser
             {
-                ClientId = null,
-                ClientSecret = null,
+                client_id = null,
+                client_secret = null,
                 Username = "test_user",
                 Password = "test_password"
             };
@@ -333,8 +333,8 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             // Arrange
             var user = new SystemUser
             {
-                ClientId = null,
-                ClientSecret = "only_secret_no_id",
+                client_id = null,
+                client_secret = "only_secret_no_id",
                 Username = null,
                 Password = "only_password_no_username"
             };
@@ -352,16 +352,16 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             // Arrange
             var userWithClientCreds = new SystemUser
             {
-                ClientId = "test_client",
-                ClientSecret = "test_secret",
+                client_id = "test_client",
+                client_secret = "test_secret",
                 Username = "test_user",
                 Password = "test_password"
             };
 
             var userWithUsernamePwd = new SystemUser
             {
-                ClientId = null,
-                ClientSecret = null,
+                client_id = null,
+                client_secret = null,
                 Username = "test_user",
                 Password = "test_password"
             };
@@ -383,9 +383,9 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
         {
             // Arrange
             var login = _fixture.Create<SystemUser>();
-            login.ClientId = null;
-            login.ClientSecret = null;
-            login.Scope = null;
+            login.client_id = null;
+            login.client_secret = null;
+            login.scope = null;
             login.Username = "test_username";
             login.Password = "correct_password";
             login.InitializeCredentials();
@@ -408,9 +408,9 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
         {
             // Arrange
             var login = _fixture.Create<SystemUser>();
-            login.ClientId = null;
-            login.ClientSecret = null;
-            login.Scope = null;
+            login.client_id = null;
+            login.client_secret = null;
+            login.scope = null;
             login.Username = "test_username";
             login.Password = "correct_password";
             login.InitializeCredentials();
@@ -439,9 +439,9 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             // Explicitly don't call InitializeCredentials() here
             login.Identifier = null; // This would normally be set by InitializeCredentials
             login.Secret = null;     // This would normally be set by InitializeCredentials
-            login.Scope = null;
-            login.ClientId = "test_client";
-            login.ClientSecret = "correct_password";
+            login.scope = null;
+            login.client_id = "test_client";
+            login.client_secret = "correct_password";
 
             var jwtConfig = _fixture.Create<JwtConfig>();
             jwtConfig.ExpectedSecret = "correct_password";
@@ -465,9 +465,9 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
         {
             // Arrange
             var login = _fixture.Create<SystemUser>();
-            login.ClientId = null;
-            login.ClientSecret = null;
-            login.Scope = null;
+            login.client_id = null;
+            login.client_secret = null;
+            login.scope = null;
             login.Username = "test_username";
             login.Password = "correct_password";
             login.InitializeCredentials();
@@ -507,15 +507,15 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
         // ...existing code...
 
         [Test]
-        public async Task Execute_Should_Include_Scope_Claim_When_Scope_Is_Provided()
+        public async Task Execute_Should_Include_scope_Claim_When_scope_Is_Provided()
         {
             // Arrange
             var login = _fixture.Create<SystemUser>();
-            login.ClientId = null;
-            login.ClientSecret = null;
+            login.client_id = null;
+            login.client_secret = null;
             login.Username = "test_username";
             login.Password = "correct_password";
-            login.Scope = "read write";
+            login.scope = "read write";
             login.InitializeCredentials();
 
             var jwtConfig = _fixture.Create<JwtConfig>();
@@ -540,16 +540,16 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
         }
 
         [Test]
-        public async Task Execute_Should_Not_Include_Scope_Claim_When_Scope_Is_Default()
+        public async Task Execute_Should_Not_Include_scope_Claim_When_scope_Is_Default()
         {
             // Arrange
             var login = _fixture.Create<SystemUser>();
 
             login.Username = "test_username";
             login.Password = "correct_password";
-            login.Scope = "default";
-            login.ClientId = null;
-            login.ClientSecret = null;
+            login.scope = "default";
+            login.client_id = null;
+            login.client_secret = null;
             login.InitializeCredentials();
 
             var jwtConfig = _fixture.Create<JwtConfig>();
@@ -574,16 +574,16 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
         }
 
         [Test]
-        public async Task Execute_Should_Not_Include_Scope_Claim_When_Scope_Is_Empty()
+        public async Task Execute_Should_Not_Include_scope_Claim_When_scope_Is_Empty()
         {
             // Arrange
             var login = _fixture.Create<SystemUser>();
 
             login.Username = "test_username";
             login.Password = "correct_password";
-            login.Scope = "";
-            login.ClientId = null;
-            login.ClientSecret = null;
+            login.scope = "";
+            login.client_id = null;
+            login.client_secret = null;
             login.InitializeCredentials();
 
             var jwtConfig = _fixture.Create<JwtConfig>();
@@ -607,13 +607,13 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
         }
 
         [Test]
-        public async Task Execute_Should_Return_Null_When_Requested_Scopes_Are_Not_Allowed()
+        public async Task Execute_Should_Return_Null_When_Requested_scopes_Are_Not_Allowed()
         {
             // Arrange
             var login = _fixture.Create<SystemUser>();
             login.Username = "test_username";
             login.Password = "correct_password";
-            login.Scope = "read delete"; // delete is not allowed
+            login.scope = "read delete"; // delete is not allowed
             login.InitializeCredentials();
 
             var jwtConfig = _fixture.Create<JwtConfig>();
@@ -629,16 +629,16 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
         }
 
         [Test]
-        public async Task Execute_Should_Allow_Authentication_When_No_Scopes_Requested()
+        public async Task Execute_Should_Allow_Authentication_When_No_scopes_Requested()
         {
             // Arrange
             var login = _fixture.Create<SystemUser>();
 
-            login.ClientId = null;
-            login.ClientSecret = null;
+            login.client_id = null;
+            login.client_secret = null;
             login.Username = "test_username";
             login.Password = "correct_password";
-            login.Scope = null; // No scopes requested
+            login.scope = null; // No scopes requested
             login.InitializeCredentials();
 
             var jwtConfig = _fixture.Create<JwtConfig>();
@@ -658,13 +658,13 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
         }
 
         [Test]
-        public async Task Execute_Should_Deny_Authentication_When_Scopes_Requested_But_None_Allowed()
+        public async Task Execute_Should_Deny_Authentication_When_scopes_Requested_But_None_Allowed()
         {
             // Arrange
             var login = _fixture.Create<SystemUser>();
             login.Username = "test_username";
             login.Password = "correct_password";
-            login.Scope = "read write"; // Scopes requested
+            login.scope = "read write"; // scopes requested
             login.InitializeCredentials();
 
             var jwtConfig = _fixture.Create<JwtConfig>();
@@ -680,15 +680,15 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
         }
 
         [Test]
-        public async Task Execute_Should_Deny_Authentication_When_Scopes_Requested_But_AllowedScopes_Is_Null()
+        public async Task Execute_Should_Deny_Authentication_When_scopes_Requested_But_AllowedScopes_Is_Null()
         {
             // Arrange
             var login = _fixture.Create<SystemUser>();
             login.Username = "test_username";
             login.Password = "correct_password";
-            login.Scope = "read write"; // Scopes requested
-            login.ClientId = null;
-            login.ClientSecret = null;
+            login.scope = "read write"; // scopes requested
+            login.client_id = null;
+            login.client_secret = null;
             login.InitializeCredentials();
 
             var jwtConfig = _fixture.Create<JwtConfig>();
@@ -708,11 +708,11 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
         {
             // Arrange
             var login = _fixture.Create<SystemUser>();
-            login.ClientId = null;
-            login.ClientSecret = null;
+            login.client_id = null;
+            login.client_secret = null;
             login.Username = "test_username";
             login.Password = "correct_password";
-            login.Scope = "read write"; // Include scope for testing
+            login.scope = "read write"; // Include scope for testing
             login.InitializeCredentials();
 
             var jwtConfig = _fixture.Create<JwtConfig>();

@@ -75,8 +75,8 @@ namespace CheckYourEligibility.WebApp.Controllers
 
             if (!credentials.IsValid())
             {
-                _logger.LogError("Either ClientId/ClientSecret pair or Username/Password pair must be provided");
-                return BadRequest(new ErrorResponse { Errors = [new Error() {Title = "Either ClientId/ClientSecret pair or Username/Password pair must be provided"}]});
+                _logger.LogError("Either client_id/client_secret pair or Username/Password pair must be provided");
+                return BadRequest(new ErrorResponse { Errors = [new Error() {Title = "Either client_id/client_secret pair or Username/Password pair must be provided"}]});
             }
 
 
