@@ -83,7 +83,7 @@ namespace CheckYourEligibility.WebApp.Controllers
         /// <param name="model"></param>
         /// <returns></returns>
         [ProducesResponseType(typeof(ApplicationSearchResponse), (int)HttpStatusCode.OK)]
-        [HttpPost("Search")]
+        [Consumes("application/json", "application/vnd.api+json; version=1.0")]
         [HttpPost("/application/search")]
         public async Task<ActionResult> ApplicationSearch([FromBody] ApplicationRequestSearch model)
         {
