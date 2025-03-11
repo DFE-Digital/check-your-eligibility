@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Data>
+    <EligiblePersons>
+        <EligiblePerson>
+            <NINO>AB123456C</NINO>
+            <DataType>2</DataType>
+            <Surname>Simpson</Surname>
+            <DateOfBirth>01011990</DateOfBirth>
+        </EligiblePerson>
+        <EligiblePerson>
+            <NINO>AC123456D</NINO>
+            <DataType>1</DataType>
+            <Surname>Griffin</Surname>
+            <DateOfBirth>31122000</DateOfBirth>
+        </EligiblePerson>
+    </EligiblePersons>
+</Data>
