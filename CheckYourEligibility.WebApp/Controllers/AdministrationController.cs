@@ -51,6 +51,7 @@ namespace CheckYourEligibility.WebApp.Controllers
         /// </summary>
         /// <returns></returns>
         [ProducesResponseType(typeof(int), (int)HttpStatusCode.OK)]
+        [Consumes("multipart/form-data")]
         [HttpPut("/cleanUpEligibilityChecks")]
         [HttpPut("/admin/clean-up-eligibility-checks")]
         public async Task<ActionResult> CleanUpEligibilityChecks()
@@ -66,6 +67,7 @@ namespace CheckYourEligibility.WebApp.Controllers
         /// <returns></returns>
         [ProducesResponseType(typeof(int), (int)HttpStatusCode.OK)]
         [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.BadRequest)]
+        [Consumes("multipart/form-data")]
         [HttpPost("/importEstablishments")]
         [HttpPost("/admin/import-establishments")]
         public async Task<ActionResult> ImportEstablishments(IFormFile file)
@@ -88,6 +90,7 @@ namespace CheckYourEligibility.WebApp.Controllers
         /// <returns></returns>
         [ProducesResponseType(typeof(int), (int)HttpStatusCode.OK)]
         [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.BadRequest)]
+        [Consumes("multipart/form-data")]
         [HttpPost("/importFsmHomeOfficeData")]
         [HttpPost("/admin/import-fsm-home-office-data")]
         public async Task<ActionResult> ImportFsmHomeOfficeData(IFormFile file)
@@ -111,6 +114,7 @@ namespace CheckYourEligibility.WebApp.Controllers
         /// <exception cref="InvalidDataException"></exception>
         [ProducesResponseType(typeof(int), (int)HttpStatusCode.OK)]
         [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.BadRequest)]
+        [Consumes("multipart/form-data")]
         [HttpPost("/importFsmHMRCData")]
         [HttpPost("/admin/import-fsm-hmrc-data")]
         public async Task<ActionResult> ImportFsmHMRCData(IFormFile file)

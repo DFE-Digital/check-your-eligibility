@@ -44,7 +44,7 @@ namespace CheckYourEligibility.WebApp.Controllers
         [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.Unauthorized)]
         [HttpPost("/api/Login")]
         [HttpPost("/oauth2/token")]
-        [Consumes("application/json")]
+        [Consumes("application/json", "application/vnd.api+json;version=1.0")]
         public async Task<IActionResult> LoginJson([FromBody] SystemUser credentials)
         {
             if (!credentials.IsValidGrantType())

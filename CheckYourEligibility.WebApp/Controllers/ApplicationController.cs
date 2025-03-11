@@ -45,6 +45,7 @@ namespace CheckYourEligibility.WebApp.Controllers
         /// <returns></returns>
         [ProducesResponseType(typeof(ApplicationSaveItemResponse), (int)HttpStatusCode.Created)]
         [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.BadRequest)]
+        [Consumes("application/json", "application/vnd.api+json;version=1.0")]
         [HttpPost("/application")]
         public async Task<ActionResult> Application([FromBody] ApplicationRequest model)
         {
@@ -66,6 +67,7 @@ namespace CheckYourEligibility.WebApp.Controllers
         /// <returns></returns>
         [ProducesResponseType(typeof(ApplicationItemResponse), (int)HttpStatusCode.OK)]
         [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.NotFound)]
+        [Consumes("application/json", "application/vnd.api+json;version=1.0")]
         [HttpGet("/application/{guid}")]
         public async Task<ActionResult> Application(string guid)
         {
@@ -99,6 +101,7 @@ namespace CheckYourEligibility.WebApp.Controllers
         /// <returns></returns>
         [ProducesResponseType(typeof(ApplicationStatusUpdateResponse), (int)HttpStatusCode.OK)]
         [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.NotFound)]
+        [Consumes("application/json", "application/vnd.api+json;version=1.0")]
         [HttpPatch("/application/{guid}")]
         public async Task<ActionResult> ApplicationStatusUpdate(string guid, [FromBody] ApplicationStatusUpdateRequest model)
         {

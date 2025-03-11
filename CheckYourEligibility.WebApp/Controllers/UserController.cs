@@ -32,6 +32,7 @@ namespace CheckYourEligibility.WebApp.Controllers
         /// <returns></returns>
         [ProducesResponseType(typeof(UserSaveItemResponse), (int)HttpStatusCode.Created)]
         [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.BadRequest)]
+        [Consumes("application/json", "application/vnd.api+json;version=1.0")]
         [HttpPost("/Users")]
         [HttpPost("/user")]
         public async Task<ActionResult> User([FromBody] UserCreateRequest model)
