@@ -3,8 +3,8 @@ import { validLoginRequestBodyWithUsernameAndPassword, validLoginRequestBodyWith
 
 
 describe('Authorisation Tests', () => {
-  const invalidRequestBody = { username: 'ecsUiUser', password: '123456' };
-  const invalidClientDetails = { clientId: 'invalidClientId', clientSecret: 'invalid Secret', scope: 'invalidScope' };
+  const invalidRequestBody = { lolzname: 'ecsUiUser', password: '123456' };
+  const invalidClientDetails = { client_id: 'invalidClientId', client_secret: 'invalid Secret', scope: 'invalidScope' };
 
   it('Verify 200 response and Bearer Token Is Returned when Valid Credentials are used', () => { 
     getandVerifyBearerToken('api/Login', validLoginRequestBodyWithUsernameAndPassword).then((token) => {
@@ -16,21 +16,19 @@ describe('Authorisation Tests', () => {
     });
   });
 
-  it('Verify 401 is returned with invalid credentials', () => {
+  it('Verify 400 is returned with invalid credentials', () => {
     cy.apiRequest('POST', 'api/Login', invalidRequestBody).then((response) => {
-      cy.verifyApiResponseCode(response, 401)
+      cy.verifyApiResponseCode(response, 400)
     });
   });
 
   it('Verify 401 is returned with invalid client details', () => {
-    cy.apiRequest('POST', 'api/Login', invalidClientDetails).then((response) => {
-      cy.verifyApiResponseCode(response, 401)
-    });
+    verifyUnauthorizedWithoutToken('POST', 'api/Login', invalidClientDetails);
   });
 
   it('Verify 401 Unauthorized is returned when token is not provided for protected endpoints', () => {
-    verifyUnauthorizedWithoutToken('POST', 'api/Login', invalidRequestBody);
-    verifyUnauthorizedWithoutToken('POST', 'EligibilityCheck/FreeSchoolMeals', invalidRequestBody);
-    verifyUnauthorizedWithoutToken('POST', 'Application', invalidRequestBody);
+    verifyUnauthorizedWithoutToken('POST', 'api/Login', invalidClientDetails);
+    verifyUnauthorizedWithoutToken('POST', 'EligibilityCheck/FreeSchoolMeals', invalidClientDetails);
+    verifyUnauthorizedWithoutToken('POST', 'Application', invalidClientDetails);
   });
 });

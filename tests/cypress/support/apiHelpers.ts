@@ -10,9 +10,9 @@ export const verifyUnauthorizedWithoutToken = (method: string, endpoint: string,
 export const getandVerifyBearerToken = (url: string, requestBody: any): Cypress.Chainable<string> => {
     return cy.apiRequest('POST', url, requestBody).then((response) => {
         expect(response.status).to.equal(200);
-        expect(response.body).to.have.property('token');
-        expect(response.body).to.have.property('expires')
+        expect(response.body).to.have.property('access_token');
+        expect(response.body).to.have.property('expires_in')
         
-        return response.body.token;
+        return response.body.access_token;
     });
 };

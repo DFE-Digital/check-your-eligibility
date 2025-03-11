@@ -162,6 +162,11 @@ builder.Services.AddAuthorization(builder.Configuration);
 
 builder.Services.AddHealthChecks();
 
+builder.Services.AddSwaggerGen(c =>
+{
+    c.ResolveConflictingActions(apiDescriptions => apiDescriptions.First());
+});
+
 var app = builder.Build();
 
 app.MapHealthChecks("/healthcheck");

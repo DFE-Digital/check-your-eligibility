@@ -116,7 +116,7 @@ namespace CheckYourEligibility.APIUnitTests
         public async Task Given_ImportEstablishments_Should_Return_Status400BadRequest()
         {
             // Arrange
-            var expectedResult = new ObjectResult(new MessageResponse { Data = $"{Admin.CsvfileRequired}" }) { StatusCode = StatusCodes.Status400BadRequest };
+            var expectedResult = new ObjectResult(new ErrorResponse { Errors = [new Error() { Title=$"{Admin.CsvfileRequired}" }]}) { StatusCode = StatusCodes.Status400BadRequest };
 
             // Setup mock to throw InvalidDataException
             _mockImportEstablishmentsUseCase
@@ -162,7 +162,7 @@ namespace CheckYourEligibility.APIUnitTests
         public async Task Given_ImportFsmHomeOfficeData_Should_Return_Status400BadRequest()
         {
             // Arrange
-            var expectedResult = new ObjectResult(new MessageResponse { Data = $"{Admin.CsvfileRequired}" }) { StatusCode = StatusCodes.Status400BadRequest };
+            var expectedResult = new ObjectResult(new ErrorResponse { Errors = [new Error() {Title = $"{Admin.CsvfileRequired}" }]}){ StatusCode = StatusCodes.Status400BadRequest };
 
             // Setup mock to throw InvalidDataException
             _mockImportFsmHomeOfficeDataUseCase
@@ -208,7 +208,7 @@ namespace CheckYourEligibility.APIUnitTests
         public async Task Given_ImportFsmHMRCData_Should_Return_Status400BadRequest()
         {
             // Arrange
-            var expectedResult = new ObjectResult(new MessageResponse { Data = $"{Admin.XmlfileRequired}" }) { StatusCode = StatusCodes.Status400BadRequest };
+            var expectedResult = new ObjectResult(new ErrorResponse { Errors = [new Error{Title = $"{Admin.XmlfileRequired}" }]}) { StatusCode = StatusCodes.Status400BadRequest };
 
             // Setup mock to throw InvalidDataException
             _mockImportFsmHMRCDataUseCase

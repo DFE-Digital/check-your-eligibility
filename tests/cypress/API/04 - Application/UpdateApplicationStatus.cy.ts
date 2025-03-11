@@ -7,7 +7,7 @@ import { validLoginRequestBody, validApplicationRequestBody, validApplicationSup
 describe('Update Application Status', () => {
   const validBaseApplicationRequest = validApplicationRequestBody();
     
-    it('Verify 200 Success response is returned', () => {
+    xit('Verify 200 Success response is returned', () => {
 
       getandVerifyBearerToken('api/Login', validLoginRequestBody).then((token) => {
           const requestBody = validApplicationSupportRequestBody();

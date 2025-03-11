@@ -5,11 +5,11 @@
         // Primary identifiers (OAuth2 standard names)
         public string? Identifier { get; set; }  // Can store either client_id or username
         public string? Secret { get; set; }      // Can store either client_secret or password
-        public string? Scope { get; set; }
+        public string? scope { get; set; }
         public string? grant_type { get; set; }
 
-        public string? ClientId { get; set; }
-        public string? ClientSecret { get; set; }
+        public string? client_id { get; set; }
+        public string? client_secret { get; set; }
 
         // Legacy properties for backward compatibility
         public string? Username { get; set; }
@@ -26,13 +26,13 @@
         /// </summary>
         public void InitializeCredentials()
         {
-            Identifier = !string.IsNullOrEmpty(ClientId) ? ClientId : Username;
-            Secret = !string.IsNullOrEmpty(ClientSecret) ? ClientSecret : Password;
+            Identifier = !string.IsNullOrEmpty(client_id) ? client_id : Username;
+            Secret = !string.IsNullOrEmpty(client_secret) ? client_secret : Password;
         }
         
         public bool IsValid()
         {
-            return (!string.IsNullOrEmpty(ClientId) && !string.IsNullOrEmpty(ClientSecret)) ||
+            return (!string.IsNullOrEmpty(client_id) && !string.IsNullOrEmpty(client_secret)) ||
                 (!string.IsNullOrEmpty(Username) && !string.IsNullOrEmpty(Password));
         }
 

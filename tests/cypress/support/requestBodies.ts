@@ -11,8 +11,8 @@ export const validLoginRequestBodyWithUsernameAndPassword = {
 };
 
 export const validLoginRequestBodyWithClientDetails = {
-    clientId: Cypress.env('JWT_USERNAME'),
-    clientSecret: Cypress.env('JWT_PASSWORD'),
+    client_id: Cypress.env('JWT_USERNAME'),
+    client_secret: Cypress.env('JWT_PASSWORD'),
     scope: Cypress.env('JWT_SCOPE')
 };
 

@@ -46,7 +46,7 @@ describe('Post Eligibility Check - Invalid Requests', () => {
     getandVerifyBearerToken('api/Login', validLoginRequestBody).then((token) => {
       cy.apiRequest('POST', 'EligibilityCheck/FreeSchoolMeals', invalidHMRCRequest, token).then((response) => {
         cy.verifyApiResponseCode(response, 400)
-        expect(response.body).to.have.property('data', 'Invalid National Insurance Number');
+        expect(response.body.errors[0]).to.have.property('title', 'Invalid National Insurance Number');
       });
     });
   });
@@ -56,7 +56,7 @@ describe('Post Eligibility Check - Invalid Requests', () => {
     getandVerifyBearerToken('api/Login', validLoginRequestBody).then((token) => {
       cy.apiRequest('POST', 'EligibilityCheck/FreeSchoolMeals', invalidDOBRequest, token).then((response) => {
         cy.verifyApiResponseCode(response, 400)
-        expect(response.body).to.have.property('data', 'Date of birth is required:- (yyyy-mm-dd)');
+        expect(response.body.errors[0]).to.have.property('title', 'Date of birth is required:- (yyyy-mm-dd)');
       });
     });
   });
@@ -66,7 +66,7 @@ describe('Post Eligibility Check - Invalid Requests', () => {
     getandVerifyBearerToken('api/Login', validLoginRequestBody).then((token) => {
       cy.apiRequest('POST', 'EligibilityCheck/FreeSchoolMeals', invalidLastNameRequest, token).then((response) => {
         cy.verifyApiResponseCode(response, 400)
-        expect(response.body).to.have.property('data', 'LastName is required');
+        expect(response.body.errors[0]).to.have.property('title', 'LastName is required');
       });
     });
   });
@@ -76,7 +76,7 @@ describe('Post Eligibility Check - Invalid Requests', () => {
     getandVerifyBearerToken('api/Login', validLoginRequestBody).then((token) => {
       cy.apiRequest('POST', 'EligibilityCheck/FreeSchoolMeals', noNIAndNASSRequest, token).then((response) => {
         cy.verifyApiResponseCode(response, 400)
-        expect(response.body).to.have.property('data', 'National Insurance Number or National Asylum Seeker Service Number is required');
+        expect(response.body.errors[0]).to.have.property('title', 'National Insurance Number or National Asylum Seeker Service Number is required');
       });
     });
   });

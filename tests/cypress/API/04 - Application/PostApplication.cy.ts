@@ -38,7 +38,7 @@ describe('Verify POST application responses', () => {
             cy.apiRequest('POST', 'Application', invalidApplicationNoLastNameRequestBody, token).then((response) => {
                 // Assert the status and statusText
                 cy.verifyApiResponseCode(response, 400);
-                expect(response.body).to.have.property('data', 'LastName is required');
+                expect(response.body.errors[0]).to.have.property('title', 'LastName is required');
             });
         });
     });
@@ -60,7 +60,7 @@ describe('Verify invalid application request responses', () => {
             cy.apiRequest('POST', 'Application', invalidApplicationNoChildLastNameRequestBody, token).then((response) => {
                 // Assert the status and statusText
                 cy.verifyApiResponseCode(response, 400);
-                expect(response.body).to.have.property('data', 'Child LastName is required');
+                expect(response.body.errors[0]).to.have.property('title', 'Child LastName is required');
             });
         });
     });
@@ -78,7 +78,7 @@ describe('Verify invalid application request responses', () => {
             cy.apiRequest('POST', 'Application', invalidApplicationInvalidChildDOBRequestBody, token).then((response) => {
                 // Assert the status and statusText
                 cy.verifyApiResponseCode(response, 400);
-                expect(response.body).to.have.property('data', "Child Date of birth is required:- (yyyy-mm-dd)");
+                expect(response.body.errors[0]).to.have.property('title', "Child Date of birth is required:- (yyyy-mm-dd)");
             });
         });
     });

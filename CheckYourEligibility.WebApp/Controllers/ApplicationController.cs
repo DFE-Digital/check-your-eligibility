@@ -44,8 +44,8 @@ namespace CheckYourEligibility.WebApp.Controllers
         /// <param name="model"></param>
         /// <returns></returns>
         [ProducesResponseType(typeof(ApplicationSaveItemResponse), (int)HttpStatusCode.Created)]
-        [ProducesResponseType((int)HttpStatusCode.BadRequest)]
-        [HttpPost()]
+        [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.BadRequest)]
+        [HttpPost("/application")]
         public async Task<ActionResult> Application([FromBody] ApplicationRequest model)
         {
             try
@@ -55,7 +55,7 @@ namespace CheckYourEligibility.WebApp.Controllers
             }
             catch (ValidationException ex)
             {
-                return BadRequest(new MessageResponse { Data = ex.Message });
+                return BadRequest(new ErrorResponse { Errors = [new Error() {Title = ex.Message }]});
             }
         }
 
@@ -65,14 +65,14 @@ namespace CheckYourEligibility.WebApp.Controllers
         /// <param name="guid"></param>
         /// <returns></returns>
         [ProducesResponseType(typeof(ApplicationItemResponse), (int)HttpStatusCode.OK)]
-        [ProducesResponseType((int)HttpStatusCode.NotFound)]
-        [HttpGet("{guid}")]
+        [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.NotFound)]
+        [HttpGet("/application/{guid}")]
         public async Task<ActionResult> Application(string guid)
         {
             var response = await _getApplicationUseCase.Execute(guid);
             if (response == null)
             {
-                return NotFound(guid);
+                return NotFound(new ErrorResponse { Errors = [new Error() {Title = guid}]});
             }
             return new ObjectResult(response) { StatusCode = StatusCodes.Status200OK };
         }
@@ -83,15 +83,11 @@ namespace CheckYourEligibility.WebApp.Controllers
         /// <param name="model"></param>
         /// <returns></returns>
         [ProducesResponseType(typeof(ApplicationSearchResponse), (int)HttpStatusCode.OK)]
-        [ProducesResponseType((int)HttpStatusCode.NoContent)]
-        [HttpPost("Search")]
+        [Consumes("application/json", "application/vnd.api+json; version=1.0")]
+        [HttpPost("/application/search")]
         public async Task<ActionResult> ApplicationSearch([FromBody] ApplicationRequestSearch model)
         {
             var response = await _searchApplicationsUseCase.Execute(model);
-            if (response == null)
-            {
-                return NoContent();
-            }
             return new ObjectResult(response) { StatusCode = StatusCodes.Status200OK };
         }
 
@@ -102,14 +98,15 @@ namespace CheckYourEligibility.WebApp.Controllers
         /// <param name="model"></param>
         /// <returns></returns>
         [ProducesResponseType(typeof(ApplicationStatusUpdateResponse), (int)HttpStatusCode.OK)]
-        [ProducesResponseType((int)HttpStatusCode.NotFound)]
+        [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.NotFound)]
         [HttpPatch("{guid}")]
+        [HttpPatch("/application/{guid}")]
         public async Task<ActionResult> ApplicationStatusUpdate(string guid, [FromBody] ApplicationStatusUpdateRequest model)
         {
             var response = await _updateApplicationStatusUseCase.Execute(guid, model);
             if (response == null)
             {
-                return NotFound();
+                return NotFound(new ErrorResponse { Errors = [new Error() {Title = ""}]});
             }
             return new ObjectResult(response) { StatusCode = StatusCodes.Status200OK };
         }

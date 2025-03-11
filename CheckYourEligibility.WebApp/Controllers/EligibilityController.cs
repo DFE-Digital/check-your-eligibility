@@ -65,15 +65,16 @@ namespace CheckYourEligibility.WebApp.Controllers
         /// <param name="queue"></param>
         /// <returns></returns>
         [ProducesResponseType(typeof(MessageResponse), (int)HttpStatusCode.OK)]
-        [ProducesResponseType((int)HttpStatusCode.BadRequest)]
+        [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.BadRequest)]
         [HttpPost("ProcessQueueMessages")]
+        [HttpPost("/engine/process")]
         public async Task<ActionResult> ProcessQueue(string queue)
         {
             var result = await _processQueueMessagesUseCase.Execute(queue);
 
             if (result.Data == "Invalid Request.")
             {
-                return BadRequest(result);
+                return BadRequest(new ErrorResponse { Errors = [new Error() {Title = result.Data}]});
             }
 
             return new OkObjectResult(result);
@@ -85,15 +86,16 @@ namespace CheckYourEligibility.WebApp.Controllers
         /// <param name="model"></param>
         /// <remarks>If the check has already been submitted, then the stored Hash is returned</remarks>
         [ProducesResponseType(typeof(CheckEligibilityResponse), (int)HttpStatusCode.Accepted)]
-        [ProducesResponseType((int)HttpStatusCode.BadRequest)]
+        [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.BadRequest)]
         [HttpPost("FreeSchoolMeals")]
+        [HttpPost("/check/free-school-meals")]
         public async Task<ActionResult> CheckEligibility([FromBody] CheckEligibilityRequest_Fsm model)
         {
             var result = await _checkEligibilityForFsmUseCase.Execute(model);
 
             if (!result.IsValid)
             {
-                return BadRequest(new MessageResponse { Data = result.ValidationErrors });
+                return BadRequest(new ErrorResponse { Errors = [new Error() {Title = result.ValidationErrors }]});
             }
 
             return new ObjectResult(result.Response) { StatusCode = StatusCodes.Status202Accepted };
@@ -105,15 +107,16 @@ namespace CheckYourEligibility.WebApp.Controllers
         /// <param name="model"></param>
         /// <returns></returns>
         [ProducesResponseType(typeof(CheckEligibilityResponseBulk), (int)HttpStatusCode.Accepted)]
-        [ProducesResponseType((int)HttpStatusCode.BadRequest)]
+        [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.BadRequest)]
         [HttpPost("/EligibilityCheck/FreeSchoolMeals/Bulk")]
+        [HttpPost("/check/bulk/free-school-meals")]
         public async Task<ActionResult> CheckEligibilityBulk([FromBody] CheckEligibilityRequestBulk_Fsm model)
         {
             var result = await _checkEligibilityBulkUseCase.Execute(model, _bulkUploadRecordCountLimit);
 
             if (!result.IsValid)
             {
-                return BadRequest(new MessageResponse { Data = result.ValidationErrors });
+                return BadRequest(new ErrorResponse { Errors = [new Error() {Title = result.ValidationErrors }]});
             }
 
             return new ObjectResult(result.Response) { StatusCode = StatusCodes.Status202Accepted };
@@ -125,20 +128,21 @@ namespace CheckYourEligibility.WebApp.Controllers
         /// <param name="guid"></param>
         /// <returns></returns>
         [ProducesResponseType(typeof(CheckEligibilityBulkStatusResponse), (int)HttpStatusCode.OK)]
-        [ProducesResponseType((int)HttpStatusCode.NotFound)]
+        [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.NotFound)]
         [HttpGet("Bulk/{guid}/CheckProgress")]
+        [HttpGet("/check/bulk/{guid}/progress")]
         public async Task<ActionResult> BulkUploadProgress(string guid)
         {
             var result = await _getBulkUploadProgressUseCase.Execute(guid);
 
             if (result.IsNotFound)
             {
-                return NotFound(guid);
+                return NotFound(new ErrorResponse { Errors = [new Error() {Title = guid}]});
             }
 
             if (!result.IsValid)
             {
-                return BadRequest(new MessageResponse { Data = result.ValidationErrors });
+                return BadRequest(new ErrorResponse { Errors = [new Error() {Title = result.ValidationErrors }]});
             }
 
             return new ObjectResult(result.Response) { StatusCode = StatusCodes.Status200OK };
@@ -150,20 +154,22 @@ namespace CheckYourEligibility.WebApp.Controllers
         /// <param name="guid"></param>
         /// <returns></returns>
         [ProducesResponseType(typeof(CheckEligibilityBulkResponse), (int)HttpStatusCode.OK)]
-        [ProducesResponseType((int)HttpStatusCode.NotFound)]
+        [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.NotFound)]
+        [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.BadRequest)]
         [HttpGet("Bulk/{guid}/Results")]
+        [HttpGet("/check/bulk/{guid}")]
         public async Task<ActionResult> BulkUploadResults(string guid)
         {
             var result = await _getBulkUploadResultsUseCase.Execute(guid);
 
             if (result.IsNotFound)
             {
-                return NotFound(guid);
+                return NotFound(new ErrorResponse() { Errors = [new Error() { Title = guid, Status = "404" }] });
             }
 
             if (!result.IsValid)
             {
-                return BadRequest(new MessageResponse { Data = result.ValidationErrors });
+                return BadRequest(new ErrorResponse() { Errors = [new Error() { Title = result.ValidationErrors, Status = "400" } ]});
             }
 
             return new ObjectResult(result.Response) { StatusCode = StatusCodes.Status200OK };
@@ -175,20 +181,21 @@ namespace CheckYourEligibility.WebApp.Controllers
         /// <param name="guid"></param>
         /// <returns></returns>
         [ProducesResponseType(typeof(CheckEligibilityStatusResponse), (int)HttpStatusCode.OK)]
-        [ProducesResponseType((int)HttpStatusCode.NotFound)]
+        [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.NotFound)]
         [HttpGet("{guid}/Status")]
+        [HttpGet("/check/{guid}/status")]
         public async Task<ActionResult> CheckEligibilityStatus(string guid)
         {
             var result = await _getEligibilityCheckStatusUseCase.Execute(guid);
 
             if (result.IsNotFound)
             {
-                return NotFound(guid);
+                return NotFound(new ErrorResponse { Errors = [new Error() {Title = guid}]});
             }
 
             if (!result.IsValid)
             {
-                return BadRequest(new MessageResponse { Data = result.ValidationErrors });
+                return BadRequest(new ErrorResponse { Errors = [new Error() {Title = result.ValidationErrors }]});
             }
 
             return new ObjectResult(result.Response) { StatusCode = StatusCodes.Status200OK };
@@ -201,20 +208,21 @@ namespace CheckYourEligibility.WebApp.Controllers
         /// <param name="model"></param>
         /// <returns></returns>
         [ProducesResponseType(typeof(CheckEligibilityStatusResponse), (int)HttpStatusCode.OK)]
-        [ProducesResponseType((int)HttpStatusCode.NotFound)]
+        [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.NotFound)]
         [HttpPatch("{guid}/Status")]
+        [HttpPatch("/check/{guid}/status")]
         public async Task<ActionResult> EligibilityCheckStatusUpdate(string guid, [FromBody] EligibilityStatusUpdateRequest model)
         {
             var result = await _updateEligibilityCheckStatusUseCase.Execute(guid, model);
 
             if (result.IsNotFound)
             {
-                return NotFound();
+                return NotFound(new ErrorResponse { Errors = [new Error() {Title = ""}]});
             }
 
             if (!result.IsValid)
             {
-                return BadRequest(new MessageResponse { Data = result.ValidationErrors });
+                return BadRequest(new ErrorResponse { Errors = [new Error() {Title = result.ValidationErrors }]});
             }
 
             return new ObjectResult(result.Response) { StatusCode = StatusCodes.Status200OK };
@@ -228,9 +236,10 @@ namespace CheckYourEligibility.WebApp.Controllers
         /// <remarks>If a dependent service, ie DWP fails then the status is not updated</remarks>
         [ProducesResponseType(typeof(CheckEligibilityStatusResponse), (int)HttpStatusCode.OK)]
         [ProducesResponseType(typeof(CheckEligibilityStatusResponse), (int)HttpStatusCode.ServiceUnavailable)]
-        [ProducesResponseType((int)HttpStatusCode.NotFound)]
-        [ProducesResponseType((int)HttpStatusCode.BadRequest)]
+        [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.NotFound)]
+        [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.BadRequest)]
         [HttpPut("ProcessEligibilityCheck/{guid}")]
+        [HttpPut("/engine/process/{guid}")]
         public async Task<ActionResult> Process(string guid)
         {
             try
@@ -239,12 +248,12 @@ namespace CheckYourEligibility.WebApp.Controllers
 
                 if (result.IsNotFound)
                 {
-                    return NotFound(guid);
+                    return NotFound(new ErrorResponse { Errors = [new Error() {Title = guid}]});
                 }
 
                 if (!result.IsValid && !result.IsServiceUnavailable)
                 {
-                    return BadRequest(new MessageResponse { Data = result.ValidationErrors });
+                    return BadRequest(new ErrorResponse { Errors = [new Error() {Title = result.ValidationErrors }]});
                 }
 
                 if (result.IsServiceUnavailable)
@@ -256,7 +265,7 @@ namespace CheckYourEligibility.WebApp.Controllers
             }
             catch (ProcessCheckException)
             {
-                return BadRequest(guid);
+                return BadRequest(new ErrorResponse { Errors = [new Error() {Title = guid}]});
             }
         }
 
@@ -266,20 +275,21 @@ namespace CheckYourEligibility.WebApp.Controllers
         /// <param name="guid"></param>
         /// <returns></returns>
         [ProducesResponseType(typeof(CheckEligibilityItemResponse), (int)HttpStatusCode.OK)]
-        [ProducesResponseType((int)HttpStatusCode.NotFound)]
+        [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.NotFound)]
         [HttpGet("{guid}")]
+        [HttpGet("/check/{guid}")]
         public async Task<ActionResult> EligibilityCheck(string guid)
         {
             var result = await _getEligibilityCheckItemUseCase.Execute(guid);
 
             if (result.IsNotFound)
             {
-                return NotFound(guid);
+                return NotFound(new ErrorResponse { Errors = [new Error() {Title = guid}]});
             }
 
             if (!result.IsValid)
             {
-                return BadRequest(new MessageResponse { Data = result.ValidationErrors });
+                return BadRequest(new ErrorResponse { Errors = [new Error() {Title = result.ValidationErrors}]});
             }
 
             return new ObjectResult(result.Response) { StatusCode = StatusCodes.Status200OK };
