@@ -115,9 +115,15 @@ namespace CheckYourEligibility.WebApp.Controllers
         [HttpPost("/admin/import-fsm-hmrc-data")]
         public async Task<ActionResult> ImportFsmHMRCData(IFormFile file)
         {
+            try
+            {
                 await _importFsmHMRCDataUseCase.Execute(file);
                 return new ObjectResult(new MessageResponse { Data = $"{file.FileName} - {Admin.HMRCFileProcessed}" }) { StatusCode = StatusCodes.Status200OK };
-            
+            }
+            catch (InvalidDataException ex)
+            {
+                return BadRequest(new ErrorResponse { Errors = [new Error() {Title = ex.Message }]});
+            }
         }
     }
 }
