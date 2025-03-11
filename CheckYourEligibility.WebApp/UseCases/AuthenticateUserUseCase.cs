@@ -55,7 +55,7 @@ namespace CheckYourEligibility.WebApp.UseCases
                 credentials.InitializeCredentials();
             }
 
-            var client = AuthenticateClient(credentials.Identifier, credentials.Secret, jwtConfig.ExpectedSecret, credentials.Scope);
+            var client = AuthenticateClient(credentials.Identifier, credentials.Secret, jwtConfig.ExpectedSecret, credentials.scope);
             if (client == null)
             {
                 return null;
@@ -91,7 +91,7 @@ namespace CheckYourEligibility.WebApp.UseCases
                 return new SystemUser
                 {
                     Identifier = identifier,
-                    Scope = scope
+                    scope = scope
                 };
             }
             return null;
@@ -124,7 +124,7 @@ namespace CheckYourEligibility.WebApp.UseCases
                 var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
                 // Validate scopes if both requested and expected scopes exist
-                if (!ValidateScopes(client.Scope, jwtConfig.AllowedScopes))
+                if (!ValidateScopes(client.scope, jwtConfig.AllowedScopes))
                 {
                     expires = DateTime.MinValue;
                     return null; // Invalid scopes
@@ -137,9 +137,9 @@ namespace CheckYourEligibility.WebApp.UseCases
                 };
 
                 // Only include scope claim if scope was provided
-                if (!string.IsNullOrEmpty(client.Scope) && client.Scope != "default")
+                if (!string.IsNullOrEmpty(client.scope) && client.scope != "default")
                 {
-                    claimsList.Add(new Claim("scope", client.Scope));
+                    claimsList.Add(new Claim("scope", client.scope));
                 }
 
                 expires = DateTime.UtcNow.AddMinutes(120);

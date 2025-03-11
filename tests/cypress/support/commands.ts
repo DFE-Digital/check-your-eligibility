@@ -43,7 +43,8 @@ Cypress.Commands.add('apiRequest', (method: string, url: string, requestBody: an
 
   if (bearerToken) {
     options.headers = {
-      'Authorization': `Bearer ${bearerToken}`
+      'Authorization': `Bearer ${bearerToken}`,
+      'Content-Type': 'application/json'
     };
   }
   return cy.request(options);
