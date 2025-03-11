@@ -63,7 +63,6 @@ stages:
           publishWebProjects: True
           arguments: '--configuration $(BuildConfiguration) --output $(Build.ArtifactStagingDirectory)'
           zipAfterPublish: True
-
       - task: PublishPipelineArtifact@1
         inputs:
           targetPath: '$(Build.ArtifactStagingDirectory)' 
@@ -143,7 +142,12 @@ stages:
               script: |
                 cd tests
                 npm run combine:reports
-
+          - task: PublishBuildArtifacts@1
+            displayName: 'Publish Cypress Screenshot Files'
+            condition: failed()
+            inputs:
+              PathtoPublish: 'tests/cypress/screenshots/'
+              ArtifactName: 'screenshots'
           - task: PublishTestResults@2
             condition: always()
             displayName: 'Publish test results'
@@ -224,7 +228,12 @@ stages:
          script: |
           cd tests
           npm run combine:reports
-
+      - task: PublishBuildArtifacts@1
+        displayName: 'Publish Cypress Screenshot Files'
+        condition: failed()
+        inputs:
+          PathtoPublish: 'tests/cypress/screenshots/'
+          ArtifactName: 'screenshots'
       - task: PublishTestResults@2
         condition: always()
         displayName: 'Publish test results'
@@ -305,7 +314,12 @@ stages:
               script: |
                 cd tests
                 npm run combine:reports
-
+          - task: PublishBuildArtifacts@1
+            displayName: 'Publish Cypress Screenshot Files'
+            condition: failed()
+            inputs:
+              PathtoPublish: 'tests/cypress/screenshots/'
+              ArtifactName: 'screenshots'
           - task: PublishTestResults@2
             condition: always()
             displayName: 'Publish test results'
