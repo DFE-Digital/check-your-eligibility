@@ -115,12 +115,17 @@ stages:
                   script: |
                     cd $(Pipeline.Workspace)/checkYourEligibilityAPI/tests
                     npm run combine:reports
+                    
+              - task: PublishBuildArtifacts@1
+                displayName: 'Publish Cypress Screenshot Files'
+                condition: failed()
+                inputs:
+                  PathtoPublish: '$(Pipeline.Workspace)/checkYourEligibilityAPI/tests/cypress/screenshots/'
+                  ArtifactName: 'screenshots'
 
               - task: PublishTestResults@2
                 condition: always()
                 displayName: 'Publish test results'
                 inputs:
-                  testResultsFiles: |
-                    **/combined-report.xml
-                    **/screenshots/
+                  testResultsFiles: '**/combined-report.xml'
                   searchFolder: '$(Pipeline.Workspace)/checkYourEligibilityAPI/tests'
