@@ -1,7 +1,19 @@
+// TODO: have only client details in the request body
 
 export const validLoginRequestBody = {
     username: Cypress.env('JWT_USERNAME'),
     password: Cypress.env('JWT_PASSWORD')
+};
+
+export const validLoginRequestBodyWithUsernameAndPassword = {
+    username: Cypress.env('JWT_USERNAME'),
+    password: Cypress.env('JWT_PASSWORD')
+};
+
+export const validLoginRequestBodyWithClientDetails = {
+    clientId: Cypress.env('JWT_USERNAME'),
+    clientSecret: Cypress.env('JWT_PASSWORD'),
+    scope: Cypress.env('JWT_SCOPE')
 };
 
 export function validHMRCRequestBody() {
