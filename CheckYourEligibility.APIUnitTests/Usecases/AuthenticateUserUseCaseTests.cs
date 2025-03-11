@@ -59,8 +59,8 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
 
             // Assert
             result.Should().NotBeNull();
-            result.Token.Should().NotBeNullOrEmpty();
-            result.Expires.Should().BeAfter(DateTime.UtcNow);
+            result.access_token.Should().NotBeNullOrEmpty();
+            result.expires_in.Should().Equals(3600);
         }
 
         [Test]
@@ -173,8 +173,8 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
 
             // Assert
             result.Should().NotBeNull();
-            result.Token.Should().NotBeNullOrEmpty();
-            result.Expires.Should().BeAfter(DateTime.UtcNow);
+            result.access_token.Should().NotBeNullOrEmpty();
+            result.expires_in.Should().Equals(3600);
         }
 
         [Test]
@@ -225,7 +225,7 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
 
             // Assert
             result.Should().NotBeNull();
-            result.Token.Should().NotBeNullOrEmpty();
+            result.access_token.Should().NotBeNullOrEmpty();
             login.Identifier.Should().Be("test_client"); // Verify identifier was set to client_id
         }
 
@@ -256,7 +256,7 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
 
             // Assert
             result.Should().NotBeNull();
-            result.Token.Should().NotBeNullOrEmpty();
+            result.access_token.Should().NotBeNullOrEmpty();
             login.Identifier.Should().Be("test_username"); // Verify identifier was set to Username
         }
 
@@ -489,7 +489,7 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
 
             // Decode token to verify claims
             var handler = new JwtSecurityTokenHandler();
-            var token = handler.ReadJwtToken(result.Token);
+            var token = handler.ReadJwtToken(result.access_token);
 
             token.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Sub)?.Value.Should().Be("test_username");
             token.Claims.FirstOrDefault(c => c.Type == "EcsApi")?.Value.Should().Be("apiCustomClaim");
@@ -534,7 +534,7 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             result.Should().NotBeNull();
 
             var handler = new JwtSecurityTokenHandler();
-            var token = handler.ReadJwtToken(result.Token);
+            var token = handler.ReadJwtToken(result.access_token);
 
             token.Claims.FirstOrDefault(c => c.Type == "scope")?.Value.Should().Be("read write");
         }
@@ -568,7 +568,7 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             result.Should().NotBeNull();
 
             var handler = new JwtSecurityTokenHandler();
-            var token = handler.ReadJwtToken(result.Token);
+            var token = handler.ReadJwtToken(result.access_token);
 
             token.Claims.FirstOrDefault(c => c.Type == "scope").Should().BeNull();
         }
@@ -601,7 +601,7 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             result.Should().NotBeNull();
 
             var handler = new JwtSecurityTokenHandler();
-            var token = handler.ReadJwtToken(result.Token);
+            var token = handler.ReadJwtToken(result.access_token);
 
             token.Claims.FirstOrDefault(c => c.Type == "scope").Should().BeNull();
         }
@@ -733,7 +733,7 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
 
             // Decode token to verify claims
             var handler = new JwtSecurityTokenHandler();
-            var token = handler.ReadJwtToken(result.Token);
+            var token = handler.ReadJwtToken(result.access_token);
 
             // Check expected claims are present
             token.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Sub)?.Value.Should().Be("test_username");

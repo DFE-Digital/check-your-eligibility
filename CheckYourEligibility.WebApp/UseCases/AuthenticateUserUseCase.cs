@@ -81,7 +81,7 @@ namespace CheckYourEligibility.WebApp.UseCases
                 }
             }
 
-            return new JwtAuthResponse { Token = tokenString, Expires = expires };
+            return new JwtAuthResponse { Token = tokenString, expires_in = 3600, access_token = tokenString};
         }
 
         private static SystemUser AuthenticateClient(string identifier, string secret, string expectedSecret, string scope = "default")

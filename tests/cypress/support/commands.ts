@@ -143,7 +143,7 @@ Cypress.Commands.add('verifyGetEligibilityCheckStatusResponse', (response) => {
 Cypress.Commands.add('createEligibilityCheckAndGetStatus', (loginUrl: string, loginRequestBody: any, eligibilityCheckUrl: string, eligibilityCheckRequestBody: any) => {
   return cy.apiRequest('POST', loginUrl, loginRequestBody).then((response) => {
     cy.verifyApiResponseCode(response, 200);
-    const token = response.body.token;
+    const token = response.body.access_token;
 
     return cy.apiRequest('POST', eligibilityCheckUrl, eligibilityCheckRequestBody, token).then((response) => {
       cy.verifyApiResponseCode(response, 202);

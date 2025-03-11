@@ -65,7 +65,7 @@ namespace CheckYourEligibility.APIUnitTests
                 .Setup(cs => cs.Execute(It.Is<SystemUser>(u =>
                     u.Username == validUser.Username && u.Password == validUser.Password),
                     It.IsAny<JwtConfig>()))
-                .ReturnsAsync(new JwtAuthResponse { Token = "validUserToken" });
+                .ReturnsAsync(new JwtAuthResponse { access_token = "validUserToken" });
 
             _mockAuthenticateUserUseCase
                 .Setup(cs => cs.Execute(It.Is<SystemUser>(u =>
@@ -78,7 +78,7 @@ namespace CheckYourEligibility.APIUnitTests
                 .Setup(cs => cs.Execute(It.Is<SystemUser>(u =>
                     u.client_id == validClient.client_id && u.client_secret == validClient.client_secret),
                     It.IsAny<JwtConfig>()))
-                .ReturnsAsync(new JwtAuthResponse { Token = "validClientToken" });
+                .ReturnsAsync(new JwtAuthResponse { access_token = "validClientToken" });
 
             _mockAuthenticateUserUseCase
                 .Setup(cs => cs.Execute(It.Is<SystemUser>(u =>
@@ -86,7 +86,7 @@ namespace CheckYourEligibility.APIUnitTests
                     u.client_secret == validClientWithScope.client_secret &&
                     u.scope == validClientWithScope.scope),
                     It.IsAny<JwtConfig>()))
-                .ReturnsAsync(new JwtAuthResponse { Token = "validClientTokenWithScope" });
+                .ReturnsAsync(new JwtAuthResponse { access_token = "validClientTokenWithScope" });
 
             _mockAuthenticateUserUseCase
                 .Setup(cs => cs.Execute(It.Is<SystemUser>(u =>
@@ -125,7 +125,7 @@ namespace CheckYourEligibility.APIUnitTests
             response.Should().BeOfType<OkObjectResult>();
             var responseData = (OkObjectResult)response;
             var jwtAuthResponse = (JwtAuthResponse)responseData.Value;
-            jwtAuthResponse.Token.Should().NotBeEmpty();
+            jwtAuthResponse.access_token.Should().NotBeEmpty();
 
             // Verify
             _mockAuthenticateUserUseCase.Verify(cs => cs.Execute(
@@ -166,7 +166,7 @@ namespace CheckYourEligibility.APIUnitTests
             response.Should().BeOfType<OkObjectResult>();
             var responseData = (OkObjectResult)response;
             var jwtAuthResponse = (JwtAuthResponse)responseData.Value;
-            jwtAuthResponse.Token.Should().NotBeEmpty();
+            jwtAuthResponse.access_token.Should().NotBeEmpty();
 
             // Verify
             _mockAuthenticateUserUseCase.Verify(cs => cs.Execute(
@@ -188,7 +188,7 @@ namespace CheckYourEligibility.APIUnitTests
             response.Should().BeOfType<OkObjectResult>();
             var responseData = (OkObjectResult)response;
             var jwtAuthResponse = (JwtAuthResponse)responseData.Value;
-            jwtAuthResponse.Token.Should().NotBeEmpty();
+            jwtAuthResponse.access_token.Should().NotBeEmpty();
 
             // Verify
             _mockAuthenticateUserUseCase.Verify(cs => cs.Execute(
@@ -331,7 +331,7 @@ namespace CheckYourEligibility.APIUnitTests
             response.Should().BeOfType<OkObjectResult>();
             var responseData = (OkObjectResult)response;
             var jwtAuthResponse = (JwtAuthResponse)responseData.Value;
-            jwtAuthResponse.Token.Should().NotBeEmpty();
+            jwtAuthResponse.access_token.Should().NotBeEmpty();
 
             // Verify
             _mockAuthenticateUserUseCase.Verify(cs => cs.Execute(
@@ -418,7 +418,7 @@ namespace CheckYourEligibility.APIUnitTests
             response.Should().BeOfType<OkObjectResult>();
             var responseData = (OkObjectResult)response;
             var jwtAuthResponse = (JwtAuthResponse)responseData.Value;
-            jwtAuthResponse.Token.Should().NotBeEmpty();
+            jwtAuthResponse.access_token.Should().NotBeEmpty();
 
             // Verify
             _mockAuthenticateUserUseCase.Verify(cs => cs.Execute(
@@ -448,7 +448,7 @@ namespace CheckYourEligibility.APIUnitTests
             response.Should().BeOfType<OkObjectResult>();
             var responseData = (OkObjectResult)response;
             var jwtAuthResponse = (JwtAuthResponse)responseData.Value;
-            jwtAuthResponse.Token.Should().NotBeEmpty();
+            jwtAuthResponse.access_token.Should().NotBeEmpty();
 
             // Verify
             _mockAuthenticateUserUseCase.Verify(cs => cs.Execute(
@@ -478,7 +478,7 @@ namespace CheckYourEligibility.APIUnitTests
             response.Should().BeOfType<OkObjectResult>();
             var responseData = (OkObjectResult)response;
             var jwtAuthResponse = (JwtAuthResponse)responseData.Value;
-            jwtAuthResponse.Token.Should().NotBeEmpty();
+            jwtAuthResponse.access_token.Should().NotBeEmpty();
 
             // Verify
             _mockAuthenticateUserUseCase.Verify(cs => cs.Execute(
