@@ -13,12 +13,12 @@ namespace CheckYourEligibility.WebApp.Controllers
     [ApiController]
     [Route("[controller]")]
     [Authorize]
-    public class UsersController : BaseController
+    public class UserController : BaseController
     {
-        private readonly ILogger<UsersController> _logger;
+        private readonly ILogger<UserController> _logger;
         private readonly ICreateOrUpdateUserUseCase _createOrUpdateUserUseCase;
 
-        public UsersController(ILogger<UsersController> logger, ICreateOrUpdateUserUseCase createOrUpdateUserUseCase, IAudit audit)
+        public UserController(ILogger<UserController> logger, ICreateOrUpdateUserUseCase createOrUpdateUserUseCase, IAudit audit)
             : base(audit)
         {
             _logger = Guard.Against.Null(logger);
@@ -31,13 +31,14 @@ namespace CheckYourEligibility.WebApp.Controllers
         /// <param name="model"></param>
         /// <returns></returns>
         [ProducesResponseType(typeof(UserSaveItemResponse), (int)HttpStatusCode.Created)]
-        [ProducesResponseType((int)HttpStatusCode.BadRequest)]
-        [HttpPost()]
+        [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.BadRequest)]
+        [HttpPost("/Users")]
+        [HttpPost("/user")]
         public async Task<ActionResult> User([FromBody] UserCreateRequest model)
         {
             if (model == null || model.Data == null)
             {
-                return BadRequest(new MessageResponse { Data = "Invalid request, data is required." });
+                return BadRequest(new ErrorResponse { Errors = [new Error() {Title = "Invalid request, data is required." }]});
             }
 
             var response = await _createOrUpdateUserUseCase.Execute(model);

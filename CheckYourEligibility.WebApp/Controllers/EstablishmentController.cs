@@ -12,13 +12,13 @@ namespace CheckYourEligibility.WebApp.Controllers
     [ApiController]
     [Route("[controller]")]
     [Authorize]
-    public class EstablishmentsController : BaseController
+    public class EstablishmentController : BaseController
     {
-        private readonly ILogger<EstablishmentsController> _logger;
+        private readonly ILogger<EstablishmentController> _logger;
         private readonly ISearchEstablishmentsUseCase _searchUseCase;
 
-        public EstablishmentsController(
-            ILogger<EstablishmentsController> logger,
+        public EstablishmentController(
+            ILogger<EstablishmentController> logger,
             ISearchEstablishmentsUseCase searchUseCase,
             IAudit audit)
             : base(audit)
@@ -28,14 +28,15 @@ namespace CheckYourEligibility.WebApp.Controllers
         }
 
         [ProducesResponseType(typeof(IEnumerable<Establishment>), (int)HttpStatusCode.OK)]
-        [ProducesResponseType((int)HttpStatusCode.NotFound)]
-        [ProducesResponseType((int)HttpStatusCode.BadRequest)]
-        [HttpGet("search")]
+        [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.NotFound)]
+        [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.BadRequest)]
+        [HttpGet("/establishment/search")]
+        [HttpGet("/Establishments/Search")]
         public async Task<ActionResult> Search(string query)
         {
             if (string.IsNullOrWhiteSpace(query) || query.Length < 3)
             {
-                return BadRequest(new MessageResponse { Data = "At least 3 characters are required to query." });
+                return BadRequest(new ErrorResponse { Errors = [new Error() {Title = "At least 3 characters are required to query." }]});
             }
 
             var results = await _searchUseCase.Execute(query);

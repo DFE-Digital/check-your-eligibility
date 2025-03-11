@@ -8,6 +8,7 @@ using CheckYourEligibility.WebApp.UseCases;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
+using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace CheckYourEligibility.WebApp.Controllers
 {
@@ -51,6 +52,7 @@ namespace CheckYourEligibility.WebApp.Controllers
         /// <returns></returns>
         [ProducesResponseType(typeof(int), (int)HttpStatusCode.OK)]
         [HttpPut("/cleanUpEligibilityChecks")]
+        [HttpPut("/admin/clean-up-eligibility-checks")]
         public async Task<ActionResult> CleanUpEligibilityChecks()
         {
             await _cleanUpEligibilityChecksUseCase.Execute();
@@ -63,7 +65,9 @@ namespace CheckYourEligibility.WebApp.Controllers
         /// <param name="file"></param>
         /// <returns></returns>
         [ProducesResponseType(typeof(int), (int)HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.BadRequest)]
         [HttpPost("/importEstablishments")]
+        [HttpPost("/admin/import-establishments")]
         public async Task<ActionResult> ImportEstablishments(IFormFile file)
         {
             try
@@ -73,7 +77,7 @@ namespace CheckYourEligibility.WebApp.Controllers
             }
             catch (InvalidDataException ex)
             {
-                return new ObjectResult(new MessageResponse { Data = ex.Message }) { StatusCode = StatusCodes.Status400BadRequest };
+                return BadRequest(new ErrorResponse { Errors = [new Error() {Title = ex.Message }]});
             }
         }
 
@@ -83,7 +87,9 @@ namespace CheckYourEligibility.WebApp.Controllers
         /// <param name="file"></param>
         /// <returns></returns>
         [ProducesResponseType(typeof(int), (int)HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.BadRequest)]
         [HttpPost("/importFsmHomeOfficeData")]
+        [HttpPost("/admin/import-fsm-home-office-data")]
         public async Task<ActionResult> ImportFsmHomeOfficeData(IFormFile file)
         {
             try
@@ -93,7 +99,7 @@ namespace CheckYourEligibility.WebApp.Controllers
             }
             catch (InvalidDataException ex)
             {
-                return new ObjectResult(new MessageResponse { Data = ex.Message }) { StatusCode = StatusCodes.Status400BadRequest };
+                return BadRequest(new ErrorResponse { Errors = [new Error() {Title = ex.Message }]});
             }
         }
 
@@ -104,18 +110,14 @@ namespace CheckYourEligibility.WebApp.Controllers
         /// <returns></returns>
         /// <exception cref="InvalidDataException"></exception>
         [ProducesResponseType(typeof(int), (int)HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.BadRequest)]
         [HttpPost("/importFsmHMRCData")]
+        [HttpPost("/admin/import-fsm-hmrc-data")]
         public async Task<ActionResult> ImportFsmHMRCData(IFormFile file)
         {
-            try
-            {
                 await _importFsmHMRCDataUseCase.Execute(file);
                 return new ObjectResult(new MessageResponse { Data = $"{file.FileName} - {Admin.HMRCFileProcessed}" }) { StatusCode = StatusCodes.Status200OK };
-            }
-            catch (InvalidDataException ex)
-            {
-                return new ObjectResult(new MessageResponse { Data = ex.Message }) { StatusCode = StatusCodes.Status400BadRequest };
-            }
+            
         }
     }
 }
