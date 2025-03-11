@@ -60,7 +60,7 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             // Assert
             result.Should().NotBeNull();
             result.access_token.Should().NotBeNullOrEmpty();
-            result.expires_in.Should().Equals(3600);
+            result.expires_in.Should().Be(3600);
         }
 
         [Test]
