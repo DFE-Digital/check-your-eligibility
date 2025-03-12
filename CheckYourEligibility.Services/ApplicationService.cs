@@ -178,17 +178,23 @@ namespace CheckYourEligibility.Services
             if (model.Data?.DateRange != null)
                 results = results.Where(x => x.Created > model.Data.DateRange.DateFrom && x.Created < model.Data.DateRange.DateTo);
             if (!string.IsNullOrEmpty(model.Data?.Keyword))
-                results = results.Where(
-                    x =>
-                        x.Reference.Contains(model.Data.Keyword) ||
-                        x.ChildFirstName.Contains(model.Data.Keyword) ||
-                        x.ChildLastName.Contains(model.Data.Keyword) ||
-                        x.ParentFirstName.Contains(model.Data.Keyword) ||
-                        x.ParentLastName.Contains(model.Data.Keyword) ||
-                        x.ParentNationalInsuranceNumber.Contains(model.Data.Keyword) ||
-                        x.ParentNationalAsylumSeekerServiceNumber.Contains(model.Data.Keyword) ||
-                        x.ParentEmail.Contains(model.Data.Keyword)
-                );
+            {
+                var keywords = model.Data.Keyword.Split(' ');
+                foreach (var keyword in keywords)
+                {
+                    results = results.Where(
+                        x =>
+                            x.Reference.Contains(keyword) ||
+                            x.ChildFirstName.Contains(keyword) ||
+                            x.ChildLastName.Contains(keyword) ||
+                            x.ParentFirstName.Contains(keyword) ||
+                            x.ParentLastName.Contains(keyword) ||
+                            x.ParentNationalInsuranceNumber.Contains(keyword) ||
+                            x.ParentNationalAsylumSeekerServiceNumber.Contains(keyword) ||
+                            x.ParentEmail.Contains(keyword)
+                    );
+                }
+            }
             return results.OrderBy(x => x.Created).ToList();
         }
 
