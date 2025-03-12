@@ -5,16 +5,16 @@ describe('Verify POST application responses', () => {
     const validBaseApplicationRequest = validApplicationRequestBody();
 
     it('Verify 201 Created response is returned with valid application', () => {
-        getandVerifyBearerToken('api/Login', validLoginRequestBody).then((token) => {
+        getandVerifyBearerToken('/oauth2/token', validLoginRequestBody).then((token) => {
             const requestBody = validApplicationSupportRequestBody();
-            cy.apiRequest('POST', 'EligibilityCheck/FreeSchoolMeals', requestBody, token).then((response) => {
+            cy.apiRequest('POST', 'check/free-school-meals', requestBody, token).then((response) => {
                 cy.verifyApiResponseCode(response, 202);
-                cy.apiRequest('POST', '/Users', validUserRequestBody(), token).then((response) => {
+                cy.apiRequest('POST', '/user', validUserRequestBody(), token).then((response) => {
                     validBaseApplicationRequest.Data.UserId = response.Data;
                     cy.wait(60000);
 
                     //Make post request for eligibility check
-                    cy.apiRequest('POST', 'Application', validBaseApplicationRequest, token).then((response) => {
+                    cy.apiRequest('POST', 'application', validBaseApplicationRequest, token).then((response) => {
                         // Assert the status and statusText
                         cy.verifyApiResponseCode(response, 201);
 
@@ -34,8 +34,8 @@ describe('Verify POST application responses', () => {
                 parentLastName: ''
             }
         };
-        getandVerifyBearerToken('api/Login', validLoginRequestBody).then((token) => {
-            cy.apiRequest('POST', 'Application', invalidApplicationNoLastNameRequestBody, token).then((response) => {
+        getandVerifyBearerToken('/oauth2/token', validLoginRequestBody).then((token) => {
+            cy.apiRequest('POST', 'application', invalidApplicationNoLastNameRequestBody, token).then((response) => {
                 // Assert the status and statusText
                 cy.verifyApiResponseCode(response, 400);
                 expect(response.body.errors[0]).to.have.property('title', 'LastName is required');
@@ -56,7 +56,7 @@ describe('Verify invalid application request responses', () => {
                 childLastName: ''
             }
         };
-        getandVerifyBearerToken('api/Login', validLoginRequestBody).then((token) => {
+        getandVerifyBearerToken('/oauth2/token', validLoginRequestBody).then((token) => {
             cy.apiRequest('POST', 'Application', invalidApplicationNoChildLastNameRequestBody, token).then((response) => {
                 // Assert the status and statusText
                 cy.verifyApiResponseCode(response, 400);
@@ -74,7 +74,7 @@ describe('Verify invalid application request responses', () => {
             }
         };
 
-        getandVerifyBearerToken('api/Login', validLoginRequestBody).then((token) => {
+        getandVerifyBearerToken('/oauth2/token', validLoginRequestBody).then((token) => {
             cy.apiRequest('POST', 'Application', invalidApplicationInvalidChildDOBRequestBody, token).then((response) => {
                 // Assert the status and statusText
                 cy.verifyApiResponseCode(response, 400);

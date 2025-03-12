@@ -7,17 +7,17 @@ import { validLoginRequestBody, validApplicationRequestBody, validApplicationSup
 describe('Update Application Status', () => {
   const validBaseApplicationRequest = validApplicationRequestBody();
     
-    xit('Verify 200 Success response is returned', () => {
+    it('Verify 200 Success response is returned', () => {
 
-      getandVerifyBearerToken('api/Login', validLoginRequestBody).then((token) => {
+      getandVerifyBearerToken('/oauth2/token', validLoginRequestBody).then((token) => {
           const requestBody = validApplicationSupportRequestBody();
-          cy.apiRequest('POST', 'EligibilityCheck/FreeSchoolMeals', requestBody, token).then((response) => {
+          cy.apiRequest('POST', 'check/free-school-meals', requestBody, token).then((response) => {
               cy.verifyApiResponseCode(response, 202);
-              cy.apiRequest('POST', '/Users', validUserRequestBody(), token).then((response) => {
+              cy.apiRequest('POST', '/user', validUserRequestBody(), token).then((response) => {
                   validBaseApplicationRequest.Data.UserId = response.Data;
                   cy.wait(60000);
 
-                  cy.apiRequest('POST', 'Application', validBaseApplicationRequest, token).then((response) => {
+                  cy.apiRequest('POST', 'application', validBaseApplicationRequest, token).then((response) => {
                       // Assert the status and statusText
                       cy.verifyApiResponseCode(response, 201);
 
@@ -32,7 +32,7 @@ describe('Update Application Status', () => {
                           }
                       };
 
-                      cy.apiRequest('PATCH', `Application/${applicationId}`, updatedRequestBody, token).then((patchResponse) => {
+                      cy.apiRequest('PATCH', `application/${applicationId}`, updatedRequestBody, token).then((patchResponse) => {
                           cy.verifyApiResponseCode(patchResponse, 200);
 
                           expect(patchResponse.body.data).to.have.property('status', 'EvidenceNeeded');

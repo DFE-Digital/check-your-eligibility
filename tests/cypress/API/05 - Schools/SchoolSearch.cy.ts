@@ -19,8 +19,8 @@ describe('Verify School Search', () => {
 
 
   it('Verify 200 OK and Bearer Token Is Returned when Valid Credentials are used', () => {
-    getandVerifyBearerToken('api/Login', validLoginRequestBody).then((token) => {
-      cy.apiRequest('GET', `Establishments/search?query=${searchCriteria}`, {}, token).then((response) => {
+    getandVerifyBearerToken('/oauth2/token', validLoginRequestBody).then((token) => {
+      cy.apiRequest('GET', `establishment/search?query=${searchCriteria}`, {}, token).then((response) => {
         cy.verifyApiResponseCode(response, 200)
         cy.verifySchoolSearchResponse(response, expectedSchoolData);
       })
@@ -29,8 +29,8 @@ describe('Verify School Search', () => {
 
   it('Verify 400 response is returned for invalid search criteria', () => {
     const invalidSearchCriteria = 'ab'
-    getandVerifyBearerToken('api/Login', validLoginRequestBody).then((token) => {
-      cy.apiRequest('GET', `Establishments/search?query=${invalidSearchCriteria}`, {}, token).then((response) => {
+    getandVerifyBearerToken('/oauth2/token', validLoginRequestBody).then((token) => {
+      cy.apiRequest('GET', `establishment/search?query=${invalidSearchCriteria}`, {}, token).then((response) => {
         cy.verifyApiResponseCode(response, 400)
 
       })

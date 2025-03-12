@@ -7,28 +7,28 @@ describe('Authorisation Tests', () => {
   const invalidClientDetails = { client_id: 'invalidClientId', client_secret: 'invalid Secret', scope: 'invalidScope' };
 
   it('Verify 200 response and Bearer Token Is Returned when Valid Credentials are used', () => { 
-    getandVerifyBearerToken('api/Login', validLoginRequestBodyWithUsernameAndPassword).then((token) => {
+    getandVerifyBearerToken('/oauth2/token', validLoginRequestBodyWithUsernameAndPassword).then((token) => {
     });
   });
 
   it('Verify 200 response and Bearer Token Is Returned when Valid Client Details are used', () => {
-    getandVerifyBearerToken('api/Login', validLoginRequestBodyWithClientDetails).then((token) => {
+    getandVerifyBearerToken('/oauth2/token', validLoginRequestBodyWithClientDetails).then((token) => {
     });
   });
 
   it('Verify 400 is returned with invalid credentials', () => {
-    cy.apiRequest('POST', 'api/Login', invalidRequestBody).then((response) => {
+    cy.apiRequest('POST', '/oauth2/token', invalidRequestBody).then((response) => {
       cy.verifyApiResponseCode(response, 400)
     });
   });
 
   it('Verify 401 is returned with invalid client details', () => {
-    verifyUnauthorizedWithoutToken('POST', 'api/Login', invalidClientDetails);
+    verifyUnauthorizedWithoutToken('POST', '/oauth2/token', invalidClientDetails);
   });
 
   it('Verify 401 Unauthorized is returned when token is not provided for protected endpoints', () => {
-    verifyUnauthorizedWithoutToken('POST', 'api/Login', invalidClientDetails);
-    verifyUnauthorizedWithoutToken('POST', 'EligibilityCheck/FreeSchoolMeals', invalidClientDetails);
-    verifyUnauthorizedWithoutToken('POST', 'Application', invalidClientDetails);
+    verifyUnauthorizedWithoutToken('POST', '/oauth2/token', invalidClientDetails);
+    verifyUnauthorizedWithoutToken('POST', 'check/free-school-meals', invalidClientDetails);
+    verifyUnauthorizedWithoutToken('POST', 'application', invalidClientDetails);
   });
 });

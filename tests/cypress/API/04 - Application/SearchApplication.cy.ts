@@ -53,9 +53,9 @@ describe('Search Application', () => {
     it('Verify 200 Success response is returned with valid search data', () => {
 
         //Get token
-        getandVerifyBearerToken('api/Login', validLoginRequestBody).then((token) => {
+        getandVerifyBearerToken('/oauth2/token', validLoginRequestBody).then((token) => {
             //Make post request for eligibility check
-            cy.apiRequest('POST', 'Application/Search', body, token).then((response) => {
+            cy.apiRequest('POST', 'application/search', body, token).then((response) => {
                 // Assert the status and statusText
                 cy.log(JSON.stringify(response));
                 cy.verifyApiResponseCode(response, 200);
