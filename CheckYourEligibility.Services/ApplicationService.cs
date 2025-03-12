@@ -179,7 +179,7 @@ namespace CheckYourEligibility.Services
                 results = results.Where(x => x.Created > model.Data.DateRange.DateFrom && x.Created < model.Data.DateRange.DateTo);
             if (!string.IsNullOrEmpty(model.Data?.Keyword))
             {
-                var keywords = model.Data.Keyword.Split(' ');
+                string[] keywords = model.Data.Keyword.Split(' ');
                 foreach (var keyword in keywords)
                 {
                     results = results.Where(
