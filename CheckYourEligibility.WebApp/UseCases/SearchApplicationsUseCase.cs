@@ -7,7 +7,7 @@ namespace CheckYourEligibility.WebApp.UseCases
 {
     public interface ISearchApplicationsUseCase
     {
-        Task<ApplicationSearchResponse> Execute(ApplicationRequestSearch model);
+        Task<ApplicationSearchResponse> Execute(ApplicationRequestSearch model, string? localAuthorityId = null);
     }
 
     public class SearchApplicationsUseCase : ISearchApplicationsUseCase
@@ -21,7 +21,7 @@ namespace CheckYourEligibility.WebApp.UseCases
             _auditService = Guard.Against.Null(auditService);
         }
 
-        public async Task<ApplicationSearchResponse> Execute(ApplicationRequestSearch model)
+        public async Task<ApplicationSearchResponse> Execute(ApplicationRequestSearch model, string? localAuthorityId = null)
         {
             var response = await _applicationService.GetApplications(model);
 

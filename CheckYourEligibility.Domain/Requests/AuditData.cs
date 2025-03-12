@@ -12,5 +12,6 @@ namespace CheckYourEligibility.Domain.Requests
         public string method { get; set; }
         public string source { get; set; }
         public string authentication { get; set; }
+        public string scope { get; set; }
     }
 }

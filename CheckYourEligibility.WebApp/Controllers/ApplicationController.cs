@@ -2,6 +2,7 @@
 using CheckYourEligibility.Domain.Requests;
 using CheckYourEligibility.Domain.Responses;
 using CheckYourEligibility.Services.Interfaces;
+using CheckYourEligibility.WebApp.Extensions;
 using CheckYourEligibility.WebApp.UseCases;
 using FeatureManagement.Domain.Validation;
 using FluentValidation;
@@ -20,10 +21,12 @@ namespace CheckYourEligibility.WebApp.Controllers
         private readonly IGetApplicationUseCase _getApplicationUseCase;
         private readonly ISearchApplicationsUseCase _searchApplicationsUseCase;
         private readonly IUpdateApplicationStatusUseCase _updateApplicationStatusUseCase;
-        private readonly ILogger<EligibilityCheckController> _logger;
+        private readonly ILogger<ApplicationController> _logger;
+        private readonly string _localAuthorityScopeName;
 
         public ApplicationController(
-            ILogger<EligibilityCheckController> logger,
+            ILogger<ApplicationController> logger,
+            IConfiguration configuration,
             ICreateApplicationUseCase createApplicationUseCase,
             IGetApplicationUseCase getApplicationUseCase,
             ISearchApplicationsUseCase searchApplicationsUseCase,
@@ -32,6 +35,7 @@ namespace CheckYourEligibility.WebApp.Controllers
             : base(audit)
         {
             _logger = Guard.Against.Null(logger);
+            _localAuthorityScopeName = configuration.GetValue<string>("Jwt:Scopes:local_authority") ?? "local_authority";
             _createApplicationUseCase = Guard.Against.Null(createApplicationUseCase);
             _getApplicationUseCase = Guard.Against.Null(getApplicationUseCase);
             _searchApplicationsUseCase = Guard.Against.Null(searchApplicationsUseCase);
@@ -56,7 +60,7 @@ namespace CheckYourEligibility.WebApp.Controllers
             }
             catch (ValidationException ex)
             {
-                return BadRequest(new ErrorResponse { Errors = [new Error() {Title = ex.Message }]});
+                return BadRequest(new ErrorResponse { Errors = [new Error() { Title = ex.Message }] });
             }
         }
 
@@ -74,7 +78,7 @@ namespace CheckYourEligibility.WebApp.Controllers
             var response = await _getApplicationUseCase.Execute(guid);
             if (response == null)
             {
-                return NotFound(new ErrorResponse { Errors = [new Error() {Title = guid}]});
+                return NotFound(new ErrorResponse { Errors = [new Error() { Title = guid }] });
             }
             return new ObjectResult(response) { StatusCode = StatusCodes.Status200OK };
         }
@@ -87,9 +91,17 @@ namespace CheckYourEligibility.WebApp.Controllers
         [ProducesResponseType(typeof(ApplicationSearchResponse), (int)HttpStatusCode.OK)]
         [Consumes("application/json", "application/vnd.api+json; version=1.0")]
         [HttpPost("/application/search")]
+        // [Authorize(Policy = "RequireLocalAuthorityScope")]
         public async Task<ActionResult> ApplicationSearch([FromBody] ApplicationRequestSearch model)
         {
-            var response = await _searchApplicationsUseCase.Execute(model);
+            /* string localAuthorityId = User.GetLocalAuthorityId(_localAuthorityScopeName);
+
+            if (localAuthorityId == null)
+            {
+                return Forbid("No local authority scope found");
+            } */
+
+            var response = await _searchApplicationsUseCase.Execute(model/* , localAuthorityId */);
             return new ObjectResult(response) { StatusCode = StatusCodes.Status200OK };
         }
 
@@ -108,7 +120,7 @@ namespace CheckYourEligibility.WebApp.Controllers
             var response = await _updateApplicationStatusUseCase.Execute(guid, model);
             if (response == null)
             {
-                return NotFound(new ErrorResponse { Errors = [new Error() {Title = ""}]});
+                return NotFound(new ErrorResponse { Errors = [new Error() { Title = "" }] });
             }
             return new ObjectResult(response) { StatusCode = StatusCodes.Status200OK };
         }

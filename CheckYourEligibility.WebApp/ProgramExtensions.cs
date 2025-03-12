@@ -8,6 +8,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using System.Text;
 using System.Diagnostics.CodeAnalysis;
+using CheckYourEligibility.WebApp.Extensions;
 
 namespace CheckYourEligibility.WebApp
 {
@@ -79,6 +80,25 @@ namespace CheckYourEligibility.WebApp
                             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Jwt:Key"]))
                         };
                     });
+
+            services.AddAuthorization(options =>
+            {
+                options.AddPolicy("RequireLocalAuthorityScope", policy =>
+                    policy.RequireAssertion(context =>
+                        context.User.HasScopeWithColon(configuration["Jwt:Scopes:local_authority"] ?? "local_authority")));
+
+                options.AddPolicy("RequireCheckScope", policy =>
+                    policy.RequireAssertion(context =>
+                        context.User.HasScope(configuration["Jwt:Scopes:check"] ?? "check")));
+
+                options.AddPolicy("RequireApplicationScope", policy =>
+                    policy.RequireAssertion(context =>
+                        context.User.HasScope(configuration["Jwt:Scopes:application"] ?? "application")));
+
+                options.AddPolicy("RequireAdminScope", policy =>
+                    policy.RequireAssertion(context =>
+                        context.User.HasScope(configuration["Jwt:Scopes:admin"] ?? "admin")));
+            });
             return services;
         }
     }

@@ -28,7 +28,6 @@ namespace CheckYourEligibility.Services
         {
             try
             {
-                
                 var item = _mapper.Map<Audit>(data);
                 item.AuditID = Guid.NewGuid().ToString();
                 item.TimeStamp = DateTime.UtcNow;
@@ -56,9 +55,26 @@ namespace CheckYourEligibility.Services
                 var path = httpContext.Request.Path;
                 var method = httpContext.Request.Method;
                 var auth = httpContext.User.Claims.FirstOrDefault(x => x.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value ?? "Unknown";
-                return new AuditData { Type = type, typeId = id, url = $"{host}{path}", method = method, source = remoteIpAddress.ToString(), authentication = auth };
+                var scope = httpContext.User.Claims.FirstOrDefault(x => x.Type == "scope")?.Value ?? "";
+                return new AuditData { 
+                    Type = type, 
+                    typeId = id, 
+                    url = $"{host}{path}", 
+                    method = method, 
+                    source = remoteIpAddress.ToString(), 
+                    authentication = auth,
+                    scope = scope
+                };
             }
-            return new AuditData { Type = type, typeId = id, url = "Unknown", method = "Unknown", source = "Unknown", authentication = "Unknown" };
+            return new AuditData { 
+                Type = type, 
+                typeId = id, 
+                url = "Unknown", 
+                method = "Unknown", 
+                source = "Unknown", 
+                authentication = "Unknown",
+                scope = "Unknown"
+            };
         }
     }
 }
