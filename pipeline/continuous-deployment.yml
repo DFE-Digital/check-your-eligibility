@@ -94,9 +94,15 @@ stages:
                 azureSubscription: 's203d.azdo.deployment'
                 scriptType: 'bash'
                 scriptLocation: 'inlineScript'
+                scriptPath: $(Pipeline.Workspace)
                 inlineScript: |
                   az sql server firewall-rule create -g s203d01-core1 --server ece-dev-database --name ADO-Deploy --start-ip-address $(curl ipinfo.io/ip) --end-ip-address $(curl ipinfo.io/ip)
-                  $(Pipeline.Workspace)\\checkYourEligibilityAPI\\efbundle.exe
+                  ls
+                  cd $(Pipeline.Workspace)/checkYourEligibilityAPI
+                  cd $(Pipeline.Workspace)\\checkYourEligibilityAPI
+                  cd D:\\a\\checkYourEligibilityAPI
+                  ls
+                  ./efbundle.exe
                   az sql server firewall-rule delete -g s203d01-core1 --server ece-dev-database --name ADO-Deploy          
           
           deploy:
