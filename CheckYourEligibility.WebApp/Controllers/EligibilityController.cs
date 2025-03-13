@@ -217,7 +217,7 @@ namespace CheckYourEligibility.WebApp.Controllers
         [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.NotFound)]
         [Consumes("application/json", "application/vnd.api+json;version=1.0")]
         [HttpPatch("{guid}/Status")]
-        [HttpPatch("/check/{guid}/status")]
+        [HttpPatch("/engine/process/{guid}/status")]
         public async Task<ActionResult> EligibilityCheckStatusUpdate(string guid, [FromBody] EligibilityStatusUpdateRequest model)
         {
             var result = await _updateEligibilityCheckStatusUseCase.Execute(guid, model);

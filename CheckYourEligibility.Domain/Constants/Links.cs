@@ -10,7 +10,7 @@ namespace CheckYourEligibility.Domain.Constants
 
         public const string BulkCheckLink = "/bulk-check/";
         public const string BulkCheckProgress = "/progress";
-        public const string BulkCheckResults = "/";
+        public const string BulkCheckResults = "";
     }
 
     public static class ApplicationLinks
