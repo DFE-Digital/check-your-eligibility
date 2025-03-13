@@ -14,6 +14,7 @@ using NUnit.Framework;
 using System;
 using FluentValidation;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
 
 namespace CheckYourEligibility.APIUnitTests
 {
@@ -24,7 +25,8 @@ namespace CheckYourEligibility.APIUnitTests
         private Mock<ISearchApplicationsUseCase> _mockSearchApplicationsUseCase;
         private Mock<IUpdateApplicationStatusUseCase> _mockUpdateApplicationStatusUseCase;
         private Mock<IAudit> _mockAuditService;
-        private ILogger<EligibilityCheckController> _mockLogger;
+        private ILogger<ApplicationController> _mockLogger;
+        private IConfigurationRoot _configuration;
         private ApplicationController _sut;
         private Fixture _fixture;
 
@@ -36,9 +38,21 @@ namespace CheckYourEligibility.APIUnitTests
             _mockSearchApplicationsUseCase = new Mock<ISearchApplicationsUseCase>(MockBehavior.Strict);
             _mockUpdateApplicationStatusUseCase = new Mock<IUpdateApplicationStatusUseCase>(MockBehavior.Strict);
             _mockAuditService = new Mock<IAudit>(MockBehavior.Strict);
-            _mockLogger = Mock.Of<ILogger<EligibilityCheckController>>();
+            _mockLogger = Mock.Of<ILogger<ApplicationController>>();
+
+            // config data for Jwt:Scopes:local_authority
+            var configData = new Dictionary<string, string>
+            {
+                {"Jwt:Scopes:local_authority", "local_authority"}
+            };
+
+            _configuration = new ConfigurationBuilder()
+                .AddInMemoryCollection(configData)
+                .Build();
+
             _sut = new ApplicationController(
                 _mockLogger,
+                _configuration,
                 _mockCreateApplicationUseCase.Object,
                 _mockGetApplicationUseCase.Object,
                 _mockSearchApplicationsUseCase.Object,
@@ -67,9 +81,20 @@ namespace CheckYourEligibility.APIUnitTests
             IUpdateApplicationStatusUseCase updateApplicationStatusUseCase = null;
             IAudit auditService = null;
 
+            // config data for Jwt:Scopes:local_authority
+            var configData = new Dictionary<string, string>
+            {
+                {"Jwt:Scopes:local_authority", "local_authority"}
+            };
+
+            _configuration = new ConfigurationBuilder()
+                .AddInMemoryCollection(configData)
+                .Build();
+
             // Act
             Action act = () => new ApplicationController(
                 _mockLogger,
+                _configuration,
                 createApplicationUseCase,
                 getApplicationUseCase,
                 searchApplicationsUseCase,
@@ -189,7 +214,7 @@ namespace CheckYourEligibility.APIUnitTests
             // Arrange
             var model = _fixture.Create<ApplicationRequestSearch>();
             var expectedResponse = _fixture.Create<ApplicationSearchResponse>();
-            _mockSearchApplicationsUseCase.Setup(cs => cs.Execute(model)).ReturnsAsync(expectedResponse);
+            _mockSearchApplicationsUseCase.Setup(cs => cs.Execute(model, null)).ReturnsAsync(expectedResponse);
             var expectedResult = new ObjectResult(expectedResponse)
             { StatusCode = StatusCodes.Status200OK };
 
