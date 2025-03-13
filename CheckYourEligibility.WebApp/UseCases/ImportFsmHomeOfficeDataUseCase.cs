@@ -1,6 +1,7 @@
 using Ardalis.GuardClauses;
 using CheckYourEligibility.Data.Models;
 using CheckYourEligibility.Domain.Constants;
+using CheckYourEligibility.Domain.Enums;
 using CheckYourEligibility.Services.CsvImport;
 using CheckYourEligibility.Services.Interfaces;
 using CsvHelper;
@@ -73,11 +74,7 @@ namespace CheckYourEligibility.WebApp.UseCases
             }
 
             await _service.ImportHomeOfficeData(DataLoad);
-            var auditData = _auditService.AuditDataGet(Domain.Enums.AuditType.Administration, string.Empty);
-            if (auditData != null)
-            {
-                await _auditService.AuditAdd(auditData);
-            }
+            await _auditService.CreateAuditEntry(AuditType.Administration, string.Empty);
         }
     }
 }

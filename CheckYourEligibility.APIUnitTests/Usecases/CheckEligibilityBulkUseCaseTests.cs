@@ -166,14 +166,12 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
                 }
             };
             var model = new CheckEligibilityRequestBulk_Fsm { Data = data };
-            var auditData = _fixture.Create<AuditData>();
 
             _mockCheckService.Setup(s => s.PostCheck(It.IsAny<IEnumerable<CheckEligibilityRequestData_Fsm>>(), It.IsAny<string>()))
                 .Returns(Task.CompletedTask);
-            _mockAuditService.Setup(a => a.AuditDataGet(AuditType.BulkCheck, It.IsAny<string>()))
-                .Returns(auditData);
-            _mockAuditService.Setup(a => a.AuditAdd(auditData))
+            _mockAuditService.Setup(a => a.CreateAuditEntry(AuditType.BulkCheck, It.IsAny<string>()))
                 .ReturnsAsync(_fixture.Create<string>());
+
 
             // Act
             var result = await _sut.Execute(model, _recordCountLimit);
@@ -185,38 +183,9 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             result.Response.Links.Should().NotBeNull();
             result.Response.Links.Get_Progress_Check.Should().Contain(CheckLinks.BulkCheckProgress);
             result.Response.Links.Get_BulkCheck_Results.Should().Contain(CheckLinks.BulkCheckResults);
-            
+
             _mockCheckService.Verify(s => s.PostCheck(It.IsAny<IEnumerable<CheckEligibilityRequestData_Fsm>>(), It.IsAny<string>()), Times.Once);
-            _mockAuditService.Verify(a => a.AuditAdd(auditData), Times.Once);
-        }
-
-        [Test]
-        public async Task Execute_should_not_call_AuditAdd_when_AuditData_is_null()
-        {
-            // Arrange
-            var data = new List<CheckEligibilityRequestData_Fsm>
-            {
-                new CheckEligibilityRequestData_Fsm
-                {
-                    LastName = "Smith",
-                    DateOfBirth = "1990-01-01",
-                    NationalInsuranceNumber = "AB123456C"
-                }
-            };
-            var model = new CheckEligibilityRequestBulk_Fsm { Data = data };
-
-            _mockCheckService.Setup(s => s.PostCheck(It.IsAny<IEnumerable<CheckEligibilityRequestData_Fsm>>(), It.IsAny<string>()))
-                .Returns(Task.CompletedTask);
-            _mockAuditService.Setup(a => a.AuditDataGet(AuditType.BulkCheck, It.IsAny<string>()))
-                .Returns((AuditData)null);
-
-            // Act
-            var result = await _sut.Execute(model, _recordCountLimit);
-
-            // Assert
-            result.IsValid.Should().BeTrue();
-            
-            _mockAuditService.Verify(a => a.AuditAdd(It.IsAny<AuditData>()), Times.Never);
+            _mockAuditService.Verify(a => a.CreateAuditEntry(AuditType.BulkCheck, It.IsAny<string>()), Times.Once);
         }
 
         [Test]
@@ -238,8 +207,8 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             _mockCheckService.Setup(s => s.PostCheck(It.Is<IEnumerable<CheckEligibilityRequestData_Fsm>>(
                 d => d.First().NationalInsuranceNumber == nino.ToUpper()), It.IsAny<string>()))
                 .Returns(Task.CompletedTask);
-            _mockAuditService.Setup(a => a.AuditDataGet(AuditType.BulkCheck, It.IsAny<string>()))
-                .Returns((AuditData)null);
+            _mockAuditService.Setup(a => a.CreateAuditEntry(AuditType.BulkCheck, It.IsAny<string>()))
+                .ReturnsAsync(_fixture.Create<string>());
 
             // Act
             await _sut.Execute(model, _recordCountLimit);
@@ -248,5 +217,36 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             _mockCheckService.Verify(s => s.PostCheck(It.Is<IEnumerable<CheckEligibilityRequestData_Fsm>>(
                 d => d.First().NationalInsuranceNumber == "AB123456C"), It.IsAny<string>()), Times.Once);
         }
+
+        [Test]
+        public async Task Execute_returns_failure_when_model_type_is_not_expected()
+        {
+            // Arrange
+            // Create a derived class to simulate wrong type
+            var data = new List<CheckEligibilityRequestData_Fsm>
+            {
+                new CheckEligibilityRequestData_Fsm
+                {
+                    LastName = "Smith",
+                    DateOfBirth = "1990-01-01",
+                    NationalInsuranceNumber = "AB123456C"
+                }
+            };
+
+            // Create an instance of the derived class
+            var model = new DerivedCheckEligibilityRequestBulk { Data = data };
+
+            // Act
+            var result = await _sut.Execute(model, _recordCountLimit);
+
+            // Assert
+            result.IsValid.Should().BeFalse();
+            result.ValidationErrors.Should().Contain($"Unknown request type:-{model.GetType()}");
+
+            // Verify no services were called
+            _mockCheckService.Verify(s => s.PostCheck(It.IsAny<IEnumerable<CheckEligibilityRequestData_Fsm>>(), It.IsAny<string>()), Times.Never);
+            _mockAuditService.Verify(a => a.CreateAuditEntry(AuditType.BulkCheck, It.IsAny<string>()), Times.Never);
+        }
     }
+    public class DerivedCheckEligibilityRequestBulk : CheckEligibilityRequestBulk_Fsm { }
 }

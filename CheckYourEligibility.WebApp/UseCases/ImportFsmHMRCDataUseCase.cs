@@ -1,6 +1,7 @@
 using Ardalis.GuardClauses;
 using CheckYourEligibility.Data.Models;
 using CheckYourEligibility.Domain.Constants;
+using CheckYourEligibility.Domain.Enums;
 using CheckYourEligibility.Services.Interfaces;
 using Newtonsoft.Json;
 using System.Globalization;
@@ -65,11 +66,7 @@ namespace CheckYourEligibility.WebApp.UseCases
             }
 
             await _service.ImportHMRCData(DataLoad);
-            var auditData = _auditService.AuditDataGet(Domain.Enums.AuditType.Administration, string.Empty);
-            if (auditData != null)
-            {
-                await _auditService.AuditAdd(auditData);
-            }
+            await _auditService.CreateAuditEntry(AuditType.Administration, string.Empty);
         }
     }
 }

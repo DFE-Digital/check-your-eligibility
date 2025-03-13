@@ -55,13 +55,8 @@ namespace CheckYourEligibility.WebApp.UseCases
                 useCaseExecutionResult.SetNotFound(guid);
                 return useCaseExecutionResult;
             }
-
-            var auditData = _auditService.AuditDataGet(AuditType.Check, guid);
-            if (auditData != null)
-            {
-                await _auditService.AuditAdd(auditData);
-            }
-
+            await _auditService.CreateAuditEntry(AuditType.Check, guid);
+            
             _logger.LogInformation($"Retrieved eligibility check details for ID: {guid.Replace(Environment.NewLine, "").Replace("\n", "").Replace("\r", "")}");
             
             useCaseExecutionResult.SetSuccess(new CheckEligibilityItemResponse()

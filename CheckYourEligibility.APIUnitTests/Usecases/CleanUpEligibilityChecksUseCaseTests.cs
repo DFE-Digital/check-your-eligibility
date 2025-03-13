@@ -36,43 +36,13 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
         {
             // Arrange
             _mockService.Setup(s => s.CleanUpEligibilityChecks()).Returns(Task.CompletedTask);
-            _mockAuditService.Setup(a => a.AuditDataGet(Domain.Enums.AuditType.Administration, string.Empty)).Returns((AuditData)null);
+            _mockAuditService.Setup(a => a.CreateAuditEntry(Domain.Enums.AuditType.Administration, string.Empty)).ReturnsAsync(_fixture.Create<string>());
 
             // Act
             await _sut.Execute();
 
             // Assert
             _mockService.Verify(s => s.CleanUpEligibilityChecks(), Times.Once);
-        }
-
-        [Test]
-        public async Task Execute_Should_Call_AuditAdd_When_AuditData_Is_Not_Null()
-        {
-            // Arrange
-            var auditData = _fixture.Create<AuditData>();
-            _mockService.Setup(s => s.CleanUpEligibilityChecks()).Returns(Task.CompletedTask);
-            _mockAuditService.Setup(a => a.AuditDataGet(Domain.Enums.AuditType.Administration, string.Empty)).Returns(auditData);
-            _mockAuditService.Setup(a => a.AuditAdd(auditData)).ReturnsAsync(_fixture.Create<string>());
-
-            // Act
-            await _sut.Execute();
-
-            // Assert
-            _mockAuditService.Verify(a => a.AuditAdd(auditData), Times.Once);
-        }
-
-        [Test]
-        public async Task Execute_Should_Not_Call_AuditAdd_When_AuditData_Is_Null()
-        {
-            // Arrange
-            _mockService.Setup(s => s.CleanUpEligibilityChecks()).Returns(Task.CompletedTask);
-            _mockAuditService.Setup(a => a.AuditDataGet(Domain.Enums.AuditType.Administration, string.Empty)).Returns((AuditData)null);
-
-            // Act
-            await _sut.Execute();
-
-            // Assert
-            _mockAuditService.Verify(a => a.AuditAdd(It.IsAny<AuditData>()), Times.Never);
         }
 
         [Test]

@@ -49,10 +49,9 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             jwtConfig.ExpectedSecret = "correct_password";
             jwtConfig.Key = "test_key_12345678901234567890123456789012"; // 32 chars for HMACSHA256
 
-            var auditData = _fixture.Create<AuditData>();
+            
 
-            _mockAuditService.Setup(a => a.AuditDataGet(Domain.Enums.AuditType.User, login.Username)).Returns(auditData);
-            _mockAuditService.Setup(a => a.AuditAdd(auditData)).ReturnsAsync(_fixture.Create<string>());
+            _mockAuditService.Setup(a => a.CreateAuditEntry(Domain.Enums.AuditType.User, login.Username)).ReturnsAsync(_fixture.Create<string>());
 
             // Act
             var result = await _sut.Execute(login, jwtConfig);
@@ -115,17 +114,16 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             jwtConfig.ExpectedSecret = "correct_password";
             jwtConfig.Key = "test_key_12345678901234567890123456789012"; // 32 chars for HMACSHA256
 
-            var auditData = _fixture.Create<AuditData>();
-
-            _mockAuditService.Setup(a => a.AuditDataGet(Domain.Enums.AuditType.User, login.Identifier)).Returns(auditData);
-            _mockAuditService.Setup(a => a.AuditAdd(auditData)).ReturnsAsync(_fixture.Create<string>());
-
+            
+            _mockAuditService.Setup(a => a.CreateAuditEntry(Domain.Enums.AuditType.User, login.Identifier)).ReturnsAsync(_fixture.Create<string>());
+            
             // Act
             var result = await _sut.Execute(login, jwtConfig);
 
             // Assert
             result.Should().NotBeNull();
-            _mockAuditService.Verify(a => a.AuditAdd(auditData), Times.Once);
+            // _mockAuditService.Verify(a => a.AuditAdd(auditData), Times.Once);
+            _mockAuditService.Verify(a => a.CreateAuditEntry(Domain.Enums.AuditType.User, login.Identifier), Times.Once);
         }
 
         [Test]
@@ -144,7 +142,7 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
 
             // Assert
             result.Should().BeNull();
-            _mockAuditService.Verify(a => a.AuditAdd(It.IsAny<AuditData>()), Times.Never);
+            _mockAuditService.Verify(a => a.CreateAuditEntry(It.IsAny<Domain.Enums.AuditType>(), It.IsAny<string>()), Times.Never);
         }
 
         [Test]
@@ -163,10 +161,9 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             jwtConfig.ExpectedSecret = "correct_password";
             jwtConfig.Key = "test_key_12345678901234567890123456789012"; // 32 chars for HMACSHA256
 
-            var auditData = _fixture.Create<AuditData>();
+            
+            _mockAuditService.Setup(a => a.CreateAuditEntry(Domain.Enums.AuditType.Client, login.client_id)).ReturnsAsync(_fixture.Create<string>());
 
-            _mockAuditService.Setup(a => a.AuditDataGet(Domain.Enums.AuditType.User, login.Identifier)).Returns(auditData);
-            _mockAuditService.Setup(a => a.AuditAdd(auditData)).ReturnsAsync(_fixture.Create<string>());
 
             // Act
             var result = await _sut.Execute(login, jwtConfig);
@@ -214,12 +211,11 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             jwtConfig.ExpectedSecret = "correct_password";
             jwtConfig.Key = "test_key_12345678901234567890123456789012";
 
-            var auditData = _fixture.Create<AuditData>();
+            
 
             // Verify Identifier is set to client_id, not Username
-            _mockAuditService.Setup(a => a.AuditDataGet(Domain.Enums.AuditType.User, "test_client")).Returns(auditData);
-            _mockAuditService.Setup(a => a.AuditAdd(auditData)).ReturnsAsync(_fixture.Create<string>());
-
+            _mockAuditService.Setup(a => a.CreateAuditEntry(Domain.Enums.AuditType.Client, "test_client")).ReturnsAsync(_fixture.Create<string>());
+            
             // Act
             var result = await _sut.Execute(login, jwtConfig);
 
@@ -245,11 +241,10 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             jwtConfig.ExpectedSecret = "correct_password";
             jwtConfig.Key = "test_key_12345678901234567890123456789012";
 
-            var auditData = _fixture.Create<AuditData>();
+            
 
             // Verify Identifier is set to Username
-            _mockAuditService.Setup(a => a.AuditDataGet(Domain.Enums.AuditType.User, "test_username")).Returns(auditData);
-            _mockAuditService.Setup(a => a.AuditAdd(auditData)).ReturnsAsync(_fixture.Create<string>());
+            _mockAuditService.Setup(a => a.CreateAuditEntry(Domain.Enums.AuditType.User, login.Identifier)).ReturnsAsync(_fixture.Create<string>());
 
             // Act
             var result = await _sut.Execute(login, jwtConfig);
@@ -276,17 +271,16 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             jwtConfig.ExpectedSecret = "correct_password";
             jwtConfig.Key = "test_key_12345678901234567890123456789012";
 
-            var auditData = _fixture.Create<AuditData>();
-
-            _mockAuditService.Setup(a => a.AuditDataGet(Domain.Enums.AuditType.User, login.Identifier)).Returns(auditData);
-            _mockAuditService.Setup(a => a.AuditAdd(auditData)).ReturnsAsync(_fixture.Create<string>());
+            
+            _mockAuditService.Setup(a => a.CreateAuditEntry(Domain.Enums.AuditType.Client, login.client_id)).ReturnsAsync(_fixture.Create<string>());
 
             // Act
             var result = await _sut.Execute(login, jwtConfig);
 
             // Assert
             result.Should().NotBeNull();
-            _mockAuditService.Verify(a => a.AuditAdd(auditData), Times.Once);
+            // _mockAuditService.Verify(a => a.AuditAdd(auditData), Times.Once);
+            _mockAuditService.Verify(a => a.CreateAuditEntry(Domain.Enums.AuditType.Client, login.client_id), Times.Once);
         }
 
         [Test]
@@ -379,59 +373,6 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
         }
 
         [Test]
-        public async Task Execute_Should_Not_Audit_When_AuditData_Is_Null()
-        {
-            // Arrange
-            var login = _fixture.Create<SystemUser>();
-            login.client_id = null;
-            login.client_secret = null;
-            login.scope = null;
-            login.Username = "test_username";
-            login.Password = "correct_password";
-            login.InitializeCredentials();
-            var jwtConfig = _fixture.Create<JwtConfig>();
-            jwtConfig.ExpectedSecret = "correct_password";
-            jwtConfig.Key = "test_key_12345678901234567890123456789012"; // 32 chars for HMACSHA256
-
-            _mockAuditService.Setup(a => a.AuditDataGet(Domain.Enums.AuditType.User, login.Identifier)).Returns((AuditData)null);
-
-            // Act
-            var result = await _sut.Execute(login, jwtConfig);
-
-            // Assert
-            result.Should().NotBeNull();
-            _mockAuditService.Verify(a => a.AuditAdd(It.IsAny<AuditData>()), Times.Never);
-        }
-
-        [Test]
-        public async Task Execute_Should_Continue_When_AuditAdd_Throws_Exception()
-        {
-            // Arrange
-            var login = _fixture.Create<SystemUser>();
-            login.client_id = null;
-            login.client_secret = null;
-            login.scope = null;
-            login.Username = "test_username";
-            login.Password = "correct_password";
-            login.InitializeCredentials();
-            var jwtConfig = _fixture.Create<JwtConfig>();
-            jwtConfig.ExpectedSecret = "correct_password";
-            jwtConfig.Key = "test_key_12345678901234567890123456789012"; // 32 chars for HMACSHA256
-
-            var auditData = _fixture.Create<AuditData>();
-
-            _mockAuditService.Setup(a => a.AuditDataGet(Domain.Enums.AuditType.User, login.Identifier)).Returns(auditData);
-            _mockAuditService.Setup(a => a.AuditAdd(auditData)).ThrowsAsync(new Exception("Audit log error"));
-
-            // Act
-            var result = await _sut.Execute(login, jwtConfig);
-
-            // Assert
-            result.Should().NotBeNull();
-            _mockAuditService.Verify(a => a.AuditAdd(auditData), Times.Once);
-        }
-
-        [Test]
         public async Task Execute_Should_Initialize_Credentials_When_Identifier_And_Secret_Are_Empty()
         {
             // Arrange
@@ -447,9 +388,8 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             jwtConfig.ExpectedSecret = "correct_password";
             jwtConfig.Key = "test_key_12345678901234567890123456789012";
 
-            var auditData = _fixture.Create<AuditData>();
-            _mockAuditService.Setup(a => a.AuditDataGet(Domain.Enums.AuditType.User, "test_client")).Returns(auditData);
-            _mockAuditService.Setup(a => a.AuditAdd(auditData)).ReturnsAsync(_fixture.Create<string>());
+            
+            _mockAuditService.Setup(a => a.CreateAuditEntry(Domain.Enums.AuditType.Client, "test_client")).ReturnsAsync(_fixture.Create<string>());
 
             // Act
             var result = await _sut.Execute(login, jwtConfig);
@@ -477,9 +417,8 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             jwtConfig.Key = "test_key_12345678901234567890123456789012";
             jwtConfig.Issuer = "test_issuer";
 
-            var auditData = _fixture.Create<AuditData>();
-            _mockAuditService.Setup(a => a.AuditDataGet(Domain.Enums.AuditType.User, login.Identifier)).Returns(auditData);
-            _mockAuditService.Setup(a => a.AuditAdd(auditData)).ReturnsAsync(_fixture.Create<string>());
+            
+            _mockAuditService.Setup(a => a.CreateAuditEntry(Domain.Enums.AuditType.User, login.Identifier)).ReturnsAsync(_fixture.Create<string>());
 
             // Act
             var result = await _sut.Execute(login, jwtConfig);
@@ -504,8 +443,6 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             token.ValidTo.Should().BeCloseTo(expectedExpiry, TimeSpan.FromSeconds(5));
         }
 
-        // ...existing code...
-
         [Test]
         public async Task Execute_Should_Include_scope_Claim_When_scope_Is_Provided()
         {
@@ -523,9 +460,8 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             jwtConfig.Key = "test_key_12345678901234567890123456789012";
             jwtConfig.AllowedScopes = "read write delete";
 
-            var auditData = _fixture.Create<AuditData>();
-            _mockAuditService.Setup(a => a.AuditDataGet(Domain.Enums.AuditType.User, login.Identifier)).Returns(auditData);
-            _mockAuditService.Setup(a => a.AuditAdd(auditData)).ReturnsAsync(_fixture.Create<string>());
+            
+            _mockAuditService.Setup(a => a.CreateAuditEntry(Domain.Enums.AuditType.User, login.Identifier)).ReturnsAsync(_fixture.Create<string>());
 
             // Act
             var result = await _sut.Execute(login, jwtConfig);
@@ -557,9 +493,8 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             jwtConfig.Key = "test_key_12345678901234567890123456789012";
             jwtConfig.AllowedScopes = "read write";
 
-            var auditData = _fixture.Create<AuditData>();
-            _mockAuditService.Setup(a => a.AuditDataGet(Domain.Enums.AuditType.User, login.Identifier)).Returns(auditData);
-            _mockAuditService.Setup(a => a.AuditAdd(auditData)).ReturnsAsync(_fixture.Create<string>());
+            
+            _mockAuditService.Setup(a => a.CreateAuditEntry(Domain.Enums.AuditType.User, login.Identifier)).ReturnsAsync(_fixture.Create<string>());
 
             // Act
             var result = await _sut.Execute(login, jwtConfig);
@@ -590,9 +525,9 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             jwtConfig.ExpectedSecret = "correct_password";
             jwtConfig.Key = "test_key_12345678901234567890123456789012";
 
-            var auditData = _fixture.Create<AuditData>();
-            _mockAuditService.Setup(a => a.AuditDataGet(Domain.Enums.AuditType.User, login.Identifier)).Returns(auditData);
-            _mockAuditService.Setup(a => a.AuditAdd(auditData)).ReturnsAsync(_fixture.Create<string>());
+            
+            _mockAuditService.Setup(a => a.CreateAuditEntry(Domain.Enums.AuditType.User, login.Identifier)).ReturnsAsync(_fixture.Create<string>());
+
 
             // Act
             var result = await _sut.Execute(login, jwtConfig);
@@ -646,9 +581,8 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             jwtConfig.Key = "test_key_12345678901234567890123456789012";
             jwtConfig.AllowedScopes = "read write";
 
-            var auditData = _fixture.Create<AuditData>();
-            _mockAuditService.Setup(a => a.AuditDataGet(Domain.Enums.AuditType.User, login.Identifier)).Returns(auditData);
-            _mockAuditService.Setup(a => a.AuditAdd(auditData)).ReturnsAsync(_fixture.Create<string>());
+            
+            _mockAuditService.Setup(a => a.CreateAuditEntry(Domain.Enums.AuditType.User, login.Identifier)).ReturnsAsync(_fixture.Create<string>());
 
             // Act
             var result = await _sut.Execute(login, jwtConfig);
@@ -721,9 +655,8 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             jwtConfig.Issuer = "test_issuer";
             jwtConfig.AllowedScopes = "read write admin";
 
-            var auditData = _fixture.Create<AuditData>();
-            _mockAuditService.Setup(a => a.AuditDataGet(Domain.Enums.AuditType.User, login.Identifier)).Returns(auditData);
-            _mockAuditService.Setup(a => a.AuditAdd(auditData)).ReturnsAsync(_fixture.Create<string>());
+            
+            _mockAuditService.Setup(a => a.CreateAuditEntry(Domain.Enums.AuditType.User, login.Identifier)).ReturnsAsync(_fixture.Create<string>());
 
             // Act
             var result = await _sut.Execute(login, jwtConfig);

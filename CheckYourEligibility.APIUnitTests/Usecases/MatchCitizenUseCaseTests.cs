@@ -7,7 +7,7 @@ using CheckYourEligibility.WebApp.UseCases;
 using FluentAssertions;
 using Moq;
 
-namespace CheckYourEligibility.WebApp.Tests.UseCases
+namespace CheckYourEligibility.APIUnitTests.UseCases
 {
     [TestFixture]
     public class MatchCitizenUseCaseTests : TestBase.TestBase

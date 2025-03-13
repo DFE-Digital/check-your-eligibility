@@ -6,7 +6,7 @@ using CheckYourEligibility.WebApp.UseCases;
 using FluentAssertions;
 using Moq;
 
-namespace CheckYourEligibility.WebApp.Tests.UseCases
+namespace CheckYourEligibility.APIUnitTests.UseCases
 {
     [TestFixture]
     public class SearchEstablishmentsUseCaseTests : TestBase.TestBase
@@ -36,11 +36,8 @@ namespace CheckYourEligibility.WebApp.Tests.UseCases
             // Arrange
             var query = "test";
             var establishments = _fixture.CreateMany<Establishment>().ToList();
-            var auditData = _fixture.Create<AuditData>();
-
             _mockEstablishmentSearchService.Setup(es => es.Search(query)).ReturnsAsync(establishments);
-            _mockAuditService.Setup(a => a.AuditDataGet(Domain.Enums.AuditType.Establishment, string.Empty)).Returns(auditData);
-            _mockAuditService.Setup(a => a.AuditAdd(auditData)).ReturnsAsync(_fixture.Create<string>());
+            _mockAuditService.Setup(a => a.CreateAuditEntry(Domain.Enums.AuditType.Establishment, string.Empty)).ReturnsAsync(_fixture.Create<string>());
 
             // Act
             var result = await _sut.Execute(query);
@@ -57,7 +54,7 @@ namespace CheckYourEligibility.WebApp.Tests.UseCases
             var establishments = new List<Establishment>();
 
             _mockEstablishmentSearchService.Setup(es => es.Search(query)).ReturnsAsync(establishments);
-            _mockAuditService.Setup(a => a.AuditDataGet(Domain.Enums.AuditType.Establishment, string.Empty)).Returns((AuditData)null);
+            _mockAuditService.Setup(a => a.CreateAuditEntry(Domain.Enums.AuditType.Establishment, string.Empty)).ReturnsAsync(_fixture.Create<string>());
 
 
             // Act

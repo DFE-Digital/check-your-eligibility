@@ -156,8 +156,8 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
                 .ReturnsAsync(responseData);
 
             _mockAuditService
-                .Setup(a => a.AuditDataGet(AuditType.Check, responseData.Id))
-                .Returns((AuditData)null);
+               .Setup(a => a.CreateAuditEntry(AuditType.Check, responseData.Id))
+               .ReturnsAsync(_fixture.Create<string>());
 
             // Act
             var result = await _sut.Execute(model);
@@ -214,9 +214,8 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
 
             _mockCheckService.Setup(s => s.PostCheck(model.Data))
                 .ReturnsAsync(responseData);
-
-            _mockAuditService.Setup(a => a.AuditDataGet(AuditType.Check, checkId))
-                .Returns((AuditData)null);
+            _mockAuditService.Setup(a => a.CreateAuditEntry(AuditType.Check, checkId))
+                .ReturnsAsync(_fixture.Create<string>());
 
             // Act
             var result = await _sut.Execute(model);
@@ -247,8 +246,8 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             _mockCheckService.Setup(s => s.PostCheck(model.Data))
                 .ReturnsAsync(responseData);
 
-            _mockAuditService.Setup(a => a.AuditDataGet(AuditType.Check, checkId))
-                .Returns((AuditData)null);
+            _mockAuditService.Setup(a => a.CreateAuditEntry(AuditType.Check, checkId))
+                .ReturnsAsync(_fixture.Create<string>());
 
             // Act
             await _sut.Execute(model);
@@ -258,59 +257,24 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
         }
 
         [Test]
-        public async Task Execute_calls_audit_service_with_correct_audit_data()
+        public async Task Execute_returns_failure_when_service_returns_null_response()
         {
             // Arrange
             var model = CreateValidFsmRequest();
-            var checkId = _fixture.Create<string>();
-            var responseData = new PostCheckResult
-            {
-                Id = checkId,
-                Status = CheckEligibilityStatus.queuedForProcessing
-            };
-            var auditData = _fixture.Create<AuditData>();
 
             _mockCheckService.Setup(s => s.PostCheck(model.Data))
-                .ReturnsAsync(responseData);
-
-            _mockAuditService.Setup(a => a.AuditDataGet(AuditType.Check, checkId))
-                .Returns(auditData);
-
-            _mockAuditService.Setup(a => a.AuditAdd(auditData))
-                .ReturnsAsync(_fixture.Create<string>());
+                .ReturnsAsync((PostCheckResult)null);
 
             // Act
-            await _sut.Execute(model);
+            var result = await _sut.Execute(model);
 
             // Assert
-            _mockAuditService.Verify(a => a.AuditDataGet(AuditType.Check, checkId), Times.Once);
-            _mockAuditService.Verify(a => a.AuditAdd(auditData), Times.Once);
-        }
+            result.IsValid.Should().BeFalse();
+            result.ValidationErrors.Should().Be("Eligibility check not completed successfully.");
+            result.Response.Should().BeNull();
 
-        [Test]
-        public async Task Execute_does_not_call_auditAdd_when_auditDataGet_returns_null()
-        {
-            // Arrange
-            var model = CreateValidFsmRequest();
-            var checkId = _fixture.Create<string>();
-            var responseData = new PostCheckResult
-            {
-                Id = checkId,
-                Status = CheckEligibilityStatus.queuedForProcessing
-            };
-
-            _mockCheckService.Setup(s => s.PostCheck(model.Data))
-                .ReturnsAsync(responseData);
-
-            _mockAuditService.Setup(a => a.AuditDataGet(AuditType.Check, checkId))
-                .Returns((AuditData)null);
-
-            // Act
-            await _sut.Execute(model);
-
-            // Assert
-            _mockAuditService.Verify(a => a.AuditDataGet(AuditType.Check, checkId), Times.Once);
-            _mockAuditService.Verify(a => a.AuditAdd(It.IsAny<AuditData>()), Times.Never);
+            // Verify audit service was not called
+            _mockAuditService.Verify(a => a.CreateAuditEntry(It.IsAny<AuditType>(), It.IsAny<string>()), Times.Never);
         }
 
         private CheckEligibilityRequest_Fsm CreateValidFsmRequest()

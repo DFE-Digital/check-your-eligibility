@@ -120,7 +120,7 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             var guid = _fixture.Create<string>();
             var resultItems = _fixture.CreateMany<CheckEligibilityItem>().ToList();
             _mockCheckService.Setup(s => s.GetBulkCheckResults<IList<CheckEligibilityItem>>(guid)).ReturnsAsync(resultItems);
-            _mockAuditService.Setup(a => a.AuditDataGet(AuditType.CheckBulkResults, guid)).Returns((AuditData)null);
+            _mockAuditService.Setup(a => a.CreateAuditEntry(AuditType.CheckBulkResults, guid)).ReturnsAsync(_fixture.Create<string>());
 
             // Act
             var result = await _sut.Execute(guid);
@@ -139,7 +139,7 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             var guid = _fixture.Create<string>();
             var resultItems = _fixture.CreateMany<CheckEligibilityItem>().ToList();
             _mockCheckService.Setup(s => s.GetBulkCheckResults<IList<CheckEligibilityItem>>(guid)).ReturnsAsync(resultItems);
-            _mockAuditService.Setup(a => a.AuditDataGet(AuditType.CheckBulkResults, guid)).Returns((AuditData)null);
+            _mockAuditService.Setup(a => a.CreateAuditEntry(AuditType.CheckBulkResults, guid)).ReturnsAsync(_fixture.Create<string>());
 
             // Act
             await _sut.Execute(guid);
@@ -155,47 +155,13 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             var guid = _fixture.Create<string>();
             var resultItems = _fixture.CreateMany<CheckEligibilityItem>().ToList();
             _mockCheckService.Setup(s => s.GetBulkCheckResults<IList<CheckEligibilityItem>>(guid)).ReturnsAsync(resultItems);
-            _mockAuditService.Setup(a => a.AuditDataGet(AuditType.CheckBulkResults, guid)).Returns((AuditData)null);
+            _mockAuditService.Setup(a => a.CreateAuditEntry(AuditType.CheckBulkResults, guid)).ReturnsAsync(_fixture.Create<string>());
 
             // Act
             await _sut.Execute(guid);
 
             // Assert
-            _mockAuditService.Verify(a => a.AuditDataGet(AuditType.CheckBulkResults, guid), Times.Once);
-        }
-
-        [Test]
-        public async Task Execute_calls_auditService_AuditAdd_when_auditData_is_not_null()
-        {
-            // Arrange
-            var guid = _fixture.Create<string>();
-            var resultItems = _fixture.CreateMany<CheckEligibilityItem>().ToList();
-            var auditData = _fixture.Create<AuditData>();
-            _mockCheckService.Setup(s => s.GetBulkCheckResults<IList<CheckEligibilityItem>>(guid)).ReturnsAsync(resultItems);
-            _mockAuditService.Setup(a => a.AuditDataGet(AuditType.CheckBulkResults, guid)).Returns(auditData);
-            _mockAuditService.Setup(a => a.AuditAdd(auditData)).ReturnsAsync(_fixture.Create<string>());
-
-            // Act
-            await _sut.Execute(guid);
-
-            // Assert
-            _mockAuditService.Verify(a => a.AuditAdd(auditData), Times.Once);
-        }
-
-        [Test]
-        public async Task Execute_doesnt_call_auditService_AuditAdd_when_auditData_is_null()
-        {
-            // Arrange
-            var guid = _fixture.Create<string>();
-            var resultItems = _fixture.CreateMany<CheckEligibilityItem>().ToList();
-            _mockCheckService.Setup(s => s.GetBulkCheckResults<IList<CheckEligibilityItem>>(guid)).ReturnsAsync(resultItems);
-            _mockAuditService.Setup(a => a.AuditDataGet(AuditType.CheckBulkResults, guid)).Returns((AuditData)null);
-
-            // Act
-            await _sut.Execute(guid);
-
-            // Assert
-            _mockAuditService.Verify(a => a.AuditAdd(It.IsAny<AuditData>()), Times.Never);
+            _mockAuditService.Verify(a => a.CreateAuditEntry(AuditType.CheckBulkResults, guid), Times.Once);
         }
     }
 }

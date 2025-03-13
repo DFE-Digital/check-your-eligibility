@@ -23,7 +23,7 @@ namespace CheckYourEligibility.Services
             _mapper = Guard.Against.Null(mapper);
             _httpContextAccessor = Guard.Against.Null(httpContextAccessor);
         }
-      
+
         public async Task<string> AuditAdd(AuditData data)
         {
             try
@@ -47,34 +47,69 @@ namespace CheckYourEligibility.Services
 
         public AuditData? AuditDataGet(AuditType type, string id)
         {
-            var httpContext = _httpContextAccessor.HttpContext;
-            if (httpContext != null)
+            try
             {
-                var remoteIpAddress = httpContext.Connection.RemoteIpAddress;
-                var host = httpContext.Request.Host;
-                var path = httpContext.Request.Path;
-                var method = httpContext.Request.Method;
-                var auth = httpContext.User.Claims.FirstOrDefault(x => x.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value ?? "Unknown";
-                var scope = httpContext.User.Claims.FirstOrDefault(x => x.Type == "scope")?.Value ?? "";
-                return new AuditData { 
-                    Type = type, 
-                    typeId = id, 
-                    url = $"{host}{path}", 
-                    method = method, 
-                    source = remoteIpAddress.ToString(), 
-                    authentication = auth,
-                    scope = scope
+                var httpContext = _httpContextAccessor.HttpContext;
+                if (httpContext != null)
+                {
+                    var remoteIpAddress = httpContext.Connection.RemoteIpAddress;
+                    var host = httpContext.Request.Host;
+                    var path = httpContext.Request.Path;
+                    var method = httpContext.Request.Method;
+                    var auth = httpContext.User.Claims.FirstOrDefault(x => x.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value ?? "";
+                    var scope = httpContext.User.Claims.FirstOrDefault(x => x.Type == "scope")?.Value ?? "";
+                    return new AuditData
+                    {
+                        Type = type,
+                        typeId = id,
+                        url = $"{host}{path}",
+                        method = method,
+                        source = remoteIpAddress.ToString(),
+                        authentication = auth,
+                        scope = scope
+                    };
+                }
+                return new AuditData
+                {
+                    Type = type,
+                    typeId = id,
+                    url = "Unknown",
+                    method = "Unknown",
+                    source = "Unknown",
+                    authentication = "Unknown",
+                    scope = "Unknown"
                 };
             }
-            return new AuditData { 
-                Type = type, 
-                typeId = id, 
-                url = "Unknown", 
-                method = "Unknown", 
-                source = "Unknown", 
-                authentication = "Unknown",
-                scope = "Unknown"
-            };
+            catch (Exception ex)
+            {
+                 var sanitizedId = id.Replace(Environment.NewLine, "").Replace("\n", "").Replace("\r", "");
+                _logger.LogError(ex, "Failed to get audit data for type {Type} and ID {Id}", type, sanitizedId);
+                return null;
+            }
+        }
+
+        public async Task<string> CreateAuditEntry(AuditType type, string id)
+        {
+            try
+            {
+                // Get the audit data
+                var auditData = AuditDataGet(type, id);
+                if (auditData == null)
+                {
+                     var sanitizedId = id.Replace(Environment.NewLine, "").Replace("\n", "").Replace("\r", "");
+                    _logger.LogWarning("Failed to create audit data for type {Type} and ID {Id}", type, sanitizedId);
+                    return string.Empty;
+                }
+
+                // Add it to the database
+                return await AuditAdd(auditData);
+            }
+            catch (Exception ex)
+            {
+                 var sanitizedId = id.Replace(Environment.NewLine, "").Replace("\n", "").Replace("\r", "");
+                _logger.LogError(ex, "Failed to create audit entry for type {Type} and ID {Id}", type, sanitizedId);
+                return string.Empty;
+            }
         }
     }
 }

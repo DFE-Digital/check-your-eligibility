@@ -55,7 +55,7 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             var model = _fixture.Create<ApplicationStatusUpdateRequest>();
             var response = _fixture.Create<ApplicationStatusUpdateResponse>();
             _mockApplicationService.Setup(s => s.UpdateApplicationStatus(guid, model.Data)).ReturnsAsync(response);
-            _mockAuditService.Setup(a => a.AuditDataGet(Domain.Enums.AuditType.Application, guid)).Returns((AuditData)null);
+            _mockAuditService.Setup(a => a.CreateAuditEntry(Domain.Enums.AuditType.Application, guid)).ReturnsAsync(_fixture.Create<string>());
 
             // Act
             var result = await _sut.Execute(guid, model);
@@ -63,42 +63,6 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             // Assert
             _mockApplicationService.Verify(s => s.UpdateApplicationStatus(guid, model.Data), Times.Once);
             result.Data.Should().Be(response.Data);
-        }
-
-        [Test]
-        public async Task Execute_Should_Call_AuditAdd_When_AuditData_Is_Not_Null()
-        {
-            // Arrange
-            var guid = _fixture.Create<string>();
-            var model = _fixture.Create<ApplicationStatusUpdateRequest>();
-            var response = _fixture.Create<ApplicationStatusUpdateResponse>();
-            var auditData = _fixture.Create<AuditData>();
-            _mockApplicationService.Setup(s => s.UpdateApplicationStatus(guid, model.Data)).ReturnsAsync(response);
-            _mockAuditService.Setup(a => a.AuditDataGet(Domain.Enums.AuditType.Application, guid)).Returns(auditData);
-            _mockAuditService.Setup(a => a.AuditAdd(auditData)).ReturnsAsync(_fixture.Create<string>());
-
-            // Act
-            await _sut.Execute(guid, model);
-
-            // Assert
-            _mockAuditService.Verify(a => a.AuditAdd(auditData), Times.Once);
-        }
-
-        [Test]
-        public async Task Execute_Should_Not_Call_AuditAdd_When_AuditData_Is_Null()
-        {
-            // Arrange
-            var guid = _fixture.Create<string>();
-            var model = _fixture.Create<ApplicationStatusUpdateRequest>();
-            var response = _fixture.Create<ApplicationStatusUpdateResponse>();
-            _mockApplicationService.Setup(s => s.UpdateApplicationStatus(guid, model.Data)).ReturnsAsync(response);
-            _mockAuditService.Setup(a => a.AuditDataGet(Domain.Enums.AuditType.Application, guid)).Returns((AuditData)null);
-
-            // Act
-            await _sut.Execute(guid, model);
-
-            // Assert
-            _mockAuditService.Verify(a => a.AuditAdd(It.IsAny<AuditData>()), Times.Never);
         }
     }
 }

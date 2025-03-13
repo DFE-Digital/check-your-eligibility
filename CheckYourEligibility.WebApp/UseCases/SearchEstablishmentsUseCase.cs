@@ -1,4 +1,5 @@
 using Ardalis.GuardClauses;
+using CheckYourEligibility.Domain.Enums;
 using CheckYourEligibility.Domain.Responses;
 using CheckYourEligibility.Services.Interfaces;
 
@@ -26,12 +27,7 @@ namespace CheckYourEligibility.WebApp.UseCases
             Guard.Against.OutOfRange(query.Length, nameof(query.Length), 3, int.MaxValue);
 
             var results = await _service.Search(query);
-            var auditData = _auditService.AuditDataGet(Domain.Enums.AuditType.Establishment, string.Empty);
-            if (auditData != null)
-            {
-                await _auditService.AuditAdd(auditData);
-            }
-
+            await _auditService.CreateAuditEntry(AuditType.Establishment, string.Empty);
             return results ?? Enumerable.Empty<Establishment>();
         }
     }

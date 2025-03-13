@@ -11,7 +11,7 @@ using Moq;
 namespace CheckYourEligibility.APIUnitTests.UseCases
 {
     [TestFixture]
-    public class ImportEstablishmentsUseCaseTests: TestBase.TestBase
+    public class ImportEstablishmentsUseCaseTests : TestBase.TestBase
     {
         private Mock<IAdministration> _mockService;
         private Mock<IAudit> _mockAuditService;
@@ -54,7 +54,7 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             fileMock.Setup(f => f.ContentType).Returns("text/csv");
 
             _mockService.Setup(s => s.ImportEstablishments(It.IsAny<List<EstablishmentRow>>())).Returns(Task.CompletedTask);
-            _mockAuditService.Setup(a => a.AuditDataGet(Domain.Enums.AuditType.Administration, string.Empty)).Returns((AuditData)null);
+            _mockAuditService.Setup(a => a.CreateAuditEntry(Domain.Enums.AuditType.Administration, string.Empty)).ReturnsAsync(_fixture.Create<string>());
 
             // Act
             await _sut.Execute(fileMock.Object);
@@ -180,62 +180,6 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
 
             // Assert
             act.Should().ThrowExactly<ArgumentNullException>().And.Message.Should().Contain("Value cannot be null. (Parameter 'logger')");
-        }
-
-        [Test]
-        public async Task Execute_Should_Call_AuditAdd_When_AuditData_Is_Not_Null()
-        {
-            // Arrange
-            var fileMock = new Mock<IFormFile>();
-            var content = Properties.Resources.small_gis;
-            var fileName = "test.csv";
-            var ms = new MemoryStream();
-            var writer = new StreamWriter(ms);
-            writer.Write(content);
-            writer.Flush();
-            ms.Position = 0;
-            fileMock.Setup(f => f.OpenReadStream()).Returns(ms);
-            fileMock.Setup(f => f.FileName).Returns(fileName);
-            fileMock.Setup(f => f.Length).Returns(ms.Length);
-            fileMock.Setup(f => f.ContentType).Returns("text/csv");
-
-            _mockService.Setup(s => s.ImportEstablishments(It.IsAny<List<EstablishmentRow>>())).Returns(Task.CompletedTask);
-            var auditData = _fixture.Create<AuditData>();
-            _mockAuditService.Setup(a => a.AuditDataGet(Domain.Enums.AuditType.Administration, string.Empty)).Returns(auditData);
-            _mockAuditService.Setup(a => a.AuditAdd(auditData)).ReturnsAsync(_fixture.Create<string>());
-
-            // Act
-            await _sut.Execute(fileMock.Object);
-
-            // Assert
-            _mockAuditService.Verify(a => a.AuditAdd(auditData), Times.Once);
-        }
-
-        [Test]
-        public async Task Execute_Should_Not_Call_AuditAdd_When_AuditData_Is_Null()
-        {
-            // Arrange
-            var fileMock = new Mock<IFormFile>();
-            var content = Properties.Resources.small_gis;
-            var fileName = "test.csv";
-            var ms = new MemoryStream();
-            var writer = new StreamWriter(ms);
-            writer.Write(content);
-            writer.Flush();
-            ms.Position = 0;
-            fileMock.Setup(f => f.OpenReadStream()).Returns(ms);
-            fileMock.Setup(f => f.FileName).Returns(fileName);
-            fileMock.Setup(f => f.Length).Returns(ms.Length);
-            fileMock.Setup(f => f.ContentType).Returns("text/csv");
-
-            _mockService.Setup(s => s.ImportEstablishments(It.IsAny<List<EstablishmentRow>>())).Returns(Task.CompletedTask);
-            _mockAuditService.Setup(a => a.AuditDataGet(Domain.Enums.AuditType.Administration, string.Empty)).Returns((AuditData)null);
-
-            // Act
-            await _sut.Execute(fileMock.Object);
-
-            // Assert
-            _mockAuditService.Verify(a => a.AuditAdd(It.IsAny<AuditData>()), Times.Never);
         }
     }
 }

@@ -23,7 +23,7 @@ namespace CheckYourEligibility.WebApp.UseCases
         /// <param name="recordCountLimit">Maximum allowed records in a bulk upload</param>
         /// <returns>Check eligibility bulk response or validation errors</returns>
         Task<UseExecutionResult<CheckEligibilityResponseBulk>> Execute(
-            CheckEligibilityRequestBulk_Fsm model, 
+            CheckEligibilityRequestBulk_Fsm model,
             int recordCountLimit);
     }
 
@@ -44,7 +44,7 @@ namespace CheckYourEligibility.WebApp.UseCases
         }
 
         public async Task<UseExecutionResult<CheckEligibilityResponseBulk>> Execute(
-            CheckEligibilityRequestBulk_Fsm model, 
+            CheckEligibilityRequestBulk_Fsm model,
             int recordCountLimit)
         {
             var useCaseExecutionResult = new UseExecutionResult<CheckEligibilityResponseBulk>();
@@ -63,7 +63,7 @@ namespace CheckYourEligibility.WebApp.UseCases
                 return useCaseExecutionResult;
             }
 
-            if(model.GetType() != typeof(CheckEligibilityRequestBulk_Fsm))
+            if (model.GetType() != typeof(CheckEligibilityRequestBulk_Fsm))
             {
                 useCaseExecutionResult.SetFailure($"Unknown request type:-{model.GetType()}");
                 return useCaseExecutionResult;
@@ -79,14 +79,12 @@ namespace CheckYourEligibility.WebApp.UseCases
 
             var groupId = Guid.NewGuid().ToString();
             await _checkService.PostCheck(model.Data, groupId);
-            var auditData = _auditService.AuditDataGet(AuditType.BulkCheck, groupId);
-            if (auditData != null)
-            {
-                await _auditService.AuditAdd(auditData);
-            }
+            
+            await _auditService.CreateAuditEntry(AuditType.BulkCheck, groupId);
+            
 
             _logger.LogInformation($"Bulk eligibility check created with group ID: {groupId}");
-            
+
             useCaseExecutionResult.SetSuccess(new CheckEligibilityResponseBulk
             {
                 Data = new StatusValue { Status = $"{Messages.Processing}" },
@@ -111,16 +109,16 @@ namespace CheckYourEligibility.WebApp.UseCases
                 item.NationalInsuranceNumber = item.NationalInsuranceNumber?.ToUpper();
                 item.NationalAsylumSeekerServiceNumber = item.NationalAsylumSeekerServiceNumber?.ToUpper();
                 item.Sequence = sequence;
-                
+
                 var validationResults = validator.Validate(item);
                 if (!validationResults.IsValid)
                 {
                     validationResultsItems.AppendLine($"Item:-{sequence}, {validationResults.ToString()}");
                 }
-                
+
                 sequence++;
             }
-            
+
             return validationResultsItems;
         }
     }
