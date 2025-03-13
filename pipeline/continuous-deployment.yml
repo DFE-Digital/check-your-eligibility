@@ -96,7 +96,7 @@ stages:
                 scriptLocation: 'inlineScript'
                 inlineScript: |
                   az sql server firewall-rule create -g s203d01-core1 --server ece-dev-database --name ADO-Deploy --start-ip-address $(curl ipinfo.io/ip) --end-ip-address $(curl ipinfo.io/ip)
-                  $(Pipeline.Workspace)/checkYourEligibilityAPI/efbundle.exe
+                  $(Pipeline.Workspace)\checkYourEligibilityAPI\efbundle.exe
                   az sql server firewall-rule delete -g s203d01-core1 --server ece-dev-database --name ADO-Deploy          
           
           deploy:
@@ -182,7 +182,7 @@ stages:
                 scriptLocation: 'inlineScript'
                 inlineScript: |
                   az sql server firewall-rule create -g s203t01-core1 --server ece-test-database --name ADO-Deploy --start-ip-address $(curl ipinfo.io/ip) --end-ip-address $(curl ipinfo.io/ip)
-                  $(Pipeline.Workspace)/checkYourEligibilityAPI/efbundle.exe
+                  $(Pipeline.Workspace)\checkYourEligibilityAPI\efbundle.exe
                   az sql server firewall-rule delete -g s203t01-core1 --server ece-test-database --name ADO-Deploy
           
           deploy:
@@ -268,7 +268,7 @@ stages:
                 scriptLocation: 'inlineScript'
                 inlineScript: |
                   az sql server firewall-rule create -g s203t02-core1 --server ece-pp-database --name ADO-Deploy --start-ip-address $(curl ipinfo.io/ip) --end-ip-address $(curl ipinfo.io/ip)
-                  $(Pipeline.Workspace)/checkYourEligibilityAPI/efbundle.exe
+                  $(Pipeline.Workspace)\checkYourEligibilityAPI\efbundle.exe
                   az sql server firewall-rule delete -g s203t02-core1 --server ece-pp-database --name ADO-Deploy          
           
           deploy:
@@ -354,7 +354,7 @@ stages:
                 scriptLocation: 'inlineScript'
                 inlineScript: |
                   az sql server firewall-rule create -g s203p01-core1 --server ece-database --name ADO-Deploy --start-ip-address $(curl ipinfo.io/ip) --end-ip-address $(curl ipinfo.io/ip)
-                  $(Pipeline.Workspace)/checkYourEligibilityAPI/efbundle.exe
+                  $(Pipeline.Workspace)\checkYourEligibilityAPI\efbundle.exe
                   az sql server firewall-rule delete -g s203p01-core1 --server ece-database --name ADO-Deploy
           
           deploy:
