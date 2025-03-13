@@ -100,7 +100,8 @@ stages:
                   ls
                   cd $(Pipeline.Workspace)/checkYourEligibilityAPI
                   cd $(Pipeline.Workspace)\\checkYourEligibilityAPI
-                  cd D:\\a\\checkYourEligibilityAPI
+                  cd D:\\a1\\checkYourEligibilityAPI
+                  cd D:/a1/checkYourEligibilityAPI
                   ls
                   ./efbundle.exe
                   az sql server firewall-rule delete -g s203d01-core1 --server ece-dev-database --name ADO-Deploy          
