@@ -125,39 +125,5 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             _mockApplicationService.Verify(s => s.PostApplication(model.Data), Times.Once);
             result.Data.Should().Be(response);
         }
-
-        /* [Test]
-        public async Task Execute_Should_Call_AuditAdd_When_AuditData_Is_Not_Null()
-        {
-            // Arrange
-            var model = _validApplicationRequest;
-            var response = _fixture.Create<ApplicationResponse>();
-            var auditData = _fixture.Create<AuditData>();
-            _mockApplicationService.Setup(s => s.PostApplication(model.Data)).ReturnsAsync(response);
-            _mockAuditService.Setup(a => a.AuditDataGet(Domain.Enums.AuditType.Application, response.Id)).Returns(auditData);
-            _mockAuditService.Setup(a => a.AuditAdd(auditData)).ReturnsAsync(_fixture.Create<string>());
-
-            // Act
-            await _sut.Execute(model);
-
-            // Assert
-            _mockAuditService.Verify(a => a.AuditAdd(auditData), Times.Once);
-        }
-
-        [Test]
-        public async Task Execute_Should_Not_Call_AuditAdd_When_AuditData_Is_Null()
-        {
-            // Arrange
-            var model = _validApplicationRequest;
-            var response = _fixture.Create<ApplicationResponse>();
-            _mockApplicationService.Setup(s => s.PostApplication(model.Data)).ReturnsAsync(response);
-            _mockAuditService.Setup(a => a.AuditDataGet(Domain.Enums.AuditType.Application, response.Id)).Returns((AuditData)null);
-
-            // Act
-            await _sut.Execute(model);
-
-            // Assert
-            _mockAuditService.Verify(a => a.AuditAdd(It.IsAny<AuditData>()), Times.Never);
-        } */
     }
 }

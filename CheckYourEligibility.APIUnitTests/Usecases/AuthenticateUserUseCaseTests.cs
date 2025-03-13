@@ -372,60 +372,6 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             userWithUsernamePwd.Secret.Should().Be("test_password");
         }
 
-        /* [Test]
-        public async Task Execute_Should_Not_Audit_When_AuditData_Is_Null()
-        {
-            // Arrange
-            var login = _fixture.Create<SystemUser>();
-            login.client_id = null;
-            login.client_secret = null;
-            login.scope = null;
-            login.Username = "test_username";
-            login.Password = "correct_password";
-            login.InitializeCredentials();
-            var jwtConfig = _fixture.Create<JwtConfig>();
-            jwtConfig.ExpectedSecret = "correct_password";
-            jwtConfig.Key = "test_key_12345678901234567890123456789012"; // 32 chars for HMACSHA256
-
-            _mockAuditService.Setup(a => a.AuditDataGet(Domain.Enums.AuditType.User, login.Identifier)).Returns((AuditData)null);
-
-            // Act
-            var result = await _sut.Execute(login, jwtConfig);
-
-            // Assert
-            result.Should().NotBeNull();
-            // _mockAuditService.Verify(a => a.AuditAdd(It.IsAny<AuditData>()), Times.Never);
-            _mockAuditService.Verify(a => a.CreateAuditEntry(Domain.Enums.AuditType.User, login.Identifier), Times.Never);
-        }
-
-        [Test]
-        public async Task Execute_Should_Continue_When_AuditAdd_Throws_Exception()
-        {
-            // Arrange
-            var login = _fixture.Create<SystemUser>();
-            login.client_id = null;
-            login.client_secret = null;
-            login.scope = null;
-            login.Username = "test_username";
-            login.Password = "correct_password";
-            login.InitializeCredentials();
-            var jwtConfig = _fixture.Create<JwtConfig>();
-            jwtConfig.ExpectedSecret = "correct_password";
-            jwtConfig.Key = "test_key_12345678901234567890123456789012"; // 32 chars for HMACSHA256
-
-            
-
-            _mockAuditService.Setup(a => a.AuditDataGet(Domain.Enums.AuditType.User, login.Identifier)).Returns(auditData);
-            _mockAuditService.Setup(a => a.AuditAdd(auditData)).ThrowsAsync(new Exception("Audit log error"));
-
-            // Act
-            var result = await _sut.Execute(login, jwtConfig);
-
-            // Assert
-            result.Should().NotBeNull();
-            _mockAuditService.Verify(a => a.AuditAdd(auditData), Times.Once);
-        } */
-
         [Test]
         public async Task Execute_Should_Initialize_Credentials_When_Identifier_And_Secret_Are_Empty()
         {

@@ -82,7 +82,8 @@ namespace CheckYourEligibility.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to get audit data for type {Type} and ID {Id}", type, id);
+                 var sanitizedId = id.Replace(Environment.NewLine, "").Replace("\n", "").Replace("\r", "");
+                _logger.LogError(ex, "Failed to get audit data for type {Type} and ID {Id}", type, sanitizedId);
                 return null;
             }
         }
@@ -95,7 +96,8 @@ namespace CheckYourEligibility.Services
                 var auditData = AuditDataGet(type, id);
                 if (auditData == null)
                 {
-                    _logger.LogWarning("Failed to create audit data for type {Type} and ID {Id}", type, id);
+                     var sanitizedId = id.Replace(Environment.NewLine, "").Replace("\n", "").Replace("\r", "");
+                    _logger.LogWarning("Failed to create audit data for type {Type} and ID {Id}", type, sanitizedId);
                     return string.Empty;
                 }
 
@@ -104,7 +106,8 @@ namespace CheckYourEligibility.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to create audit entry for type {Type} and ID {Id}", type, id);
+                 var sanitizedId = id.Replace(Environment.NewLine, "").Replace("\n", "").Replace("\r", "");
+                _logger.LogError(ex, "Failed to create audit entry for type {Type} and ID {Id}", type, sanitizedId);
                 return string.Empty;
             }
         }

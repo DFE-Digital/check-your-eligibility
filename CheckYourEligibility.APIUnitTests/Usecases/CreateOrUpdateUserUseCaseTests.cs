@@ -52,26 +52,6 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             result.Should().BeEquivalentTo(expectedResponse);
         }
 
-        /* [Test]
-        public async Task Execute_Should_Not_Audit_When_AuditData_Is_Null()
-        {
-            // Arrange
-            var request = _fixture.Create<UserCreateRequest>();
-            var responseId = _fixture.Create<string>();
-
-            _mockUserService.Setup(us => us.Create(request.Data)).ReturnsAsync(responseId);
-            _mockAuditService.Setup(a => a.AuditDataGet(Domain.Enums.AuditType.User, responseId)).Returns((AuditData)null);
-
-            var expectedResponse = new UserSaveItemResponse { Data = responseId };
-
-            // Act
-            var result = await _sut.Execute(request);
-
-            // Assert
-            result.Should().BeEquivalentTo(expectedResponse);
-            _mockAuditService.Verify(a => a.AuditAdd(It.IsAny<AuditData>()), Times.Never);
-        } */
-
         [Test]
         public void Constructor_throws_argumentNullException_when_userService_is_null()
         {
