@@ -71,23 +71,26 @@ namespace CheckYourEligibility.WebApp.UseCases
 
             // Execute the check
             var response = await _checkService.PostCheck(model.Data);
-            var auditData = _auditService.AuditDataGet(AuditType.Check, response.Id);
-            if (auditData != null)
+            if (response != null)
             {
-                await _auditService.AuditAdd(auditData);
-            }
-
-            _logger.LogInformation($"FSM eligibility check created with ID: {response.Id}");
-            useCaseExecutionResult.SetSuccess(new CheckEligibilityResponse
-            {
-                Data = new StatusValue { Status = response.Status.ToString() },
-                Links = new CheckEligibilityResponseLinks
+                await _auditService.CreateAuditEntry(AuditType.Check, response.Id);
+                _logger.LogInformation($"FSM eligibility check created with ID: {response.Id}");
+                useCaseExecutionResult.SetSuccess(new CheckEligibilityResponse
                 {
-                    Get_EligibilityCheck = $"{CheckLinks.GetLink}{response.Id}",
-                    Put_EligibilityCheckProcess = $"{CheckLinks.ProcessLink}{response.Id}",
-                    Get_EligibilityCheckStatus = $"{CheckLinks.GetLink}{response.Id}/Status"
-                }
-            });
+                    Data = new StatusValue { Status = response.Status.ToString() },
+                    Links = new CheckEligibilityResponseLinks
+                    {
+                        Get_EligibilityCheck = $"{CheckLinks.GetLink}{response.Id}",
+                        Put_EligibilityCheckProcess = $"{CheckLinks.ProcessLink}{response.Id}",
+                        Get_EligibilityCheckStatus = $"{CheckLinks.GetLink}{response.Id}/Status"
+                    }
+                });
+            }
+            else
+            {
+                _logger.LogWarning("Response for FSM eligibility check was null.");
+                useCaseExecutionResult.SetFailure("Eligibility check not completed successfully.");
+            }
 
             return useCaseExecutionResult;
         }

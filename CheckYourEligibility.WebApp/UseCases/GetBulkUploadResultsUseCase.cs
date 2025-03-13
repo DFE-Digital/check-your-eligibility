@@ -52,13 +52,9 @@ namespace CheckYourEligibility.WebApp.UseCases
                 useCaseExecutionResult.SetNotFound(guid);
                 return useCaseExecutionResult;
             }
-
-            var auditData = _auditService.AuditDataGet(AuditType.CheckBulkResults, guid);
-            if (auditData != null)
-            {
-                await _auditService.AuditAdd(auditData);
-            }
-
+            
+            await _auditService.CreateAuditEntry(AuditType.CheckBulkResults, guid);
+            
             _logger.LogInformation($"Retrieved bulk upload results for group ID: {guid.Replace(Environment.NewLine, "").Replace("\n", "").Replace("\r", "")}");
             
             useCaseExecutionResult.SetSuccess(new CheckEligibilityBulkResponse()

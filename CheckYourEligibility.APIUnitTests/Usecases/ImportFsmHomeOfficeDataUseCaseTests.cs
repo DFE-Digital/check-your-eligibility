@@ -12,7 +12,7 @@ using CheckYourEligibility.Domain.Requests;
 namespace CheckYourEligibility.APIUnitTests.UseCases
 {
     [TestFixture]
-    public class ImportFsmHomeOfficeDataUseCaseTests: TestBase.TestBase
+    public class ImportFsmHomeOfficeDataUseCaseTests : TestBase.TestBase
     {
         private Mock<IAdministration> _mockService;
         private Mock<IAudit> _mockAuditService;
@@ -118,9 +118,7 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             fileMock.Setup(f => f.OpenReadStream()).Returns(new MemoryStream(System.Text.Encoding.UTF8.GetBytes(Properties.Resources.HO_Data_small)));
 
             _mockService.Setup(s => s.ImportHomeOfficeData(It.IsAny<List<FreeSchoolMealsHO>>())).Returns(Task.CompletedTask);
-            var auditData = _fixture.Create<AuditData>();
-            _mockAuditService.Setup(a => a.AuditDataGet(Domain.Enums.AuditType.Administration, string.Empty)).Returns(auditData);
-            _mockAuditService.Setup(a => a.AuditAdd(auditData)).ReturnsAsync(_fixture.Create<string>());
+            _mockAuditService.Setup(a => a.CreateAuditEntry(Domain.Enums.AuditType.Administration, string.Empty)).ReturnsAsync(_fixture.Create<string>());
 
             // Act
             await _sut.Execute(fileMock.Object);
@@ -130,41 +128,23 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
         }
 
         [Test]
-        public async Task Execute_Should_Call_AuditAdd_When_AuditData_Is_Not_Null()
+        public void Execute_Should_Throw_InvalidDataException_When_XML_File_Has_No_Content()
         {
             // Arrange
             var fileMock = new Mock<IFormFile>();
             fileMock.Setup(f => f.ContentType).Returns("text/csv");
-            fileMock.Setup(f => f.OpenReadStream()).Returns(new MemoryStream(System.Text.Encoding.UTF8.GetBytes(Properties.Resources.HO_Data_small)));
+            fileMock.Setup(f => f.FileName).Returns("test.csv");
 
-            _mockService.Setup(s => s.ImportHomeOfficeData(It.IsAny<List<FreeSchoolMealsHO>>())).Returns(Task.CompletedTask);
-            var auditData = _fixture.Create<AuditData>();
-            _mockAuditService.Setup(a => a.AuditDataGet(Domain.Enums.AuditType.Administration, string.Empty)).Returns(auditData);
-            _mockAuditService.Setup(a => a.AuditAdd(auditData)).ReturnsAsync(_fixture.Create<string>());
-
-            // Act
-            await _sut.Execute(fileMock.Object);
-
-            // Assert
-            _mockAuditService.Verify(a => a.AuditAdd(auditData), Times.Once);
-        }
-
-        [Test]
-        public async Task Execute_Should_Not_Call_AuditAdd_When_AuditData_Is_Null()
-        {
-            // Arrange
-            var fileMock = new Mock<IFormFile>();
-            fileMock.Setup(f => f.ContentType).Returns("text/csv");
-            fileMock.Setup(f => f.OpenReadStream()).Returns(new MemoryStream(System.Text.Encoding.UTF8.GetBytes(Properties.Resources.HO_Data_small)));
-
-            _mockService.Setup(s => s.ImportHomeOfficeData(It.IsAny<List<FreeSchoolMealsHO>>())).Returns(Task.CompletedTask);
-            _mockAuditService.Setup(a => a.AuditDataGet(Domain.Enums.AuditType.Administration, string.Empty)).Returns((AuditData)null);
+            // Create empty CSV file
+            var emptyCsv = "InvalidContent";
+            fileMock.Setup(f => f.OpenReadStream()).Returns(new MemoryStream(System.Text.Encoding.UTF8.GetBytes(emptyCsv)));
 
             // Act
-            await _sut.Execute(fileMock.Object);
+            Func<Task> act = async () => await _sut.Execute(fileMock.Object);
 
             // Assert
-            _mockAuditService.Verify(a => a.AuditAdd(It.IsAny<AuditData>()), Times.Never);
+            act.Should().ThrowExactlyAsync<InvalidDataException>()
+                .WithMessage("Invalid file no content.");
         }
     }
 }

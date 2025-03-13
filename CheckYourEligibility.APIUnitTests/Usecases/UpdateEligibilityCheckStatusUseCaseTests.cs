@@ -163,8 +163,8 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
                 .Setup(s => s.UpdateEligibilityCheckStatus(guid, request.Data))
                 .ReturnsAsync(responseData);
             
-            _mockAuditService.Setup(a => a.AuditDataGet(AuditType.Check, guid))
-                .Returns((AuditData)null);
+            
+            _mockAuditService.Setup(a => a.CreateAuditEntry(AuditType.Check, guid)).ReturnsAsync(_fixture.Create<string>());
 
             // Act
             var result = await _sut.Execute(guid, request);
@@ -188,63 +188,14 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
                 .Setup(s => s.UpdateEligibilityCheckStatus(guid, request.Data))
                 .ReturnsAsync(responseData);
             
-            _mockAuditService.Setup(a => a.AuditDataGet(AuditType.Check, guid))
-                .Returns((AuditData)null);
+            _mockAuditService.Setup(a => a.CreateAuditEntry(AuditType.Check, guid)).ReturnsAsync(_fixture.Create<string>());
+            
 
             // Act
             await _sut.Execute(guid, request);
 
             // Assert
             _mockCheckService.Verify(s => s.UpdateEligibilityCheckStatus(guid, request.Data), Times.Once);
-        }
-
-        [Test]
-        public async Task Execute_calls_audit_service_with_correct_audit_data()
-        {
-            // Arrange
-            var guid = _fixture.Create<string>();
-            var request = _fixture.Create<EligibilityStatusUpdateRequest>();
-            var responseData = _fixture.Create<CheckEligibilityStatusResponse>();
-            var auditData = _fixture.Create<AuditData>();
-            
-            _mockCheckService
-                .Setup(s => s.UpdateEligibilityCheckStatus(guid, request.Data))
-                .ReturnsAsync(responseData);
-            
-            _mockAuditService.Setup(a => a.AuditDataGet(AuditType.Check, guid))
-                .Returns(auditData);
-                
-            _mockAuditService.Setup(a => a.AuditAdd(auditData)).ReturnsAsync(_fixture.Create<string>());
-
-            // Act
-            await _sut.Execute(guid, request);
-
-            // Assert
-            _mockAuditService.Verify(a => a.AuditDataGet(AuditType.Check, guid), Times.Once);
-            _mockAuditService.Verify(a => a.AuditAdd(auditData), Times.Once);
-        }
-
-        [Test]
-        public async Task Execute_does_not_call_auditAdd_when_auditDataGet_returns_null()
-        {
-            // Arrange
-            var guid = _fixture.Create<string>();
-            var request = _fixture.Create<EligibilityStatusUpdateRequest>();
-            var responseData = _fixture.Create<CheckEligibilityStatusResponse>();
-            
-            _mockCheckService
-                .Setup(s => s.UpdateEligibilityCheckStatus(guid, request.Data))
-                .ReturnsAsync(responseData);
-            
-            _mockAuditService.Setup(a => a.AuditDataGet(AuditType.Check, guid))
-                .Returns((AuditData)null);
-
-            // Act
-            await _sut.Execute(guid, request);
-
-            // Assert
-            _mockAuditService.Verify(a => a.AuditDataGet(AuditType.Check, guid), Times.Once);
-            _mockAuditService.Verify(a => a.AuditAdd(It.IsAny<AuditData>()), Times.Never);
         }
     }
 }

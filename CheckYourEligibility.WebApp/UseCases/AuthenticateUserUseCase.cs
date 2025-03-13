@@ -67,21 +67,11 @@ namespace CheckYourEligibility.WebApp.UseCases
                 return null;
             }
 
-            var auditData = _auditService.AuditDataGet(Domain.Enums.AuditType.User, credentials.Identifier);
-            if (auditData != null)
-            {
-                try
-                {
-                    await _auditService.AuditAdd(auditData);
-                }
-                catch (Exception ex)
-                {
-                    // continue
-                    Console.WriteLine($"Audit log error: {ex.Message}");
-                }
-            }
-
-            return new JwtAuthResponse { Token = tokenString, expires_in = 3600, access_token = tokenString};
+            
+            var auditType = string.IsNullOrEmpty(credentials.client_id) ? Domain.Enums.AuditType.User : Domain.Enums.AuditType.Client;
+            await _auditService.CreateAuditEntry(auditType, credentials.Identifier);
+            
+            return new JwtAuthResponse { Token = tokenString, expires_in = 3600, access_token = tokenString };
         }
 
         private static SystemUser AuthenticateClient(string identifier, string secret, string expectedSecret, string scope = "default")

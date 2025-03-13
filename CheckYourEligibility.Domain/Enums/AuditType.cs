@@ -9,6 +9,7 @@ namespace CheckYourEligibility.Domain.Enums
         Hash,
         Establishment,
         User,
+        Client,
         Administration,
         BulkCheck,
         CheckBulkResults,

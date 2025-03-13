@@ -7,11 +7,12 @@ using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Moq;
+using Newtonsoft.Json;
 
 namespace CheckYourEligibility.APIUnitTests.UseCases
 {
     [TestFixture]
-    public class ImportFsmHMRCDataUseCaseTests: TestBase.TestBase
+    public class ImportFsmHMRCDataUseCaseTests : TestBase.TestBase
     {
         private Mock<IAdministration> _mockService;
         private Mock<IAudit> _mockAuditService;
@@ -117,9 +118,7 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             fileMock.Setup(f => f.OpenReadStream()).Returns(new MemoryStream(System.Text.Encoding.UTF8.GetBytes(Properties.Resources.exampleHMRC)));
 
             _mockService.Setup(s => s.ImportHMRCData(It.IsAny<List<FreeSchoolMealsHMRC>>())).Returns(Task.CompletedTask);
-            var auditData = _fixture.Create<AuditData>();
-            _mockAuditService.Setup(a => a.AuditDataGet(Domain.Enums.AuditType.Administration, string.Empty)).Returns(auditData);
-            _mockAuditService.Setup(a => a.AuditAdd(auditData)).ReturnsAsync(_fixture.Create<string>());
+            _mockAuditService.Setup(a => a.CreateAuditEntry(Domain.Enums.AuditType.Administration, string.Empty)).ReturnsAsync(_fixture.Create<string>());
 
             // Act
             await _sut.Execute(fileMock.Object);
@@ -129,41 +128,23 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
         }
 
         [Test]
-        public async Task Execute_Should_Call_AuditAdd_When_AuditData_Is_Not_Null()
+        public void Execute_Should_Throw_InvalidDataException_When_XML_File_Has_No_Content()
         {
             // Arrange
             var fileMock = new Mock<IFormFile>();
             fileMock.Setup(f => f.ContentType).Returns("text/xml");
-            fileMock.Setup(f => f.OpenReadStream()).Returns(new MemoryStream(System.Text.Encoding.UTF8.GetBytes(Properties.Resources.exampleHMRC)));
+            fileMock.Setup(f => f.FileName).Returns("test.xml");
 
-            _mockService.Setup(s => s.ImportHMRCData(It.IsAny<List<FreeSchoolMealsHMRC>>())).Returns(Task.CompletedTask);
-            var auditData = _fixture.Create<AuditData>();
-            _mockAuditService.Setup(a => a.AuditDataGet(Domain.Enums.AuditType.Administration, string.Empty)).Returns(auditData);
-            _mockAuditService.Setup(a => a.AuditAdd(auditData)).ReturnsAsync(_fixture.Create<string>());
-
-            // Act
-            await _sut.Execute(fileMock.Object);
-
-            // Assert
-            _mockAuditService.Verify(a => a.AuditAdd(auditData), Times.Once);
-        }
-
-        [Test]
-        public async Task Execute_Should_Not_Call_AuditAdd_When_AuditData_Is_Null()
-        {
-            // Arrange
-            var fileMock = new Mock<IFormFile>();
-            fileMock.Setup(f => f.ContentType).Returns("text/xml");
-            fileMock.Setup(f => f.OpenReadStream()).Returns(new MemoryStream(System.Text.Encoding.UTF8.GetBytes(Properties.Resources.exampleHMRC)));
-
-            _mockService.Setup(s => s.ImportHMRCData(It.IsAny<List<FreeSchoolMealsHMRC>>())).Returns(Task.CompletedTask);
-            _mockAuditService.Setup(a => a.AuditDataGet(Domain.Enums.AuditType.Administration, string.Empty)).Returns((AuditData)null);
+            // Create XML without EligiblePersons nodes
+            var emptyXml = "<Root><SomeOtherElement>data</SomeOtherElement></Root>";
+            fileMock.Setup(f => f.OpenReadStream()).Returns(new MemoryStream(System.Text.Encoding.UTF8.GetBytes(emptyXml)));
 
             // Act
-            await _sut.Execute(fileMock.Object);
+            Func<Task> act = async () => await _sut.Execute(fileMock.Object);
 
             // Assert
-            _mockAuditService.Verify(a => a.AuditAdd(It.IsAny<AuditData>()), Times.Never);
+            act.Should().ThrowExactlyAsync<InvalidDataException>()
+                .WithMessage("Invalid file no content.");
         }
     }
 }

@@ -4,7 +4,7 @@ using CheckYourEligibility.WebApp.UseCases;
 using FluentAssertions;
 using Newtonsoft.Json;
 
-namespace CheckYourEligibility.WebApp.Tests.UseCases
+namespace CheckYourEligibility.APIUnitTests.UseCases
 {
     [TestFixture]
     public class GetCitizenClaimsUseCaseTests : TestBase.TestBase

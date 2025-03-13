@@ -9,5 +9,6 @@ namespace CheckYourEligibility.Services.Interfaces
     {
         Task<string> AuditAdd(AuditData auditData);
         AuditData? AuditDataGet(AuditType type, string id);
+        Task<string> CreateAuditEntry(AuditType type, string id);
     }
 }

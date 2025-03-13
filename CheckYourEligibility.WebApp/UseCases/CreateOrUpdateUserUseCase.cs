@@ -1,4 +1,5 @@
 using Ardalis.GuardClauses;
+using CheckYourEligibility.Domain.Enums;
 using CheckYourEligibility.Domain.Requests;
 using CheckYourEligibility.Domain.Responses;
 using CheckYourEligibility.Services.Interfaces;
@@ -32,11 +33,9 @@ namespace CheckYourEligibility.WebApp.UseCases
         public async Task<UserSaveItemResponse> Execute(UserCreateRequest model)
         {
             var response = await _userService.Create(model.Data);
-            var auditData = _auditService.AuditDataGet(Domain.Enums.AuditType.User, response);
-            if (auditData != null)
-            {
-                await _auditService.AuditAdd(auditData);
-            }
+            
+            await _auditService.CreateAuditEntry(AuditType.User, response);
+            
             return new UserSaveItemResponse { Data = response };
         }
     }

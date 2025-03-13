@@ -26,7 +26,7 @@ namespace CheckYourEligibility.Data.Models
         public string authentication { get; set; }
         
         [Column(TypeName = "varchar(100)")]
-        public string scope { get; set; }
+        public string? scope { get; set; }
         public DateTime TimeStamp { get; set; }
     }
 }

@@ -1,4 +1,5 @@
 using Ardalis.GuardClauses;
+using CheckYourEligibility.Domain.Enums;
 using CheckYourEligibility.Domain.Requests;
 using CheckYourEligibility.Domain.Responses;
 using CheckYourEligibility.Services.Interfaces;
@@ -47,18 +48,18 @@ namespace CheckYourEligibility.WebApp.UseCases
             }
 
             var response = await _applicationService.PostApplication(model.Data);
-            var auditData = _auditService.AuditDataGet(Domain.Enums.AuditType.Application, response.Id);
-            if (auditData != null)
+            if (response != null)
             {
-                await _auditService.AuditAdd(auditData);
+                await _auditService.CreateAuditEntry(AuditType.Application, response.Id);
             }
+
 
             return new ApplicationSaveItemResponse
             {
                 Data = response,
                 Links = new ApplicationResponseLinks
                 {
-                    get_Application = $"{Domain.Constants.ApplicationLinks.GetLinkApplication}{response.Id}"
+                    get_Application = $"{Domain.Constants.ApplicationLinks.GetLinkApplication}{response?.Id}"
                 }
             };
         }

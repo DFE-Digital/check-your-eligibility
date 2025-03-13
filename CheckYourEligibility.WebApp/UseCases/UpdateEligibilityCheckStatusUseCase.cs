@@ -63,11 +63,7 @@ namespace CheckYourEligibility.WebApp.UseCases
                 return useCaseExecutionResult;
             }
 
-            var auditData = _auditService.AuditDataGet(AuditType.Check, guid);
-            if (auditData != null)
-            {
-                await _auditService.AuditAdd(auditData);
-            }
+            await _auditService.CreateAuditEntry(AuditType.Check, guid);
 
             _logger.LogInformation($"Updated eligibility check status for ID: {guid.Replace(Environment.NewLine, "").Replace("\n", "").Replace("\r", "")}");
             

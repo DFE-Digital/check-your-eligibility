@@ -1,4 +1,5 @@
 using Ardalis.GuardClauses;
+using CheckYourEligibility.Domain.Enums;
 using CheckYourEligibility.Domain.Responses;
 using CheckYourEligibility.Services.Interfaces;
 
@@ -27,12 +28,7 @@ namespace CheckYourEligibility.WebApp.UseCases
             {
                 return null;
             }
-
-            var auditData = _auditService.AuditDataGet(Domain.Enums.AuditType.Application, guid);
-            if (auditData != null)
-            {
-                await _auditService.AuditAdd(auditData);
-            }
+            await _auditService.CreateAuditEntry(AuditType.Application, guid);
 
             return new ApplicationItemResponse
             {
