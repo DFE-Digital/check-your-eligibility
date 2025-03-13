@@ -112,7 +112,7 @@ namespace CheckYourEligibility.WebApp.Controllers
         [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.BadRequest)]
         [Consumes("application/json", "application/vnd.api+json;version=1.0")]
         [HttpPost("/EligibilityCheck/FreeSchoolMeals/Bulk")]
-        [HttpPost("/check/bulk/free-school-meals")]
+        [HttpPost("/bulk-check/free-school-meals")]
         public async Task<ActionResult> CheckEligibilityBulk([FromBody] CheckEligibilityRequestBulk_Fsm model)
         {
             var result = await _checkEligibilityBulkUseCase.Execute(model, _bulkUploadRecordCountLimit);
@@ -134,7 +134,7 @@ namespace CheckYourEligibility.WebApp.Controllers
         [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.NotFound)]
         [Consumes("application/json", "application/vnd.api+json;version=1.0")]
         [HttpGet("Bulk/{guid}/CheckProgress")]
-        [HttpGet("/check/bulk/{guid}/progress")]
+        [HttpGet("/bulk-check/{guid}/progress")]
         public async Task<ActionResult> BulkUploadProgress(string guid)
         {
             var result = await _getBulkUploadProgressUseCase.Execute(guid);
@@ -162,7 +162,7 @@ namespace CheckYourEligibility.WebApp.Controllers
         [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.BadRequest)]
         [Consumes("application/json", "application/vnd.api+json;version=1.0")]
         [HttpGet("Bulk/{guid}/Results")]
-        [HttpGet("/check/bulk/{guid}")]
+        [HttpGet("/bulk-check/{guid}")]
         public async Task<ActionResult> BulkUploadResults(string guid)
         {
             var result = await _getBulkUploadResultsUseCase.Execute(guid);

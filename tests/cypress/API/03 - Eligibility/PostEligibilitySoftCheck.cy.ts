@@ -10,8 +10,8 @@ describe('Post Eligibility Check - Valid Requests', () => {
 
 
   it('Verify 202 Accepted response is returned with valid HMRC data', () => {
-    getandVerifyBearerToken('api/Login', validLoginRequestBody).then((token) => {
-      cy.apiRequest('POST', 'EligibilityCheck/FreeSchoolMeals', validHMRCRequest, token).then((response) => {
+    getandVerifyBearerToken('/oauth2/token', validLoginRequestBody).then((token) => {
+      cy.apiRequest('POST', 'check/free-school-meals', validHMRCRequest, token).then((response) => {
         // Assert the status and statusText
         cy.verifyApiResponseCode(response, 202)
 
@@ -23,8 +23,8 @@ describe('Post Eligibility Check - Valid Requests', () => {
 
 
   it('Verify 202 Accepted response is returned with valid Home Office data', () => {
-    getandVerifyBearerToken('api/Login', validLoginRequestBody).then((token) => {
-      cy.apiRequest('POST', 'EligibilityCheck/FreeSchoolMeals', validHomeOfficeRequest, token).then((response) => {
+    getandVerifyBearerToken('/oauth2/token', validLoginRequestBody).then((token) => {
+      cy.apiRequest('POST', 'check/free-school-meals', validHomeOfficeRequest, token).then((response) => {
         // Assert the status and statusText
         cy.verifyApiResponseCode(response, 202)
         // Assert the response body data
@@ -43,8 +43,8 @@ describe('Post Eligibility Check - Invalid Requests', () => {
 
   it('Verify 400 Bad Request response is returned with invalid National Insurance number', () => {
 
-    getandVerifyBearerToken('api/Login', validLoginRequestBody).then((token) => {
-      cy.apiRequest('POST', 'EligibilityCheck/FreeSchoolMeals', invalidHMRCRequest, token).then((response) => {
+    getandVerifyBearerToken('/oauth2/token', validLoginRequestBody).then((token) => {
+      cy.apiRequest('POST', 'check/free-school-meals', invalidHMRCRequest, token).then((response) => {
         cy.verifyApiResponseCode(response, 400)
         expect(response.body.errors[0]).to.have.property('title', 'Invalid National Insurance Number');
       });
@@ -53,8 +53,8 @@ describe('Post Eligibility Check - Invalid Requests', () => {
 
   it('Verify 400 Bad Request response is returned with invalid date of birth', () => {
 
-    getandVerifyBearerToken('api/Login', validLoginRequestBody).then((token) => {
-      cy.apiRequest('POST', 'EligibilityCheck/FreeSchoolMeals', invalidDOBRequest, token).then((response) => {
+    getandVerifyBearerToken('/oauth2/token', validLoginRequestBody).then((token) => {
+      cy.apiRequest('POST', 'check/free-school-meals', invalidDOBRequest, token).then((response) => {
         cy.verifyApiResponseCode(response, 400)
         expect(response.body.errors[0]).to.have.property('title', 'Date of birth is required:- (yyyy-mm-dd)');
       });
@@ -63,8 +63,8 @@ describe('Post Eligibility Check - Invalid Requests', () => {
 
   it('Verify 400 Bad Request response is returned with invalid last name', () => {
 
-    getandVerifyBearerToken('api/Login', validLoginRequestBody).then((token) => {
-      cy.apiRequest('POST', 'EligibilityCheck/FreeSchoolMeals', invalidLastNameRequest, token).then((response) => {
+    getandVerifyBearerToken('/oauth2/token', validLoginRequestBody).then((token) => {
+      cy.apiRequest('POST', 'check/free-school-meals', invalidLastNameRequest, token).then((response) => {
         cy.verifyApiResponseCode(response, 400)
         expect(response.body.errors[0]).to.have.property('title', 'LastName is required');
       });
@@ -73,8 +73,8 @@ describe('Post Eligibility Check - Invalid Requests', () => {
 
   it('Verify 400 Bad Request response is returned with invalid NI and Nass number', () => {
 
-    getandVerifyBearerToken('api/Login', validLoginRequestBody).then((token) => {
-      cy.apiRequest('POST', 'EligibilityCheck/FreeSchoolMeals', noNIAndNASSRequest, token).then((response) => {
+    getandVerifyBearerToken('/oauth2/token', validLoginRequestBody).then((token) => {
+      cy.apiRequest('POST', 'check/free-school-meals', noNIAndNASSRequest, token).then((response) => {
         cy.verifyApiResponseCode(response, 400)
         expect(response.body.errors[0]).to.have.property('title', 'National Insurance Number or National Asylum Seeker Service Number is required');
       });

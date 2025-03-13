@@ -6,7 +6,7 @@ describe('Testing the API', function () {
         // Declarations
         const fileName = 'HMRCDataSubset.xml'; // File name including extension
         const method = 'POST';
-        const url = Cypress.config('baseUrl') + '/importFsmHMRCData';
+        const url = Cypress.config('baseUrl') + '/admin/import-fsm-hmrc-data';
         const fileType = 'text/xml'; // XML file type     
         const expectedAnswer = '{"data":"HMRCDataSubset.xml - HMRC File Processed."}';
 
@@ -21,7 +21,7 @@ describe('Testing the API', function () {
             formData.set('file', blob, fileName); // Adding a file to the form
 
             // Get Bearer token
-            getandVerifyBearerToken('/api/Login', validLoginRequestBody).then((token: string) => {
+            getandVerifyBearerToken('/oauth2/token', validLoginRequestBody).then((token: string) => {
                 // Perform the request
                 cy.form_request(method, url, formData, token, (response: XMLHttpRequest) => {
                     expect(response.status).to.eq(200);

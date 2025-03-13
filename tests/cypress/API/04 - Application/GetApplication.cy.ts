@@ -15,23 +15,23 @@ describe('GET eligibility soft check by Guid', () => {
 
     it('Verify 200 Success response is returned with valid guid', () => {
         //Get token
-        getandVerifyBearerToken('api/Login', validLoginRequestBody).then((token) => {
+        getandVerifyBearerToken('/oauth2/token', validLoginRequestBody).then((token) => {
             const requestBody = validApplicationSupportRequestBody();
-            cy.apiRequest('POST', 'EligibilityCheck/FreeSchoolMeals', requestBody, token).then((response) => {
+            cy.apiRequest('POST', 'check/free-school-meals', requestBody, token).then((response) => {
                 cy.verifyApiResponseCode(response, 202);
-                cy.apiRequest('POST', '/Users', validUserRequestBody(), token).then((response) => {
+                cy.apiRequest('POST', '/user', validUserRequestBody(), token).then((response) => {
                     validApplicationRequest.Data.UserId = response.Data;
                     cy.wait(60000);
 
                     //Make post request for eligibility check
-                    cy.apiRequest('POST', 'Application', validApplicationRequest, token).then((response) => {
+                    cy.apiRequest('POST', 'application', validApplicationRequest, token).then((response) => {
                         cy.verifyApiResponseCode(response, 201);
                         //extract Guid
                         cy.extractGuid(response);
 
                         //make get request using the guid 
                         cy.get('@Guid').then((Guid) => {
-                            cy.apiRequest('GET', `Application/${Guid}`, {}, token).then((newResponse) => {
+                            cy.apiRequest('GET', `application/${Guid}`, {}, token).then((newResponse) => {
                                 // Assert the response 
                                 cy.verifyApiResponseCode(newResponse, 200)
                                 cy.log(JSON.stringify(validApplicationRequest))
@@ -44,15 +44,15 @@ describe('GET eligibility soft check by Guid', () => {
         });
     })
     it('Verify 401 response is returned when bearer token is not provided', () => {
-        getandVerifyBearerToken('api/Login', validLoginRequestBody).then((token) => {
+        getandVerifyBearerToken('/oauth2/token', validLoginRequestBody).then((token) => {
             //Make post request for eligibility check
-            cy.apiRequest('POST', 'Application', validApplicationRequest, token).then((response) => {
+            cy.apiRequest('POST', 'application', validApplicationRequest, token).then((response) => {
                 cy.verifyApiResponseCode(response, 201);
                 //extract Guid
                 cy.extractGuid(response);
                 //make get request using the guid 
                 cy.get('@Guid').then((Guid) => {
-                    cy.apiRequest('GET', `Application/${Guid}`, {} ).then((newResponse) => {
+                    cy.apiRequest('GET', `application/${Guid}`, {} ).then((newResponse) => {
                         // Assert the response 
                         cy.verifyApiResponseCode(newResponse, 401)
                     })
