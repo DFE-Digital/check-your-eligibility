@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using System.Text;
 using System.Diagnostics.CodeAnalysis;
 using CheckYourEligibility.WebApp.Extensions;
+using CheckYourEligibility.Domain.Constants;
 
 namespace CheckYourEligibility.WebApp
 {
@@ -83,21 +84,39 @@ namespace CheckYourEligibility.WebApp
 
             services.AddAuthorization(options =>
             {
-                options.AddPolicy("RequireLocalAuthorityScope", policy =>
+                options.AddPolicy(PolicyNames.RequireLocalAuthorityScope, policy =>
                     policy.RequireAssertion(context =>
                         context.User.HasScopeWithColon(configuration["Jwt:Scopes:local_authority"] ?? "local_authority")));
 
-                options.AddPolicy("RequireCheckScope", policy =>
+                options.AddPolicy(PolicyNames.RequireCheckScope, policy =>
                     policy.RequireAssertion(context =>
                         context.User.HasScope(configuration["Jwt:Scopes:check"] ?? "check")));
 
-                options.AddPolicy("RequireApplicationScope", policy =>
+                options.AddPolicy(PolicyNames.RequireApplicationScope, policy =>
                     policy.RequireAssertion(context =>
                         context.User.HasScope(configuration["Jwt:Scopes:application"] ?? "application")));
 
-                options.AddPolicy("RequireAdminScope", policy =>
+                options.AddPolicy(PolicyNames.RequireAdminScope, policy =>
                     policy.RequireAssertion(context =>
                         context.User.HasScope(configuration["Jwt:Scopes:admin"] ?? "admin")));
+                
+                /* new policies for "bulk_check","establishment","user" and "engine" */
+                options.AddPolicy(PolicyNames.RequireBulkCheckScope, policy =>
+                    policy.RequireAssertion(context =>
+                        context.User.HasScope(configuration["Jwt:Scopes:bulk_check"] ?? "bulk_check")));
+
+                options.AddPolicy(PolicyNames.RequireEstablishmentScope, policy =>
+                    policy.RequireAssertion(context =>
+                        context.User.HasScope(configuration["Jwt:Scopes:establishment"] ?? "establishment")));
+
+                options.AddPolicy(PolicyNames.RequireUserScope, policy =>
+                    policy.RequireAssertion(context =>
+                        context.User.HasScope(configuration["Jwt:Scopes:user"] ?? "user")));
+
+                options.AddPolicy(PolicyNames.RequireEngineScope, policy =>
+                    policy.RequireAssertion(context =>
+                        context.User.HasScope(configuration["Jwt:Scopes:engine"] ?? "engine")));
+
             });
             return services;
         }

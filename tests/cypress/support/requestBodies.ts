@@ -1,8 +1,9 @@
 // TODO: have only client details in the request body
 
 export const validLoginRequestBody = {
-    username: Cypress.env('JWT_USERNAME'),
-    password: Cypress.env('JWT_PASSWORD')
+    client_id: Cypress.env('JWT_USERNAME'),
+    client_secret: Cypress.env('JWT_PASSWORD'),
+    scope: Cypress.env('JWT_SCOPE')
 };
 
 export const validLoginRequestBodyWithUsernameAndPassword = {
@@ -11,6 +12,11 @@ export const validLoginRequestBodyWithUsernameAndPassword = {
 };
 
 export const validLoginRequestBodyWithClientDetails = {
+    client_id: Cypress.env('JWT_USERNAME'),
+    client_secret: Cypress.env('JWT_PASSWORD')
+};
+
+export const validLoginRequestBodyWithClientDetailsAndScope = {
     client_id: Cypress.env('JWT_USERNAME'),
     client_secret: Cypress.env('JWT_PASSWORD'),
     scope: Cypress.env('JWT_SCOPE')

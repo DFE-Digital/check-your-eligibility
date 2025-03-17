@@ -54,6 +54,7 @@ namespace CheckYourEligibility.WebApp.Controllers
         [Consumes("multipart/form-data")]
         [HttpPut("/cleanUpEligibilityChecks")]
         [HttpPut("/admin/clean-up-eligibility-checks")]
+        [Authorize(Policy = PolicyNames.RequireAdminScope)]
         public async Task<ActionResult> CleanUpEligibilityChecks()
         {
             await _cleanUpEligibilityChecksUseCase.Execute();
@@ -70,6 +71,7 @@ namespace CheckYourEligibility.WebApp.Controllers
         [Consumes("multipart/form-data")]
         [HttpPost("/importEstablishments")]
         [HttpPost("/admin/import-establishments")]
+        [Authorize(Policy = PolicyNames.RequireAdminScope)]
         public async Task<ActionResult> ImportEstablishments(IFormFile file)
         {
             try
@@ -93,6 +95,7 @@ namespace CheckYourEligibility.WebApp.Controllers
         [Consumes("multipart/form-data")]
         [HttpPost("/importFsmHomeOfficeData")]
         [HttpPost("/admin/import-fsm-home-office-data")]
+        [Authorize(Policy = PolicyNames.RequireAdminScope)]
         public async Task<ActionResult> ImportFsmHomeOfficeData(IFormFile file)
         {
             try
@@ -117,6 +120,7 @@ namespace CheckYourEligibility.WebApp.Controllers
         [Consumes("multipart/form-data")]
         [HttpPost("/importFsmHMRCData")]
         [HttpPost("/admin/import-fsm-hmrc-data")]
+        [Authorize(Policy = PolicyNames.RequireAdminScope)]
         public async Task<ActionResult> ImportFsmHMRCData(IFormFile file)
         {
             try

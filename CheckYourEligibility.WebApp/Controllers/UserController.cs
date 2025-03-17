@@ -1,4 +1,5 @@
 ﻿using Ardalis.GuardClauses;
+using CheckYourEligibility.Domain.Constants;
 using CheckYourEligibility.Domain.Requests;
 using CheckYourEligibility.Domain.Responses;
 using CheckYourEligibility.Services.Interfaces;
@@ -35,6 +36,7 @@ namespace CheckYourEligibility.WebApp.Controllers
         [Consumes("application/json", "application/vnd.api+json;version=1.0")]
         [HttpPost("/Users")]
         [HttpPost("/user")]
+        [Authorize(Policy = PolicyNames.RequireUserScope)]
         public async Task<ActionResult> User([FromBody] UserCreateRequest model)
         {
             if (model == null || model.Data == null)
