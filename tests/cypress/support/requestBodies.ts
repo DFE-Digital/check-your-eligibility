@@ -3,7 +3,7 @@
 export const validLoginRequestBody = {
     client_id: Cypress.env('JWT_USERNAME'),
     client_secret: Cypress.env('JWT_PASSWORD'),
-    scope: Cypress.env('JWT_SCOPE') ?? "local_authority check application admin bulk_check establishment user engine"
+    scope: "local_authority check application admin bulk_check establishment user engine"
 };
 
 export const validLoginRequestBodyWithUsernameAndPassword = {
@@ -19,7 +19,7 @@ export const validLoginRequestBodyWithClientDetails = {
 export const validLoginRequestBodyWithClientDetailsAndScope = {
     client_id: Cypress.env('JWT_USERNAME'),
     client_secret: Cypress.env('JWT_PASSWORD'),
-    scope: Cypress.env('JWT_SCOPE') ?? "local_authority check application admin bulk_check establishment user engine"
+    scope: "local_authority check application admin bulk_check establishment user engine"
 };
 
 export function validHMRCRequestBody() {
