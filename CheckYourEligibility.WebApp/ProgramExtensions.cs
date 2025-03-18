@@ -80,6 +80,15 @@ namespace CheckYourEligibility.WebApp
                             ValidAudience = configuration["Jwt:Issuer"],
                             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Jwt:Key"]))
                         };
+
+                        options.Events = new JwtBearerEvents
+                        {
+                            OnForbidden = context =>
+                            {
+                                context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                                return Task.CompletedTask;
+                            }
+                        };
                     });
 
             services.AddAuthorization(options =>
@@ -99,7 +108,7 @@ namespace CheckYourEligibility.WebApp
                 options.AddPolicy(PolicyNames.RequireAdminScope, policy =>
                     policy.RequireAssertion(context =>
                         context.User.HasScope(configuration["Jwt:Scopes:admin"] ?? "admin")));
-                
+
                 /* new policies for "bulk_check","establishment","user" and "engine" */
                 options.AddPolicy(PolicyNames.RequireBulkCheckScope, policy =>
                     policy.RequireAssertion(context =>
