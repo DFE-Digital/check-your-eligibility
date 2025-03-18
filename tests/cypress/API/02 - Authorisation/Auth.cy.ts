@@ -1,5 +1,5 @@
 import { verifyUnauthorizedWithoutToken, getandVerifyBearerToken } from '../../support/apiHelpers';
-import { validLoginRequestBodyWithUsernameAndPassword, validLoginRequestBodyWithClientDetails } from '../../support/requestBodies';
+import { validLoginRequestBodyWithUsernameAndPassword, validLoginRequestBodyWithClientDetails, validLoginRequestBodyWithClientDetailsAndScope } from '../../support/requestBodies';
 
 
 describe('Authorisation Tests', () => {
@@ -13,6 +13,11 @@ describe('Authorisation Tests', () => {
 
   it('Verify 200 response and Bearer Token Is Returned when Valid Client Details are used', () => {
     getandVerifyBearerToken('/oauth2/token', validLoginRequestBodyWithClientDetails).then((token) => {
+    });
+  });
+
+  it('Verify 200 response and Bearer Token Is Returned when Valid Client Details with scope are used', () => {
+    getandVerifyBearerToken('/oauth2/token', validLoginRequestBodyWithClientDetailsAndScope).then((token) => {
     });
   });
 

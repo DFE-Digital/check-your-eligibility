@@ -1,5 +1,6 @@
 ﻿using Ardalis.GuardClauses;
 using Azure;
+using CheckYourEligibility.Domain.Constants;
 using CheckYourEligibility.Domain.Responses;
 using CheckYourEligibility.Services.Interfaces;
 using CheckYourEligibility.WebApp.UseCases;
@@ -33,6 +34,7 @@ namespace CheckYourEligibility.WebApp.Controllers
         [Consumes("application/json", "application/vnd.api+json;version=1.0")]
         [HttpGet("/establishment/search")]
         [HttpGet("/Establishments/Search")]
+        [Authorize(Policy = PolicyNames.RequireEstablishmentScope)]
         public async Task<ActionResult> Search(string query)
         {
             if (string.IsNullOrWhiteSpace(query) || query.Length < 3)

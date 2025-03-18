@@ -1,4 +1,5 @@
 ﻿using Ardalis.GuardClauses;
+using CheckYourEligibility.Domain.Constants;
 using CheckYourEligibility.Domain.Exceptions;
 using CheckYourEligibility.Domain.Requests;
 using CheckYourEligibility.Domain.Responses;
@@ -69,6 +70,7 @@ namespace CheckYourEligibility.WebApp.Controllers
         [Consumes("application/json", "application/vnd.api+json;version=1.0")]
         [HttpPost("ProcessQueueMessages")]
         [HttpPost("/engine/process")]
+        [Authorize(Policy = PolicyNames.RequireEngineScope)]
         public async Task<ActionResult> ProcessQueue(string queue)
         {
             var result = await _processQueueMessagesUseCase.Execute(queue);
@@ -91,6 +93,7 @@ namespace CheckYourEligibility.WebApp.Controllers
         [Consumes("application/json", "application/vnd.api+json;version=1.0")]
         [HttpPost("FreeSchoolMeals")]
         [HttpPost("/check/free-school-meals")]
+        [Authorize(Policy = PolicyNames.RequireCheckScope)]
         public async Task<ActionResult> CheckEligibility([FromBody] CheckEligibilityRequest_Fsm model)
         {
             var result = await _checkEligibilityForFsmUseCase.Execute(model);
@@ -113,6 +116,7 @@ namespace CheckYourEligibility.WebApp.Controllers
         [Consumes("application/json", "application/vnd.api+json;version=1.0")]
         [HttpPost("/EligibilityCheck/FreeSchoolMeals/Bulk")]
         [HttpPost("/bulk-check/free-school-meals")]
+        [Authorize(Policy = PolicyNames.RequireBulkCheckScope)]
         public async Task<ActionResult> CheckEligibilityBulk([FromBody] CheckEligibilityRequestBulk_Fsm model)
         {
             var result = await _checkEligibilityBulkUseCase.Execute(model, _bulkUploadRecordCountLimit);
@@ -135,6 +139,7 @@ namespace CheckYourEligibility.WebApp.Controllers
         [Consumes("application/json", "application/vnd.api+json;version=1.0")]
         [HttpGet("Bulk/{guid}/CheckProgress")]
         [HttpGet("/bulk-check/{guid}/progress")]
+        [Authorize(Policy = PolicyNames.RequireBulkCheckScope)]
         public async Task<ActionResult> BulkUploadProgress(string guid)
         {
             var result = await _getBulkUploadProgressUseCase.Execute(guid);
@@ -163,6 +168,7 @@ namespace CheckYourEligibility.WebApp.Controllers
         [Consumes("application/json", "application/vnd.api+json;version=1.0")]
         [HttpGet("Bulk/{guid}/Results")]
         [HttpGet("/bulk-check/{guid}")]
+        [Authorize(Policy = PolicyNames.RequireBulkCheckScope)]
         public async Task<ActionResult> BulkUploadResults(string guid)
         {
             var result = await _getBulkUploadResultsUseCase.Execute(guid);
@@ -190,6 +196,7 @@ namespace CheckYourEligibility.WebApp.Controllers
         [Consumes("application/json", "application/vnd.api+json;version=1.0")]
         [HttpGet("{guid}/Status")]
         [HttpGet("/check/{guid}/status")]
+        [Authorize(Policy = PolicyNames.RequireCheckScope)]
         public async Task<ActionResult> CheckEligibilityStatus(string guid)
         {
             var result = await _getEligibilityCheckStatusUseCase.Execute(guid);
@@ -218,6 +225,7 @@ namespace CheckYourEligibility.WebApp.Controllers
         [Consumes("application/json", "application/vnd.api+json;version=1.0")]
         [HttpPatch("{guid}/Status")]
         [HttpPatch("/check/{guid}/status")]
+        [Authorize(Policy = PolicyNames.RequireCheckScope)]
         public async Task<ActionResult> EligibilityCheckStatusUpdate(string guid, [FromBody] EligibilityStatusUpdateRequest model)
         {
             var result = await _updateEligibilityCheckStatusUseCase.Execute(guid, model);
@@ -248,6 +256,7 @@ namespace CheckYourEligibility.WebApp.Controllers
         [Consumes("application/json", "application/vnd.api+json;version=1.0")]
         [HttpPut("ProcessEligibilityCheck/{guid}")]
         [HttpPut("/engine/process/{guid}")]
+        [Authorize(Policy = PolicyNames.RequireEngineScope)]
         public async Task<ActionResult> Process(string guid)
         {
             try
@@ -287,6 +296,7 @@ namespace CheckYourEligibility.WebApp.Controllers
         [Consumes("application/json", "application/vnd.api+json;version=1.0")]
         [HttpGet("{guid}")]
         [HttpGet("/check/{guid}")]
+        [Authorize(Policy = PolicyNames.RequireCheckScope)]
         public async Task<ActionResult> EligibilityCheck(string guid)
         {
             var result = await _getEligibilityCheckItemUseCase.Execute(guid);

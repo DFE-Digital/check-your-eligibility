@@ -1,4 +1,5 @@
 ﻿using Ardalis.GuardClauses;
+using CheckYourEligibility.Domain.Constants;
 using CheckYourEligibility.Domain.Requests;
 using CheckYourEligibility.Domain.Responses;
 using CheckYourEligibility.Services.Interfaces;
@@ -51,6 +52,7 @@ namespace CheckYourEligibility.WebApp.Controllers
         [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.BadRequest)]
         [Consumes("application/json", "application/vnd.api+json;version=1.0")]
         [HttpPost("/application")]
+        [Authorize(Policy = PolicyNames.RequireApplicationScope)]
         public async Task<ActionResult> Application([FromBody] ApplicationRequest model)
         {
             try
@@ -73,6 +75,7 @@ namespace CheckYourEligibility.WebApp.Controllers
         [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.NotFound)]
         [Consumes("application/json", "application/vnd.api+json;version=1.0")]
         [HttpGet("/application/{guid}")]
+        [Authorize(Policy = PolicyNames.RequireApplicationScope)]
         public async Task<ActionResult> Application(string guid)
         {
             var response = await _getApplicationUseCase.Execute(guid);
@@ -91,7 +94,7 @@ namespace CheckYourEligibility.WebApp.Controllers
         [ProducesResponseType(typeof(ApplicationSearchResponse), (int)HttpStatusCode.OK)]
         [Consumes("application/json", "application/vnd.api+json; version=1.0")]
         [HttpPost("/application/search")]
-        // [Authorize(Policy = "RequireLocalAuthorityScope")]
+        [Authorize(Policy = PolicyNames.RequireApplicationScope)]
         public async Task<ActionResult> ApplicationSearch([FromBody] ApplicationRequestSearch model)
         {
             /* string localAuthorityId = User.GetLocalAuthorityId(_localAuthorityScopeName);
@@ -115,6 +118,7 @@ namespace CheckYourEligibility.WebApp.Controllers
         [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.NotFound)]
         [Consumes("application/json", "application/vnd.api+json;version=1.0")]
         [HttpPatch("/application/{guid}")]
+        [Authorize(Policy = PolicyNames.RequireApplicationScope)]
         public async Task<ActionResult> ApplicationStatusUpdate(string guid, [FromBody] ApplicationStatusUpdateRequest model)
         {
             var response = await _updateApplicationStatusUseCase.Execute(guid, model);
