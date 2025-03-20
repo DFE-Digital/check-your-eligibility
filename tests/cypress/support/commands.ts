@@ -46,8 +46,6 @@ Cypress.Commands.add('apiRequest', (method: string, url: string, requestBody: an
   if (bearerToken) {
     options.headers['Authorization'] = `Bearer ${bearerToken}`;
   }
-
-  cy.log(contentType);
   
   options.headers['Content-Type'] = contentType ? contentType : 'application/vnd.api+json;version=1.0';
   return cy.request(options);
