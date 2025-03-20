@@ -117,72 +117,76 @@ namespace CheckYourEligibility.Services
 
         public async Task<ApplicationSearchResponse> GetApplications(ApplicationRequestSearch model)
         {
-            IEnumerable<Application> results = new List<Application>();
-            if (model.Data.Statuses != null)
-                foreach (var status in model.Data.Statuses)
-                {
-                    var resultsForStatus = GetSearchResults(model, status);
-                    results = results.Union(resultsForStatus);
-                }
+            IQueryable<Application> query;
+
+            if (model.Data.Statuses != null && model.Data.Statuses.Any())
+            {
+                query = _db.Applications.Where(a => model.Data.Statuses.Contains(a.Status.Value));
+            }
             else
             {
-                results = GetSearchResults(model, null);
+                query = _db.Applications;
             }
 
-            // Calculate total records and total pages
-            int totalRecords = results.Count();
+            // Apply other filters
+            query = ApplyAdditionalFilters(query, model);
+
+            int totalRecords = await query.CountAsync();
             int totalPages = (int)Math.Ceiling((double)totalRecords / model.PageSize);
 
-            // Pagination logic
+            // Pagination
             model.PageNumber = model.PageNumber <= 0 ? 1 : model.PageNumber;
-            var pagedResults = results
+            var pagedResults = await query
                 .Skip((model.PageNumber - 1) * model.PageSize)
-                .Take(model.PageSize);
+                .Take(model.PageSize)
+                .Include(x => x.Statuses)
+                .Include(x => x.Establishment)
+                .ThenInclude(x => x.LocalAuthority)
+                .Include(x => x.User)
+                .ToListAsync();
 
-            // Use AutoMapper or manual mapping to map Application entities to ApplicationResponse DTOs
+
             var mappedResults = _mapper.Map<IEnumerable<ApplicationResponse>>(pagedResults);
 
-            // Return paginated and mapped results
-            return new ApplicationSearchResponse { Data = mappedResults, TotalRecords = totalRecords, TotalPages = totalPages };
+            return new ApplicationSearchResponse
+            {
+                Data = mappedResults,
+                TotalRecords = totalRecords,
+                TotalPages = totalPages
+            };
         }
 
-        private IEnumerable<Application> GetSearchResults(ApplicationRequestSearch model, Domain.Enums.ApplicationStatus? status)
+        private IQueryable<Application> ApplyAdditionalFilters(IQueryable<Application> query, ApplicationRequestSearch model)
         {
-            IQueryable<Application> results = results = _db.Applications
-               .Include(x => x.Statuses)
-               .Include(x => x.Establishment)
-               .ThenInclude(x => x.LocalAuthority)
-               .Include(x => x.User)
-               .Where(x => x.Type == model.Data.Type);
+            query = query.Where(x => x.Type == model.Data.Type);
+
             if (model.Data?.Establishment != null)
-                results = results.Where(x => x.EstablishmentId == model.Data.Establishment);
+                query = query.Where(x => x.EstablishmentId == model.Data.Establishment);
             if (model.Data?.LocalAuthority != null)
-                results = results.Where(x => x.LocalAuthorityId == model.Data.LocalAuthority);
-            if (status != null)
-                results = results.Where(x => x.Status == status);
+                query = query.Where(x => x.LocalAuthorityId == model.Data.LocalAuthority);
 
             if (!string.IsNullOrEmpty(model.Data?.ParentNationalInsuranceNumber))
-                results = results.Where(x => x.ParentNationalInsuranceNumber == model.Data.ParentNationalInsuranceNumber);
+                query = query.Where(x => x.ParentNationalInsuranceNumber == model.Data.ParentNationalInsuranceNumber);
             if (!string.IsNullOrEmpty(model.Data?.ParentLastName))
-                results = results.Where(x => x.ParentLastName == model.Data.ParentLastName);
+                query = query.Where(x => x.ParentLastName == model.Data.ParentLastName);
             if (!string.IsNullOrEmpty(model.Data?.ParentNationalAsylumSeekerServiceNumber))
-                results = results.Where(x => x.ParentNationalAsylumSeekerServiceNumber == model.Data.ParentNationalAsylumSeekerServiceNumber);
+                query = query.Where(x => x.ParentNationalAsylumSeekerServiceNumber == model.Data.ParentNationalAsylumSeekerServiceNumber);
             if (!string.IsNullOrEmpty(model.Data?.ParentDateOfBirth))
-                results = results.Where(x => x.ParentDateOfBirth == DateTime.ParseExact(model.Data.ParentDateOfBirth, "yyyy-MM-dd", CultureInfo.InvariantCulture));
+                query = query.Where(x => x.ParentDateOfBirth == DateTime.ParseExact(model.Data.ParentDateOfBirth, "yyyy-MM-dd", CultureInfo.InvariantCulture));
             if (!string.IsNullOrEmpty(model.Data?.ChildLastName))
-                results = results.Where(x => x.ChildLastName == model.Data.ChildLastName);
+                query = query.Where(x => x.ChildLastName == model.Data.ChildLastName);
             if (!string.IsNullOrEmpty(model.Data?.ChildDateOfBirth))
-                results = results.Where(x => x.ChildDateOfBirth == DateTime.ParseExact(model.Data.ChildDateOfBirth, "yyyy-MM-dd", CultureInfo.InvariantCulture));
+                query = query.Where(x => x.ChildDateOfBirth == DateTime.ParseExact(model.Data.ChildDateOfBirth, "yyyy-MM-dd", CultureInfo.InvariantCulture));
             if (!string.IsNullOrEmpty(model.Data?.Reference))
-                results = results.Where(x => x.Reference == model.Data.Reference);
+                query = query.Where(x => x.Reference == model.Data.Reference);
             if (model.Data?.DateRange != null)
-                results = results.Where(x => x.Created > model.Data.DateRange.DateFrom && x.Created < model.Data.DateRange.DateTo);
+                query = query.Where(x => x.Created > model.Data.DateRange.DateFrom && x.Created < model.Data.DateRange.DateTo);
             if (!string.IsNullOrEmpty(model.Data?.Keyword))
             {
                 string[] keywords = model.Data.Keyword.Split(' ');
                 foreach (var keyword in keywords)
                 {
-                    results = results.Where(
+                    query = query.Where(
                         x =>
                             x.Reference.Contains(keyword) ||
                             x.ChildFirstName.Contains(keyword) ||
@@ -195,7 +199,18 @@ namespace CheckYourEligibility.Services
                     );
                 }
             }
-            return results.OrderBy(x => x.Created).ToList();
+
+            return query.OrderBy(x => x.Created);
+
+            // In case we need to order by status first and then by created date
+            /* if (model.Data?.Statuses != null && model.Data.Statuses.Any())
+            {
+                return query.OrderBy(x => x.Status).ThenBy(x => x.Created);
+            }
+            else
+            {
+                return query.OrderBy(x => x.Created);
+            } */
         }
 
         public async Task<ApplicationStatusUpdateResponse> UpdateApplicationStatus(string guid, ApplicationStatusData data)

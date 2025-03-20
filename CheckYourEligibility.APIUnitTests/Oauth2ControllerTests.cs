@@ -1,4 +1,5 @@
 using CheckYourEligibility.Domain;
+using CheckYourEligibility.Domain.Exceptions;
 using CheckYourEligibility.Domain.Responses;
 using CheckYourEligibility.WebApp.Controllers;
 using CheckYourEligibility.WebApp.UseCases;
@@ -13,7 +14,6 @@ namespace CheckYourEligibility.APIUnitTests
     public class Oauth2ControllerTests : TestBase.TestBase
     {
         private Mock<IAuthenticateUserUseCase> _mockAuthenticateUserUseCase;
-        private IConfigurationRoot _configuration;
         private ILogger<Oauth2Controller> _mockLogger;
         private Oauth2Controller _sut;
 
@@ -36,63 +36,45 @@ namespace CheckYourEligibility.APIUnitTests
             validClientWithScope = new SystemUser { client_id = "client1", client_secret = "secret1", scope = "read write" };
             invalidClient = new SystemUser { client_id = "invalidClient", client_secret = "wrongSecret" };
 
-            var configData = new Dictionary<string, string>
-            {
-                // User credentials config
-                {$"Jwt:Users:{validUser.Username}", $"{validUser.Password}"},
-                {$"Jwt:Users:{invalidUser.Username}", $"{invalidUser.Password}"},
-                
-                // Client credentials config
-                {$"Jwt:Clients:{validClient.client_id}:Secret", $"{validClient.client_secret}"},
-                {$"Jwt:Clients:{validClientWithScope.client_id}:Scope", "read write"},
-                {$"Jwt:Clients:{invalidClient.client_id}:Secret", $"{invalidClient.client_secret}"},
-                
-                // JWT config
-                {"Jwt:Key", "This_ismySecretKeyforEcsjwtLogin"},
-                {"Jwt:Issuer", "ece.com"},
-            };
-
-            _configuration = new ConfigurationBuilder()
-                .AddInMemoryCollection(configData)
-                .Build();
-
             _mockAuthenticateUserUseCase = new Mock<IAuthenticateUserUseCase>(MockBehavior.Strict);
             _mockLogger = Mock.Of<ILogger<Oauth2Controller>>();
-            _sut = new Oauth2Controller(_configuration, _mockLogger, _mockAuthenticateUserUseCase.Object);
+            _sut = new Oauth2Controller(_mockLogger, _mockAuthenticateUserUseCase.Object);
 
             // Setup authentication for user credentials
             _mockAuthenticateUserUseCase
-                .Setup(cs => cs.Execute(It.Is<SystemUser>(u =>
-                    u.Username == validUser.Username && u.Password == validUser.Password),
-                    It.IsAny<JwtConfig>()))
+                .Setup(cs => cs.AuthenticateUser(It.Is<SystemUser>(u =>
+                    u.Username == validUser.Username && u.Password == validUser.Password)))
                 .ReturnsAsync(new JwtAuthResponse { access_token = "validUserToken" });
 
             _mockAuthenticateUserUseCase
-                .Setup(cs => cs.Execute(It.Is<SystemUser>(u =>
-                    u.Username == invalidUser.Username && u.Password == invalidUser.Password),
-                    It.IsAny<JwtConfig>()))
-                .ReturnsAsync((JwtAuthResponse)null);
+                .Setup(cs => cs.AuthenticateUser(It.Is<SystemUser>(u =>
+                    u.Username == invalidUser.Username && u.Password == invalidUser.Password)))
+                .ThrowsAsync(new AuthenticationException("invalid_grant", "Invalid username or password"));
 
             // Setup authentication for client credentials
             _mockAuthenticateUserUseCase
-                .Setup(cs => cs.Execute(It.Is<SystemUser>(u =>
-                    u.client_id == validClient.client_id && u.client_secret == validClient.client_secret),
-                    It.IsAny<JwtConfig>()))
+                .Setup(cs => cs.AuthenticateUser(It.Is<SystemUser>(u =>
+                    u.client_id == validClient.client_id && u.client_secret == validClient.client_secret)))
                 .ReturnsAsync(new JwtAuthResponse { access_token = "validClientToken" });
 
             _mockAuthenticateUserUseCase
-                .Setup(cs => cs.Execute(It.Is<SystemUser>(u =>
+                .Setup(cs => cs.AuthenticateUser(It.Is<SystemUser>(u =>
                     u.client_id == validClientWithScope.client_id &&
                     u.client_secret == validClientWithScope.client_secret &&
-                    u.scope == validClientWithScope.scope),
-                    It.IsAny<JwtConfig>()))
+                    u.scope == validClientWithScope.scope)))
                 .ReturnsAsync(new JwtAuthResponse { access_token = "validClientTokenWithScope" });
 
             _mockAuthenticateUserUseCase
-                .Setup(cs => cs.Execute(It.Is<SystemUser>(u =>
-                    u.client_id == invalidClient.client_id && u.client_secret == invalidClient.client_secret),
-                    It.IsAny<JwtConfig>()))
-                .ReturnsAsync((JwtAuthResponse)null);
+                .Setup(cs => cs.AuthenticateUser(It.Is<SystemUser>(u =>
+                    u.client_id == invalidClient.client_id && u.client_secret == invalidClient.client_secret)))
+                .ThrowsAsync(new AuthenticationException("invalid_client", "Invalid client credentials"));
+
+            // Setup for empty credentials
+            _mockAuthenticateUserUseCase
+                .Setup(cs => cs.AuthenticateUser(It.Is<SystemUser>(u => 
+                    string.IsNullOrEmpty(u.Username) && string.IsNullOrEmpty(u.Password) && 
+                    string.IsNullOrEmpty(u.client_id) && string.IsNullOrEmpty(u.client_secret))))
+                .ThrowsAsync(new AuthenticationException("invalid_request", "Either client_id/client_secret pair or Username/Password pair must be provided"));
         }
 
         [TearDown]
@@ -106,7 +88,7 @@ namespace CheckYourEligibility.APIUnitTests
         {
             // Arrange
             // Act
-            Action act = () => new Oauth2Controller(_configuration, null, null);
+            Action act = () => new Oauth2Controller(null, null);
 
             // Assert
             act.Should().ThrowExactly<ArgumentNullException>().And.Message.Should().EndWithEquivalentOf("Value cannot be null. (Parameter 'logger')");
@@ -128,9 +110,8 @@ namespace CheckYourEligibility.APIUnitTests
             jwtAuthResponse.access_token.Should().NotBeEmpty();
 
             // Verify
-            _mockAuthenticateUserUseCase.Verify(cs => cs.Execute(
-                It.Is<SystemUser>(u => u.Username == validUser.Username && u.Password == validUser.Password),
-                It.IsAny<JwtConfig>()),
+            _mockAuthenticateUserUseCase.Verify(cs => cs.AuthenticateUser(
+                It.Is<SystemUser>(u => u.Username == validUser.Username && u.Password == validUser.Password)),
                 Times.Once);
         }
 
@@ -147,9 +128,8 @@ namespace CheckYourEligibility.APIUnitTests
             response.Should().BeOfType<UnauthorizedObjectResult>();
 
             // Verify
-            _mockAuthenticateUserUseCase.Verify(cs => cs.Execute(
-                It.Is<SystemUser>(u => u.Username == invalidUser.Username && u.Password == invalidUser.Password),
-                It.IsAny<JwtConfig>()),
+            _mockAuthenticateUserUseCase.Verify(cs => cs.AuthenticateUser(
+                It.Is<SystemUser>(u => u.Username == invalidUser.Username && u.Password == invalidUser.Password)),
                 Times.Once);
         }
 
@@ -169,9 +149,8 @@ namespace CheckYourEligibility.APIUnitTests
             jwtAuthResponse.access_token.Should().NotBeEmpty();
 
             // Verify
-            _mockAuthenticateUserUseCase.Verify(cs => cs.Execute(
-                It.Is<SystemUser>(u => u.client_id == validClient.client_id && u.client_secret == validClient.client_secret),
-                It.IsAny<JwtConfig>()),
+            _mockAuthenticateUserUseCase.Verify(cs => cs.AuthenticateUser(
+                It.Is<SystemUser>(u => u.client_id == validClient.client_id && u.client_secret == validClient.client_secret)),
                 Times.Once);
         }
 
@@ -191,12 +170,11 @@ namespace CheckYourEligibility.APIUnitTests
             jwtAuthResponse.access_token.Should().NotBeEmpty();
 
             // Verify
-            _mockAuthenticateUserUseCase.Verify(cs => cs.Execute(
+            _mockAuthenticateUserUseCase.Verify(cs => cs.AuthenticateUser(
                 It.Is<SystemUser>(u =>
                     u.client_id == validClientWithScope.client_id &&
                     u.client_secret == validClientWithScope.client_secret &&
-                    u.scope == validClientWithScope.scope),
-                It.Is<JwtConfig>(c => c.AllowedScopes == "read write")),
+                    u.scope == validClientWithScope.scope)),
                 Times.Once);
         }
 
@@ -213,9 +191,8 @@ namespace CheckYourEligibility.APIUnitTests
             response.Should().BeOfType<UnauthorizedObjectResult>();
 
             // Verify
-            _mockAuthenticateUserUseCase.Verify(cs => cs.Execute(
-                It.Is<SystemUser>(u => u.client_id == invalidClient.client_id && u.client_secret == invalidClient.client_secret),
-                It.IsAny<JwtConfig>()),
+            _mockAuthenticateUserUseCase.Verify(cs => cs.AuthenticateUser(
+                It.Is<SystemUser>(u => u.client_id == invalidClient.client_id && u.client_secret == invalidClient.client_secret)),
                 Times.Once);
         }
 
@@ -229,93 +206,9 @@ namespace CheckYourEligibility.APIUnitTests
             var response = await _sut.LoginJson(request);
 
             // Assert
-            response.Should().BeOfType<BadRequestObjectResult>();
-            var badRequestResult = (BadRequestObjectResult)response;
-            ((ErrorResponse)badRequestResult.Value).Errors.First().Title.Should().Be("Either client_id/client_secret pair or Username/Password pair must be provided");
-        }
-
-        [Test]
-        public async Task Login_throws_Exception_when_JwtKey_is_missing()
-        {
-            // Arrange
-            var configUser = new Dictionary<string, string>
-            {
-                {$"Jwt:Users:{validUser.Username}", $"{validUser.Password}"},
-                {"Jwt:Issuer", "ece.com"},
-            };
-            _configuration = new ConfigurationBuilder()
-                .AddInMemoryCollection(configUser)
-                .Build();
-            _sut = new Oauth2Controller(_configuration, _mockLogger, _mockAuthenticateUserUseCase.Object);
-
-            // Act
-            var response = await _sut.LoginJson(validUser);
-
-            // Assert
             response.Should().BeOfType<UnauthorizedObjectResult>();
-        }
-
-        [Test]
-        public async Task Login_throws_Exception_when_JwtIssuer_is_missing()
-        {
-            // Arrange
-            var configUser = new Dictionary<string, string>
-            {
-                {$"Jwt:Users:{validUser.Username}", $"{validUser.Password}"},
-                {"Jwt:Key", "This_ismySecretKeyforEcsjwtLogin"},
-            };
-            _configuration = new ConfigurationBuilder()
-                .AddInMemoryCollection(configUser)
-                .Build();
-            _sut = new Oauth2Controller(_configuration, _mockLogger, _mockAuthenticateUserUseCase.Object);
-
-            // Act
-            var response = await _sut.LoginJson(validUser);
-
-            // Assert
-            response.Should().BeOfType<UnauthorizedObjectResult>();
-        }
-
-        [Test]
-        public async Task Login_returns_Unauthorized_when_UserPassword_is_missing()
-        {
-            // Arrange
-            var configUser = new Dictionary<string, string>
-            {
-                {"Jwt:Key", "This_ismySecretKeyforEcsjwtLogin"},
-                {"Jwt:Issuer", "ece.com"},
-            };
-            _configuration = new ConfigurationBuilder()
-                .AddInMemoryCollection(configUser)
-                .Build();
-            _sut = new Oauth2Controller(_configuration, _mockLogger, _mockAuthenticateUserUseCase.Object);
-
-            // Act
-            var response = await _sut.LoginJson(validUser);
-
-            // Assert
-            response.Should().BeOfType<UnauthorizedObjectResult>();
-        }
-
-        [Test]
-        public async Task Login_returns_Unauthorized_when_client_secret_is_missing()
-        {
-            // Arrange
-            var configUser = new Dictionary<string, string>
-            {
-                {"Jwt:Key", "This_ismySecretKeyforEcsjwtLogin"},
-                {"Jwt:Issuer", "ece.com"},
-            };
-            _configuration = new ConfigurationBuilder()
-                .AddInMemoryCollection(configUser)
-                .Build();
-            _sut = new Oauth2Controller(_configuration, _mockLogger, _mockAuthenticateUserUseCase.Object);
-
-            // Act
-            var response = await _sut.LoginJson(validClient);
-
-            // Assert
-            response.Should().BeOfType<UnauthorizedObjectResult>();
+            var unauthorizedResult = (UnauthorizedObjectResult)response;
+            ((ErrorResponse)unauthorizedResult.Value).Errors.First().Title.Should().Be("invalid_request");
         }
 
         [Test]
@@ -334,9 +227,8 @@ namespace CheckYourEligibility.APIUnitTests
             jwtAuthResponse.access_token.Should().NotBeEmpty();
 
             // Verify
-            _mockAuthenticateUserUseCase.Verify(cs => cs.Execute(
-                It.Is<SystemUser>(u => u.Username == validUser.Username && u.Password == validUser.Password),
-                It.IsAny<JwtConfig>()),
+            _mockAuthenticateUserUseCase.Verify(cs => cs.AuthenticateUser(
+                It.Is<SystemUser>(u => u.Username == validUser.Username && u.Password == validUser.Password)),
                 Times.Once);
         }
 
@@ -363,41 +255,9 @@ namespace CheckYourEligibility.APIUnitTests
             var response = await _sut.LoginForm(request);
 
             // Assert
-            response.Should().BeOfType<BadRequestObjectResult>();
-            var badRequestResult = (BadRequestObjectResult)response;
-            ((ErrorResponse)badRequestResult.Value).Errors.First().Title.Should().Be("Either client_id/client_secret pair or Username/Password pair must be provided");
-        }
-
-        [Test]
-        public async Task Client_With_Missing_Scope_Configuration_Returns_Unauthorized()
-        {
-            // Arrange
-            var clientWithInvalidScope = new SystemUser
-            {
-                client_id = "client1",
-                client_secret = "secret1",
-                scope = "admin" // Scope that doesn't match configuration
-            };
-
-            var configData = new Dictionary<string, string>
-            {
-                {$"Jwt:Clients:{clientWithInvalidScope.client_id}:Secret", $"{clientWithInvalidScope.client_secret}"},
-                // No scope configuration for this client
-                {"Jwt:Key", "This_ismySecretKeyforEcsjwtLogin"},
-                {"Jwt:Issuer", "ece.com"},
-            };
-
-            var configWithoutScope = new ConfigurationBuilder()
-                .AddInMemoryCollection(configData)
-                .Build();
-
-            _sut = new Oauth2Controller(configWithoutScope, _mockLogger, _mockAuthenticateUserUseCase.Object);
-
-            // Act
-            var response = await _sut.LoginJson(clientWithInvalidScope);
-
-            // Assert
             response.Should().BeOfType<UnauthorizedObjectResult>();
+            var unauthorizedResult = (UnauthorizedObjectResult)response;
+            ((ErrorResponse)unauthorizedResult.Value).Errors.First().Title.Should().Be("invalid_request");
         }
 
         [Test]
@@ -411,6 +271,14 @@ namespace CheckYourEligibility.APIUnitTests
                 grant_type = "invalid_grant_type" // Invalid grant type
             };
 
+            // Setup specific mock for this test case
+            _mockAuthenticateUserUseCase
+                .Setup(cs => cs.AuthenticateUser(It.Is<SystemUser>(u =>
+                    u.Username == validUser.Username &&
+                    u.Password == validUser.Password &&
+                    u.grant_type == "invalid_grant_type")))
+                .ReturnsAsync(new JwtAuthResponse { access_token = "validUserToken" });
+
             // Act
             var response = await _sut.LoginJson(request);
 
@@ -421,12 +289,11 @@ namespace CheckYourEligibility.APIUnitTests
             jwtAuthResponse.access_token.Should().NotBeEmpty();
 
             // Verify
-            _mockAuthenticateUserUseCase.Verify(cs => cs.Execute(
+            _mockAuthenticateUserUseCase.Verify(cs => cs.AuthenticateUser(
                 It.Is<SystemUser>(u =>
                     u.Username == validUser.Username &&
                     u.Password == validUser.Password &&
-                    u.grant_type == "invalid_grant_type"),
-                It.IsAny<JwtConfig>()),
+                    u.grant_type == "invalid_grant_type")),
                 Times.Once);
         }
 
@@ -441,6 +308,14 @@ namespace CheckYourEligibility.APIUnitTests
                 grant_type = "invalid_grant_type" // Invalid grant type
             };
 
+            // Setup specific mock for this test case
+            _mockAuthenticateUserUseCase
+                .Setup(cs => cs.AuthenticateUser(It.Is<SystemUser>(u =>
+                    u.Username == validUser.Username &&
+                    u.Password == validUser.Password &&
+                    u.grant_type == "invalid_grant_type")))
+                .ReturnsAsync(new JwtAuthResponse { access_token = "validUserToken" });
+
             // Act
             var response = await _sut.LoginForm(request);
 
@@ -451,12 +326,11 @@ namespace CheckYourEligibility.APIUnitTests
             jwtAuthResponse.access_token.Should().NotBeEmpty();
 
             // Verify
-            _mockAuthenticateUserUseCase.Verify(cs => cs.Execute(
+            _mockAuthenticateUserUseCase.Verify(cs => cs.AuthenticateUser(
                 It.Is<SystemUser>(u =>
                     u.Username == validUser.Username &&
                     u.Password == validUser.Password &&
-                    u.grant_type == "invalid_grant_type"),
-                It.IsAny<JwtConfig>()),
+                    u.grant_type == "invalid_grant_type")),
                 Times.Once);
         }
 
@@ -471,6 +345,14 @@ namespace CheckYourEligibility.APIUnitTests
                 grant_type = "client_credentials" // Valid grant type
             };
 
+            // Setup specific mock for this test case
+            _mockAuthenticateUserUseCase
+                .Setup(cs => cs.AuthenticateUser(It.Is<SystemUser>(u =>
+                    u.client_id == validClient.client_id &&
+                    u.client_secret == validClient.client_secret &&
+                    u.grant_type == "client_credentials")))
+                .ReturnsAsync(new JwtAuthResponse { access_token = "validClientToken" });
+
             // Act
             var response = await _sut.LoginForm(request);
 
@@ -481,13 +363,33 @@ namespace CheckYourEligibility.APIUnitTests
             jwtAuthResponse.access_token.Should().NotBeEmpty();
 
             // Verify
-            _mockAuthenticateUserUseCase.Verify(cs => cs.Execute(
+            _mockAuthenticateUserUseCase.Verify(cs => cs.AuthenticateUser(
                 It.Is<SystemUser>(u =>
                     u.client_id == validClient.client_id &&
                     u.client_secret == validClient.client_secret &&
-                    u.grant_type == "client_credentials"),
-                It.IsAny<JwtConfig>()),
+                    u.grant_type == "client_credentials")),
                 Times.Once);
+        }
+
+        [Test]
+        public async Task Controller_Handles_Generic_Exception_From_UseCase()
+        {
+            // Arrange
+            var request = new SystemUser { Username = "error_user", Password = "error_password" };
+
+            // Setup specific mock for this test case
+            _mockAuthenticateUserUseCase
+                .Setup(cs => cs.AuthenticateUser(It.Is<SystemUser>(u =>
+                    u.Username == "error_user" && u.Password == "error_password")))
+                .ThrowsAsync(new Exception("Unexpected error"));
+
+            // Act
+            var response = await _sut.LoginJson(request);
+
+            // Assert
+            response.Should().BeOfType<UnauthorizedObjectResult>();
+            var unauthorizedResult = (UnauthorizedObjectResult)response;
+            ((ErrorResponse)unauthorizedResult.Value).Errors.First().Title.Should().Be("server_error");
         }
     }
 }
