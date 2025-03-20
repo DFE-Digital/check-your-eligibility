@@ -1,15 +1,10 @@
 import { verifyUnauthorizedWithoutToken, getandVerifyBearerToken } from '../../support/apiHelpers';
-import { validLoginRequestBodyWithUsernameAndPassword, validLoginRequestBodyWithClientDetails, validLoginRequestBodyWithClientDetailsAndScope } from '../../support/requestBodies';
+import { validLoginRequestBodyWithClientDetails, validLoginRequestBody } from '../../support/requestBodies';
 
 
 describe('Authorisation Tests', () => {
   const invalidRequestBody = { lolzname: 'ecsUiUser', password: '123456' };
   const invalidClientDetails = { client_id: 'invalidClientId', client_secret: 'invalid Secret', scope: 'invalidScope' };
-
-  it('Verify 200 response and Bearer Token Is Returned when Valid Credentials are used', () => { 
-    getandVerifyBearerToken('/oauth2/token', validLoginRequestBodyWithUsernameAndPassword).then((token) => {
-    });
-  });
 
   it('Verify 200 response and Bearer Token Is Returned when Valid Client Details are used', () => {
     getandVerifyBearerToken('/oauth2/token', validLoginRequestBodyWithClientDetails).then((token) => {
@@ -17,7 +12,7 @@ describe('Authorisation Tests', () => {
   });
 
   it('Verify 200 response and Bearer Token Is Returned when Valid Client Details with scope are used', () => {
-    getandVerifyBearerToken('/oauth2/token', validLoginRequestBodyWithClientDetailsAndScope).then((token) => {
+    getandVerifyBearerToken('/oauth2/token', validLoginRequestBody).then((token) => {
     });
   });
 

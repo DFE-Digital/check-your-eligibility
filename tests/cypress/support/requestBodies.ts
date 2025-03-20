@@ -1,26 +1,16 @@
 // TODO: have only client details in the request body
 
-export const validLoginRequestBody = {
-    client_id: Cypress.env('JWT_USERNAME'),
-    client_secret: Cypress.env('JWT_PASSWORD'),
-    scope: "local_authority check application admin bulk_check establishment user engine"
-};
+export const validLoginRequestBody = "client_id=".concat(
+    Cypress.env('JWT_USERNAME'),
+    "&client_secret=",
+    Cypress.env('JWT_PASSWORD'),
+    "&scope=local_authority check application admin bulk_check establishment user engine"
+);
 
-export const validLoginRequestBodyWithUsernameAndPassword = {
-    username: Cypress.env('JWT_USERNAME'),
-    password: Cypress.env('JWT_PASSWORD')
-};
-
-export const validLoginRequestBodyWithClientDetails = {
-    client_id: Cypress.env('JWT_USERNAME'),
-    client_secret: Cypress.env('JWT_PASSWORD')
-};
-
-export const validLoginRequestBodyWithClientDetailsAndScope = {
-    client_id: Cypress.env('JWT_USERNAME'),
-    client_secret: Cypress.env('JWT_PASSWORD'),
-    scope: "local_authority check application admin bulk_check establishment user engine"
-};
+export const validLoginRequestBodyWithClientDetails = "client_id=".concat(
+    Cypress.env('JWT_USERNAME'),
+    "&client_secret=".Cypress.env('JWT_PASSWORD')
+);
 
 export function validHMRCRequestBody() {
     return {
