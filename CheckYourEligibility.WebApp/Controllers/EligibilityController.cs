@@ -68,7 +68,6 @@ namespace CheckYourEligibility.WebApp.Controllers
         [ProducesResponseType(typeof(MessageResponse), (int)HttpStatusCode.OK)]
         [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.BadRequest)]
         [Consumes("application/json", "application/vnd.api+json;version=1.0")]
-        [HttpPost("ProcessQueueMessages")]
         [HttpPost("/engine/process")]
         [Authorize(Policy = PolicyNames.RequireEngineScope)]
         public async Task<ActionResult> ProcessQueue(string queue)
@@ -91,7 +90,6 @@ namespace CheckYourEligibility.WebApp.Controllers
         [ProducesResponseType(typeof(CheckEligibilityResponse), (int)HttpStatusCode.Accepted)]
         [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.BadRequest)]
         [Consumes("application/json", "application/vnd.api+json;version=1.0")]
-        [HttpPost("FreeSchoolMeals")]
         [HttpPost("/check/free-school-meals")]
         [Authorize(Policy = PolicyNames.RequireCheckScope)]
         public async Task<ActionResult> CheckEligibility([FromBody] CheckEligibilityRequest_Fsm model)
@@ -114,7 +112,6 @@ namespace CheckYourEligibility.WebApp.Controllers
         [ProducesResponseType(typeof(CheckEligibilityResponseBulk), (int)HttpStatusCode.Accepted)]
         [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.BadRequest)]
         [Consumes("application/json", "application/vnd.api+json;version=1.0")]
-        [HttpPost("/EligibilityCheck/FreeSchoolMeals/Bulk")]
         [HttpPost("/bulk-check/free-school-meals")]
         [Authorize(Policy = PolicyNames.RequireBulkCheckScope)]
         public async Task<ActionResult> CheckEligibilityBulk([FromBody] CheckEligibilityRequestBulk_Fsm model)
@@ -137,7 +134,6 @@ namespace CheckYourEligibility.WebApp.Controllers
         [ProducesResponseType(typeof(CheckEligibilityBulkStatusResponse), (int)HttpStatusCode.OK)]
         [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.NotFound)]
         [Consumes("application/json", "application/vnd.api+json;version=1.0")]
-        [HttpGet("Bulk/{guid}/CheckProgress")]
         [HttpGet("/bulk-check/{guid}/progress")]
         [Authorize(Policy = PolicyNames.RequireBulkCheckScope)]
         public async Task<ActionResult> BulkUploadProgress(string guid)
@@ -166,7 +162,6 @@ namespace CheckYourEligibility.WebApp.Controllers
         [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.NotFound)]
         [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.BadRequest)]
         [Consumes("application/json", "application/vnd.api+json;version=1.0")]
-        [HttpGet("Bulk/{guid}/Results")]
         [HttpGet("/bulk-check/{guid}")]
         [Authorize(Policy = PolicyNames.RequireBulkCheckScope)]
         public async Task<ActionResult> BulkUploadResults(string guid)
@@ -194,7 +189,6 @@ namespace CheckYourEligibility.WebApp.Controllers
         [ProducesResponseType(typeof(CheckEligibilityStatusResponse), (int)HttpStatusCode.OK)]
         [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.NotFound)]
         [Consumes("application/json", "application/vnd.api+json;version=1.0")]
-        [HttpGet("{guid}/Status")]
         [HttpGet("/check/{guid}/status")]
         [Authorize(Policy = PolicyNames.RequireCheckScope)]
         public async Task<ActionResult> CheckEligibilityStatus(string guid)
@@ -223,7 +217,6 @@ namespace CheckYourEligibility.WebApp.Controllers
         [ProducesResponseType(typeof(CheckEligibilityStatusResponse), (int)HttpStatusCode.OK)]
         [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.NotFound)]
         [Consumes("application/json", "application/vnd.api+json;version=1.0")]
-        [HttpPatch("{guid}/Status")]
         [HttpPatch("/check/{guid}/status")]
         [Authorize(Policy = PolicyNames.RequireCheckScope)]
         public async Task<ActionResult> EligibilityCheckStatusUpdate(string guid, [FromBody] EligibilityStatusUpdateRequest model)
@@ -254,7 +247,6 @@ namespace CheckYourEligibility.WebApp.Controllers
         [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.NotFound)]
         [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.BadRequest)]
         [Consumes("application/json", "application/vnd.api+json;version=1.0")]
-        [HttpPut("ProcessEligibilityCheck/{guid}")]
         [HttpPut("/engine/process/{guid}")]
         [Authorize(Policy = PolicyNames.RequireEngineScope)]
         public async Task<ActionResult> Process(string guid)
@@ -294,7 +286,6 @@ namespace CheckYourEligibility.WebApp.Controllers
         [ProducesResponseType(typeof(CheckEligibilityItemResponse), (int)HttpStatusCode.OK)]
         [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.NotFound)]
         [Consumes("application/json", "application/vnd.api+json;version=1.0")]
-        [HttpGet("{guid}")]
         [HttpGet("/check/{guid}")]
         [Authorize(Policy = PolicyNames.RequireCheckScope)]
         public async Task<ActionResult> EligibilityCheck(string guid)

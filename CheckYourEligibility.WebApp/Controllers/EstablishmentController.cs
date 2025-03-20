@@ -33,7 +33,6 @@ namespace CheckYourEligibility.WebApp.Controllers
         [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.BadRequest)]
         [Consumes("application/json", "application/vnd.api+json;version=1.0")]
         [HttpGet("/establishment/search")]
-        [HttpGet("/Establishments/Search")]
         [Authorize(Policy = PolicyNames.RequireEstablishmentScope)]
         public async Task<ActionResult> Search(string query)
         {

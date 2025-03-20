@@ -51,8 +51,7 @@ namespace CheckYourEligibility.WebApp.Controllers
         /// </summary>
         /// <returns></returns>
         [ProducesResponseType(typeof(int), (int)HttpStatusCode.OK)]
-        [Consumes("multipart/form-data")]
-        [HttpPut("/cleanUpEligibilityChecks")]
+        [Consumes("application/json", "application/vnd.api+json;version=1.0")]
         [HttpPut("/admin/clean-up-eligibility-checks")]
         [Authorize(Policy = PolicyNames.RequireAdminScope)]
         public async Task<ActionResult> CleanUpEligibilityChecks()
@@ -69,7 +68,6 @@ namespace CheckYourEligibility.WebApp.Controllers
         [ProducesResponseType(typeof(int), (int)HttpStatusCode.OK)]
         [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.BadRequest)]
         [Consumes("multipart/form-data")]
-        [HttpPost("/importEstablishments")]
         [HttpPost("/admin/import-establishments")]
         [Authorize(Policy = PolicyNames.RequireAdminScope)]
         public async Task<ActionResult> ImportEstablishments(IFormFile file)
@@ -93,8 +91,7 @@ namespace CheckYourEligibility.WebApp.Controllers
         [ProducesResponseType(typeof(int), (int)HttpStatusCode.OK)]
         [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.BadRequest)]
         [Consumes("multipart/form-data")]
-        [HttpPost("/importFsmHomeOfficeData")]
-        [HttpPost("/admin/import-fsm-home-office-data")]
+        [HttpPost("/admin/import-home-office-data")]
         [Authorize(Policy = PolicyNames.RequireAdminScope)]
         public async Task<ActionResult> ImportFsmHomeOfficeData(IFormFile file)
         {
@@ -118,8 +115,7 @@ namespace CheckYourEligibility.WebApp.Controllers
         [ProducesResponseType(typeof(int), (int)HttpStatusCode.OK)]
         [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.BadRequest)]
         [Consumes("multipart/form-data")]
-        [HttpPost("/importFsmHMRCData")]
-        [HttpPost("/admin/import-fsm-hmrc-data")]
+        [HttpPost("/admin/import-hmrc-data")]
         [Authorize(Policy = PolicyNames.RequireAdminScope)]
         public async Task<ActionResult> ImportFsmHMRCData(IFormFile file)
         {
