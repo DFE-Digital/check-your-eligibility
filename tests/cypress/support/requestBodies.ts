@@ -9,7 +9,8 @@ export const validLoginRequestBody = "client_id=".concat(
 
 export const validLoginRequestBodyWithClientDetails = "client_id=".concat(
     Cypress.env('JWT_USERNAME'),
-    "&client_secret=".Cypress.env('JWT_PASSWORD')
+    "&client_secret=",
+    Cypress.env('JWT_PASSWORD')
 );
 
 export function validHMRCRequestBody() {
