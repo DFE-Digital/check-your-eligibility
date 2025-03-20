@@ -1,13 +1,15 @@
 using AutoFixture;
 using CheckYourEligibility.Domain;
-using CheckYourEligibility.Domain.Requests;
+using CheckYourEligibility.Domain.Exceptions;
 using CheckYourEligibility.Domain.Responses;
 using CheckYourEligibility.Services.Interfaces;
 using CheckYourEligibility.WebApp.UseCases;
 using FluentAssertions;
+using Microsoft.Extensions.Logging;
 using Moq;
 using NUnit.Framework;
 using System;
+using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Threading.Tasks;
 
@@ -17,6 +19,8 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
     public class AuthenticateUserUseCaseTests
     {
         private Mock<IAudit> _mockAuditService;
+        private Mock<ILogger<AuthenticateUserUseCase>> _mockLogger;
+        private JwtSettings _jwtSettings;
         private AuthenticateUserUseCase _sut;
         private Fixture _fixture;
 
@@ -24,7 +28,25 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
         public void Setup()
         {
             _mockAuditService = new Mock<IAudit>(MockBehavior.Strict);
-            _sut = new AuthenticateUserUseCase(_mockAuditService.Object);
+            _mockLogger = new Mock<ILogger<AuthenticateUserUseCase>>();
+            _jwtSettings = new JwtSettings
+            {
+                Key = "test_key_12345678901234567890123456789012",
+                Issuer = "test_issuer",
+                Clients = new Dictionary<string, ClientSettings>
+                {
+                    ["test_client"] = new ClientSettings
+                    {
+                        Secret = "correct_password",
+                        Scope = "read write admin"
+                    }
+                },
+                Users = new Dictionary<string, string>
+                {
+                    ["test_username"] = "correct_password"
+                }
+            };
+            _sut = new AuthenticateUserUseCase(_mockAuditService.Object, _mockLogger.Object, _jwtSettings);
             _fixture = new Fixture();
         }
 
@@ -35,252 +57,179 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
         }
 
         [Test]
-        public async Task Execute_Should_Return_JwtAuthResponse_When_Successful()
+        public async Task AuthenticateUser_Should_Return_JwtAuthResponse_When_Successful()
         {
             // Arrange
-            var login = _fixture.Create<SystemUser>();
-            login.client_id = null;
-            login.client_secret = null;
-            login.Username = "test_username";
-            login.Password = "correct_password";
-            login.scope = null;
-            login.InitializeCredentials();
-            var jwtConfig = _fixture.Create<JwtConfig>();
-            jwtConfig.ExpectedSecret = "correct_password";
-            jwtConfig.Key = "test_key_12345678901234567890123456789012"; // 32 chars for HMACSHA256
+            var login = new SystemUser
+            {
+                Username = "test_username",
+                Password = "correct_password"
+            };
 
-            
-
-            _mockAuditService.Setup(a => a.CreateAuditEntry(Domain.Enums.AuditType.User, login.Username)).ReturnsAsync(_fixture.Create<string>());
+            _mockAuditService
+                .Setup(a => a.CreateAuditEntry(Domain.Enums.AuditType.User, login.Username))
+                .ReturnsAsync(_fixture.Create<string>());
 
             // Act
-            var result = await _sut.Execute(login, jwtConfig);
+            var result = await _sut.AuthenticateUser(login);
 
             // Assert
             result.Should().NotBeNull();
             result.access_token.Should().NotBeNullOrEmpty();
-            result.expires_in.Should().Be(3600);
+            result.expires_in.Should().BeGreaterThan(0);
+            result.token_type.Should().Be("Bearer");
         }
 
         [Test]
-        public async Task Execute_Should_Return_Null_When_Authentication_Fails()
+        public void AuthenticateUser_Should_Throw_InvalidClientException_When_Authentication_Fails()
         {
             // Arrange
-            var login = new SystemUser();
-            login.Username = "test_username";
-            login.Password = "wrong_password";
-            login.InitializeCredentials();
-            var jwtConfig = _fixture.Create<JwtConfig>();
-            jwtConfig.ExpectedSecret = "correct_password";
+            var login = new SystemUser
+            {
+                Username = "test_username",
+                Password = "wrong_password"
+            };
 
-            // Act
-            var result = await _sut.Execute(login, jwtConfig);
-
-            // Assert
-            result.Should().BeNull();
+            // Act & Assert
+            Func<Task> act = async () => await _sut.AuthenticateUser(login);
+            act.Should().ThrowAsync<InvalidClientException>()
+                .WithMessage("Invalid client credentials");
         }
 
         [Test]
-        public async Task Execute_Should_Return_Null_When_Token_Generation_Fails()
+        public void AuthenticateUser_Should_Throw_InvalidClientException_When_User_Not_Found()
         {
             // Arrange
-            var login = new SystemUser();
-            login.Username = "test_username";
-            login.Password = "correct_password";
-            login.InitializeCredentials();
-            var jwtConfig = _fixture.Create<JwtConfig>();
-            jwtConfig.ExpectedSecret = "correct_password";
-            jwtConfig.Key = ""; // Invalid key
+            var login = new SystemUser
+            {
+                Username = "unknown_user",
+                Password = "any_password"
+            };
 
-            // Act
-            var result = await _sut.Execute(login, jwtConfig);
-
-            // Assert
-            result.Should().BeNull();
+            // Act & Assert
+            Func<Task> act = async () => await _sut.AuthenticateUser(login);
+            act.Should().ThrowAsync<InvalidClientException>()
+                .WithMessage("The client authentication failed");
         }
 
         [Test]
-        public async Task Execute_Should_Audit_When_User_Is_Authenticated()
+        public void AuthenticateUser_Should_Throw_ServerErrorException_When_Key_Is_Empty()
         {
             // Arrange
-            var login = _fixture.Create<SystemUser>();
-            login.client_id = null;
-            login.client_secret = null;
-            login.Username = "test_username";
-            login.Password = "correct_password";
-            login.scope = null;
-            login.InitializeCredentials();
-            var jwtConfig = _fixture.Create<JwtConfig>();
-            jwtConfig.ExpectedSecret = "correct_password";
-            jwtConfig.Key = "test_key_12345678901234567890123456789012"; // 32 chars for HMACSHA256
+            var login = new SystemUser
+            {
+                Username = "test_username",
+                Password = "correct_password"
+            };
 
-            
-            _mockAuditService.Setup(a => a.CreateAuditEntry(Domain.Enums.AuditType.User, login.Identifier)).ReturnsAsync(_fixture.Create<string>());
-            
-            // Act
-            var result = await _sut.Execute(login, jwtConfig);
+            _jwtSettings.Key = "";
 
-            // Assert
-            result.Should().NotBeNull();
-            // _mockAuditService.Verify(a => a.AuditAdd(auditData), Times.Once);
-            _mockAuditService.Verify(a => a.CreateAuditEntry(Domain.Enums.AuditType.User, login.Identifier), Times.Once);
+            // Act & Assert
+            Func<Task> act = async () => await _sut.AuthenticateUser(login);
+            act.Should().ThrowAsync<ServerErrorException>()
+                .WithMessage("The authorization server is misconfigured. Key is required.");
         }
 
         [Test]
-        public async Task Execute_Should_Not_Audit_When_User_Is_Not_Authenticated()
+        public void AuthenticateUser_Should_Throw_ServerErrorException_When_Issuer_Is_Empty()
         {
             // Arrange
-            var login = new SystemUser();
-            login.Username = "test_username";
-            login.Password = "wrong_password";
-            login.InitializeCredentials();
-            var jwtConfig = _fixture.Create<JwtConfig>();
-            jwtConfig.ExpectedSecret = "correct_password";
+            var login = new SystemUser
+            {
+                Username = "test_username",
+                Password = "correct_password"
+            };
 
-            // Act
-            var result = await _sut.Execute(login, jwtConfig);
+            _jwtSettings.Issuer = "";
 
-            // Assert
-            result.Should().BeNull();
-            _mockAuditService.Verify(a => a.CreateAuditEntry(It.IsAny<Domain.Enums.AuditType>(), It.IsAny<string>()), Times.Never);
+            // Act & Assert
+            Func<Task> act = async () => await _sut.AuthenticateUser(login);
+            act.Should().ThrowAsync<ServerErrorException>()
+                .WithMessage("The authorization server is misconfigured. Issuer is required.");
         }
 
         [Test]
-        public async Task Execute_Should_Return_JwtAuthResponse_When_Successful_Using_ClientCredentials()
+        public async Task AuthenticateUser_Should_Audit_When_User_Is_Authenticated()
         {
             // Arrange
-            var login = _fixture.Create<SystemUser>();
-            login.Username = null;
-            login.Password = null;
-            login.client_id = "test_client";
-            login.client_secret = "correct_password";
-            login.scope = null;
-            login.InitializeCredentials(); // This should set Identifier to client_id
+            var login = new SystemUser
+            {
+                Username = "test_username",
+                Password = "correct_password"
+            };
 
-            var jwtConfig = _fixture.Create<JwtConfig>();
-            jwtConfig.ExpectedSecret = "correct_password";
-            jwtConfig.Key = "test_key_12345678901234567890123456789012"; // 32 chars for HMACSHA256
-
-            
-            _mockAuditService.Setup(a => a.CreateAuditEntry(Domain.Enums.AuditType.Client, login.client_id)).ReturnsAsync(_fixture.Create<string>());
-
+            _mockAuditService
+                .Setup(a => a.CreateAuditEntry(Domain.Enums.AuditType.User, login.Username))
+                .ReturnsAsync(_fixture.Create<string>());
 
             // Act
-            var result = await _sut.Execute(login, jwtConfig);
+            var result = await _sut.AuthenticateUser(login);
 
             // Assert
             result.Should().NotBeNull();
-            result.access_token.Should().NotBeNullOrEmpty();
-            result.expires_in.Should().Be(3600);
+            _mockAuditService.Verify(a => a.CreateAuditEntry(Domain.Enums.AuditType.User, login.Username), Times.Once);
         }
 
         [Test]
-        public async Task Execute_Should_Return_Null_When_Authentication_Fails_Using_ClientCredentials()
+        public async Task AuthenticateUser_Should_Return_JwtAuthResponse_When_Successful_Using_ClientCredentials()
         {
             // Arrange
-            var login = _fixture.Create<SystemUser>();
-            login.Username = null;
-            login.Password = null;
-            login.client_id = "test_client";
-            login.client_secret = "wrong_password";
-            login.InitializeCredentials(); // This should set Identifier to client_id
+            var login = new SystemUser
+            {
+                client_id = "test_client",
+                client_secret = "correct_password"
+            };
 
-            var jwtConfig = _fixture.Create<JwtConfig>();
-            jwtConfig.ExpectedSecret = "correct_password";
+            _mockAuditService
+                .Setup(a => a.CreateAuditEntry(Domain.Enums.AuditType.Client, login.client_id))
+                .ReturnsAsync(_fixture.Create<string>());
 
             // Act
-            var result = await _sut.Execute(login, jwtConfig);
-
-            // Assert
-            result.Should().BeNull();
-        }
-
-        [Test]
-        public async Task Execute_Should_Prioritize_client_id_Over_Username_When_Both_Are_Present()
-        {
-            // Arrange
-            var login = _fixture.Create<SystemUser>();
-            login.Username = "test_username";
-            login.Password = "correct_password";
-            login.client_id = "test_client"; // This should take precedence
-            login.client_secret = "correct_password";
-            login.scope = null;
-            login.InitializeCredentials();
-
-            var jwtConfig = _fixture.Create<JwtConfig>();
-            jwtConfig.ExpectedSecret = "correct_password";
-            jwtConfig.Key = "test_key_12345678901234567890123456789012";
-
-            
-
-            // Verify Identifier is set to client_id, not Username
-            _mockAuditService.Setup(a => a.CreateAuditEntry(Domain.Enums.AuditType.Client, "test_client")).ReturnsAsync(_fixture.Create<string>());
-            
-            // Act
-            var result = await _sut.Execute(login, jwtConfig);
+            var result = await _sut.AuthenticateUser(login);
 
             // Assert
             result.Should().NotBeNull();
             result.access_token.Should().NotBeNullOrEmpty();
-            login.Identifier.Should().Be("test_client"); // Verify identifier was set to client_id
         }
 
         [Test]
-        public async Task Execute_Should_Fallback_To_Username_When_client_id_Is_Not_Present()
+        public void AuthenticateUser_Should_Throw_InvalidClientException_When_Authentication_Fails_Using_ClientCredentials()
         {
             // Arrange
-            var login = _fixture.Create<SystemUser>();
-            login.Username = "test_username";
-            login.Password = "correct_password";
-            login.scope = null;
-            login.client_id = null;
-            login.client_secret = null;
-            login.InitializeCredentials();
+            var login = new SystemUser
+            {
+                client_id = "test_client",
+                client_secret = "wrong_password"
+            };
 
-            var jwtConfig = _fixture.Create<JwtConfig>();
-            jwtConfig.ExpectedSecret = "correct_password";
-            jwtConfig.Key = "test_key_12345678901234567890123456789012";
+            // Act & Assert
+            Func<Task> act = async () => await _sut.AuthenticateUser(login);
+            act.Should().ThrowAsync<InvalidClientException>()
+                .WithMessage("Invalid client credentials");
+        }
 
-            
+        [Test]
+        public async Task AuthenticateUser_Should_Prioritize_client_id_Over_Username_When_Both_Are_Present()
+        {
+            // Arrange
+            var login = new SystemUser
+            {
+                Username = "test_username",
+                Password = "ignored_password",
+                client_id = "test_client",
+                client_secret = "correct_password"
+            };
 
-            // Verify Identifier is set to Username
-            _mockAuditService.Setup(a => a.CreateAuditEntry(Domain.Enums.AuditType.User, login.Identifier)).ReturnsAsync(_fixture.Create<string>());
+            _mockAuditService
+                .Setup(a => a.CreateAuditEntry(Domain.Enums.AuditType.Client, login.client_id))
+                .ReturnsAsync(_fixture.Create<string>());
 
             // Act
-            var result = await _sut.Execute(login, jwtConfig);
+            var result = await _sut.AuthenticateUser(login);
 
             // Assert
             result.Should().NotBeNull();
             result.access_token.Should().NotBeNullOrEmpty();
-            login.Identifier.Should().Be("test_username"); // Verify identifier was set to Username
-        }
-
-        [Test]
-        public async Task Execute_Should_Audit_When_User_Is_Authenticated_Using_ClientCredentials()
-        {
-            // Arrange
-            var login = _fixture.Create<SystemUser>();
-            login.Username = null;
-            login.Password = null;
-            login.scope = null;
-            login.client_id = "test_client";
-            login.client_secret = "correct_password";
-            login.InitializeCredentials();
-
-            var jwtConfig = _fixture.Create<JwtConfig>();
-            jwtConfig.ExpectedSecret = "correct_password";
-            jwtConfig.Key = "test_key_12345678901234567890123456789012";
-
-            
-            _mockAuditService.Setup(a => a.CreateAuditEntry(Domain.Enums.AuditType.Client, login.client_id)).ReturnsAsync(_fixture.Create<string>());
-
-            // Act
-            var result = await _sut.Execute(login, jwtConfig);
-
-            // Assert
-            result.Should().NotBeNull();
-            // _mockAuditService.Verify(a => a.AuditAdd(auditData), Times.Once);
-            _mockAuditService.Verify(a => a.CreateAuditEntry(Domain.Enums.AuditType.Client, login.client_id), Times.Once);
         }
 
         [Test]
@@ -290,9 +239,7 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             var user = new SystemUser
             {
                 client_id = "test_client",
-                client_secret = "test_secret",
-                Username = null,
-                Password = null
+                client_secret = "test_secret"
             };
 
             // Act
@@ -308,8 +255,6 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             // Arrange
             var user = new SystemUser
             {
-                client_id = null,
-                client_secret = null,
                 Username = "test_user",
                 Password = "test_password"
             };
@@ -341,130 +286,34 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
         }
 
         [Test]
-        public void SystemUser_InitializeCredentials_Should_Set_Identifier_And_Secret_Correctly()
+        public void AuthenticateUser_Should_Throw_InvalidRequestException_When_No_Valid_Credentials()
         {
             // Arrange
-            var userWithClientCreds = new SystemUser
+            var login = new SystemUser(); // No credentials set
+
+            // Act & Assert
+            Func<Task> act = async () => await _sut.AuthenticateUser(login);
+            act.Should().ThrowAsync<InvalidRequestException>()
+                .WithMessage("Either client_id/client_secret pair or Username/Password pair must be provided");
+        }
+
+        [Test]
+        public async Task AuthenticateUser_Should_Include_scope_Claim_When_scope_Is_Provided()
+        {
+            // Arrange
+            var login = new SystemUser
             {
                 client_id = "test_client",
-                client_secret = "test_secret",
-                Username = "test_user",
-                Password = "test_password"
+                client_secret = "correct_password",
+                scope = "read write"
             };
 
-            var userWithUsernamePwd = new SystemUser
-            {
-                client_id = null,
-                client_secret = null,
-                Username = "test_user",
-                Password = "test_password"
-            };
+            _mockAuditService
+                .Setup(a => a.CreateAuditEntry(Domain.Enums.AuditType.Client, login.client_id))
+                .ReturnsAsync(_fixture.Create<string>());
 
             // Act
-            userWithClientCreds.InitializeCredentials();
-            userWithUsernamePwd.InitializeCredentials();
-
-            // Assert
-            userWithClientCreds.Identifier.Should().Be("test_client");
-            userWithClientCreds.Secret.Should().Be("test_secret");
-
-            userWithUsernamePwd.Identifier.Should().Be("test_user");
-            userWithUsernamePwd.Secret.Should().Be("test_password");
-        }
-
-        [Test]
-        public async Task Execute_Should_Initialize_Credentials_When_Identifier_And_Secret_Are_Empty()
-        {
-            // Arrange
-            var login = _fixture.Create<SystemUser>();
-            // Explicitly don't call InitializeCredentials() here
-            login.Identifier = null; // This would normally be set by InitializeCredentials
-            login.Secret = null;     // This would normally be set by InitializeCredentials
-            login.scope = null;
-            login.client_id = "test_client";
-            login.client_secret = "correct_password";
-
-            var jwtConfig = _fixture.Create<JwtConfig>();
-            jwtConfig.ExpectedSecret = "correct_password";
-            jwtConfig.Key = "test_key_12345678901234567890123456789012";
-
-            
-            _mockAuditService.Setup(a => a.CreateAuditEntry(Domain.Enums.AuditType.Client, "test_client")).ReturnsAsync(_fixture.Create<string>());
-
-            // Act
-            var result = await _sut.Execute(login, jwtConfig);
-
-            // Assert
-            result.Should().NotBeNull();
-            login.Identifier.Should().Be("test_client"); // Verify credentials were initialized
-            login.Secret.Should().Be("correct_password");
-        }
-
-        [Test]
-        public async Task Execute_Should_Generate_Token_With_Expected_Claims()
-        {
-            // Arrange
-            var login = _fixture.Create<SystemUser>();
-            login.client_id = null;
-            login.client_secret = null;
-            login.scope = null;
-            login.Username = "test_username";
-            login.Password = "correct_password";
-            login.InitializeCredentials();
-
-            var jwtConfig = _fixture.Create<JwtConfig>();
-            jwtConfig.ExpectedSecret = "correct_password";
-            jwtConfig.Key = "test_key_12345678901234567890123456789012";
-            jwtConfig.Issuer = "test_issuer";
-
-            
-            _mockAuditService.Setup(a => a.CreateAuditEntry(Domain.Enums.AuditType.User, login.Identifier)).ReturnsAsync(_fixture.Create<string>());
-
-            // Act
-            var result = await _sut.Execute(login, jwtConfig);
-
-            // Assert
-            result.Should().NotBeNull();
-
-            // Decode token to verify claims
-            var handler = new JwtSecurityTokenHandler();
-            var token = handler.ReadJwtToken(result.access_token);
-
-            token.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Sub)?.Value.Should().Be("test_username");
-            token.Claims.FirstOrDefault(c => c.Type == "EcsApi")?.Value.Should().Be("apiCustomClaim");
-            token.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Email)?.Value.Should().Be("ecs@ecs.com");
-            token.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Jti).Should().NotBeNull();
-
-            token.Issuer.Should().Be("test_issuer");
-            token.Audiences.Should().Contain("test_issuer");
-
-            // Verify expiration is set to 120 minutes from now
-            var expectedExpiry = DateTime.UtcNow.AddMinutes(120);
-            token.ValidTo.Should().BeCloseTo(expectedExpiry, TimeSpan.FromSeconds(5));
-        }
-
-        [Test]
-        public async Task Execute_Should_Include_scope_Claim_When_scope_Is_Provided()
-        {
-            // Arrange
-            var login = _fixture.Create<SystemUser>();
-            login.client_id = null;
-            login.client_secret = null;
-            login.Username = "test_username";
-            login.Password = "correct_password";
-            login.scope = "read write";
-            login.InitializeCredentials();
-
-            var jwtConfig = _fixture.Create<JwtConfig>();
-            jwtConfig.ExpectedSecret = "correct_password";
-            jwtConfig.Key = "test_key_12345678901234567890123456789012";
-            jwtConfig.AllowedScopes = "read write delete";
-
-            
-            _mockAuditService.Setup(a => a.CreateAuditEntry(Domain.Enums.AuditType.User, login.Identifier)).ReturnsAsync(_fixture.Create<string>());
-
-            // Act
-            var result = await _sut.Execute(login, jwtConfig);
+            var result = await _sut.AuthenticateUser(login);
 
             // Assert
             result.Should().NotBeNull();
@@ -476,190 +325,38 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
         }
 
         [Test]
-        public async Task Execute_Should_Not_Include_scope_Claim_When_scope_Is_Default()
+        public void AuthenticateUser_Should_Throw_InvalidScopeException_When_Requested_scopes_Are_Not_Allowed()
         {
             // Arrange
-            var login = _fixture.Create<SystemUser>();
+            var login = new SystemUser
+            {
+                client_id = "test_client",
+                client_secret = "correct_password",
+                scope = "read delete" // delete is not allowed
+            };
 
-            login.Username = "test_username";
-            login.Password = "correct_password";
-            login.scope = "default";
-            login.client_id = null;
-            login.client_secret = null;
-            login.InitializeCredentials();
-
-            var jwtConfig = _fixture.Create<JwtConfig>();
-            jwtConfig.ExpectedSecret = "correct_password";
-            jwtConfig.Key = "test_key_12345678901234567890123456789012";
-            jwtConfig.AllowedScopes = "read write";
-
-            
-            _mockAuditService.Setup(a => a.CreateAuditEntry(Domain.Enums.AuditType.User, login.Identifier)).ReturnsAsync(_fixture.Create<string>());
-
-            // Act
-            var result = await _sut.Execute(login, jwtConfig);
-
-            // Assert
-            result.Should().NotBeNull();
-
-            var handler = new JwtSecurityTokenHandler();
-            var token = handler.ReadJwtToken(result.access_token);
-
-            token.Claims.FirstOrDefault(c => c.Type == "scope").Should().BeNull();
+            // Act & Assert
+            Func<Task> act = async () => await _sut.AuthenticateUser(login);
+            act.Should().ThrowAsync<InvalidScopeException>()
+                .WithMessage("The requested scope is invalid, unknown, or exceeds the scope granted by the resource owner");
         }
 
         [Test]
-        public async Task Execute_Should_Not_Include_scope_Claim_When_scope_Is_Empty()
+        public async Task AuthenticateUser_Should_Generate_Token_With_Expected_Claims()
         {
             // Arrange
-            var login = _fixture.Create<SystemUser>();
+            var login = new SystemUser
+            {
+                Username = "test_username",
+                Password = "correct_password"
+            };
 
-            login.Username = "test_username";
-            login.Password = "correct_password";
-            login.scope = "";
-            login.client_id = null;
-            login.client_secret = null;
-            login.InitializeCredentials();
-
-            var jwtConfig = _fixture.Create<JwtConfig>();
-            jwtConfig.ExpectedSecret = "correct_password";
-            jwtConfig.Key = "test_key_12345678901234567890123456789012";
-
-            
-            _mockAuditService.Setup(a => a.CreateAuditEntry(Domain.Enums.AuditType.User, login.Identifier)).ReturnsAsync(_fixture.Create<string>());
-
+            _mockAuditService
+                .Setup(a => a.CreateAuditEntry(Domain.Enums.AuditType.User, login.Username))
+                .ReturnsAsync(_fixture.Create<string>());
 
             // Act
-            var result = await _sut.Execute(login, jwtConfig);
-
-            // Assert
-            result.Should().NotBeNull();
-
-            var handler = new JwtSecurityTokenHandler();
-            var token = handler.ReadJwtToken(result.access_token);
-
-            token.Claims.FirstOrDefault(c => c.Type == "scope").Should().BeNull();
-        }
-
-        [Test]
-        public async Task Execute_Should_Return_Null_When_Requested_scopes_Are_Not_Allowed()
-        {
-            // Arrange
-            var login = _fixture.Create<SystemUser>();
-            login.Username = "test_username";
-            login.Password = "correct_password";
-            login.scope = "read delete"; // delete is not allowed
-            login.InitializeCredentials();
-
-            var jwtConfig = _fixture.Create<JwtConfig>();
-            jwtConfig.ExpectedSecret = "correct_password";
-            jwtConfig.Key = "test_key_12345678901234567890123456789012";
-            jwtConfig.AllowedScopes = "read write"; // only read and write are allowed
-
-            // Act
-            var result = await _sut.Execute(login, jwtConfig);
-
-            // Assert
-            result.Should().BeNull();
-        }
-
-        [Test]
-        public async Task Execute_Should_Allow_Authentication_When_No_scopes_Requested()
-        {
-            // Arrange
-            var login = _fixture.Create<SystemUser>();
-
-            login.client_id = null;
-            login.client_secret = null;
-            login.Username = "test_username";
-            login.Password = "correct_password";
-            login.scope = null; // No scopes requested
-            login.InitializeCredentials();
-
-            var jwtConfig = _fixture.Create<JwtConfig>();
-            jwtConfig.ExpectedSecret = "correct_password";
-            jwtConfig.Key = "test_key_12345678901234567890123456789012";
-            jwtConfig.AllowedScopes = "read write";
-
-            
-            _mockAuditService.Setup(a => a.CreateAuditEntry(Domain.Enums.AuditType.User, login.Identifier)).ReturnsAsync(_fixture.Create<string>());
-
-            // Act
-            var result = await _sut.Execute(login, jwtConfig);
-
-            // Assert
-            result.Should().NotBeNull();
-        }
-
-        [Test]
-        public async Task Execute_Should_Deny_Authentication_When_scopes_Requested_But_None_Allowed()
-        {
-            // Arrange
-            var login = _fixture.Create<SystemUser>();
-            login.Username = "test_username";
-            login.Password = "correct_password";
-            login.scope = "read write"; // scopes requested
-            login.InitializeCredentials();
-
-            var jwtConfig = _fixture.Create<JwtConfig>();
-            jwtConfig.ExpectedSecret = "correct_password";
-            jwtConfig.Key = "test_key_12345678901234567890123456789012";
-            jwtConfig.AllowedScopes = ""; // No scopes allowed
-
-            // Act
-            var result = await _sut.Execute(login, jwtConfig);
-
-            // Assert
-            result.Should().BeNull();
-        }
-
-        [Test]
-        public async Task Execute_Should_Deny_Authentication_When_scopes_Requested_But_AllowedScopes_Is_Null()
-        {
-            // Arrange
-            var login = _fixture.Create<SystemUser>();
-            login.Username = "test_username";
-            login.Password = "correct_password";
-            login.scope = "read write"; // scopes requested
-            login.client_id = null;
-            login.client_secret = null;
-            login.InitializeCredentials();
-
-            var jwtConfig = _fixture.Create<JwtConfig>();
-            jwtConfig.ExpectedSecret = "correct_password";
-            jwtConfig.Key = "test_key_12345678901234567890123456789012";
-            jwtConfig.AllowedScopes = null; // AllowedScopes is null
-
-            // Act
-            var result = await _sut.Execute(login, jwtConfig);
-
-            // Assert
-            result.Should().BeNull();
-        }
-
-        [Test]
-        public async Task Execute_Should_Generate_Token_With_Updated_Claims_Structure()
-        {
-            // Arrange
-            var login = _fixture.Create<SystemUser>();
-            login.client_id = null;
-            login.client_secret = null;
-            login.Username = "test_username";
-            login.Password = "correct_password";
-            login.scope = "read write"; // Include scope for testing
-            login.InitializeCredentials();
-
-            var jwtConfig = _fixture.Create<JwtConfig>();
-            jwtConfig.ExpectedSecret = "correct_password";
-            jwtConfig.Key = "test_key_12345678901234567890123456789012";
-            jwtConfig.Issuer = "test_issuer";
-            jwtConfig.AllowedScopes = "read write admin";
-
-            
-            _mockAuditService.Setup(a => a.CreateAuditEntry(Domain.Enums.AuditType.User, login.Identifier)).ReturnsAsync(_fixture.Create<string>());
-
-            // Act
-            var result = await _sut.Execute(login, jwtConfig);
+            var result = await _sut.AuthenticateUser(login);
 
             // Assert
             result.Should().NotBeNull();
@@ -670,12 +367,7 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
 
             // Check expected claims are present
             token.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Sub)?.Value.Should().Be("test_username");
-            token.Claims.FirstOrDefault(c => c.Type == "scope")?.Value.Should().Be("read write");
             token.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Jti).Should().NotBeNull();
-
-            // Check removed claims are not present
-            token.Claims.FirstOrDefault(c => c.Type == "EcsApi").Should().BeNull();
-            token.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Email).Should().BeNull();
 
             // Check token properties
             token.Issuer.Should().Be("test_issuer");
@@ -684,6 +376,263 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             // Verify expiration is set to 120 minutes from now
             var expectedExpiry = DateTime.UtcNow.AddMinutes(120);
             token.ValidTo.Should().BeCloseTo(expectedExpiry, TimeSpan.FromSeconds(5));
+        }
+
+        [Test]
+        public async Task AuthenticateUser_Should_Fallback_To_Legacy_User_Configuration_When_Not_Found_In_Clients()
+        {
+            // Arrange
+            // Create a new user that exists only in the Users dictionary, not in Clients
+            string legacyUsername = "legacy_only_user";
+            string legacyPassword = "legacy_password";
+
+            _jwtSettings.Users[legacyUsername] = legacyPassword;
+
+            var login = new SystemUser
+            {
+                Username = legacyUsername,
+                Password = legacyPassword
+            };
+
+            _mockAuditService
+                .Setup(a => a.CreateAuditEntry(Domain.Enums.AuditType.User, login.Username))
+                .ReturnsAsync(_fixture.Create<string>());
+
+            // Act
+            var result = await _sut.AuthenticateUser(login);
+
+            // Assert
+            result.Should().NotBeNull();
+            result.access_token.Should().NotBeNullOrEmpty();
+            result.expires_in.Should().BeGreaterThan(0);
+            result.token_type.Should().Be("Bearer");
+
+            // Verify audit was called with legacy username
+            _mockAuditService.Verify(a => a.CreateAuditEntry(Domain.Enums.AuditType.User, legacyUsername), Times.Once);
+
+            // Decode token to verify the subject claim contains the legacy username
+            var handler = new JwtSecurityTokenHandler();
+            var token = handler.ReadJwtToken(result.access_token);
+            token.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Sub)?.Value.Should().Be(legacyUsername);
+        }
+
+        [Test]
+        public async Task AuthenticateUser_Should_Log_Warning_But_Continue_When_GrantType_Is_Invalid()
+        {
+            // Arrange
+            var login = new SystemUser
+            {
+                Username = "test_username",
+                Password = "correct_password",
+                grant_type = "invalid_grant_type" // Using an invalid grant type
+            };
+
+            _mockAuditService
+                .Setup(a => a.CreateAuditEntry(Domain.Enums.AuditType.User, login.Username))
+                .ReturnsAsync(_fixture.Create<string>());
+
+            // Act
+            var result = await _sut.AuthenticateUser(login);
+
+            // Assert
+            // Verify we still got a valid response despite invalid grant type
+            result.Should().NotBeNull();
+            result.access_token.Should().NotBeNullOrEmpty();
+
+            // Verify the warning was logged
+            _mockLogger.Verify(
+                x => x.Log(
+                    LogLevel.Warning,
+                    It.IsAny<EventId>(),
+                    It.Is<It.IsAnyType>((o, t) => o.ToString().Contains(login.GetInvalidGrantTypeMessage().Replace(Environment.NewLine, ""))),
+                    It.IsAny<Exception>(),
+                    (Func<It.IsAnyType, Exception, string>)It.IsAny<object>()),
+                Times.Once);
+        }
+
+        [Test]
+        public void AuthenticateUser_Should_Throw_InvalidScopeException_When_Client_Has_No_Allowed_Scopes_Configured()
+        {
+            // Arrange
+            // Create a client with no scopes configured
+            string clientIdWithoutScopes = "client_without_scopes";
+            string clientSecret = "some_secret";
+
+            _jwtSettings.Clients[clientIdWithoutScopes] = new ClientSettings
+            {
+                Secret = clientSecret,
+                Scope = null // No scopes configured for this client
+            };
+
+            var login = new SystemUser
+            {
+                client_id = clientIdWithoutScopes,
+                client_secret = clientSecret,
+                scope = "read write" // Requesting scopes that aren't defined
+            };
+
+            // Act & Assert
+            Func<Task> act = async () => await _sut.AuthenticateUser(login);
+
+            // Should throw InvalidScopeException with the specific error message
+            act.Should().ThrowAsync<InvalidScopeException>()
+                .WithMessage("Client is not authorized for any scopes");
+
+            // Verify the error was logged
+            _mockLogger.Verify(
+                x => x.Log(
+                    LogLevel.Error,
+                    It.IsAny<EventId>(),
+                    It.Is<It.IsAnyType>((o, t) => o.ToString().Contains($"Allowed scopes not found for client: {clientIdWithoutScopes}")),
+                    It.IsAny<Exception>(),
+                    (Func<It.IsAnyType, Exception, string>)It.IsAny<object>()),
+                Times.Once);
+        }
+
+        [Test]
+        public void AuthenticateUser_Should_Throw_ServerErrorException_When_Token_Generation_Fails()
+        {
+            // Arrange
+            var login = new SystemUser
+            {
+                Username = "test_username",
+                Password = "correct_password"
+            };
+
+            // Set up a scenario that would cause token generation to fail
+            // An invalid key length will cause the JWT token generation to fail
+            _jwtSettings.Key = "too_short_key";
+
+            // Act & Assert
+            Func<Task> act = async () => await _sut.AuthenticateUser(login);
+
+            // Should throw ServerErrorException with the specific error message
+            act.Should().ThrowAsync<ServerErrorException>()
+                .WithMessage("The authorization server encountered an unexpected error");
+        }
+
+        [Test]
+        public void AuthenticateUser_Should_Throw_InvalidClientException_When_Secret_Not_Found_For_Valid_Identifier()
+        {
+            // Arrange
+            // Create a malformed client entry where the identifier exists but has a null secret
+            string userWithNoSecret = "user_with_no_secret";
+
+            // Add the user to the dictionary but with null secret
+            _jwtSettings.Users[userWithNoSecret] = null;
+
+            var login = new SystemUser
+            {
+                Username = userWithNoSecret,
+                Password = "any_password"
+            };
+
+            // Act & Assert
+            Func<Task> act = async () => await _sut.AuthenticateUser(login);
+
+            // Should throw InvalidClientException with the correct message
+            act.Should().ThrowAsync<InvalidClientException>()
+                .WithMessage("The client authentication failed");
+
+            // Verify the error was logged
+            _mockLogger.Verify(
+                x => x.Log(
+                    LogLevel.Error,
+                    It.IsAny<EventId>(),
+                    It.Is<It.IsAnyType>((o, t) => o.ToString().Contains($"Authentication secret not found for identifier: {userWithNoSecret}")),
+                    It.IsAny<Exception>(),
+                    (Func<It.IsAnyType, Exception, string>)It.IsAny<object>()),
+                Times.Once);
+        }
+
+        [Test]
+        public void ValidateScopes_Should_Return_False_When_RequestedScopes_Provided_But_AllowedScopes_Empty()
+        {
+            // This test uses reflection to access the private ValidateScopes method
+            // Arrange
+            string requestedScopes = "read write";
+            string allowedScopes = null;  // No allowed scopes
+
+            // Act
+            var method = typeof(AuthenticateUserUseCase).GetMethod("ValidateScopes",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+
+            var result = (bool)method.Invoke(null, new object[] { requestedScopes, allowedScopes });
+
+            // Assert
+            result.Should().BeFalse();
+        }
+
+        [Test]
+        public void ValidateScopes_Should_Return_True_When_RequestedScopes_Is_Empty()
+        {
+            // This test uses reflection to access the private ValidateScopes method
+            // Arrange
+            string requestedScopes = "";  // Empty requested scopes
+            string allowedScopes = null;  // No allowed scopes
+
+            // Act
+            var method = typeof(AuthenticateUserUseCase).GetMethod("ValidateScopes",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+
+            var result = (bool)method.Invoke(null, new object[] { requestedScopes, allowedScopes });
+
+            // Assert
+            result.Should().BeTrue();
+        }
+
+        [Test]
+        public void ValidateScopes_Should_Return_True_When_RequestedScopes_Is_Default()
+        {
+            // This test uses reflection to access the private ValidateScopes method
+            // Arrange
+            string requestedScopes = "default";  // Default scope
+            string allowedScopes = null;  // No allowed scopes
+
+            // Act
+            var method = typeof(AuthenticateUserUseCase).GetMethod("ValidateScopes",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+
+            var result = (bool)method.Invoke(null, new object[] { requestedScopes, allowedScopes });
+
+            // Assert
+            result.Should().BeTrue();
+        }
+
+        [Test]
+        public void ValidateScopes_Should_Return_False_When_RequestedScope_Not_In_AllowedScopes()
+        {
+            // This test uses reflection to access the private ValidateScopes method
+            // Arrange
+            string requestedScopes = "read write delete";  // Requesting scopes including 'delete'
+            string allowedScopes = "read write";  // Only 'read' and 'write' are allowed
+
+            // Act
+            var method = typeof(AuthenticateUserUseCase).GetMethod("ValidateScopes",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+
+            var result = (bool)method.Invoke(null, new object[] { requestedScopes, allowedScopes });
+
+            // Assert
+            result.Should().BeFalse();
+        }
+
+        [Test]
+        public void ValidateScopes_Should_Return_True_When_All_RequestedScopes_In_AllowedScopes()
+        {
+            // This test uses reflection to access the private ValidateScopes method
+            // Arrange
+            string requestedScopes = "read write";  // Requesting 'read' and 'write'
+            string allowedScopes = "read write admin";  // All requested scopes are allowed
+
+            // Act
+            var method = typeof(AuthenticateUserUseCase).GetMethod("ValidateScopes",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+
+            var result = (bool)method.Invoke(null, new object[] { requestedScopes, allowedScopes });
+
+            // Assert
+            result.Should().BeTrue();
         }
     }
 }

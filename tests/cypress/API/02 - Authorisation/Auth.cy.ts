@@ -21,9 +21,9 @@ describe('Authorisation Tests', () => {
     });
   });
 
-  it('Verify 400 is returned with invalid credentials', () => {
+  it('Verify 401 is returned with invalid credentials', () => {
     cy.apiRequest('POST', '/oauth2/token', invalidRequestBody).then((response) => {
-      cy.verifyApiResponseCode(response, 400)
+      cy.verifyApiResponseCode(response, 401)
     });
   });
 

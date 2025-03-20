@@ -10,6 +10,7 @@ using System.Text;
 using System.Diagnostics.CodeAnalysis;
 using CheckYourEligibility.WebApp.Extensions;
 using CheckYourEligibility.Domain.Constants;
+using CheckYourEligibility.Domain;
 
 namespace CheckYourEligibility.WebApp
 {
@@ -62,6 +63,14 @@ namespace CheckYourEligibility.WebApp
             {
                 client.BaseAddress = new Uri(configuration["Dwp:BaseUrl"]);
             });
+            return services;
+        }
+
+        public static IServiceCollection AddJwtSettings(this IServiceCollection services, IConfiguration configuration)
+        {
+            var jwtSettings = new JwtSettings();
+            configuration.GetSection("Jwt").Bind(jwtSettings);
+            services.AddSingleton(jwtSettings);
             return services;
         }
 

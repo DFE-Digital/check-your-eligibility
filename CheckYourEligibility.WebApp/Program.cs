@@ -119,6 +119,7 @@ builder.Services.AddDatabase(builder.Configuration);
 builder.Services.AddAzureClients(builder.Configuration);
 builder.Services.AddServices();
 builder.Services.AddExternalServices(builder.Configuration);
+builder.Services.AddJwtSettings(builder.Configuration);
 
 // Use cases
 builder.Services.AddScoped<ICreateOrUpdateUserUseCase, CreateOrUpdateUserUseCase>();
