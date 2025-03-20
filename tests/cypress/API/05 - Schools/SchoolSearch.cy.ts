@@ -39,7 +39,7 @@ describe('Verify School Search', () => {
 
 
   it('Verify 401 response is returned when bearer token is not provided', () => {
-    cy.apiRequest('GET', `Establishments/search?query=${searchCriteria}`, {},).then((response) => {
+    cy.apiRequest('GET', `establishment/search?query=${searchCriteria}`, {},'application/x-www-form-urlencoded').then((response) => {
       cy.verifyApiResponseCode(response, 401)
     });
   });

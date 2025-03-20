@@ -3,7 +3,7 @@
 declare namespace Cypress {
   interface Chainable<Subject = any> {
     saveBearerToken(): Chainable<any>;
-    apiRequest(method: string, url: string, requestBody: any, bearerToken?: string | null, failOnStatusCode?: boolean): Chainable<any>;
+    apiRequest(method: string, url: string, requestBody: any, bearerToken?: string | null, failOnStatusCode?: boolean, contentType?: string | null): Chainable<any>;
     verifyPostEligibilityCheckResponse(response: any): Chainable<any>;
     extractGuid(response: any): Chainable<string>;
     verifyGetEligibilityCheckResponseData(response: any, requestData: any): Chainable<void>;
@@ -33,20 +33,21 @@ Cypress.Commands.add('saveBearerToken', () => {
   });
 });
 
-Cypress.Commands.add('apiRequest', (method: string, url: string, requestBody: any, bearerToken: string | null = null, failOnStatusCode: boolean = false) => {
+Cypress.Commands.add('apiRequest', (method: string, url: string, requestBody: any, bearerToken: string | null = null, failOnStatusCode: boolean = false, contentType: string | null = null) => {
   const options: Partial<Cypress.RequestOptions> = {
     method: method,
     url: url,
     body: requestBody,
-    failOnStatusCode: failOnStatusCode
+    failOnStatusCode: failOnStatusCode,
+    contentType: contentType
   };
 
+  options.headers = {};
   if (bearerToken) {
-    options.headers = {
-      'Authorization': `Bearer ${bearerToken}`,
-      'Content-Type': 'application/json'
-    };
+    options.headers['Authorization'] = `Bearer ${bearerToken}`;
   }
+  
+  options.headers['Content-Type'] = contentType ? contentType : 'application/vnd.api+json;version=1.0';
   return cy.request(options);
 });
 
@@ -141,7 +142,7 @@ Cypress.Commands.add('verifyGetEligibilityCheckStatusResponse', (response) => {
 
 
 Cypress.Commands.add('createEligibilityCheckAndGetStatus', (loginUrl: string, loginRequestBody: any, eligibilityCheckUrl: string, eligibilityCheckRequestBody: any) => {
-  return cy.apiRequest('POST', loginUrl, loginRequestBody).then((response) => {
+  return cy.apiRequest('POST', loginUrl, loginRequestBody, null, null, 'application/x-www-form-urlencoded').then((response) => {
     cy.verifyApiResponseCode(response, 200);
     const token = response.body.access_token;
 
@@ -150,7 +151,7 @@ Cypress.Commands.add('createEligibilityCheckAndGetStatus', (loginUrl: string, lo
       cy.extractGuid(response);
       cy.wait(40000);
       return cy.get('@Guid').then((eligibilityCheckId) => {
-        return cy.apiRequest('GET', `EligibilityCheck/${eligibilityCheckId}/Status`, {}, token).then((newResponse) => {
+        return cy.apiRequest('GET', `check/${eligibilityCheckId}/status`, {}, token).then((newResponse) => {
           cy.verifyApiResponseCode(newResponse, 200);
           const status = newResponse.body.data.status;
           cy.wrap(status).as('status');

@@ -1,14 +1,15 @@
 // cypress/support/apiHelpers.ts
 
-export const verifyUnauthorizedWithoutToken = (method: string, endpoint: string, requestBody: any) => {
-    cy.apiRequest(method, endpoint, requestBody).then((response) => {
+export const verifyUnauthorizedWithoutToken = (method: string, endpoint: string, requestBody: any, contentType: string) => {
+    cy.apiRequest(method, endpoint, requestBody, null, null, contentType).then((response) => {
         cy.verifyApiResponseCode(response, 401)
     });
 }
 
 
 export const getandVerifyBearerToken = (url: string, requestBody: any): Cypress.Chainable<string> => {
-    return cy.apiRequest('POST', url, requestBody).then((response) => {
+    cy.log(requestBody);
+    return cy.apiRequest('POST', url, requestBody, null, null, 'application/x-www-form-urlencoded').then((response) => {
         expect(response.status).to.equal(200);
         expect(response.body).to.have.property('access_token');
         expect(response.body).to.have.property('expires_in')

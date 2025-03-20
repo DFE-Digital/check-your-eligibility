@@ -9,8 +9,10 @@ using Microsoft.Extensions.Azure;
 using Microsoft.OpenApi.Models;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
+using System.Reflection;
 using System.Text.Json.Serialization;
 using Azure.Extensions.AspNetCore.Configuration.Secrets;
+using Swashbuckle.AspNetCore.SwaggerGen;
 
 CultureInfo.DefaultThreadCurrentCulture = new CultureInfo("en-GB");
 CultureInfo.DefaultThreadCurrentUICulture = new CultureInfo("en-GB");
@@ -43,28 +45,22 @@ builder.Services.AddControllers()
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1",
+    c.SwaggerDoc("v1-admin",
         new OpenApiInfo
         {
             Title = "ECE API - V1",
-            Version = "v1",
-            Description = "DFE Eligibility Checking Engine: API to perform Checks determining eligibility for entitlements via integration with OGDs",
-          
-            Contact = new OpenApiContact
-            {
-                Email = "Ian.HOWARD@education.gov.uk",
-                Name = "Further Information",
-
-            },
-            License = new OpenApiLicense
-            {
-                Name = "Api Documentation",
-                Url = new Uri("https://github.com/DFE-Digital/check-your-eligibility-documentation/blob/main/Runbook/System/API/Readme.md")
-            }
-           
+            Version = "v1-admin",
+            Description = "DFE Eligibility Checking Engine: API to perform Checks determining eligibility for entitlements via integration with OGDs"
         }
      );
-    
+    c.SwaggerDoc("v1", 
+        new OpenApiInfo
+        {
+            Title = "ECE Local Authority API - V1", 
+            Version = "v1",
+            Description = "DFE Eligibility Checking Engine: API to perform Checks determining eligibility for entitlements via integration with OGDs"
+        });
+
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Description = @"JWT Authorization header using the Bearer scheme.\r\n\r\n 
@@ -94,6 +90,18 @@ builder.Services.AddSwaggerGen(c =>
           }
         });
 
+    c.DocInclusionPredicate((docName, apiDesc) =>
+    {
+        if (!apiDesc.TryGetMethodInfo(out MethodInfo methodInfo)) return false;
+        
+        if(docName=="v1-admin") return true;
+        if(apiDesc.RelativePath.StartsWith("check/")) return true;
+        if(apiDesc.RelativePath.StartsWith("bulk-check/")) return true;
+        if(apiDesc.RelativePath.StartsWith("oauth2/")) return true;
+        
+        return false;
+    });
+    
     var filePath = Path.Combine(System.AppContext.BaseDirectory, "CheckYourEligibility.WebApp.xml");
     c.IncludeXmlComments(filePath);
 });
@@ -198,7 +206,11 @@ app.UseAuthorization();
 
 // 2.5. Swagger Middleware
 app.UseSwagger();
-app.UseSwaggerUI();
+app.UseSwaggerUI(c =>
+{
+    c.SwaggerEndpoint("v1/swagger.json", "ECE Local Authority API - V1");
+    c.SwaggerEndpoint("v1-admin/swagger.json", "ECE API - V1");
+});
 
 // 2.6. Map Controllers
 app.MapControllers();

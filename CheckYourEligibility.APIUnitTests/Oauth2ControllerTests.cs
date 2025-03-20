@@ -101,7 +101,7 @@ namespace CheckYourEligibility.APIUnitTests
             var request = validUser;
 
             // Act
-            var response = await _sut.LoginJson(request);
+            var response = await _sut.LoginForm(request);
 
             // Assert
             response.Should().BeOfType<OkObjectResult>();
@@ -122,7 +122,7 @@ namespace CheckYourEligibility.APIUnitTests
             var request = invalidUser;
 
             // Act
-            var response = await _sut.LoginJson(request);
+            var response = await _sut.LoginForm(request);
 
             // Assert
             response.Should().BeOfType<UnauthorizedObjectResult>();
@@ -140,7 +140,7 @@ namespace CheckYourEligibility.APIUnitTests
             var request = validClient;
 
             // Act
-            var response = await _sut.LoginJson(request);
+            var response = await _sut.LoginForm(request);
 
             // Assert
             response.Should().BeOfType<OkObjectResult>();
@@ -161,7 +161,7 @@ namespace CheckYourEligibility.APIUnitTests
             var request = validClientWithScope;
 
             // Act
-            var response = await _sut.LoginJson(request);
+            var response = await _sut.LoginForm(request);
 
             // Assert
             response.Should().BeOfType<OkObjectResult>();
@@ -185,7 +185,7 @@ namespace CheckYourEligibility.APIUnitTests
             var request = invalidClient;
 
             // Act
-            var response = await _sut.LoginJson(request);
+            var response = await _sut.LoginForm(request);
 
             // Assert
             response.Should().BeOfType<UnauthorizedObjectResult>();
@@ -203,7 +203,7 @@ namespace CheckYourEligibility.APIUnitTests
             var request = new SystemUser(); // No credentials provided
 
             // Act
-            var response = await _sut.LoginJson(request);
+            var response = await _sut.LoginForm(request);
 
             // Assert
             response.Should().BeOfType<UnauthorizedObjectResult>();
@@ -280,7 +280,7 @@ namespace CheckYourEligibility.APIUnitTests
                 .ReturnsAsync(new JwtAuthResponse { access_token = "validUserToken" });
 
             // Act
-            var response = await _sut.LoginJson(request);
+            var response = await _sut.LoginForm(request);
 
             // Assert
             response.Should().BeOfType<OkObjectResult>();
@@ -384,7 +384,7 @@ namespace CheckYourEligibility.APIUnitTests
                 .ThrowsAsync(new Exception("Unexpected error"));
 
             // Act
-            var response = await _sut.LoginJson(request);
+            var response = await _sut.LoginForm(request);
 
             // Assert
             response.Should().BeOfType<UnauthorizedObjectResult>();
