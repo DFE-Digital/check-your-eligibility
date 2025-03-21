@@ -1,10 +1,10 @@
-using Ardalis.GuardClauses;
 using CheckYourEligibility.Domain;
 using CheckYourEligibility.Domain.Constants;
 using CheckYourEligibility.Domain.Responses;
 using CheckYourEligibility.Services.Interfaces;
 using Microsoft.Extensions.Logging;
 using System.Threading.Tasks;
+using CheckYourEligibility.Domain.Exceptions;
 
 namespace CheckYourEligibility.WebApp.UseCases
 {
@@ -18,7 +18,7 @@ namespace CheckYourEligibility.WebApp.UseCases
         /// </summary>
         /// <param name="guid">The group ID of the bulk upload</param>
         /// <returns>Bulk upload progress status</returns>
-        Task<UseExecutionResult<CheckEligibilityBulkStatusResponse>> Execute(string guid);
+        Task<CheckEligibilityBulkStatusResponse> Execute(string guid);
     }
 
     public class GetBulkUploadProgressUseCase : IGetBulkUploadProgressUseCase
@@ -30,40 +30,34 @@ namespace CheckYourEligibility.WebApp.UseCases
             ICheckEligibility checkService,
             ILogger<GetBulkUploadProgressUseCase> logger)
         {
-            _checkService = Guard.Against.Null(checkService);
-            _logger = Guard.Against.Null(logger);
+            _checkService = checkService;
+            _logger = logger;
         }
 
-        public async Task<UseExecutionResult<CheckEligibilityBulkStatusResponse>> Execute(string guid)
+        public async Task<CheckEligibilityBulkStatusResponse> Execute(string guid)
         {
-            var useCaseExecutionResult = new UseExecutionResult<CheckEligibilityBulkStatusResponse>();
-
             if (string.IsNullOrEmpty(guid))
             {
-                useCaseExecutionResult.SetFailure("Invalid Request, group ID is required.");
-                return useCaseExecutionResult;
+                throw new ValidationException(null, "Invalid Request, group ID is required.");
             }
 
             var response = await _checkService.GetBulkStatus(guid);
             if (response == null)
             {
                 _logger.LogWarning($"Bulk upload with ID {guid.Replace(Environment.NewLine, "").Replace("\n", "").Replace("\r", "")} not found");
-                useCaseExecutionResult.SetNotFound(guid);
-                return useCaseExecutionResult;
+                throw new NotFoundException(guid.ToString());
             }
 
             _logger.LogInformation($"Retrieved bulk upload progress for group ID: {guid.Replace(Environment.NewLine, "").Replace("\n", "").Replace("\r", "")}");
             
-            useCaseExecutionResult.SetSuccess(new CheckEligibilityBulkStatusResponse()
+            return new CheckEligibilityBulkStatusResponse()
             {
                 Data = response,
                 Links = new BulkCheckResponseLinks()
                 { 
                     Get_BulkCheck_Results = $"{CheckLinks.BulkCheckLink}{guid}{CheckLinks.BulkCheckResults}" 
                 }
-            });
-            
-            return useCaseExecutionResult;
+            };
         }
     }
 }

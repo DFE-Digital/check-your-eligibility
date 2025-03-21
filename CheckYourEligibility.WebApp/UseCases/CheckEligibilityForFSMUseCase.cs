@@ -8,6 +8,7 @@ using CheckYourEligibility.Services.Interfaces;
 using FeatureManagement.Domain.Validation;
 using FluentValidation.Results;
 using System.Threading.Tasks;
+using CheckYourEligibility.Domain.Exceptions;
 
 namespace CheckYourEligibility.WebApp.UseCases
 {
@@ -21,7 +22,7 @@ namespace CheckYourEligibility.WebApp.UseCases
         /// </summary>
         /// <param name="model">FSM eligibility check request</param>
         /// <returns>Check eligibility response or validation errors</returns>
-        Task<UseExecutionResult<CheckEligibilityResponse>> Execute(CheckEligibilityRequest_Fsm model);
+        Task<CheckEligibilityResponse> Execute(CheckEligibilityRequest_Fsm model);
     }
 
     public class CheckEligibilityForFSMUseCase : ICheckEligibilityForFSMUseCase
@@ -40,19 +41,15 @@ namespace CheckYourEligibility.WebApp.UseCases
             _logger = Guard.Against.Null(logger);
         }
 
-        public async Task<UseExecutionResult<CheckEligibilityResponse>> Execute(CheckEligibilityRequest_Fsm model)
+        public async Task<CheckEligibilityResponse> Execute(CheckEligibilityRequest_Fsm model)
         {
-            var useCaseExecutionResult = new UseExecutionResult<CheckEligibilityResponse>();
-
             if (model == null || model.Data == null)
             {
-                useCaseExecutionResult.SetFailure("Invalid Request, data is required.");
-                return useCaseExecutionResult;
+                throw new ValidationException(null, "Invalid Request, data is required.");
             }
             if (model.GetType() != typeof(CheckEligibilityRequest_Fsm))
             {
-                useCaseExecutionResult.SetFailure($"Unknown request type:-{model.GetType()}");
-                return useCaseExecutionResult;
+                throw new ValidationException(null, $"Unknown request type:-{model.GetType()}");
             }
 
             // Normalize and validate the request
@@ -64,9 +61,7 @@ namespace CheckYourEligibility.WebApp.UseCases
 
             if (!validationResults.IsValid)
             {
-                _logger.LogWarning("Validation failed for FSM eligibility check");
-                useCaseExecutionResult.SetFailure(validationResults.ToString());
-                return useCaseExecutionResult;
+                throw new ValidationException(null, validationResults.ToString());
             }
 
             // Execute the check
@@ -75,24 +70,20 @@ namespace CheckYourEligibility.WebApp.UseCases
             {
                 await _auditService.CreateAuditEntry(AuditType.Check, response.Id);
                 _logger.LogInformation($"FSM eligibility check created with ID: {response.Id}");
-                useCaseExecutionResult.SetSuccess(new CheckEligibilityResponse
+                return new CheckEligibilityResponse
                 {
                     Data = new StatusValue { Status = response.Status.ToString() },
                     Links = new CheckEligibilityResponseLinks
                     {
                         Get_EligibilityCheck = $"{CheckLinks.GetLink}{response.Id}",
                         Put_EligibilityCheckProcess = $"{CheckLinks.ProcessLink}{response.Id}",
-                        Get_EligibilityCheckStatus = $"{CheckLinks.GetLink}{response.Id}/Status"
+                        Get_EligibilityCheckStatus = $"{CheckLinks.GetLink}{response.Id}/status"
                     }
-                });
+                };
             }
-            else
-            {
-                _logger.LogWarning("Response for FSM eligibility check was null.");
-                useCaseExecutionResult.SetFailure("Eligibility check not completed successfully.");
-            }
-
-            return useCaseExecutionResult;
+            
+            _logger.LogWarning("Response for FSM eligibility check was null.");
+            throw new ValidationException(null, "Eligibility check not completed successfully.");
         }
     }
 }

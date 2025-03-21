@@ -1,5 +1,4 @@
-﻿using Ardalis.GuardClauses;
-using CheckYourEligibility.Domain.Constants;
+﻿using CheckYourEligibility.Domain.Constants;
 using CheckYourEligibility.Domain.Exceptions;
 using CheckYourEligibility.Domain.Requests;
 using CheckYourEligibility.Domain.Responses;
@@ -8,6 +7,8 @@ using CheckYourEligibility.WebApp.UseCases;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
+using Ardalis.GuardClauses;
+using NotFoundException = CheckYourEligibility.Domain.Exceptions.NotFoundException;
 
 namespace CheckYourEligibility.WebApp.Controllers
 {
@@ -94,14 +95,17 @@ namespace CheckYourEligibility.WebApp.Controllers
         [Authorize(Policy = PolicyNames.RequireCheckScope)]
         public async Task<ActionResult> CheckEligibility([FromBody] CheckEligibilityRequest_Fsm model)
         {
-            var result = await _checkEligibilityForFsmUseCase.Execute(model);
-
-            if (!result.IsValid)
+            try
             {
-                return BadRequest(new ErrorResponse { Errors = [new Error() {Title = result.ValidationErrors }]});
+                var result = await _checkEligibilityForFsmUseCase.Execute(model);
+
+                return new ObjectResult(result) { StatusCode = StatusCodes.Status202Accepted };
             }
 
-            return new ObjectResult(result.Response) { StatusCode = StatusCodes.Status202Accepted };
+            catch (ValidationException ex)
+            {
+                return BadRequest(new ErrorResponse { Errors = ex.Errors });
+            }
         }
 
         /// <summary>
@@ -116,14 +120,16 @@ namespace CheckYourEligibility.WebApp.Controllers
         [Authorize(Policy = PolicyNames.RequireBulkCheckScope)]
         public async Task<ActionResult> CheckEligibilityBulk([FromBody] CheckEligibilityRequestBulk_Fsm model)
         {
-            var result = await _checkEligibilityBulkUseCase.Execute(model, _bulkUploadRecordCountLimit);
-
-            if (!result.IsValid)
-            {
-                return BadRequest(new ErrorResponse { Errors = [new Error() {Title = result.ValidationErrors }]});
+            try {
+                var result = await _checkEligibilityBulkUseCase.Execute(model, _bulkUploadRecordCountLimit);
+    
+                return new ObjectResult(result) { StatusCode = StatusCodes.Status202Accepted };
             }
 
-            return new ObjectResult(result.Response) { StatusCode = StatusCodes.Status202Accepted };
+            catch (ValidationException ex)
+            {
+                return BadRequest(new ErrorResponse { Errors = ex.Errors });
+            }
         }
 
         /// <summary>
@@ -138,19 +144,22 @@ namespace CheckYourEligibility.WebApp.Controllers
         [Authorize(Policy = PolicyNames.RequireBulkCheckScope)]
         public async Task<ActionResult> BulkUploadProgress(string guid)
         {
-            var result = await _getBulkUploadProgressUseCase.Execute(guid);
-
-            if (result.IsNotFound)
+            try
             {
-                return NotFound(new ErrorResponse { Errors = [new Error() {Title = guid}]});
+                var result = await _getBulkUploadProgressUseCase.Execute(guid);
+                
+                return new ObjectResult(result) { StatusCode = StatusCodes.Status200OK };
             }
 
-            if (!result.IsValid)
+            catch (NotFoundException ex)
             {
-                return BadRequest(new ErrorResponse { Errors = [new Error() {Title = result.ValidationErrors }]});
+                return NotFound(new ErrorResponse { Errors = [new Error() { Title = guid }] });
             }
-
-            return new ObjectResult(result.Response) { StatusCode = StatusCodes.Status200OK };
+            
+            catch (ValidationException ex)
+            {
+                return BadRequest(new ErrorResponse { Errors = ex.Errors });
+            }
         }
 
         /// <summary>
@@ -166,19 +175,23 @@ namespace CheckYourEligibility.WebApp.Controllers
         [Authorize(Policy = PolicyNames.RequireBulkCheckScope)]
         public async Task<ActionResult> BulkUploadResults(string guid)
         {
-            var result = await _getBulkUploadResultsUseCase.Execute(guid);
+            try
+            {
+                var result = await _getBulkUploadResultsUseCase.Execute(guid);
 
-            if (result.IsNotFound)
+                return new ObjectResult(result) { StatusCode = StatusCodes.Status200OK };
+
+            }
+
+            catch (NotFoundException ex)
             {
                 return NotFound(new ErrorResponse() { Errors = [new Error() { Title = guid, Status = "404" }] });
             }
-
-            if (!result.IsValid)
+            
+            catch (ValidationException ex)
             {
-                return BadRequest(new ErrorResponse() { Errors = [new Error() { Title = result.ValidationErrors, Status = "400" } ]});
+                return BadRequest(new ErrorResponse { Errors = ex.Errors });
             }
-
-            return new ObjectResult(result.Response) { StatusCode = StatusCodes.Status200OK };
         }
 
         /// <summary>
@@ -193,19 +206,22 @@ namespace CheckYourEligibility.WebApp.Controllers
         [Authorize(Policy = PolicyNames.RequireCheckScope)]
         public async Task<ActionResult> CheckEligibilityStatus(string guid)
         {
-            var result = await _getEligibilityCheckStatusUseCase.Execute(guid);
-
-            if (result.IsNotFound)
+            try
             {
-                return NotFound(new ErrorResponse { Errors = [new Error() {Title = guid}]});
+                var result = await _getEligibilityCheckStatusUseCase.Execute(guid);
+
+                return new ObjectResult(result) { StatusCode = StatusCodes.Status200OK };
             }
 
-            if (!result.IsValid)
+            catch (NotFoundException ex)
             {
-                return BadRequest(new ErrorResponse { Errors = [new Error() {Title = result.ValidationErrors }]});
+                return NotFound(new ErrorResponse { Errors = [new Error() { Title = guid }] });
             }
-
-            return new ObjectResult(result.Response) { StatusCode = StatusCodes.Status200OK };
+            
+            catch (ValidationException ex)
+            {
+                return BadRequest(new ErrorResponse { Errors = ex.Errors });
+            }
         }
 
         /// <summary>
@@ -217,23 +233,26 @@ namespace CheckYourEligibility.WebApp.Controllers
         [ProducesResponseType(typeof(CheckEligibilityStatusResponse), (int)HttpStatusCode.OK)]
         [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.NotFound)]
         [Consumes("application/json", "application/vnd.api+json;version=1.0")]
-        [HttpPatch("/check/{guid}/status")]
-        [Authorize(Policy = PolicyNames.RequireCheckScope)]
-        public async Task<ActionResult> EligibilityCheckStatusUpdate(string guid, [FromBody] EligibilityStatusUpdateRequest model)
+        [HttpPatch("/engine/check/{guid}/status")]
+        [Authorize(Policy = PolicyNames.RequireEngineScope)]
+        public async Task<ActionResult> EligibilityCheckStatusUpdate(string guid,
+            [FromBody] EligibilityStatusUpdateRequest model)
         {
-            var result = await _updateEligibilityCheckStatusUseCase.Execute(guid, model);
-
-            if (result.IsNotFound)
+            try
             {
-                return NotFound(new ErrorResponse { Errors = [new Error() {Title = ""}]});
+                var result = await _updateEligibilityCheckStatusUseCase.Execute(guid, model);
+                return new ObjectResult(result) { StatusCode = StatusCodes.Status200OK };
             }
 
-            if (!result.IsValid)
+            catch (NotFoundException ex)
             {
-                return BadRequest(new ErrorResponse { Errors = [new Error() {Title = result.ValidationErrors }]});
+                return NotFound(new ErrorResponse { Errors = [new Error() { Title = "" }] });
             }
-
-            return new ObjectResult(result.Response) { StatusCode = StatusCodes.Status200OK };
+            
+            catch (ValidationException ex)
+            {
+                return BadRequest(new ErrorResponse { Errors = ex.Errors });
+            }
         }
 
         /// <summary>
@@ -255,24 +274,21 @@ namespace CheckYourEligibility.WebApp.Controllers
             {
                 var result = await _processEligibilityCheckUseCase.Execute(guid);
 
-                if (result.IsNotFound)
-                {
-                    return NotFound(new ErrorResponse { Errors = [new Error() {Title = guid}]});
-                }
-
-                if (!result.IsValid && !result.IsServiceUnavailable)
-                {
-                    return BadRequest(new ErrorResponse { Errors = [new Error() {Title = result.ValidationErrors }]});
-                }
-
-                if (result.IsServiceUnavailable)
-                {
-                    return new ObjectResult(result.Response) { StatusCode = StatusCodes.Status503ServiceUnavailable };
-                }
-
-                return new ObjectResult(result.Response) { StatusCode = StatusCodes.Status200OK };
+                return new ObjectResult(result) { StatusCode = StatusCodes.Status200OK };
             }
-            catch (ProcessCheckException)
+            catch (NotFoundException ex)
+            {
+                return NotFound(new ErrorResponse { Errors = [new Error() { Title = guid }] });
+            }
+            catch (ValidationException ex)
+            {
+                return BadRequest(new ErrorResponse { Errors = ex.Errors });
+            }
+            catch (ApplicationException ex)
+            {
+                return StatusCode(StatusCodes.Status503ServiceUnavailable, new ErrorResponse { Errors = [new Error() { Title = ex.Message }] });
+            }
+            catch (ProcessCheckException ex)
             {
                 return BadRequest(new ErrorResponse { Errors = [new Error() {Title = guid}]});
             }
@@ -290,19 +306,21 @@ namespace CheckYourEligibility.WebApp.Controllers
         [Authorize(Policy = PolicyNames.RequireCheckScope)]
         public async Task<ActionResult> EligibilityCheck(string guid)
         {
-            var result = await _getEligibilityCheckItemUseCase.Execute(guid);
-
-            if (result.IsNotFound)
+            try
             {
+                var result = await _getEligibilityCheckItemUseCase.Execute(guid);
+                
+                return new ObjectResult(result) { StatusCode = StatusCodes.Status200OK };
+            }
+
+            catch(NotFoundException ex) {
                 return NotFound(new ErrorResponse { Errors = [new Error() {Title = guid}]});
             }
-
-            if (!result.IsValid)
+            
+            catch (ValidationException ex)
             {
-                return BadRequest(new ErrorResponse { Errors = [new Error() {Title = result.ValidationErrors}]});
+                return BadRequest(new ErrorResponse { Errors = ex.Errors });
             }
-
-            return new ObjectResult(result.Response) { StatusCode = StatusCodes.Status200OK };
         }
     }
 }

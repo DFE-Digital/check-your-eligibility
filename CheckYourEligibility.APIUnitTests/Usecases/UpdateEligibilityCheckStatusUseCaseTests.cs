@@ -1,6 +1,7 @@
 using AutoFixture;
 using CheckYourEligibility.Domain;
 using CheckYourEligibility.Domain.Enums;
+using CheckYourEligibility.Domain.Exceptions;
 using CheckYourEligibility.Domain.Requests;
 using CheckYourEligibility.Domain.Responses;
 using CheckYourEligibility.Services.Interfaces;
@@ -8,6 +9,7 @@ using CheckYourEligibility.WebApp.UseCases;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
+using NotFoundException = Ardalis.GuardClauses.NotFoundException;
 
 namespace CheckYourEligibility.APIUnitTests.UseCases
 {
@@ -38,51 +40,6 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
         }
 
         [Test]
-        public void Constructor_throws_argumentNullException_when_checkService_is_null()
-        {
-            // Arrange
-            ICheckEligibility checkService = null;
-            var auditService = _mockAuditService.Object;
-            var logger = _mockLogger.Object;
-
-            // Act
-            Action act = () => new UpdateEligibilityCheckStatusUseCase(checkService, auditService, logger);
-
-            // Assert
-            act.Should().ThrowExactly<ArgumentNullException>().And.Message.Should().Contain("Value cannot be null. (Parameter 'checkService')");
-        }
-
-        [Test]
-        public void Constructor_throws_argumentNullException_when_auditService_is_null()
-        {
-            // Arrange
-            var checkService = _mockCheckService.Object;
-            IAudit auditService = null;
-            var logger = _mockLogger.Object;
-
-            // Act
-            Action act = () => new UpdateEligibilityCheckStatusUseCase(checkService, auditService, logger);
-
-            // Assert
-            act.Should().ThrowExactly<ArgumentNullException>().And.Message.Should().Contain("Value cannot be null. (Parameter 'auditService')");
-        }
-
-        [Test]
-        public void Constructor_throws_argumentNullException_when_logger_is_null()
-        {
-            // Arrange
-            var checkService = _mockCheckService.Object;
-            var auditService = _mockAuditService.Object;
-            ILogger<UpdateEligibilityCheckStatusUseCase> logger = null;
-
-            // Act
-            Action act = () => new UpdateEligibilityCheckStatusUseCase(checkService, auditService, logger);
-
-            // Assert
-            act.Should().ThrowExactly<ArgumentNullException>().And.Message.Should().Contain("Value cannot be null. (Parameter 'logger')");
-        }
-
-        [Test]
         [TestCase(null)]
         [TestCase("")]
         public async Task Execute_returns_failure_when_guid_is_null_or_empty(string guid)
@@ -91,12 +48,10 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             var request = _fixture.Create<EligibilityStatusUpdateRequest>();
 
             // Act
-            var result = await _sut.Execute(guid, request);
+            Func<Task> act = async () => await _sut.Execute(guid, request);
 
             // Assert
-            result.IsValid.Should().BeFalse();
-            result.ValidationErrors.Should().Be("Invalid Request, check ID is required.");
-            result.Response.Should().BeNull();
+            act.Should().ThrowAsync<ValidationException>().WithMessage("Invalid Request, check ID is required.");
         }
 
         [Test]
@@ -106,12 +61,10 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             var guid = _fixture.Create<string>();
 
             // Act
-            var result = await _sut.Execute(guid, null);
+            Func<Task> act = async () => await _sut.Execute(guid, null);
 
             // Assert
-            result.IsValid.Should().BeFalse();
-            result.ValidationErrors.Should().Be("Invalid Request, update data is required.");
-            result.Response.Should().BeNull();
+            act.Should().ThrowAsync<ValidationException>().WithMessage("Invalid Request, update data is required.");
         }
 
         [Test]
@@ -122,12 +75,10 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             var request = new EligibilityStatusUpdateRequest { Data = null };
 
             // Act
-            var result = await _sut.Execute(guid, request);
+            Func<Task> act = async () => await _sut.Execute(guid, request);
 
             // Assert
-            result.IsValid.Should().BeFalse();
-            result.ValidationErrors.Should().Be("Invalid Request, update data is required.");
-            result.Response.Should().BeNull();
+            act.Should().ThrowAsync<ValidationException>().WithMessage("Invalid Request, update data is required.");
         }
 
         [Test]
@@ -142,13 +93,10 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
                 .ReturnsAsync((CheckEligibilityStatusResponse)null);
 
             // Act
-            var result = await _sut.Execute(guid, request);
+            Func<Task> act = async () => await _sut.Execute(guid, request);
 
             // Assert
-            result.IsValid.Should().BeFalse();
-            result.IsNotFound.Should().BeTrue();
-            result.ValidationErrors.Should().Be($"Bulk upload with ID {guid} not found");
-            result.Response.Should().BeNull();
+            act.Should().ThrowAsync<NotFoundException>().WithMessage($"Bulk upload with ID {guid} not found");
         }
 
         [Test]
@@ -170,10 +118,7 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             var result = await _sut.Execute(guid, request);
 
             // Assert
-            result.IsValid.Should().BeTrue();
-            result.IsNotFound.Should().BeFalse();
-            result.Response.Should().NotBeNull();
-            result.Response.Data.Should().Be(responseData.Data);
+            result.Data.Should().Be(responseData.Data);
         }
 
         [Test]

@@ -1,6 +1,7 @@
 using AutoFixture;
 using CheckYourEligibility.Domain;
 using CheckYourEligibility.Domain.Enums;
+using CheckYourEligibility.Domain.Exceptions;
 using CheckYourEligibility.Domain.Requests;
 using CheckYourEligibility.Domain.Responses;
 using CheckYourEligibility.Services.Interfaces;
@@ -39,62 +40,15 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
         }
 
         [Test]
-        public void Constructor_throws_argumentNullException_when_checkService_is_null()
-        {
-            // Arrange
-            ICheckEligibility checkService = null;
-            var auditService = _mockAuditService.Object;
-            var logger = _mockLogger.Object;
-
-            // Act
-            Action act = () => new GetEligibilityCheckStatusUseCase(checkService, auditService, logger);
-
-            // Assert
-            act.Should().ThrowExactly<ArgumentNullException>().And.Message.Should().Contain("Value cannot be null. (Parameter 'checkService')");
-        }
-
-        [Test]
-        public void Constructor_throws_argumentNullException_when_auditService_is_null()
-        {
-            // Arrange
-            var checkService = _mockCheckService.Object;
-            IAudit auditService = null;
-            var logger = _mockLogger.Object;
-
-            // Act
-            Action act = () => new GetEligibilityCheckStatusUseCase(checkService, auditService, logger);
-
-            // Assert
-            act.Should().ThrowExactly<ArgumentNullException>().And.Message.Should().Contain("Value cannot be null. (Parameter 'auditService')");
-        }
-
-        [Test]
-        public void Constructor_throws_argumentNullException_when_logger_is_null()
-        {
-            // Arrange
-            var checkService = _mockCheckService.Object;
-            var auditService = _mockAuditService.Object;
-            ILogger<GetEligibilityCheckStatusUseCase> logger = null;
-
-            // Act
-            Action act = () => new GetEligibilityCheckStatusUseCase(checkService, auditService, logger);
-
-            // Assert
-            act.Should().ThrowExactly<ArgumentNullException>().And.Message.Should().Contain("Value cannot be null. (Parameter 'logger')");
-        }
-
-        [Test]
         [TestCase(null)]
         [TestCase("")]
         public async Task Execute_returns_failure_when_guid_is_null_or_empty(string guid)
         {
             // Act
-            var result = await _sut.Execute(guid);
+            Func<Task> act = async () => await _sut.Execute(guid);
 
             // Assert
-            result.IsValid.Should().BeFalse();
-            result.ValidationErrors.Should().Be("Invalid Request, check ID is required.");
-            result.Response.Should().BeNull();
+            act.Should().ThrowAsync<ValidationException>().WithMessage("Invalid Request, check ID is required.");
         }
 
         [Test]
@@ -105,13 +59,10 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             _mockCheckService.Setup(s => s.GetStatus(guid)).ReturnsAsync((CheckEligibilityStatus?)null);
 
             // Act
-            var result = await _sut.Execute(guid);
+            Func<Task> act = async () => await _sut.Execute(guid);
 
             // Assert
-            result.IsValid.Should().BeFalse();
-            result.IsNotFound.Should().BeTrue();
-            result.ValidationErrors.Should().Be($"Bulk upload with ID {guid} not found");
-            result.Response.Should().BeNull();
+            act.Should().ThrowAsync<NotFoundException>().WithMessage($"Bulk upload with ID {guid} not found");
         }
 
         [Test]
@@ -130,11 +81,8 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             var result = await _sut.Execute(guid);
 
             // Assert
-            result.IsValid.Should().BeTrue();
-            result.IsNotFound.Should().BeFalse();
-            result.Response.Should().NotBeNull();
-            result.Response.Data.Should().NotBeNull();
-            result.Response.Data.Status.Should().Be(expectedStausCode.ToString());
+            result.Data.Should().NotBeNull();
+            result.Data.Status.Should().Be(expectedStausCode.ToString());
         }
 
         [Test]

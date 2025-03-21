@@ -41,6 +41,22 @@ builder.Services.AddControllers()
     .AddNewtonsoftJson()
     .AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
+// Configure Azure Key Vault if environment variable is set
+if (Environment.GetEnvironmentVariable("API_KEY_VAULT_NAME") != null)
+{
+    var keyVaultName = Environment.GetEnvironmentVariable("API_KEY_VAULT_NAME");
+    var kvUri = $"https://{keyVaultName}.vault.azure.net";
+
+    builder.Configuration.AddAzureKeyVault(
+        new Uri(kvUri), 
+        new DefaultAzureCredential(),
+        new AzureKeyVaultConfigurationOptions()
+        {
+            ReloadInterval = TimeSpan.FromSeconds(60*10)
+        }
+    );
+}
+
 // Configure Swagger/OpenAPI
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -61,33 +77,33 @@ builder.Services.AddSwaggerGen(c =>
             Description = "DFE Eligibility Checking Engine: API to perform Checks determining eligibility for entitlements via integration with OGDs"
         });
 
-    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-    {
-        Description = @"JWT Authorization header using the Bearer scheme.\r\n\r\n 
-                      Enter 'Bearer' [space] and then your token in the text input below.
-                      \r\n\r\nExample: 'Bearer 12345abcdef'",
-        Name = "Authorization",
-        In = ParameterLocation.Header,
-        Type = SecuritySchemeType.ApiKey,
-        Scheme = "Bearer"
-    });
-    c.AddSecurityRequirement(new OpenApiSecurityRequirement()
-      {
+    c.AddSecurityDefinition(
+        "oauth2", 
+        new OpenApiSecurityScheme
         {
-          new OpenApiSecurityScheme
-          {
-            Reference = new OpenApiReference
-              {
-                Type = ReferenceType.SecurityScheme,
-                Id = "Bearer"
-              },
-              Scheme = "oauth2",
-              Name = "Bearer",
-              In = ParameterLocation.Header,
+            Type = SecuritySchemeType.OAuth2,
+            Flows = new OpenApiOAuthFlows
+            {
+                AuthorizationCode = new OpenApiOAuthFlow
+                {
+                    TokenUrl = new Uri(builder.Configuration.GetValue<string>("Host")+"/oauth2/token"),
+                    Scopes = builder.Configuration.GetSection("Jwt").GetSection("Scopes").Get<List<string>>().ToDictionary(x => x, x => x)
+                }
+            }
+        });
 
-            },
-            new List<string>()
-          }
+    c.AddSecurityRequirement(
+        new OpenApiSecurityRequirement 
+        {
+            {
+                new OpenApiSecurityScheme{
+                    Reference = new OpenApiReference{
+                        Id = "oauth2", //The name of the previously defined security scheme.
+                        Type = ReferenceType.SecurityScheme
+                    }
+                },
+                new List<string>()
+            }
         });
 
     c.DocInclusionPredicate((docName, apiDesc) =>
@@ -97,7 +113,6 @@ builder.Services.AddSwaggerGen(c =>
         if(docName=="v1-admin") return true;
         if(apiDesc.RelativePath.StartsWith("check/")) return true;
         if(apiDesc.RelativePath.StartsWith("bulk-check/")) return true;
-        if(apiDesc.RelativePath.StartsWith("oauth2/")) return true;
         
         return false;
     });
@@ -105,22 +120,6 @@ builder.Services.AddSwaggerGen(c =>
     var filePath = Path.Combine(System.AppContext.BaseDirectory, "CheckYourEligibility.WebApp.xml");
     c.IncludeXmlComments(filePath);
 });
-
-// Configure Azure Key Vault if environment variable is set
-if (Environment.GetEnvironmentVariable("API_KEY_VAULT_NAME") != null)
-{
-    var keyVaultName = Environment.GetEnvironmentVariable("API_KEY_VAULT_NAME");
-    var kvUri = $"https://{keyVaultName}.vault.azure.net";
-
-    builder.Configuration.AddAzureKeyVault(
-        new Uri(kvUri), 
-        new DefaultAzureCredential(),
-        new AzureKeyVaultConfigurationOptions()
-        {
-            ReloadInterval = TimeSpan.FromSeconds(60*10)
-        }
-    );
-}
 
 // Register Database and other services
 builder.Services.AddDatabase(builder.Configuration);

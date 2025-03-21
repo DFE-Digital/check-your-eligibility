@@ -154,10 +154,9 @@ namespace CheckYourEligibility.APIUnitTests
         {
             // Arrange
             var request = _fixture.Create<CheckEligibilityRequest_Fsm>();
-            var executionResult = new UseExecutionResult<CheckEligibilityResponse>();
-            executionResult.SetFailure("Validation error");
+            var executionResult = new CheckEligibilityResponse();
             
-            _mockCheckEligibilityForFsmUseCase.Setup(u => u.Execute(request)).ReturnsAsync(executionResult);
+            _mockCheckEligibilityForFsmUseCase.Setup(u => u.Execute(request)).ThrowsAsync(new ValidationException(null, "Validation error"));
 
             // Act
             var response = await _sut.CheckEligibility(request);
@@ -174,8 +173,7 @@ namespace CheckYourEligibility.APIUnitTests
             // Arrange
             var request = _fixture.Create<CheckEligibilityRequest_Fsm>();
             var statusResponse = _fixture.Create<CheckEligibilityResponse>();
-            var executionResult = new UseExecutionResult<CheckEligibilityResponse>();
-            executionResult.SetSuccess(statusResponse);
+            var executionResult = statusResponse;
             
             _mockCheckEligibilityForFsmUseCase.Setup(u => u.Execute(request)).ReturnsAsync(executionResult);
 
@@ -194,10 +192,9 @@ namespace CheckYourEligibility.APIUnitTests
         {
             // Arrange
             var request = _fixture.Create<CheckEligibilityRequestBulk_Fsm>();
-            var executionResult = new UseExecutionResult<CheckEligibilityResponseBulk>();
-            executionResult.SetFailure("Validation error");
+            var executionResult = new CheckEligibilityResponseBulk();
             
-            _mockCheckEligibilityBulkUseCase.Setup(u => u.Execute(request, _configuration.GetValue<int>("BulkEligibilityCheckLimit"))).ReturnsAsync(executionResult);
+            _mockCheckEligibilityBulkUseCase.Setup(u => u.Execute(request, _configuration.GetValue<int>("BulkEligibilityCheckLimit"))).ThrowsAsync(new ValidationException(null, "Validation error"));
 
             // Act
             var response = await _sut.CheckEligibilityBulk(request);
@@ -214,8 +211,7 @@ namespace CheckYourEligibility.APIUnitTests
             // Arrange
             var request = _fixture.Create<CheckEligibilityRequestBulk_Fsm>();
             var bulkResponse = _fixture.Create<CheckEligibilityResponseBulk>();
-            var executionResult = new UseExecutionResult<CheckEligibilityResponseBulk>();
-            executionResult.SetSuccess(bulkResponse);
+            var executionResult = bulkResponse;
             
             _mockCheckEligibilityBulkUseCase.Setup(u => u.Execute(request, _configuration.GetValue<int>("BulkEligibilityCheckLimit"))).ReturnsAsync(executionResult);
 
@@ -234,10 +230,9 @@ namespace CheckYourEligibility.APIUnitTests
         {
             // Arrange
             var guid = _fixture.Create<string>();
-            var executionResult = new UseExecutionResult<CheckEligibilityBulkStatusResponse>();
-            executionResult.SetNotFound(guid);
+            var executionResult = new CheckEligibilityBulkStatusResponse();
             
-            _mockGetBulkUploadProgressUseCase.Setup(u => u.Execute(guid)).ReturnsAsync(executionResult);
+            _mockGetBulkUploadProgressUseCase.Setup(u => u.Execute(guid)).ThrowsAsync(new NotFoundException(guid));
 
             // Act
             var response = await _sut.BulkUploadProgress(guid);
@@ -253,10 +248,9 @@ namespace CheckYourEligibility.APIUnitTests
         {
             // Arrange
             var guid = _fixture.Create<string>();
-            var executionResult = new UseExecutionResult<CheckEligibilityBulkStatusResponse>();
-            executionResult.SetFailure("Validation error");
+            var executionResult = new CheckEligibilityBulkStatusResponse();
             
-            _mockGetBulkUploadProgressUseCase.Setup(u => u.Execute(guid)).ReturnsAsync(executionResult);
+            _mockGetBulkUploadProgressUseCase.Setup(u => u.Execute(guid)).ThrowsAsync(new ValidationException(null, "Validation error"));
 
             // Act
             var response = await _sut.BulkUploadProgress(guid);
@@ -273,8 +267,7 @@ namespace CheckYourEligibility.APIUnitTests
             // Arrange
             var guid = _fixture.Create<string>();
             var statusResponse = _fixture.Create<CheckEligibilityBulkStatusResponse>();
-            var executionResult = new UseExecutionResult<CheckEligibilityBulkStatusResponse>();
-            executionResult.SetSuccess(statusResponse);
+            var executionResult = statusResponse;
             
             _mockGetBulkUploadProgressUseCase.Setup(u => u.Execute(guid)).ReturnsAsync(executionResult);
 
@@ -293,10 +286,9 @@ namespace CheckYourEligibility.APIUnitTests
         {
             // Arrange
             var guid = _fixture.Create<string>();
-            var executionResult = new UseExecutionResult<CheckEligibilityBulkResponse>();
-            executionResult.SetNotFound(guid);
+            var executionResult = new CheckEligibilityBulkResponse();
             
-            _mockGetBulkUploadResultsUseCase.Setup(u => u.Execute(guid)).ReturnsAsync(executionResult);
+            _mockGetBulkUploadResultsUseCase.Setup(u => u.Execute(guid)).ThrowsAsync(new NotFoundException(guid));
 
             // Act
             var response = await _sut.BulkUploadResults(guid);
@@ -312,10 +304,9 @@ namespace CheckYourEligibility.APIUnitTests
         {
             // Arrange
             var guid = _fixture.Create<string>();
-            var executionResult = new UseExecutionResult<CheckEligibilityBulkResponse>();
-            executionResult.SetFailure("Validation error");
+            var executionResult = new CheckEligibilityBulkResponse();
             
-            _mockGetBulkUploadResultsUseCase.Setup(u => u.Execute(guid)).ReturnsAsync(executionResult);
+            _mockGetBulkUploadResultsUseCase.Setup(u => u.Execute(guid)).ThrowsAsync(new ValidationException(null, "Validation error"));
 
             // Act
             var response = await _sut.BulkUploadResults(guid);
@@ -332,8 +323,7 @@ namespace CheckYourEligibility.APIUnitTests
             // Arrange
             var guid = _fixture.Create<string>();
             var bulkResponse = _fixture.Create<CheckEligibilityBulkResponse>();
-            var executionResult = new UseExecutionResult<CheckEligibilityBulkResponse>();
-            executionResult.SetSuccess(bulkResponse);
+            var executionResult = bulkResponse;
             
             _mockGetBulkUploadResultsUseCase.Setup(u => u.Execute(guid)).ReturnsAsync(executionResult);
 
@@ -352,10 +342,9 @@ namespace CheckYourEligibility.APIUnitTests
         {
             // Arrange
             var guid = _fixture.Create<string>();
-            var executionResult = new UseExecutionResult<CheckEligibilityStatusResponse>();
-            executionResult.SetNotFound(guid);
+            var executionResult = new CheckEligibilityStatusResponse();
             
-            _mockGetEligibilityCheckStatusUseCase.Setup(u => u.Execute(guid)).ReturnsAsync(executionResult);
+            _mockGetEligibilityCheckStatusUseCase.Setup(u => u.Execute(guid)).ThrowsAsync(new NotFoundException());
 
             // Act
             var response = await _sut.CheckEligibilityStatus(guid);
@@ -371,10 +360,9 @@ namespace CheckYourEligibility.APIUnitTests
         {
             // Arrange
             var guid = _fixture.Create<string>();
-            var executionResult = new UseExecutionResult<CheckEligibilityStatusResponse>();
-            executionResult.SetFailure("Validation error");
+            var executionResult = new CheckEligibilityStatusResponse();
             
-            _mockGetEligibilityCheckStatusUseCase.Setup(u => u.Execute(guid)).ReturnsAsync(executionResult);
+            _mockGetEligibilityCheckStatusUseCase.Setup(u => u.Execute(guid)).ThrowsAsync(new ValidationException(null, "Validation error"));
 
             // Act
             var response = await _sut.CheckEligibilityStatus(guid);
@@ -391,8 +379,7 @@ namespace CheckYourEligibility.APIUnitTests
             // Arrange
             var guid = _fixture.Create<string>();
             var statusResponse = _fixture.Create<CheckEligibilityStatusResponse>();
-            var executionResult = new UseExecutionResult<CheckEligibilityStatusResponse>();
-            executionResult.SetSuccess(statusResponse);
+            var executionResult = statusResponse;
             
             _mockGetEligibilityCheckStatusUseCase.Setup(u => u.Execute(guid)).ReturnsAsync(executionResult);
 
@@ -412,10 +399,9 @@ namespace CheckYourEligibility.APIUnitTests
             // Arrange
             var guid = _fixture.Create<string>();
             var request = _fixture.Create<EligibilityStatusUpdateRequest>();
-            var executionResult = new UseExecutionResult<CheckEligibilityStatusResponse>();
-            executionResult.SetNotFound(guid);
+            var executionResult = new CheckEligibilityStatusResponse();
             
-            _mockUpdateEligibilityCheckStatusUseCase.Setup(u => u.Execute(guid, request)).ReturnsAsync(executionResult);
+            _mockUpdateEligibilityCheckStatusUseCase.Setup(u => u.Execute(guid, request)).ThrowsAsync(new NotFoundException());
 
             // Act
             var response = await _sut.EligibilityCheckStatusUpdate(guid, request);
@@ -430,10 +416,9 @@ namespace CheckYourEligibility.APIUnitTests
             // Arrange
             var guid = _fixture.Create<string>();
             var request = _fixture.Create<EligibilityStatusUpdateRequest>();
-            var executionResult = new UseExecutionResult<CheckEligibilityStatusResponse>();
-            executionResult.SetFailure("Validation error");
+            var executionResult = new CheckEligibilityStatusResponse();
             
-            _mockUpdateEligibilityCheckStatusUseCase.Setup(u => u.Execute(guid, request)).ReturnsAsync(executionResult);
+            _mockUpdateEligibilityCheckStatusUseCase.Setup(u => u.Execute(guid, request)).ThrowsAsync(new ValidationException(null, "Validation error"));
 
             // Act
             var response = await _sut.EligibilityCheckStatusUpdate(guid, request);
@@ -451,8 +436,7 @@ namespace CheckYourEligibility.APIUnitTests
             var guid = _fixture.Create<string>();
             var request = _fixture.Create<EligibilityStatusUpdateRequest>();
             var statusResponse = _fixture.Create<CheckEligibilityStatusResponse>();
-            var executionResult = new UseExecutionResult<CheckEligibilityStatusResponse>();
-            executionResult.SetSuccess(statusResponse);
+            var executionResult = statusResponse;
             
             _mockUpdateEligibilityCheckStatusUseCase.Setup(u => u.Execute(guid, request)).ReturnsAsync(executionResult);
 
@@ -471,10 +455,9 @@ namespace CheckYourEligibility.APIUnitTests
         {
             // Arrange
             var guid = _fixture.Create<string>();
-            var executionResult = new UseExecutionResult<CheckEligibilityStatusResponse>();
-            executionResult.SetNotFound(guid);
+            var executionResult = new CheckEligibilityStatusResponse();
             
-            _mockProcessEligibilityCheckUseCase.Setup(u => u.Execute(guid)).ReturnsAsync(executionResult);
+            _mockProcessEligibilityCheckUseCase.Setup(u => u.Execute(guid)).ThrowsAsync(new NotFoundException());
 
             // Act
             var response = await _sut.Process(guid);
@@ -490,10 +473,9 @@ namespace CheckYourEligibility.APIUnitTests
         {
             // Arrange
             var guid = _fixture.Create<string>();
-            var executionResult = new UseExecutionResult<CheckEligibilityStatusResponse>();
-            executionResult.SetFailure("Validation error");
+            var executionResult = new CheckEligibilityStatusResponse();
             
-            _mockProcessEligibilityCheckUseCase.Setup(u => u.Execute(guid)).ReturnsAsync(executionResult);
+            _mockProcessEligibilityCheckUseCase.Setup(u => u.Execute(guid)).ThrowsAsync(new ValidationException(null, "Validation error"));
 
             // Act
             var response = await _sut.Process(guid);
@@ -510,11 +492,9 @@ namespace CheckYourEligibility.APIUnitTests
             // Arrange
             var guid = _fixture.Create<string>();
             var statusResponse = _fixture.Create<CheckEligibilityStatusResponse>();
-            var executionResult = new UseExecutionResult<CheckEligibilityStatusResponse>();
-            executionResult.SetServiceUnavailable();
-            executionResult.Response = statusResponse;
+            var executionResult = statusResponse;
             
-            _mockProcessEligibilityCheckUseCase.Setup(u => u.Execute(guid)).ReturnsAsync(executionResult);
+            _mockProcessEligibilityCheckUseCase.Setup(u => u.Execute(guid)).ThrowsAsync(new ApplicationException("Service unavailable"));
 
             // Act
             var response = await _sut.Process(guid);
@@ -523,7 +503,6 @@ namespace CheckYourEligibility.APIUnitTests
             response.Should().BeOfType<ObjectResult>();
             var objectResult = (ObjectResult)response;
             objectResult.StatusCode.Should().Be(StatusCodes.Status503ServiceUnavailable);
-            objectResult.Value.Should().Be(statusResponse);
         }
 
         [Test]
@@ -532,8 +511,7 @@ namespace CheckYourEligibility.APIUnitTests
             // Arrange
             var guid = _fixture.Create<string>();
             var statusResponse = _fixture.Create<CheckEligibilityStatusResponse>();
-            var executionResult = new UseExecutionResult<CheckEligibilityStatusResponse>();
-            executionResult.SetSuccess(statusResponse);
+            var executionResult = statusResponse;
             
             _mockProcessEligibilityCheckUseCase.Setup(u => u.Execute(guid)).ReturnsAsync(executionResult);
 
@@ -569,10 +547,9 @@ namespace CheckYourEligibility.APIUnitTests
         {
             // Arrange
             var guid = _fixture.Create<string>();
-            var executionResult = new UseExecutionResult<CheckEligibilityItemResponse>();
-            executionResult.SetNotFound(guid);
+            var executionResult = new CheckEligibilityItemResponse();
             
-            _mockGetEligibilityCheckItemUseCase.Setup(u => u.Execute(guid)).ReturnsAsync(executionResult);
+            _mockGetEligibilityCheckItemUseCase.Setup(u => u.Execute(guid)).ThrowsAsync(new NotFoundException());
 
             // Act
             var response = await _sut.EligibilityCheck(guid);
@@ -588,10 +565,9 @@ namespace CheckYourEligibility.APIUnitTests
         {
             // Arrange
             var guid = _fixture.Create<string>();
-            var executionResult = new UseExecutionResult<CheckEligibilityItemResponse>();
-            executionResult.SetFailure("Validation error");
+            var executionResult = new CheckEligibilityItemResponse();
             
-            _mockGetEligibilityCheckItemUseCase.Setup(u => u.Execute(guid)).ReturnsAsync(executionResult);
+            _mockGetEligibilityCheckItemUseCase.Setup(u => u.Execute(guid)).ThrowsAsync(new ValidationException(null, "Validation error"));
 
             // Act
             var response = await _sut.EligibilityCheck(guid);
@@ -608,8 +584,7 @@ namespace CheckYourEligibility.APIUnitTests
             // Arrange
             var guid = _fixture.Create<string>();
             var itemResponse = _fixture.Create<CheckEligibilityItemResponse>();
-            var executionResult = new UseExecutionResult<CheckEligibilityItemResponse>();
-            executionResult.SetSuccess(itemResponse);
+            var executionResult = itemResponse;
             
             _mockGetEligibilityCheckItemUseCase.Setup(u => u.Execute(guid)).ReturnsAsync(executionResult);
 

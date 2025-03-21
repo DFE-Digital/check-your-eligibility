@@ -8,6 +8,7 @@ using CheckYourEligibility.Services.Interfaces;
 using FeatureManagement.Domain.Validation;
 using System.Text;
 using System.Threading.Tasks;
+using CheckYourEligibility.Domain.Exceptions;
 
 namespace CheckYourEligibility.WebApp.UseCases
 {
@@ -22,7 +23,7 @@ namespace CheckYourEligibility.WebApp.UseCases
         /// <param name="model">Bulk FSM eligibility check request</param>
         /// <param name="recordCountLimit">Maximum allowed records in a bulk upload</param>
         /// <returns>Check eligibility bulk response or validation errors</returns>
-        Task<UseExecutionResult<CheckEligibilityResponseBulk>> Execute(
+        Task<CheckEligibilityResponseBulk> Execute(
             CheckEligibilityRequestBulk_Fsm model,
             int recordCountLimit);
     }
@@ -43,38 +44,32 @@ namespace CheckYourEligibility.WebApp.UseCases
             _logger = Guard.Against.Null(logger);
         }
 
-        public async Task<UseExecutionResult<CheckEligibilityResponseBulk>> Execute(
+        public async Task<CheckEligibilityResponseBulk> Execute(
             CheckEligibilityRequestBulk_Fsm model,
             int recordCountLimit)
         {
-            var useCaseExecutionResult = new UseExecutionResult<CheckEligibilityResponseBulk>();
-
             if (model == null || model.Data == null)
             {
-                useCaseExecutionResult.SetFailure("Invalid Request, data is required.");
-                return useCaseExecutionResult;
+                throw new ValidationException(null, "Invalid Request, data is required.");
             }
 
             if (model.Data.Count() > recordCountLimit)
             {
                 var errorMessage = $"Invalid Request, data limit of {recordCountLimit} exceeded, {model.Data.Count()} records.";
                 _logger.LogWarning(errorMessage);
-                useCaseExecutionResult.SetFailure(errorMessage);
-                return useCaseExecutionResult;
+                throw new ValidationException(null, errorMessage);
             }
 
             if (model.GetType() != typeof(CheckEligibilityRequestBulk_Fsm))
             {
-                useCaseExecutionResult.SetFailure($"Unknown request type:-{model.GetType()}");
-                return useCaseExecutionResult;
+                throw new ValidationException(null, $"Unknown request type:-{model.GetType()}");
             }
 
             var validationErrors = ValidateBulkItems(model);
             if (validationErrors.Length > 0)
             {
                 _logger.LogWarning("Validation errors in bulk eligibility check");
-                useCaseExecutionResult.SetFailure(validationErrors.ToString());
-                return useCaseExecutionResult;
+                throw new ValidationException(null, validationErrors.ToString());
             }
 
             var groupId = Guid.NewGuid().ToString();
@@ -85,7 +80,7 @@ namespace CheckYourEligibility.WebApp.UseCases
 
             _logger.LogInformation($"Bulk eligibility check created with group ID: {groupId}");
 
-            useCaseExecutionResult.SetSuccess(new CheckEligibilityResponseBulk
+            return new CheckEligibilityResponseBulk
             {
                 Data = new StatusValue { Status = $"{Messages.Processing}" },
                 Links = new CheckEligibilityResponseBulkLinks
@@ -93,9 +88,7 @@ namespace CheckYourEligibility.WebApp.UseCases
                     Get_Progress_Check = $"{CheckLinks.BulkCheckLink}{groupId}{CheckLinks.BulkCheckProgress}",
                     Get_BulkCheck_Results = $"{CheckLinks.BulkCheckLink}{groupId}{CheckLinks.BulkCheckResults}"
                 }
-            });
-
-            return useCaseExecutionResult;
+            };
         }
 
         private static StringBuilder ValidateBulkItems(CheckEligibilityRequestBulk_Fsm model)
