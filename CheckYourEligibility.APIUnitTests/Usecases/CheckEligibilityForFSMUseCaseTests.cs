@@ -2,6 +2,7 @@ using AutoFixture;
 using CheckYourEligibility.Domain;
 using CheckYourEligibility.Domain.Constants;
 using CheckYourEligibility.Domain.Enums;
+using CheckYourEligibility.Domain.Exceptions;
 using CheckYourEligibility.Domain.Requests;
 using CheckYourEligibility.Domain.Responses;
 using CheckYourEligibility.Services.Interfaces;
@@ -88,12 +89,10 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
         public async Task Execute_returns_failure_when_model_is_null()
         {
             // Act
-            var result = await _sut.Execute(null);
+            Func<Task> act = async () => await _sut.Execute(null);
 
             // Assert
-            result.IsValid.Should().BeFalse();
-            result.ValidationErrors.Should().Be("Invalid Request, data is required.");
-            result.Response.Should().BeNull();
+            act.Should().ThrowAsync<ValidationException>().WithMessage("Invalid Request, data is required.");
         }
 
         [Test]
@@ -103,12 +102,10 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             var model = new CheckEligibilityRequest_Fsm { Data = null };
 
             // Act
-            var result = await _sut.Execute(model);
+            Func<Task> act = async () => await _sut.Execute(model);
 
             // Assert
-            result.IsValid.Should().BeFalse();
-            result.ValidationErrors.Should().Be("Invalid Request, data is required.");
-            result.Response.Should().BeNull();
+            act.Should().ThrowAsync<ValidationException>().WithMessage("Invalid Request, data is required.");
         }
 
         [Test]
@@ -122,12 +119,10 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             };
 
             // Act
-            var result = await _sut.Execute(incorrectModel);
+            Func<Task> act = async () => await _sut.Execute(incorrectModel);
 
             // Assert
-            result.IsValid.Should().BeFalse();
-            result.ValidationErrors.Should().Be($"Unknown request type:-{incorrectModel.GetType()}");
-            result.Response.Should().BeNull();
+            act.Should().ThrowAsync<ValidationException>().WithMessage($"Unknown request type:-{incorrectModel.GetType()}");
         }
 
         // Add this class to help with the test
@@ -192,12 +187,10 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             };
 
             // Act
-            var result = await _sut.Execute(model);
+            Func<Task> act = async () => await _sut.Execute(model);
 
             // Assert
-            result.IsValid.Should().BeFalse();
-            result.ValidationErrors.Should().NotBeNullOrEmpty();
-            result.Response.Should().BeNull();
+            act.Should().ThrowAsync<ValidationException>();
         }
 
         [Test]
@@ -221,14 +214,12 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             var result = await _sut.Execute(model);
 
             // Assert
-            result.IsValid.Should().BeTrue();
-            result.Response.Should().NotBeNull();
-            result.Response.Data.Should().NotBeNull();
-            result.Response.Data.Status.Should().Be(responseData.Status.ToString());
-            result.Response.Links.Should().NotBeNull();
-            result.Response.Links.Get_EligibilityCheck.Should().Be($"{CheckLinks.GetLink}{checkId}");
-            result.Response.Links.Put_EligibilityCheckProcess.Should().Be($"{CheckLinks.ProcessLink}{checkId}");
-            result.Response.Links.Get_EligibilityCheckStatus.Should().Be($"{CheckLinks.GetLink}{checkId}/Status");
+            result.Data.Should().NotBeNull();
+            result.Data.Status.Should().Be(responseData.Status.ToString());
+            result.Links.Should().NotBeNull();
+            result.Links.Get_EligibilityCheck.Should().Be($"{CheckLinks.GetLink}{checkId}");
+            result.Links.Put_EligibilityCheckProcess.Should().Be($"{CheckLinks.ProcessLink}{checkId}");
+            result.Links.Get_EligibilityCheckStatus.Should().Be($"{CheckLinks.GetLink}{checkId}/Status");
         }
 
         [Test]
@@ -266,12 +257,10 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
                 .ReturnsAsync((PostCheckResult)null);
 
             // Act
-            var result = await _sut.Execute(model);
+            Func<Task> act = async () => await _sut.Execute(model);
 
             // Assert
-            result.IsValid.Should().BeFalse();
-            result.ValidationErrors.Should().Be("Eligibility check not completed successfully.");
-            result.Response.Should().BeNull();
+            act.Should().ThrowAsync<ValidationException>().WithMessage("Eligibility check not completed successfully.");
 
             // Verify audit service was not called
             _mockAuditService.Verify(a => a.CreateAuditEntry(It.IsAny<AuditType>(), It.IsAny<string>()), Times.Never);

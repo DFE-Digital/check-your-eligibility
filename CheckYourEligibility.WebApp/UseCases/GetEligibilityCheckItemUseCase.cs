@@ -1,4 +1,3 @@
-using Ardalis.GuardClauses;
 using CheckYourEligibility.Domain;
 using CheckYourEligibility.Domain.Constants;
 using CheckYourEligibility.Domain.Enums;
@@ -6,6 +5,7 @@ using CheckYourEligibility.Domain.Responses;
 using CheckYourEligibility.Services.Interfaces;
 using Microsoft.Extensions.Logging;
 using System.Threading.Tasks;
+using CheckYourEligibility.Domain.Exceptions;
 
 namespace CheckYourEligibility.WebApp.UseCases
 {
@@ -19,7 +19,7 @@ namespace CheckYourEligibility.WebApp.UseCases
         /// </summary>
         /// <param name="guid">The ID of the eligibility check</param>
         /// <returns>Eligibility check item details</returns>
-        Task<UseExecutionResult<CheckEligibilityItemResponse>> Execute(string guid);
+        Task<CheckEligibilityItemResponse> Execute(string guid);
     }
 
     public class GetEligibilityCheckItemUseCase : IGetEligibilityCheckItemUseCase
@@ -33,33 +33,29 @@ namespace CheckYourEligibility.WebApp.UseCases
             IAudit auditService,
             ILogger<GetEligibilityCheckItemUseCase> logger)
         {
-            _checkService = Guard.Against.Null(checkService);
-            _auditService = Guard.Against.Null(auditService);
-            _logger = Guard.Against.Null(logger);
+            _checkService = checkService;
+            _auditService = auditService;
+            _logger = logger;
         }
 
-        public async Task<UseExecutionResult<CheckEligibilityItemResponse>> Execute(string guid)
+        public async Task<CheckEligibilityItemResponse> Execute(string guid)
         {
-            var useCaseExecutionResult = new UseExecutionResult<CheckEligibilityItemResponse>();
-
             if (string.IsNullOrEmpty(guid))
             {
-                useCaseExecutionResult.SetFailure("Invalid Request, check ID is required.");
-                return useCaseExecutionResult;
+                throw new ValidationException(null, "Invalid Request, check ID is required.");
             }
 
             var response = await _checkService.GetItem<CheckEligibilityItem>(guid);
             if (response == null)
             {
                 _logger.LogWarning($"Eligibility check with ID {guid.Replace(Environment.NewLine, "").Replace("\n", "").Replace("\r", "")} not found");
-                useCaseExecutionResult.SetNotFound(guid);
-                return useCaseExecutionResult;
+                throw new NotFoundException(guid);
             }
             await _auditService.CreateAuditEntry(AuditType.Check, guid);
             
             _logger.LogInformation($"Retrieved eligibility check details for ID: {guid.Replace(Environment.NewLine, "").Replace("\n", "").Replace("\r", "")}");
-            
-            useCaseExecutionResult.SetSuccess(new CheckEligibilityItemResponse()
+
+            return new CheckEligibilityItemResponse()
             {
                 Data = response,
                 Links = new CheckEligibilityResponseLinks
@@ -68,9 +64,7 @@ namespace CheckYourEligibility.WebApp.UseCases
                     Put_EligibilityCheckProcess = $"{CheckLinks.ProcessLink}{guid}",
                     Get_EligibilityCheckStatus = $"{CheckLinks.GetLink}{guid}/Status"
                 }
-            });
-            
-            return useCaseExecutionResult;
+            };
         }
     }
 }

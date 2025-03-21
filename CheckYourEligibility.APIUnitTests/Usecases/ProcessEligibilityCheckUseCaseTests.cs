@@ -89,12 +89,10 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
         public async Task Execute_returns_failure_when_guid_is_null_or_empty(string guid)
         {
             // Act
-            var result = await _sut.Execute(guid);
+            Func<Task> act = async () => await _sut.Execute(guid);
 
             // Assert
-            result.IsValid.Should().BeFalse();
-            result.ValidationErrors.Should().Be("Invalid Request, check ID is required.");
-            result.Response.Should().BeNull();
+            act.Should().ThrowAsync<ValidationException>().WithMessage("Invalid Request, check ID is required.");
         }
 
         [Test]
@@ -110,13 +108,10 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
                 .ReturnsAsync((CheckEligibilityStatus?)null);
 
             // Act
-            var result = await _sut.Execute(guid);
+            Func<Task> act = async () => await _sut.Execute(guid);
 
             // Assert
-            result.IsValid.Should().BeFalse();
-            result.IsNotFound.Should().BeTrue();
-            result.ValidationErrors.Should().Be($"Bulk upload with ID {guid} not found");
-            result.Response.Should().BeNull();
+            act.Should().ThrowAsync<ValidationException>().WithMessage($"Bulk upload with ID {guid} not found");
         }
 
         [Test]
@@ -135,13 +130,10 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             _mockAuditService.Setup(a => a.CreateAuditEntry(AuditType.Check, guid)).ReturnsAsync(_fixture.Create<string>());
 
             // Act
-            var result = await _sut.Execute(guid);
+            Func<Task> act = async () => await _sut.Execute(guid);
 
             // Assert
-            result.IsValid.Should().BeFalse();
-            result.IsServiceUnavailable.Should().BeTrue();
-            result.Response.Should().BeNull();
-            result.ValidationErrors.Should().Be("Service is unavailable");
+            act.Should().ThrowAsync<ValidationException>().WithMessage("Service is unavailable");
         }
 
         [Test]
@@ -162,10 +154,7 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             var result = await _sut.Execute(guid);
 
             // Assert
-            result.IsValid.Should().BeTrue();
-            result.IsServiceUnavailable.Should().BeFalse();
-            result.Response.Should().NotBeNull();
-            result.Response.Data.Status.Should().Be(CheckEligibilityStatus.eligible.ToString());
+            result.Data.Status.Should().Be(CheckEligibilityStatus.eligible.ToString());
         }
 
         [Test]
@@ -202,12 +191,10 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
                 .ThrowsAsync(new ProcessCheckException("Test exception"));
 
             // Act
-            var result = await _sut.Execute(guid);
+            Func<Task> act = async () => await _sut.Execute(guid);
 
             // Assert
-            result.IsValid.Should().BeFalse();
-            result.ValidationErrors.Should().Be("Failed to process eligibility check.");
-            result.Response.Should().BeNull();
+            act.Should().ThrowAsync<ValidationException>().WithMessage("Failed to process eligibility check.");
         }
     }
 }

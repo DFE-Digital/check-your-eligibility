@@ -1,6 +1,7 @@
 using AutoFixture;
 using CheckYourEligibility.Domain;
 using CheckYourEligibility.Domain.Enums;
+using CheckYourEligibility.Domain.Exceptions;
 using CheckYourEligibility.Domain.Requests;
 using CheckYourEligibility.Domain.Responses;
 using CheckYourEligibility.Services.Interfaces;
@@ -8,6 +9,7 @@ using CheckYourEligibility.WebApp.UseCases;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
+using NotFoundException = Ardalis.GuardClauses.NotFoundException;
 
 namespace CheckYourEligibility.APIUnitTests.UseCases
 {
@@ -91,12 +93,10 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             var request = _fixture.Create<EligibilityStatusUpdateRequest>();
 
             // Act
-            var result = await _sut.Execute(guid, request);
+            Func<Task> act = async () => await _sut.Execute(guid, request);
 
             // Assert
-            result.IsValid.Should().BeFalse();
-            result.ValidationErrors.Should().Be("Invalid Request, check ID is required.");
-            result.Response.Should().BeNull();
+            act.Should().ThrowAsync<ValidationException>().WithMessage("Invalid Request, check ID is required.");
         }
 
         [Test]
@@ -106,12 +106,10 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             var guid = _fixture.Create<string>();
 
             // Act
-            var result = await _sut.Execute(guid, null);
+            Func<Task> act = async () => await _sut.Execute(guid, null);
 
             // Assert
-            result.IsValid.Should().BeFalse();
-            result.ValidationErrors.Should().Be("Invalid Request, update data is required.");
-            result.Response.Should().BeNull();
+            act.Should().ThrowAsync<ValidationException>().WithMessage("Invalid Request, update data is required.");
         }
 
         [Test]
@@ -122,12 +120,10 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             var request = new EligibilityStatusUpdateRequest { Data = null };
 
             // Act
-            var result = await _sut.Execute(guid, request);
+            Func<Task> act = async () => await _sut.Execute(guid, request);
 
             // Assert
-            result.IsValid.Should().BeFalse();
-            result.ValidationErrors.Should().Be("Invalid Request, update data is required.");
-            result.Response.Should().BeNull();
+            act.Should().ThrowAsync<ValidationException>().WithMessage("Invalid Request, update data is required.");
         }
 
         [Test]
@@ -142,13 +138,10 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
                 .ReturnsAsync((CheckEligibilityStatusResponse)null);
 
             // Act
-            var result = await _sut.Execute(guid, request);
+            Func<Task> act = async () => await _sut.Execute(guid, request);
 
             // Assert
-            result.IsValid.Should().BeFalse();
-            result.IsNotFound.Should().BeTrue();
-            result.ValidationErrors.Should().Be($"Bulk upload with ID {guid} not found");
-            result.Response.Should().BeNull();
+            act.Should().ThrowAsync<NotFoundException>().WithMessage($"Bulk upload with ID {guid} not found");
         }
 
         [Test]
@@ -170,10 +163,7 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             var result = await _sut.Execute(guid, request);
 
             // Assert
-            result.IsValid.Should().BeTrue();
-            result.IsNotFound.Should().BeFalse();
-            result.Response.Should().NotBeNull();
-            result.Response.Data.Should().Be(responseData.Data);
+            result.Data.Should().Be(responseData.Data);
         }
 
         [Test]

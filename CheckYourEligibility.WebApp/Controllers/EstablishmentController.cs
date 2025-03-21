@@ -43,14 +43,7 @@ namespace CheckYourEligibility.WebApp.Controllers
 
             var results = await _searchUseCase.Execute(query);
 
-            if (!results.Any())
-            {
-                return new ObjectResult(new EstablishmentSearchResponse { Data = results }) { StatusCode = StatusCodes.Status404NotFound };
-            }
-            else
-            {
-                return new ObjectResult(new EstablishmentSearchResponse { Data = results }) { StatusCode = StatusCodes.Status200OK };
-            }
+            return new ObjectResult(new EstablishmentSearchResponse { Data = results }) { StatusCode = StatusCodes.Status200OK };
         }
     }
 }

@@ -10,6 +10,7 @@ using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
 using System.Collections.Generic;
+using FluentValidation;
 
 namespace CheckYourEligibility.APIUnitTests.UseCases
 {
@@ -93,11 +94,10 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             CheckEligibilityRequestBulk_Fsm model = null;
 
             // Act
-            var result = await _sut.Execute(model, _recordCountLimit);
+            Func<Task> act = async () => _sut.Execute(model, _recordCountLimit);
 
             // Assert
-            result.IsValid.Should().BeFalse();
-            result.ValidationErrors.Should().Be("Invalid Request, data is required.");
+            act.Should().ThrowAsync<ValidationException>().WithMessage("Invalid Request, data is required.");
         }
 
         [Test]
@@ -107,11 +107,10 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             var model = new CheckEligibilityRequestBulk_Fsm { Data = null };
 
             // Act
-            var result = await _sut.Execute(model, _recordCountLimit);
+            Func<Task> act = async () => await _sut.Execute(model, _recordCountLimit);
 
             // Assert
-            result.IsValid.Should().BeFalse();
-            result.ValidationErrors.Should().Be("Invalid Request, data is required.");
+            act.Should().ThrowAsync<ValidationException>().WithMessage("Invalid Request, data is required.");
         }
 
         [Test]
@@ -123,11 +122,10 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             var model = new CheckEligibilityRequestBulk_Fsm { Data = data };
 
             // Act
-            var result = await _sut.Execute(model, limit);
+            Func<Task> act = async () => await _sut.Execute(model, limit);
 
             // Assert
-            result.IsValid.Should().BeFalse();
-            result.ValidationErrors.Should().Be($"Invalid Request, data limit of {limit} exceeded, {data.Count} records.");
+            act.Should().ThrowAsync<ValidationException>().WithMessage($"Invalid Request, data limit of {limit} exceeded, {data.Count} records.");
         }
 
         [Test]
@@ -145,11 +143,10 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             var model = new CheckEligibilityRequestBulk_Fsm { Data = data };
 
             // Act
-            var result = await _sut.Execute(model, _recordCountLimit);
+            Func<Task> act = async () => await _sut.Execute(model, _recordCountLimit);
 
             // Assert
-            result.IsValid.Should().BeFalse();
-            result.ValidationErrors.Should().NotBeNullOrEmpty();
+            act.Should().ThrowAsync<ValidationException>();
         }
 
         [Test]
@@ -177,12 +174,10 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             var result = await _sut.Execute(model, _recordCountLimit);
 
             // Assert
-            result.IsValid.Should().BeTrue();
-            result.Response.Should().NotBeNull();
-            result.Response.Data.Status.Should().Be(Messages.Processing);
-            result.Response.Links.Should().NotBeNull();
-            result.Response.Links.Get_Progress_Check.Should().Contain(CheckLinks.BulkCheckProgress);
-            result.Response.Links.Get_BulkCheck_Results.Should().Contain(CheckLinks.BulkCheckResults);
+            result.Data.Status.Should().Be(Messages.Processing);
+            result.Links.Should().NotBeNull();
+            result.Links.Get_Progress_Check.Should().Contain(CheckLinks.BulkCheckProgress);
+            result.Links.Get_BulkCheck_Results.Should().Contain(CheckLinks.BulkCheckResults);
 
             _mockCheckService.Verify(s => s.PostCheck(It.IsAny<IEnumerable<CheckEligibilityRequestData_Fsm>>(), It.IsAny<string>()), Times.Once);
             _mockAuditService.Verify(a => a.CreateAuditEntry(AuditType.BulkCheck, It.IsAny<string>()), Times.Once);
@@ -237,11 +232,10 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             var model = new DerivedCheckEligibilityRequestBulk { Data = data };
 
             // Act
-            var result = await _sut.Execute(model, _recordCountLimit);
+            Func<Task> act = async () => await _sut.Execute(model, _recordCountLimit);
 
             // Assert
-            result.IsValid.Should().BeFalse();
-            result.ValidationErrors.Should().Contain($"Unknown request type:-{model.GetType()}");
+            act.Should().ThrowAsync<ValidationException>().WithMessage($"Unknown request type:-{model.GetType()}");
 
             // Verify no services were called
             _mockCheckService.Verify(s => s.PostCheck(It.IsAny<IEnumerable<CheckEligibilityRequestData_Fsm>>(), It.IsAny<string>()), Times.Never);
