@@ -31,7 +31,7 @@ namespace CheckYourEligibility.WebApp.Controllers
         {
             try
             {
-                var response = await _authenticateUserUseCase.AuthenticateUser(credentials);
+                var response = await _authenticateUserUseCase.Execute(credentials);
 
                 _logger.LogInformation($"{credentials.client_id?.Replace(Environment.NewLine, "")} authenticated");
                 return Ok(response);

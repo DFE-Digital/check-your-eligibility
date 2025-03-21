@@ -9,6 +9,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
+using CheckYourEligibility.Domain.Enums;
 
 namespace CheckYourEligibility.WebApp.UseCases
 {
@@ -23,7 +24,7 @@ namespace CheckYourEligibility.WebApp.UseCases
         /// <param name="credentials">Client credentials</param>
         /// <param name="configuration">Application configuration</param>
         /// <returns>JWT auth response with token</returns>
-        Task<JwtAuthResponse> AuthenticateUser(SystemUser credentials);
+        Task<JwtAuthResponse> Execute(SystemUser credentials);
     }
 
     /// <summary>
@@ -54,81 +55,49 @@ namespace CheckYourEligibility.WebApp.UseCases
         /// <param name="configuration">Application configuration</param>
         /// <returns>JWT auth response with token</returns>
         /// <exception cref="AuthenticationException">Thrown when authentication fails</exception>
-        public async Task<JwtAuthResponse> AuthenticateUser(SystemUser credentials)
+        public async Task<JwtAuthResponse> Execute(SystemUser credentials)
         {
-            if (!credentials.IsValidGrantType())
+            if (credentials.grant_type != null && credentials.grant_type != "client_credentials")
             {
-                _logger.LogWarning(credentials.GetInvalidGrantTypeMessage().Replace(Environment.NewLine, ""));
+                _logger.LogWarning($"Unsupported grant_type: {credentials.grant_type}".Replace(Environment.NewLine, ""));
             }
 
-            var key = _jwtSettings.Key;
-            if (string.IsNullOrEmpty(key))
+            if (credentials.client_id.IsNullOrEmpty())
             {
-                _logger.LogError("Jwt:Key is required");
-                throw new ServerErrorException("The authorization server is misconfigured. Key is required.");
-            }
-
-            var issuer = _jwtSettings.Issuer;
-            if (string.IsNullOrEmpty(issuer))
-            {
-                _logger.LogError("Jwt:Issuer is required");
-                throw new ServerErrorException("The authorization server is misconfigured. Issuer is required.");
-            }
-
-            credentials.InitializeCredentials();
-
-            if (!credentials.IsValid())
-            {
-                _logger.LogError("Either client_id/client_secret pair or Username/Password pair must be provided");
-                throw new InvalidRequestException("Either client_id/client_secret pair or Username/Password pair must be provided");
-            }
-
-            if (!IsValidIdentifier(credentials.Identifier))
-            {
-                _logger.LogError($"Invalid client or user identifier: {credentials.Identifier.Replace(Environment.NewLine, "")}");
-                throw new InvalidClientException("Invalid client or user identifier");
+                _logger.LogError($"Invalid client identifier: {credentials.client_id.Replace(Environment.NewLine, "")}");
+                throw new InvalidClientException("Invalid client identifier");
             }
 
             // Get client secret from configuration
             string? secret = null;
-            if (_jwtSettings.Clients.TryGetValue(credentials.Identifier, out ClientSettings? value))
+            if (_jwtSettings.Clients.TryGetValue(credentials.client_id, out ClientSettings? value))
             {
                 secret = value?.Secret;
             }
             if (secret == null)
             {
-                // Try legacy user config path for backward compatibility
-                secret = _jwtSettings.Users[credentials.Identifier];
-                if (secret == null)
-                {
-                    _logger.LogError($"Authentication secret not found for identifier: {credentials.Identifier.Replace(Environment.NewLine, "")}");
-                    throw new InvalidClientException("The client authentication failed");
-                }
+                _logger.LogError($"Authentication secret not found for identifier: {credentials.client_id.Replace(Environment.NewLine, "")}");
+                throw new InvalidClientException("The client authentication failed");
             }
 
             var jwtConfig = new JwtConfig
             {
-                Key = key,
-                Issuer = issuer,
+                Key = _jwtSettings.Key,
+                Issuer = _jwtSettings.Issuer,
                 ExpectedSecret = secret
             };
 
             // Get and validate allowed scopes
             if (!string.IsNullOrEmpty(credentials.client_id) && !string.IsNullOrEmpty(credentials.scope))
             {
-                jwtConfig.AllowedScopes = _jwtSettings.Clients[credentials.Identifier]?.Scope;
+                jwtConfig.AllowedScopes = _jwtSettings.Clients[credentials.client_id]?.Scope;
                 if (string.IsNullOrEmpty(jwtConfig.AllowedScopes))
                 {
-                    _logger.LogError($"Allowed scopes not found for client: {credentials.Identifier.Replace(Environment.NewLine, "")}");
+                    _logger.LogError($"Allowed scopes not found for client: {credentials.client_id.Replace(Environment.NewLine, "")}");
                     throw new InvalidScopeException("Client is not authorized for any scopes");
                 }
             }
             return await ExecuteAuthentication(credentials, jwtConfig);
-        }
-
-        private bool IsValidIdentifier(string identifier)
-        {
-            return _jwtSettings.Clients.ContainsKey(identifier) || _jwtSettings.Users.ContainsKey(identifier);
         }
 
         /// <summary>
@@ -136,7 +105,10 @@ namespace CheckYourEligibility.WebApp.UseCases
         /// </summary>
         private async Task<JwtAuthResponse> ExecuteAuthentication(SystemUser credentials, JwtConfig jwtConfig)
         {
-            if (!ValidateSecret(credentials.Secret, jwtConfig.ExpectedSecret))
+            var auditType = string.IsNullOrEmpty(credentials.client_id) ? Domain.Enums.AuditType.User : Domain.Enums.AuditType.Client;
+            await _auditService.CreateAuditEntry(AuditType.Client, credentials.client_id);
+            
+            if (!ValidateSecret(credentials.client_secret, jwtConfig.ExpectedSecret))
             {
                 throw new InvalidClientException("Invalid client credentials");
             }
@@ -146,16 +118,13 @@ namespace CheckYourEligibility.WebApp.UseCases
                 throw new InvalidScopeException("The requested scope is invalid, unknown, or exceeds the scope granted by the resource owner");
             }
 
-            var tokenString = GenerateJSONWebToken(credentials.Identifier, credentials.scope, jwtConfig, out var expires);
+            var tokenString = GenerateJSONWebToken(credentials.client_id, credentials.scope, jwtConfig, out var expires);
             var expiresInSeconds = (int)(expires - DateTime.UtcNow).TotalSeconds;
 
             if (string.IsNullOrEmpty(tokenString))
             {
                 throw new ServerErrorException("The authorization server encountered an unexpected error");
             }
-
-            var auditType = string.IsNullOrEmpty(credentials.client_id) ? Domain.Enums.AuditType.User : Domain.Enums.AuditType.Client;
-            await _auditService.CreateAuditEntry(auditType, credentials.Identifier);
 
 
             return new JwtAuthResponse { Token = tokenString, expires_in = expiresInSeconds, access_token = tokenString, token_type = "Bearer" };

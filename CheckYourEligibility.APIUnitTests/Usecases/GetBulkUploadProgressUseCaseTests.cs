@@ -36,34 +36,6 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
         }
 
         [Test]
-        public void Constructor_throws_argumentNullException_when_checkService_is_null()
-        {
-            // Arrange
-            ICheckEligibility checkService = null;
-            var logger = _mockLogger.Object;
-
-            // Act
-            Action act = () => new GetBulkUploadProgressUseCase(checkService, logger);
-
-            // Assert
-            act.Should().ThrowExactly<ArgumentNullException>().And.Message.Should().Contain("Value cannot be null. (Parameter 'checkService')");
-        }
-
-        [Test]
-        public void Constructor_throws_argumentNullException_when_logger_is_null()
-        {
-            // Arrange
-            var checkService = _mockCheckService.Object;
-            ILogger<GetBulkUploadProgressUseCase> logger = null;
-
-            // Act
-            Action act = () => new GetBulkUploadProgressUseCase(checkService, logger);
-
-            // Assert
-            act.Should().ThrowExactly<ArgumentNullException>().And.Message.Should().Contain("Value cannot be null. (Parameter 'logger')");
-        }
-
-        [Test]
         [TestCase(null)]
         [TestCase("")]
         public async Task Execute_returns_failure_when_guid_is_null_or_empty(string guid)

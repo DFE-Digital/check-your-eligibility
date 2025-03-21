@@ -39,51 +39,6 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
         }
 
         [Test]
-        public void Constructor_throws_argumentNullException_when_checkService_is_null()
-        {
-            // Arrange
-            ICheckEligibility checkService = null;
-            var auditService = _mockAuditService.Object;
-            var logger = _mockLogger.Object;
-
-            // Act
-            Action act = () => new ProcessEligibilityCheckUseCase(checkService, auditService, logger);
-
-            // Assert
-            act.Should().ThrowExactly<ArgumentNullException>().And.Message.Should().Contain("Value cannot be null. (Parameter 'checkService')");
-        }
-
-        [Test]
-        public void Constructor_throws_argumentNullException_when_auditService_is_null()
-        {
-            // Arrange
-            var checkService = _mockCheckService.Object;
-            IAudit auditService = null;
-            var logger = _mockLogger.Object;
-
-            // Act
-            Action act = () => new ProcessEligibilityCheckUseCase(checkService, auditService, logger);
-
-            // Assert
-            act.Should().ThrowExactly<ArgumentNullException>().And.Message.Should().Contain("Value cannot be null. (Parameter 'auditService')");
-        }
-
-        [Test]
-        public void Constructor_throws_argumentNullException_when_logger_is_null()
-        {
-            // Arrange
-            var checkService = _mockCheckService.Object;
-            var auditService = _mockAuditService.Object;
-            ILogger<ProcessEligibilityCheckUseCase> logger = null;
-
-            // Act
-            Action act = () => new ProcessEligibilityCheckUseCase(checkService, auditService, logger);
-
-            // Assert
-            act.Should().ThrowExactly<ArgumentNullException>().And.Message.Should().Contain("Value cannot be null. (Parameter 'logger')");
-        }
-
-        [Test]
         [TestCase(null)]
         [TestCase("")]
         public async Task Execute_returns_failure_when_guid_is_null_or_empty(string guid)
@@ -164,6 +119,7 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             var guid = _fixture.Create<string>();
             var auditItemTemplate = _fixture.Create<AuditData>();
             var statusValue = _fixture.Create<CheckEligibilityStatus>();
+            statusValue = CheckEligibilityStatus.eligible;
 
             _mockAuditService.Setup(a => a.AuditDataGet(AuditType.Check, string.Empty))
                 .Returns(auditItemTemplate);

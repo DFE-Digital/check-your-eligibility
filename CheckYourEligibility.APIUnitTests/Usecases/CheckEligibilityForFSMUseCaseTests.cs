@@ -219,7 +219,7 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             result.Links.Should().NotBeNull();
             result.Links.Get_EligibilityCheck.Should().Be($"{CheckLinks.GetLink}{checkId}");
             result.Links.Put_EligibilityCheckProcess.Should().Be($"{CheckLinks.ProcessLink}{checkId}");
-            result.Links.Get_EligibilityCheckStatus.Should().Be($"{CheckLinks.GetLink}{checkId}/Status");
+            result.Links.Get_EligibilityCheckStatus.Should().Be($"{CheckLinks.GetLink}{checkId}/status");
         }
 
         [Test]

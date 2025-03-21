@@ -8,12 +8,5 @@
 
         public string client_id { get; set; }
         public string client_secret { get; set; }
-
-        // Legacy properties for backward compatibility
-
-        public SystemUser()
-        {
-            // Default constructor for deserialization
-        }
     }
 }
