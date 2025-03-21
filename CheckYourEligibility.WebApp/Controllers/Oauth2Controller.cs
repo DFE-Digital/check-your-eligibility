@@ -33,12 +33,12 @@ namespace CheckYourEligibility.WebApp.Controllers
             {
                 var response = await _authenticateUserUseCase.AuthenticateUser(credentials);
 
-                _logger.LogInformation($"{credentials.Identifier?.Replace(Environment.NewLine, "")} authenticated");
+                _logger.LogInformation($"{credentials.client_id?.Replace(Environment.NewLine, "")} authenticated");
                 return Ok(response);
             }
             catch (AuthenticationException ex)
             {
-                _logger.LogWarning($"{credentials.Identifier?.Replace(Environment.NewLine, "")} authentication failed: {ex.ErrorCode}");
+                _logger.LogWarning($"{credentials.client_id?.Replace(Environment.NewLine, "")} authentication failed: {ex.ErrorCode}");
                 return Unauthorized(new ErrorResponse
                 {
                     Errors = [new Error()
@@ -50,7 +50,7 @@ namespace CheckYourEligibility.WebApp.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Unexpected error authenticating {credentials.Identifier?.Replace(Environment.NewLine, "")}");
+                _logger.LogError(ex, $"Unexpected error authenticating {credentials.client_id?.Replace(Environment.NewLine, "")}");
                 return Unauthorized(new ErrorResponse
                 {
                     Errors = [new Error()
