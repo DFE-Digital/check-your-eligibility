@@ -91,7 +91,6 @@ namespace CheckYourEligibility.WebApp.Controllers
         [ProducesResponseType(typeof(CheckEligibilityResponse), (int)HttpStatusCode.Accepted)]
         [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.BadRequest)]
         [Consumes("application/json", "application/vnd.api+json;version=1.0")]
-        [HttpPost("FreeSchoolMeals")]
         [HttpPost("/check/free-school-meals")]
         [Authorize(Policy = PolicyNames.RequireCheckScope)]
         public async Task<ActionResult> CheckEligibility([FromBody] CheckEligibilityRequest_Fsm model)
