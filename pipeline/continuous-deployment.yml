@@ -33,7 +33,7 @@ stages:
         inputs:
           script: |
             dotnet tool install --global dotnet-ef --version 8.0.4
-            dotnet ef migrations bundle --verbose --self-contained -r win-x86 --project CheckYourEligibility.WebApp/CheckYourEligibility.WebApp.csproj
+            dotnet ef migrations bundle --verbose --self-contained -r win-x86 --project CheckYourEligibility.API/CheckYourEligibility.API.csproj
             mv efbundle.exe $(Build.ArtifactStagingDirectory)
 
       - task: VSBuild@1
@@ -47,7 +47,7 @@ stages:
         inputs:
           platform: '$(buildPlatform)'
           configuration: '$(buildConfiguration)'
-          runSettingsFile: 'CheckYourEligibility.TestBase/.runsettings'
+          runSettingsFile: 'CheckYourEligibility.API.Tests/.runsettings'
           resultsFolder: '$(build.ArtifactStagingDirectory)/Test/Results'
           otherConsoleOptions: '/collect:"Code Coverage;Format=Cobertura"'  # <<<< this is the important bit
           codeCoverageEnabled: True
@@ -109,7 +109,7 @@ stages:
                 azureSubscription: 's203d.azdo.deployment'
                 appType: 'webApp'
                 WebAppName: 'ece-dev-as'
-                packageForLinux: '$(Pipeline.Workspace)/checkYourEligibilityAPI/CheckYourEligibility.WebApp.zip'
+                packageForLinux: '$(Pipeline.Workspace)/checkYourEligibilityAPI/CheckYourEligibility.API.zip'
 
   - stage: RunCypressTestsDev
     displayName: Run Cypress Tests Dev
@@ -196,7 +196,7 @@ stages:
                 azureSubscription: 's203t.azdo.deployment'
                 appType: 'webApp'
                 WebAppName: 'ece-test-as'
-                packageForLinux: '$(Pipeline.Workspace)/checkYourEligibilityAPI/CheckYourEligibility.WebApp.zip'
+                packageForLinux: '$(Pipeline.Workspace)/checkYourEligibilityAPI/CheckYourEligibility.API.zip'
               
   - stage: RunCypressTestsTest
     displayName: Run Cypress Tests Test
@@ -283,7 +283,7 @@ stages:
                 azureSubscription: 's203t.azdo.deployment'
                 appType: 'webApp'
                 WebAppName: 'ece-pp-as'
-                packageForLinux: '$(Pipeline.Workspace)/checkYourEligibilityAPI/CheckYourEligibility.WebApp.zip'
+                packageForLinux: '$(Pipeline.Workspace)/checkYourEligibilityAPI/CheckYourEligibility.API.zip'
                 
   - stage: RunCypressTestsPp
     displayName: Run Cypress Tests Pre-Prod
@@ -370,4 +370,4 @@ stages:
                 azureSubscription: 's203p.azdo.deployment'
                 appType: 'webApp'
                 WebAppName: 'ece-as'
-                packageForLinux: '$(Pipeline.Workspace)/checkYourEligibilityAPI/CheckYourEligibility.WebApp.zip'
+                packageForLinux: '$(Pipeline.Workspace)/checkYourEligibilityAPI/CheckYourEligibility.API.zip'

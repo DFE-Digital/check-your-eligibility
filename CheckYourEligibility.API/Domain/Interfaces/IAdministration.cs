@@ -1,0 +1,16 @@
+﻿// Ignore Spelling: Fsm
+
+using CheckYourEligibility.API.Domain;
+using CheckYourEligibility.API.Gateways.CsvImport;
+using Microsoft.AspNetCore.Http;
+
+namespace CheckYourEligibility.API.Gateways.Interfaces
+{
+    public interface IAdministration
+    {
+        Task CleanUpEligibilityChecks();
+        Task ImportEstablishments(IEnumerable<EstablishmentRow> data);
+        Task ImportHMRCData(IEnumerable<FreeSchoolMealsHMRC> data);
+        Task ImportHomeOfficeData(IEnumerable<FreeSchoolMealsHO> data);
+    }
+}

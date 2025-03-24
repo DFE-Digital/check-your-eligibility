@@ -1,0 +1,41 @@
+using CheckYourEligibility.API.Domain.Enums;
+using CheckYourEligibility.API.Boundary.Requests;
+using CheckYourEligibility.API.Boundary.Responses;
+using CheckYourEligibility.API.Gateways.Interfaces;
+using System.Threading.Tasks;
+
+namespace CheckYourEligibility.API.UseCases
+{
+    /// <summary>
+    /// Interface for creating or updating a user.
+    /// </summary>
+    public interface ICreateOrUpdateUserUseCase
+    {
+        /// <summary>
+        /// Execute the use case.
+        /// </summary>
+        /// <param name="model"></param>
+        /// <returns></returns>
+        Task<UserSaveItemResponse> Execute(UserCreateRequest model);
+    }
+    public class CreateOrUpdateUserUseCase : ICreateOrUpdateUserUseCase
+    {
+        private readonly IUsers _userGateway;
+        private readonly IAudit _auditGateway;
+
+        public CreateOrUpdateUserUseCase(IUsers userGateway, IAudit auditGateway)
+        {
+            _userGateway = userGateway;
+            _auditGateway = auditGateway;
+        }
+
+        public async Task<UserSaveItemResponse> Execute(UserCreateRequest model)
+        {
+            var response = await _userGateway.Create(model.Data);
+            
+            await _auditGateway.CreateAuditEntry(AuditType.User, response);
+            
+            return new UserSaveItemResponse { Data = response };
+        }
+    }
+}

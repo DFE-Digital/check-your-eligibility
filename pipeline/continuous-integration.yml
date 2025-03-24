@@ -37,7 +37,7 @@ stages:
         inputs:
           platform: '$(buildPlatform)'
           configuration: '$(buildConfiguration)'
-          runSettingsFile: 'CheckYourEligibility.TestBase/.runsettings'
+          runSettingsFile: 'CheckYourEligibility.API.Tests/.runsettings'
           resultsFolder: '$(build.ArtifactStagingDirectory)/Test/Results'
           otherConsoleOptions: '/collect:"Code Coverage;Format=Cobertura"'  # <<<< this is the important bit
           codeCoverageEnabled: True
@@ -90,7 +90,7 @@ stages:
                   azureSubscription: 's203d.azdo.deployment'
                   appType: 'webApp'
                   WebAppName: 'ece-dev-as-cypress'
-                  packageForLinux: '$(Pipeline.Workspace)/checkYourEligibilityAPI/CheckYourEligibility.WebApp.zip'
+                  packageForLinux: '$(Pipeline.Workspace)/checkYourEligibilityAPI/CheckYourEligibility.API.zip'
               - task: Bash@3
                 inputs:
                   targetType: inline
