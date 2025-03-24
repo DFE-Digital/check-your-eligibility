@@ -27,7 +27,7 @@ using System.Globalization;
 using CheckYourEligibility.API.Data.Mappings;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
-namespace CheckYourEligibility.ServiceUnitTests
+namespace CheckYourEligibility.API.Tests
 {
 
 
@@ -443,6 +443,7 @@ namespace CheckYourEligibility.ServiceUnitTests
         {
             // Arrange
             var item = _fixture.Create<EligibilityCheck>();
+            item.Status = CheckEligibilityStatus.queuedForProcessing;
             var fsm = _fixture.Create<CheckEligibilityRequestData_Fsm>();
             fsm.DateOfBirth = "1990-01-01";
             var dataItem = GetCheckProcessData(fsm);
@@ -452,7 +453,7 @@ namespace CheckYourEligibility.ServiceUnitTests
             _fakeInMemoryDb.CheckEligibilities.Add(item);
             _fakeInMemoryDb.SaveChangesAsync();
             _moqDwpGateway.Setup(x => x.UseEcsforChecks).Returns(true);
-            var ecsSoapCheckResponse = new SoapFsmCheckRespone { Status="1",ErrorCode ="0", Qualifier =""};
+            var ecsSoapCheckResponse = new SoapFsmCheckRespone { Status = "1", ErrorCode = "0", Qualifier = "" };
             _moqDwpGateway.Setup(x => x.EcsFsmCheck(It.IsAny<CheckProcessData>())).ReturnsAsync(ecsSoapCheckResponse);
             var result = new StatusCodeResult(StatusCodes.Status200OK);
             //_moqDwpGateway.Setup(x => x.GetCitizenClaims(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(result);

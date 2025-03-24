@@ -17,7 +17,7 @@ using System.Reflection;
 using System.Resources;
 using CheckYourEligibility.API.Data.Mappings;
 
-namespace CheckYourEligibility.ServiceUnitTests
+namespace CheckYourEligibility.API.Tests
 {
 
     [ExcludeFromCodeCoverage]

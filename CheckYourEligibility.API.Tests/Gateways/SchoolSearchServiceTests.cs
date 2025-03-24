@@ -7,7 +7,7 @@ using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 
-namespace CheckYourEligibility.ServiceUnitTests
+namespace CheckYourEligibility.API.Tests
 {
 
 

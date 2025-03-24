@@ -22,7 +22,7 @@ using static Microsoft.ApplicationInsights.MetricDimensionNames.TelemetryContext
 using static System.Runtime.InteropServices.JavaScript.JSType;
 using Establishment = CheckYourEligibility.API.Domain.Establishment;
 
-namespace CheckYourEligibility.ServiceUnitTests
+namespace CheckYourEligibility.API.Tests
 {
 
     [ExcludeFromCodeCoverage(Justification = "test")]

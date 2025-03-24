@@ -17,7 +17,7 @@ using System.Globalization;
 using CheckYourEligibility.API.Data.Mappings;
 using String = System.String;
 
-namespace CheckYourEligibility.ServiceUnitTests
+namespace CheckYourEligibility.API.Tests
 {
 
 

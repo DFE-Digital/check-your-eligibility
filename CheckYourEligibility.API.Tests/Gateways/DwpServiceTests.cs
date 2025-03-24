@@ -23,7 +23,7 @@ using String = System.String;
 using CheckYourEligibility.API.Tests.Properties;
 using Resources = CheckYourEligibility.API.Tests.Properties.Resources;
 
-namespace CheckYourEligibility.ServiceUnitTests
+namespace CheckYourEligibility.API.Tests
 {
 
 

@@ -13,7 +13,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using String = System.String;
 
-namespace CheckYourEligibility.ServiceUnitTests
+namespace CheckYourEligibility.API.Tests
 {
 
 
