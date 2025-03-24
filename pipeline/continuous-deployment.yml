@@ -47,7 +47,7 @@ stages:
         inputs:
           platform: '$(buildPlatform)'
           configuration: '$(buildConfiguration)'
-          runSettingsFile: 'CheckYourEligibility.TestBase/.runsettings'
+          runSettingsFile: 'CheckYourEligibility.API.Tests/.runsettings'
           resultsFolder: '$(build.ArtifactStagingDirectory)/Test/Results'
           otherConsoleOptions: '/collect:"Code Coverage;Format=Cobertura"'  # <<<< this is the important bit
           codeCoverageEnabled: True
