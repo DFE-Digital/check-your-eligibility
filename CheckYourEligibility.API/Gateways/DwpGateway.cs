@@ -300,19 +300,19 @@ namespace CheckYourEligibility.API.Gateways
                     {
                         _logger.LogInformation($"DWP Duplicate matches found");
                         TrackMetric($"DWP Duplicate Matches Found", 1);
-                        return CheckEligibilityStatus.DwpError.ToString();
+                        return CheckEligibilityStatus.Error.ToString();
                     }
                     else
                     {
                         _logger.LogInformation($"Get Citizen failed. uri:-{_httpClient.BaseAddress}{uri} Response:- {response.StatusCode}");
-                        return CheckEligibilityStatus.DwpError.ToString();
+                        return CheckEligibilityStatus.Error.ToString();
                     }
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex,$"Get Citizen failed. uri:-{_httpClient.BaseAddress}{uri}");
-                return CheckEligibilityStatus.DwpError.ToString();
+                return CheckEligibilityStatus.Error.ToString();
             }
             
         }

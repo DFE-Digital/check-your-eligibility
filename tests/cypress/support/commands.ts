@@ -137,7 +137,7 @@ Cypress.Commands.add('verifyGetEligibilityCheckStatusResponse', (response) => {
 
   expect(response.body).to.have.property('data');
   const responseData = response.body.data;
-  expect(responseData.status).to.be.oneOf(['DwpError', 'eligible', 'parentNotFound', 'queuedForProcessing']);
+  expect(responseData.status).to.be.oneOf(['Error', 'eligible', 'parentNotFound', 'queuedForProcessing']);
 })
 
 

@@ -314,7 +314,7 @@ namespace CheckYourEligibility.API.Gateways
             result.Status = checkResult;
             result.Updated = DateTime.UtcNow;
 
-            if (checkResult == CheckEligibilityStatus.DwpError)
+            if (checkResult == CheckEligibilityStatus.Error)
             {
                 // Revert status back and do not save changes
                 result.Status = CheckEligibilityStatus.queuedForProcessing;
@@ -421,14 +421,14 @@ namespace CheckYourEligibility.API.Gateways
                 }
                 else
                 {
-                    _logger.LogError($"DwpError unknown Response status code:-{result.Status}, error code:-{result.ErrorCode} qualifier:-{result.Qualifier}");
-                    checkResult = CheckEligibilityStatus.DwpError;
+                    _logger.LogError($"Error unknown Response status code:-{result.Status}, error code:-{result.ErrorCode} qualifier:-{result.Qualifier}");
+                    checkResult = CheckEligibilityStatus.Error;
                 }
             }
             else
             {
-                _logger.LogError($"DwpError ECS unknown Response of null");
-                checkResult = CheckEligibilityStatus.DwpError;
+                _logger.LogError($"Error ECS unknown Response of null");
+                checkResult = CheckEligibilityStatus.Error;
             }
 
             return checkResult;
@@ -473,8 +473,8 @@ namespace CheckYourEligibility.API.Gateways
                 }
                 else
                 {
-                    _logger.LogError($"DwpError unknown Response status code:-{result.StatusCode}.");
-                    checkResult = CheckEligibilityStatus.DwpError;
+                    _logger.LogError($"Error unknown Response status code:-{result.StatusCode}.");
+                    checkResult = CheckEligibilityStatus.Error;
                 }
             }
             return checkResult;
@@ -530,7 +530,7 @@ namespace CheckYourEligibility.API.Gateways
                             if (result == null || result != CheckEligibilityStatus.queuedForProcessing || item.DequeueCount > 1) {
                                 if (result == null || item.DequeueCount > 1)
                                 {
-                                    await UpdateEligibilityCheckStatus(checkData.Guid, new EligibilityCheckStatusData { Status = CheckEligibilityStatus.DwpError });
+                                    await UpdateEligibilityCheckStatus(checkData.Guid, new EligibilityCheckStatusData { Status = CheckEligibilityStatus.Error });
                                 }
                                 await queue.DeleteMessageAsync(item.MessageId, item.PopReceipt);
                             }

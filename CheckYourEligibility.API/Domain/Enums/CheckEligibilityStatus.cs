@@ -8,6 +8,6 @@ namespace CheckYourEligibility.API.Domain.Enums
         parentNotFound,
         eligible,
         notEligible,
-        DwpError
+        Error
     }
 }

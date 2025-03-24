@@ -524,7 +524,7 @@ namespace CheckYourEligibility.ServiceUnitTests
         }
 
         [Test]
-        public void Given_validRequest_DWP_Soap_Process_Should_Return_Null_DwpError()
+        public void Given_validRequest_DWP_Soap_Process_Should_Return_Null_Error()
         {
             // Arrange
             var item = _fixture.Create<EligibilityCheck>();
@@ -552,7 +552,7 @@ namespace CheckYourEligibility.ServiceUnitTests
         }
 
         [Test]
-        public void Given_validRequest_DWP_Soap_Process_Should_Return_updatedStatus_DwpError()
+        public void Given_validRequest_DWP_Soap_Process_Should_Return_updatedStatus_Error()
         {
             // Arrange
             var item = _fixture.Create<EligibilityCheck>();
@@ -675,7 +675,7 @@ namespace CheckYourEligibility.ServiceUnitTests
             _fakeInMemoryDb.CheckEligibilities.Add(item);
             await _fakeInMemoryDb.SaveChangesAsync();
             _moqDwpGateway.Setup(x => x.UseEcsforChecks).Returns(false);
-            _moqDwpGateway.Setup(x => x.GetCitizen(It.IsAny<CitizenMatchRequest>())).ReturnsAsync(CheckEligibilityStatus.DwpError.ToString());
+            _moqDwpGateway.Setup(x => x.GetCitizen(It.IsAny<CitizenMatchRequest>())).ReturnsAsync(CheckEligibilityStatus.Error.ToString());
             var result = new StatusCodeResult(StatusCodes.Status500InternalServerError);
 
             // Act
