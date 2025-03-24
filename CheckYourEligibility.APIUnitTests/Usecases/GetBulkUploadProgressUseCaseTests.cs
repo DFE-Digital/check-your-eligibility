@@ -1,12 +1,14 @@
 using AutoFixture;
 using CheckYourEligibility.Domain;
 using CheckYourEligibility.Domain.Constants;
+using CheckYourEligibility.Domain.Exceptions;
 using CheckYourEligibility.Domain.Responses;
 using CheckYourEligibility.Services.Interfaces;
 using CheckYourEligibility.WebApp.UseCases;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
+using NotFoundException = Ardalis.GuardClauses.NotFoundException;
 
 namespace CheckYourEligibility.APIUnitTests.UseCases
 {
@@ -34,45 +36,15 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
         }
 
         [Test]
-        public void Constructor_throws_argumentNullException_when_checkService_is_null()
-        {
-            // Arrange
-            ICheckEligibility checkService = null;
-            var logger = _mockLogger.Object;
-
-            // Act
-            Action act = () => new GetBulkUploadProgressUseCase(checkService, logger);
-
-            // Assert
-            act.Should().ThrowExactly<ArgumentNullException>().And.Message.Should().Contain("Value cannot be null. (Parameter 'checkService')");
-        }
-
-        [Test]
-        public void Constructor_throws_argumentNullException_when_logger_is_null()
-        {
-            // Arrange
-            var checkService = _mockCheckService.Object;
-            ILogger<GetBulkUploadProgressUseCase> logger = null;
-
-            // Act
-            Action act = () => new GetBulkUploadProgressUseCase(checkService, logger);
-
-            // Assert
-            act.Should().ThrowExactly<ArgumentNullException>().And.Message.Should().Contain("Value cannot be null. (Parameter 'logger')");
-        }
-
-        [Test]
         [TestCase(null)]
         [TestCase("")]
         public async Task Execute_returns_failure_when_guid_is_null_or_empty(string guid)
         {
             // Act
-            var result = await _sut.Execute(guid);
+            Func<Task> act = async () => await _sut.Execute(guid);
 
             // Assert
-            result.IsValid.Should().BeFalse();
-            result.ValidationErrors.Should().Be("Invalid Request, group ID is required.");
-            result.Response.Should().BeNull();
+            act.Should().ThrowAsync<ValidationException>().WithMessage("Invalid Request, group ID is required.");
         }
 
         [Test]
@@ -83,13 +55,10 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             _mockCheckService.Setup(s => s.GetBulkStatus(guid)).ReturnsAsync((BulkStatus)null);
 
             // Act
-            var result = await _sut.Execute(guid);
+            Func<Task> act = async () => await _sut.Execute(guid);
 
             // Assert
-            result.IsValid.Should().BeFalse();
-            result.IsNotFound.Should().BeTrue();
-            result.ValidationErrors.Should().Be($"Bulk upload with ID {guid} not found");
-            result.Response.Should().BeNull();
+            act.Should().ThrowAsync<NotFoundException>().WithMessage($"Bulk upload with ID {guid} not found");
         }
 
         [Test]
@@ -104,12 +73,9 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             var result = await _sut.Execute(guid);
 
             // Assert
-            result.IsValid.Should().BeTrue();
-            result.IsNotFound.Should().BeFalse();
-            result.Response.Should().NotBeNull();
-            result.Response.Data.Should().Be(statusValue);
-            result.Response.Links.Should().NotBeNull();
-            result.Response.Links.Get_BulkCheck_Results.Should().Be($"{CheckLinks.BulkCheckLink}{guid}{CheckLinks.BulkCheckResults}");
+            result.Data.Should().Be(statusValue);
+            result.Links.Should().NotBeNull();
+            result.Links.Get_BulkCheck_Results.Should().Be($"{CheckLinks.BulkCheckLink}{guid}{CheckLinks.BulkCheckResults}");
         }
 
         [Test]

@@ -29,7 +29,6 @@ namespace CheckYourEligibility.WebApp.Controllers
         }
 
         [ProducesResponseType(typeof(IEnumerable<Establishment>), (int)HttpStatusCode.OK)]
-        [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.NotFound)]
         [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.BadRequest)]
         [Consumes("application/json", "application/vnd.api+json;version=1.0")]
         [HttpGet("/establishment/search")]
@@ -43,14 +42,7 @@ namespace CheckYourEligibility.WebApp.Controllers
 
             var results = await _searchUseCase.Execute(query);
 
-            if (!results.Any())
-            {
-                return new ObjectResult(new EstablishmentSearchResponse { Data = results }) { StatusCode = StatusCodes.Status404NotFound };
-            }
-            else
-            {
-                return new ObjectResult(new EstablishmentSearchResponse { Data = results }) { StatusCode = StatusCodes.Status200OK };
-            }
+            return new ObjectResult(new EstablishmentSearchResponse { Data = results }) { StatusCode = StatusCodes.Status200OK };
         }
     }
 }

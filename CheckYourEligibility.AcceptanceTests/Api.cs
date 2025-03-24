@@ -66,8 +66,8 @@ namespace CheckYourEligibility.AcceptanceTests
         {
             var data = new SystemUser
             {
-                Username = _userName,
-                Password =_password,
+                client_id = _userName,
+                client_secret = _password,
             };
 
             var response = await ApiDataPostAsynch("/api/Login", data, new JwtAuthResponse());

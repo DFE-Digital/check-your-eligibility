@@ -40,10 +40,6 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
                         Secret = "correct_password",
                         Scope = "read write admin"
                     }
-                },
-                Users = new Dictionary<string, string>
-                {
-                    ["test_username"] = "correct_password"
                 }
             };
             _sut = new AuthenticateUserUseCase(_mockAuditService.Object, _mockLogger.Object, _jwtSettings);
@@ -62,16 +58,16 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             // Arrange
             var login = new SystemUser
             {
-                Username = "test_username",
-                Password = "correct_password"
+                client_id = "test_client",
+                client_secret = "correct_password"
             };
 
             _mockAuditService
-                .Setup(a => a.CreateAuditEntry(Domain.Enums.AuditType.User, login.Username))
+                .Setup(a => a.CreateAuditEntry(Domain.Enums.AuditType.Client, login.client_id))
                 .ReturnsAsync(_fixture.Create<string>());
 
             // Act
-            var result = await _sut.AuthenticateUser(login);
+            var result = await _sut.Execute(login);
 
             // Assert
             result.Should().NotBeNull();
@@ -86,12 +82,12 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             // Arrange
             var login = new SystemUser
             {
-                Username = "test_username",
-                Password = "wrong_password"
+                client_id = "test_client",
+                client_secret = "wrong_password"
             };
 
             // Act & Assert
-            Func<Task> act = async () => await _sut.AuthenticateUser(login);
+            Func<Task> act = async () => await _sut.Execute(login);
             act.Should().ThrowAsync<InvalidClientException>()
                 .WithMessage("Invalid client credentials");
         }
@@ -102,12 +98,12 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             // Arrange
             var login = new SystemUser
             {
-                Username = "unknown_user",
-                Password = "any_password"
+                client_id = "unknown_user",
+                client_secret = "any_password"
             };
 
             // Act & Assert
-            Func<Task> act = async () => await _sut.AuthenticateUser(login);
+            Func<Task> act = async () => await _sut.Execute(login);
             act.Should().ThrowAsync<InvalidClientException>()
                 .WithMessage("The client authentication failed");
         }
@@ -118,14 +114,14 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             // Arrange
             var login = new SystemUser
             {
-                Username = "test_username",
-                Password = "correct_password"
+                client_id = "test_client",
+                client_secret = "correct_password"
             };
 
             _jwtSettings.Key = "";
 
             // Act & Assert
-            Func<Task> act = async () => await _sut.AuthenticateUser(login);
+            Func<Task> act = async () => await _sut.Execute(login);
             act.Should().ThrowAsync<ServerErrorException>()
                 .WithMessage("The authorization server is misconfigured. Key is required.");
         }
@@ -136,14 +132,14 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             // Arrange
             var login = new SystemUser
             {
-                Username = "test_username",
-                Password = "correct_password"
+                client_id = "test_client",
+                client_secret = "correct_password"
             };
 
             _jwtSettings.Issuer = "";
 
             // Act & Assert
-            Func<Task> act = async () => await _sut.AuthenticateUser(login);
+            Func<Task> act = async () => await _sut.Execute(login);
             act.Should().ThrowAsync<ServerErrorException>()
                 .WithMessage("The authorization server is misconfigured. Issuer is required.");
         }
@@ -154,20 +150,20 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             // Arrange
             var login = new SystemUser
             {
-                Username = "test_username",
-                Password = "correct_password"
+                client_id = "test_client",
+                client_secret = "correct_password"
             };
 
             _mockAuditService
-                .Setup(a => a.CreateAuditEntry(Domain.Enums.AuditType.User, login.Username))
+                .Setup(a => a.CreateAuditEntry(Domain.Enums.AuditType.Client, login.client_id))
                 .ReturnsAsync(_fixture.Create<string>());
 
             // Act
-            var result = await _sut.AuthenticateUser(login);
+            var result = await _sut.Execute(login);
 
             // Assert
             result.Should().NotBeNull();
-            _mockAuditService.Verify(a => a.CreateAuditEntry(Domain.Enums.AuditType.User, login.Username), Times.Once);
+            _mockAuditService.Verify(a => a.CreateAuditEntry(Domain.Enums.AuditType.Client, login.client_id), Times.Once);
         }
 
         [Test]
@@ -185,7 +181,7 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
                 .ReturnsAsync(_fixture.Create<string>());
 
             // Act
-            var result = await _sut.AuthenticateUser(login);
+            var result = await _sut.Execute(login);
 
             // Assert
             result.Should().NotBeNull();
@@ -203,86 +199,9 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             };
 
             // Act & Assert
-            Func<Task> act = async () => await _sut.AuthenticateUser(login);
+            Func<Task> act = async () => await _sut.Execute(login);
             act.Should().ThrowAsync<InvalidClientException>()
                 .WithMessage("Invalid client credentials");
-        }
-
-        [Test]
-        public async Task AuthenticateUser_Should_Prioritize_client_id_Over_Username_When_Both_Are_Present()
-        {
-            // Arrange
-            var login = new SystemUser
-            {
-                Username = "test_username",
-                Password = "ignored_password",
-                client_id = "test_client",
-                client_secret = "correct_password"
-            };
-
-            _mockAuditService
-                .Setup(a => a.CreateAuditEntry(Domain.Enums.AuditType.Client, login.client_id))
-                .ReturnsAsync(_fixture.Create<string>());
-
-            // Act
-            var result = await _sut.AuthenticateUser(login);
-
-            // Assert
-            result.Should().NotBeNull();
-            result.access_token.Should().NotBeNullOrEmpty();
-        }
-
-        [Test]
-        public void SystemUser_IsValid_Should_Return_True_For_Valid_ClientCredentials()
-        {
-            // Arrange
-            var user = new SystemUser
-            {
-                client_id = "test_client",
-                client_secret = "test_secret"
-            };
-
-            // Act
-            var result = user.IsValid();
-
-            // Assert
-            result.Should().BeTrue();
-        }
-
-        [Test]
-        public void SystemUser_IsValid_Should_Return_True_For_Valid_UsernamePassword()
-        {
-            // Arrange
-            var user = new SystemUser
-            {
-                Username = "test_user",
-                Password = "test_password"
-            };
-
-            // Act
-            var result = user.IsValid();
-
-            // Assert
-            result.Should().BeTrue();
-        }
-
-        [Test]
-        public void SystemUser_IsValid_Should_Return_False_When_No_Valid_Credentials()
-        {
-            // Arrange
-            var user = new SystemUser
-            {
-                client_id = null,
-                client_secret = "only_secret_no_id",
-                Username = null,
-                Password = "only_password_no_username"
-            };
-
-            // Act
-            var result = user.IsValid();
-
-            // Assert
-            result.Should().BeFalse();
         }
 
         [Test]
@@ -292,7 +211,7 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             var login = new SystemUser(); // No credentials set
 
             // Act & Assert
-            Func<Task> act = async () => await _sut.AuthenticateUser(login);
+            Func<Task> act = async () => await _sut.Execute(login);
             act.Should().ThrowAsync<InvalidRequestException>()
                 .WithMessage("Either client_id/client_secret pair or Username/Password pair must be provided");
         }
@@ -313,7 +232,7 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
                 .ReturnsAsync(_fixture.Create<string>());
 
             // Act
-            var result = await _sut.AuthenticateUser(login);
+            var result = await _sut.Execute(login);
 
             // Assert
             result.Should().NotBeNull();
@@ -336,7 +255,7 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             };
 
             // Act & Assert
-            Func<Task> act = async () => await _sut.AuthenticateUser(login);
+            Func<Task> act = async () => await _sut.Execute(login);
             act.Should().ThrowAsync<InvalidScopeException>()
                 .WithMessage("The requested scope is invalid, unknown, or exceeds the scope granted by the resource owner");
         }
@@ -347,16 +266,16 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             // Arrange
             var login = new SystemUser
             {
-                Username = "test_username",
-                Password = "correct_password"
+                client_id = "test_client",
+                client_secret = "correct_password"
             };
 
             _mockAuditService
-                .Setup(a => a.CreateAuditEntry(Domain.Enums.AuditType.User, login.Username))
+                .Setup(a => a.CreateAuditEntry(Domain.Enums.AuditType.Client, login.client_id))
                 .ReturnsAsync(_fixture.Create<string>());
 
             // Act
-            var result = await _sut.AuthenticateUser(login);
+            var result = await _sut.Execute(login);
 
             // Assert
             result.Should().NotBeNull();
@@ -366,7 +285,7 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             var token = handler.ReadJwtToken(result.access_token);
 
             // Check expected claims are present
-            token.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Sub)?.Value.Should().Be("test_username");
+            token.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Sub)?.Value.Should().Be("test_client");
             token.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Jti).Should().NotBeNull();
 
             // Check token properties
@@ -379,60 +298,22 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
         }
 
         [Test]
-        public async Task AuthenticateUser_Should_Fallback_To_Legacy_User_Configuration_When_Not_Found_In_Clients()
-        {
-            // Arrange
-            // Create a new user that exists only in the Users dictionary, not in Clients
-            string legacyUsername = "legacy_only_user";
-            string legacyPassword = "legacy_password";
-
-            _jwtSettings.Users[legacyUsername] = legacyPassword;
-
-            var login = new SystemUser
-            {
-                Username = legacyUsername,
-                Password = legacyPassword
-            };
-
-            _mockAuditService
-                .Setup(a => a.CreateAuditEntry(Domain.Enums.AuditType.User, login.Username))
-                .ReturnsAsync(_fixture.Create<string>());
-
-            // Act
-            var result = await _sut.AuthenticateUser(login);
-
-            // Assert
-            result.Should().NotBeNull();
-            result.access_token.Should().NotBeNullOrEmpty();
-            result.expires_in.Should().BeGreaterThan(0);
-            result.token_type.Should().Be("Bearer");
-
-            // Verify audit was called with legacy username
-            _mockAuditService.Verify(a => a.CreateAuditEntry(Domain.Enums.AuditType.User, legacyUsername), Times.Once);
-
-            // Decode token to verify the subject claim contains the legacy username
-            var handler = new JwtSecurityTokenHandler();
-            var token = handler.ReadJwtToken(result.access_token);
-            token.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Sub)?.Value.Should().Be(legacyUsername);
-        }
-
-        [Test]
         public async Task AuthenticateUser_Should_Log_Warning_But_Continue_When_GrantType_Is_Invalid()
         {
             // Arrange
             var login = new SystemUser
             {
-                Username = "test_username",
-                Password = "correct_password",
+                client_id = "test_client",
+                client_secret = "correct_password",
                 grant_type = "invalid_grant_type" // Using an invalid grant type
             };
 
             _mockAuditService
-                .Setup(a => a.CreateAuditEntry(Domain.Enums.AuditType.User, login.Username))
+                .Setup(a => a.CreateAuditEntry(Domain.Enums.AuditType.Client, login.client_id))
                 .ReturnsAsync(_fixture.Create<string>());
 
             // Act
-            var result = await _sut.AuthenticateUser(login);
+            var result = await _sut.Execute(login);
 
             // Assert
             // Verify we still got a valid response despite invalid grant type
@@ -444,7 +325,7 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
                 x => x.Log(
                     LogLevel.Warning,
                     It.IsAny<EventId>(),
-                    It.Is<It.IsAnyType>((o, t) => o.ToString().Contains(login.GetInvalidGrantTypeMessage().Replace(Environment.NewLine, ""))),
+                    It.Is<It.IsAnyType>((o, t) => o.ToString().Contains($"Unsupported grant_type: {login.grant_type}")),
                     It.IsAny<Exception>(),
                     (Func<It.IsAnyType, Exception, string>)It.IsAny<object>()),
                 Times.Once);
@@ -472,7 +353,7 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             };
 
             // Act & Assert
-            Func<Task> act = async () => await _sut.AuthenticateUser(login);
+            Func<Task> act = async () => await _sut.Execute(login);
 
             // Should throw InvalidScopeException with the specific error message
             act.Should().ThrowAsync<InvalidScopeException>()
@@ -495,8 +376,8 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             // Arrange
             var login = new SystemUser
             {
-                Username = "test_username",
-                Password = "correct_password"
+                client_id = "test_client",
+                client_secret = "correct_password"
             };
 
             // Set up a scenario that would cause token generation to fail
@@ -504,7 +385,7 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
             _jwtSettings.Key = "too_short_key";
 
             // Act & Assert
-            Func<Task> act = async () => await _sut.AuthenticateUser(login);
+            Func<Task> act = async () => await _sut.Execute(login);
 
             // Should throw ServerErrorException with the specific error message
             act.Should().ThrowAsync<ServerErrorException>()
@@ -516,19 +397,19 @@ namespace CheckYourEligibility.APIUnitTests.UseCases
         {
             // Arrange
             // Create a malformed client entry where the identifier exists but has a null secret
-            string userWithNoSecret = "user_with_no_secret";
+            string userWithNoSecret = "client_with_no_secret";
 
             // Add the user to the dictionary but with null secret
-            _jwtSettings.Users[userWithNoSecret] = null;
+            _jwtSettings.Clients[userWithNoSecret] = new ClientSettings(){Secret = null};
 
             var login = new SystemUser
             {
-                Username = userWithNoSecret,
-                Password = "any_password"
+                client_id = userWithNoSecret,
+                client_secret = "any_password"
             };
 
             // Act & Assert
-            Func<Task> act = async () => await _sut.AuthenticateUser(login);
+            Func<Task> act = async () => await _sut.Execute(login);
 
             // Should throw InvalidClientException with the correct message
             act.Should().ThrowAsync<InvalidClientException>()

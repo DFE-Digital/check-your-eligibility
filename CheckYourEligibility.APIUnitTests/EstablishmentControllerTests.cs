@@ -80,14 +80,14 @@ namespace CheckYourEligibility.APIUnitTests
         }
 
         [Test]
-        public async Task Given_Search_Should_Return_Status404NotFound()
+        public async Task Given_Search_Should_Return_Status200NotFound()
         {
             // Arrange
             var query = _fixture.Create<string>();
             var result = Enumerable.Empty<Establishment>();
             _mockSearchUseCase.Setup(cs => cs.Execute(query)).ReturnsAsync(result);
 
-            var expectedResult = new ObjectResult(new EstablishmentSearchResponse { Data = result }) { StatusCode = StatusCodes.Status404NotFound };
+            var expectedResult = new ObjectResult(new EstablishmentSearchResponse { Data = result }) { StatusCode = StatusCodes.Status200OK };
 
             // Act
             var response = await _sut.Search(query);

@@ -1,4 +1,3 @@
-using Ardalis.GuardClauses;
 using CheckYourEligibility.Domain;
 using CheckYourEligibility.Domain.Enums;
 using CheckYourEligibility.Domain.Exceptions;
@@ -19,7 +18,7 @@ namespace CheckYourEligibility.WebApp.UseCases
         /// </summary>
         /// <param name="guid">The ID of the eligibility check</param>
         /// <returns>Processed eligibility check status</returns>
-        Task<UseExecutionResult<CheckEligibilityStatusResponse>> Execute(string guid);
+        Task<CheckEligibilityStatusResponse> Execute(string guid);
     }
 
     public class ProcessEligibilityCheckUseCase : IProcessEligibilityCheckUseCase
@@ -33,19 +32,16 @@ namespace CheckYourEligibility.WebApp.UseCases
             IAudit auditService,
             ILogger<ProcessEligibilityCheckUseCase> logger)
         {
-            _checkService = Guard.Against.Null(checkService);
-            _auditService = Guard.Against.Null(auditService);
-            _logger = Guard.Against.Null(logger);
+            _checkService = checkService;
+            _auditService = auditService;
+            _logger = logger;
         }
 
-        public async Task<UseExecutionResult<CheckEligibilityStatusResponse>> Execute(string guid)
+        public async Task<CheckEligibilityStatusResponse> Execute(string guid)
         {
-            var useCaseExecutionResult = new UseExecutionResult<CheckEligibilityStatusResponse>();
-
             if (string.IsNullOrEmpty(guid))
             {
-                useCaseExecutionResult.SetFailure("Invalid Request, check ID is required.");
-                return useCaseExecutionResult;
+                throw new ValidationException(null, "Invalid Request, check ID is required.");
             }
 
             try
@@ -56,8 +52,7 @@ namespace CheckYourEligibility.WebApp.UseCases
                 if (response == null)
                 {
                     _logger.LogWarning($"Eligibility check with ID {guid.Replace(Environment.NewLine, "").Replace("\n", "").Replace("\r", "")} not found");
-                    useCaseExecutionResult.SetNotFound(guid);
-                    return useCaseExecutionResult;
+                    throw new NotFoundException(guid.ToString());
                 }
 
                 await _auditService.CreateAuditEntry(AuditType.Check, guid);
@@ -74,20 +69,18 @@ namespace CheckYourEligibility.WebApp.UseCases
                 
                 if (response.Value == CheckEligibilityStatus.queuedForProcessing)
                 {
-                    useCaseExecutionResult.SetServiceUnavailable();
+                    throw new ApplicationException("Eligibility check still queued for processing.");
                 }
                 else
                 {
-                    useCaseExecutionResult.SetSuccess(resultResponse);
+                    return resultResponse;
                 }
             }
             catch (ProcessCheckException ex)
             {
                 _logger.LogError(ex, $"Error processing eligibility check with ID: {guid.Replace(Environment.NewLine, "").Replace("\n", "").Replace("\r", "")}");
-                useCaseExecutionResult.SetFailure("Failed to process eligibility check.");
+                throw new ValidationException(null, "Failed to process eligibility check.");
             }
-            
-            return useCaseExecutionResult;
         }
     }
 }
