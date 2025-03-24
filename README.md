@@ -7,7 +7,7 @@ This is a .NET 8 project - you'll need the latest .NET SDK etc to run it locally
 ### Config
 
 When you first clone the repo, you'll want to define your own config. You'll want to copy up the 
-file [appsettings.json](CheckYourEligibility.WebApp/appsettings.json), name the copy `appsettings.developmnent.json`
+file [appsettings.json](CheckYourEligibility.API/appsettings.json), name the copy `appsettings.developmnent.json`
 in the same folder. Update the values in this new file as needed. This file should not be committed, nor will it with our .gitignore.
 
 #### Credentials
@@ -95,46 +95,46 @@ The contents is then POSTed to `/importEstablishments`
 #### Migrations
 
 ##### Run Latest migration
-`dotnet ef update-database -project CheckYourEligibility.Data.Migrations`
+`dotnet ef update-database -project CheckYourEligibility.API.Data.Migrations`
 
 ##### How to add a migration
-Add-Migration BaseMigration -project CheckYourEligibility.Data.Migrations
-Add-Migration establishmentImport -project CheckYourEligibility.Data.Migrations
-Add-Migration idxReference -project CheckYourEligibility.Data.Migrations
-Add-Migration applicationStatus -project CheckYourEligibility.Data.Migrations
-Add-Migration checkHash -project CheckYourEligibility.Data.Migrations
-Add-Migration checkHashSource -project CheckYourEligibility.Data.Migrations
-Add-Migration checkHashResult -project CheckYourEligibility.Data.Migrations
-Add-Migration UserCreate -project CheckYourEligibility.Data.Migrations
-Add-Migration Audit -project CheckYourEligibility.Data.Migrations
-Add-Migration AuditTypeColumn -project CheckYourEligibility.Data.Migrations
-Add-Migration ApplicationHash -project CheckYourEligibility.Data.Migrations
-Add-Migration BulkUpload -project CheckYourEligibility.Data.Migrations
-Add-Migration BulkUploadItemSequence -project CheckYourEligibility.Data.Migrations
-Add-Migration UpdateStatus -project CheckYourEligibility.Data.Migrations
-Add-Migration UpdateApplicationStatus -project CheckYourEligibility.Data.Migrations
-Add-Migration UserReference -project CheckYourEligibility.Data.Migrations
-Add-Migration ApplicationParentEmail -project CheckYourEligibility.Data.Migrations
-Add-Migration DeCoupleCheck -project CheckYourEligibility.Data.Migrations
-Add-Migration SetApplicationType -project CheckYourEligibility.Data.Migrations
+Add-Migration BaseMigration -project CheckYourEligibility.API.Data.Migrations
+Add-Migration establishmentImport -project CheckYourEligibility.API.Data.Migrations
+Add-Migration idxReference -project CheckYourEligibility.API.Data.Migrations
+Add-Migration applicationStatus -project CheckYourEligibility.API.Data.Migrations
+Add-Migration checkHash -project CheckYourEligibility.API.Data.Migrations
+Add-Migration checkHashSource -project CheckYourEligibility.API.Data.Migrations
+Add-Migration checkHashResult -project CheckYourEligibility.API.Data.Migrations
+Add-Migration UserCreate -project CheckYourEligibility.API.Data.Migrations
+Add-Migration Audit -project CheckYourEligibility.API.Data.Migrations
+Add-Migration AuditTypeColumn -project CheckYourEligibility.API.Data.Migrations
+Add-Migration ApplicationHash -project CheckYourEligibility.API.Data.Migrations
+Add-Migration BulkUpload -project CheckYourEligibility.API.Data.Migrations
+Add-Migration BulkUploadItemSequence -project CheckYourEligibility.API.Data.Migrations
+Add-Migration UpdateStatus -project CheckYourEligibility.API.Data.Migrations
+Add-Migration UpdateApplicationStatus -project CheckYourEligibility.API.Data.Migrations
+Add-Migration UserReference -project CheckYourEligibility.API.Data.Migrations
+Add-Migration ApplicationParentEmail -project CheckYourEligibility.API.Data.Migrations
+Add-Migration DeCoupleCheck -project CheckYourEligibility.API.Data.Migrations
+Add-Migration SetApplicationType -project CheckYourEligibility.API.Data.Migrations
 
-Add-Migration ChangeSchoolToEstablishmentMigration -project CheckYourEligibility.Data.Migrations
+Add-Migration ChangeSchoolToEstablishmentMigration -project CheckYourEligibility.API.Data.Migrations
 
 
 
 
 ##### Update db to latest migration
-update-database  -project CheckYourEligibility.Data.Migrations
+update-database  -project CheckYourEligibility.API.Data.Migrations
 
 
 ##### List Migrations
 Get-Migration
 
-Remove-Migration -Force -project CheckYourEligibility.Data.Migrations
-Remove-Migration  -project CheckYourEligibility.Data.Migrations
+Remove-Migration -Force -project CheckYourEligibility.API.Data.Migrations
+Remove-Migration  -project CheckYourEligibility.API.Data.Migrations
 
 ##### Run specific migration
-update-database -migration BaseMigration -project CheckYourEligibility.Data.Migrations
+update-database -migration BaseMigration -project CheckYourEligibility.API.Data.Migrations
 
 
 #### MoqDWP

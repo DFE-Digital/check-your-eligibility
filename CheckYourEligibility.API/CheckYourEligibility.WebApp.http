@@ -1,0 +1,6 @@
+@CheckYourEligibility.API_HostAddress = http://localhost:5203
+
+GET {{CheckYourEligibility.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

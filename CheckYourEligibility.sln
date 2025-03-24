@@ -3,34 +3,20 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.8.34525.116
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CheckYourEligibility.WebApp", "CheckYourEligibility.WebApp\CheckYourEligibility.WebApp.csproj", "{19544FF4-3872-4C83-BA0C-F06CDF852E5B}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CheckYourEligibility.Domain", "CheckYourEligibility.Domain\CheckYourEligibility.Domain.csproj", "{190A4949-62D8-4C0D-A757-51A31B66C938}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CheckYourEligibility.Services", "CheckYourEligibility.Services\CheckYourEligibility.Services.csproj", "{8AE5A8A8-7C7A-4735-839C-BD115892D1D9}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CheckYourEligibility.Data", "CheckYourEligibility.Data\CheckYourEligibility.Data.csproj", "{37AD51CA-F35C-4729-A1D5-0F06F7327A26}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CheckYourEligibility.API", "CheckYourEligibility.API\CheckYourEligibility.API.csproj", "{19544FF4-3872-4C83-BA0C-F06CDF852E5B}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{166B2095-B983-49F3-9F46-CA95EBDEF9A1}"
 	ProjectSection(SolutionItems) = preProject
 		README.md = README.md
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CheckYourEligibility.Data.Migrations", "CheckYourEligibility.Data.Migrations\CheckYourEligibility.Data.Migrations.csproj", "{13A99159-4CD7-401F-A95A-CB107FAB4049}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{729562A4-B025-4919-8743-EA64B34D590D}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "UnitTests", "UnitTests", "{5F304C0D-7BE2-4912-9AA7-F7FC563B91FC}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CheckYourEligibility.APIUnitTests", "CheckYourEligibility.APIUnitTests\CheckYourEligibility.APIUnitTests.csproj", "{8457D39B-6591-4EAF-8481-651F1A7215BF}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CheckYourEligibility.TestBase", "CheckYourEligibility.TestBase\CheckYourEligibility.TestBase.csproj", "{C58CD004-D331-49CE-8D43-926CAD9057A1}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CheckYourEligibility.ServiceUnitTests", "CheckYourEligibility.ServiceUnitTests\CheckYourEligibility.ServiceUnitTests.csproj", "{4EF71DCE-04C5-472F-9645-ED4464CBEEC2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CheckYourEligibility.API.Tests", "CheckYourEligibility.API.Tests\CheckYourEligibility.API.Tests.csproj", "{8457D39B-6591-4EAF-8481-651F1A7215BF}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Acceptance", "Acceptance", "{E3269BAF-DEE4-4DCC-81CE-93FD618C6937}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CheckYourEligibility.AcceptanceRun", "CheckYourEligibility.AcceptanceTests\CheckYourEligibility.AcceptanceRun.csproj", "{FAC224DE-BB7A-44FE-9278-DD6FF12657CB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -42,38 +28,10 @@ Global
 		{19544FF4-3872-4C83-BA0C-F06CDF852E5B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{19544FF4-3872-4C83-BA0C-F06CDF852E5B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{19544FF4-3872-4C83-BA0C-F06CDF852E5B}.Release|Any CPU.Build.0 = Release|Any CPU
-		{190A4949-62D8-4C0D-A757-51A31B66C938}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{190A4949-62D8-4C0D-A757-51A31B66C938}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{190A4949-62D8-4C0D-A757-51A31B66C938}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{190A4949-62D8-4C0D-A757-51A31B66C938}.Release|Any CPU.Build.0 = Release|Any CPU
-		{8AE5A8A8-7C7A-4735-839C-BD115892D1D9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{8AE5A8A8-7C7A-4735-839C-BD115892D1D9}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{8AE5A8A8-7C7A-4735-839C-BD115892D1D9}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{8AE5A8A8-7C7A-4735-839C-BD115892D1D9}.Release|Any CPU.Build.0 = Release|Any CPU
-		{37AD51CA-F35C-4729-A1D5-0F06F7327A26}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{37AD51CA-F35C-4729-A1D5-0F06F7327A26}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{37AD51CA-F35C-4729-A1D5-0F06F7327A26}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{37AD51CA-F35C-4729-A1D5-0F06F7327A26}.Release|Any CPU.Build.0 = Release|Any CPU
-		{13A99159-4CD7-401F-A95A-CB107FAB4049}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{13A99159-4CD7-401F-A95A-CB107FAB4049}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{13A99159-4CD7-401F-A95A-CB107FAB4049}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{13A99159-4CD7-401F-A95A-CB107FAB4049}.Release|Any CPU.Build.0 = Release|Any CPU
 		{8457D39B-6591-4EAF-8481-651F1A7215BF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{8457D39B-6591-4EAF-8481-651F1A7215BF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8457D39B-6591-4EAF-8481-651F1A7215BF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8457D39B-6591-4EAF-8481-651F1A7215BF}.Release|Any CPU.Build.0 = Release|Any CPU
-		{C58CD004-D331-49CE-8D43-926CAD9057A1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{C58CD004-D331-49CE-8D43-926CAD9057A1}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{C58CD004-D331-49CE-8D43-926CAD9057A1}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{C58CD004-D331-49CE-8D43-926CAD9057A1}.Release|Any CPU.Build.0 = Release|Any CPU
-		{4EF71DCE-04C5-472F-9645-ED4464CBEEC2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4EF71DCE-04C5-472F-9645-ED4464CBEEC2}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{4EF71DCE-04C5-472F-9645-ED4464CBEEC2}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{4EF71DCE-04C5-472F-9645-ED4464CBEEC2}.Release|Any CPU.Build.0 = Release|Any CPU
-		{FAC224DE-BB7A-44FE-9278-DD6FF12657CB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{FAC224DE-BB7A-44FE-9278-DD6FF12657CB}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{FAC224DE-BB7A-44FE-9278-DD6FF12657CB}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{FAC224DE-BB7A-44FE-9278-DD6FF12657CB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -81,10 +39,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{5F304C0D-7BE2-4912-9AA7-F7FC563B91FC} = {729562A4-B025-4919-8743-EA64B34D590D}
 		{8457D39B-6591-4EAF-8481-651F1A7215BF} = {5F304C0D-7BE2-4912-9AA7-F7FC563B91FC}
-		{C58CD004-D331-49CE-8D43-926CAD9057A1} = {5F304C0D-7BE2-4912-9AA7-F7FC563B91FC}
-		{4EF71DCE-04C5-472F-9645-ED4464CBEEC2} = {5F304C0D-7BE2-4912-9AA7-F7FC563B91FC}
 		{E3269BAF-DEE4-4DCC-81CE-93FD618C6937} = {729562A4-B025-4919-8743-EA64B34D590D}
-		{FAC224DE-BB7A-44FE-9278-DD6FF12657CB} = {E3269BAF-DEE4-4DCC-81CE-93FD618C6937}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {04898F63-3229-4E4B-8AE2-AC035EA9D779}

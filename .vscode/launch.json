@@ -3,10 +3,10 @@
         {
             "type": "coreclr",
             "request": "launch",
-            "name": "Launch CheckYourEligibility.WebApp",
-            "program": "${workspaceFolder}/CheckYourEligibility.WebApp/bin/Debug/net8.0/CheckYourEligibility.WebApp.dll",
+            "name": "Launch CheckYourEligibility.API",
+            "program": "${workspaceFolder}/CheckYourEligibility.API/bin/Debug/net8.0/CheckYourEligibility.API.dll",
             "args": [],
-            "cwd": "${workspaceFolder}/CheckYourEligibility.WebApp",
+            "cwd": "${workspaceFolder}/CheckYourEligibility.API",
             "stopAtEntry": false,
             "preLaunchTask": "build"
         }

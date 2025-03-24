@@ -6,7 +6,7 @@
             "type": "process",
             "args": [
                 "build",
-                "${workspaceFolder}/CheckYourEligibility.WebApp/CheckYourEligibility.WebApp.csproj"
+                "${workspaceFolder}/CheckYourEligibility.API/CheckYourEligibility.API.csproj"
             ],
             "problemMatcher": "$msCompile"
         }

@@ -90,7 +90,7 @@ stages:
                   azureSubscription: 's203d.azdo.deployment'
                   appType: 'webApp'
                   WebAppName: 'ece-dev-as-cypress'
-                  packageForLinux: '$(Pipeline.Workspace)/checkYourEligibilityAPI/CheckYourEligibility.WebApp.zip'
+                  packageForLinux: '$(Pipeline.Workspace)/checkYourEligibilityAPI/CheckYourEligibility.API.zip'
               - task: Bash@3
                 inputs:
                   targetType: inline
