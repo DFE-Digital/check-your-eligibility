@@ -1,4 +1,6 @@
 ﻿using System.Net;
+using CheckYourEligibility.API.Boundary.Requests;
+using CheckYourEligibility.Api.Boundary.Responses;
 using CheckYourEligibility.API.Boundary.Responses;
 using CheckYourEligibility.API.Domain;
 using CheckYourEligibility.API.Domain.Exceptions;

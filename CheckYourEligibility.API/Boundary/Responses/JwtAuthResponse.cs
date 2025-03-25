@@ -1,4 +1,4 @@
-﻿namespace CheckYourEligibility.API.Domain;
+﻿namespace CheckYourEligibility.Api.Boundary.Responses;
 
 public class JwtAuthResponse
 {

@@ -1,4 +1,4 @@
-﻿namespace CheckYourEligibility.API.Domain;
+﻿namespace CheckYourEligibility.API.Boundary.Requests;
 
 public class SystemUser
 {

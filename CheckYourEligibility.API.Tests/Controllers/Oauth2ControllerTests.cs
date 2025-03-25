@@ -1,3 +1,5 @@
+using CheckYourEligibility.API.Boundary.Requests;
+using CheckYourEligibility.Api.Boundary.Responses;
 using CheckYourEligibility.API.Boundary.Responses;
 using CheckYourEligibility.API.Controllers;
 using CheckYourEligibility.API.Domain;
