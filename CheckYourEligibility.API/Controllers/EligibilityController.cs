@@ -118,6 +118,8 @@ namespace CheckYourEligibility.API.Controllers
         [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.BadRequest)]
         [Consumes("application/json", "application/vnd.api+json;version=1.0")]
         [HttpPost("/bulk-check/free-school-meals")]
+        [HttpPost("/bulk-check/early-year-pupil-premium")]
+        [HttpPost("/bulk-check/two-year-offer")]
         [Authorize(Policy = PolicyNames.RequireBulkCheckScope)]
         public async Task<ActionResult> CheckEligibilityBulk([FromBody] CheckEligibilityRequestBulk_Fsm model)
         {

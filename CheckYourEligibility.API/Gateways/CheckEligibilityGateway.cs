@@ -132,6 +132,8 @@ namespace CheckYourEligibility.API.Gateways
                 switch (result.Type)
                 {
                     case CheckEligibilityType.FreeSchoolMeals:
+                    case CheckEligibilityType.TwoYearOffer:
+                    case CheckEligibilityType.EarlyYearPupilPremium:
                         {
                             await Process_StandardCheck(guid, auditDataTemplate, result, checkData);
                         }
@@ -337,6 +339,8 @@ namespace CheckYourEligibility.API.Gateways
             switch (type)
             {
                 case CheckEligibilityType.FreeSchoolMeals:
+                case CheckEligibilityType.TwoYearOffer:
+                case CheckEligibilityType.EarlyYearPupilPremium:
                     return GetCheckProcessDataType<CheckEligibilityRequestData_Fsm>(type, data);
                 default:
                     throw new NotImplementedException($"Type:-{type} not supported.");

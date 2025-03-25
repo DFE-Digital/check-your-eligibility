@@ -12,5 +12,7 @@ namespace CheckYourEligibility.API.Domain.Enums
         None = 0,
         [Description("Free School Meals")]
         FreeSchoolMeals,
+        EarlyYearPupilPremium,
+        TwoYearOffer
     }
 }
