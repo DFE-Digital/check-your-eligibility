@@ -1,70 +1,66 @@
-using CheckYourEligibility.API.Domain;
+using CheckYourEligibility.API.Boundary.Responses;
 using CheckYourEligibility.API.Domain.Constants;
 using CheckYourEligibility.API.Domain.Enums;
-using CheckYourEligibility.API.Boundary.Responses;
-using CheckYourEligibility.API.Gateways.Interfaces;
-using Microsoft.Extensions.Logging;
-using System.Threading.Tasks;
 using CheckYourEligibility.API.Domain.Exceptions;
+using CheckYourEligibility.API.Gateways.Interfaces;
 
-namespace CheckYourEligibility.API.UseCases
+namespace CheckYourEligibility.API.UseCases;
+
+/// <summary>
+///     Interface for retrieving eligibility check item details
+/// </summary>
+public interface IGetEligibilityCheckItemUseCase
 {
     /// <summary>
-    /// Interface for retrieving eligibility check item details
+    ///     Execute the use case
     /// </summary>
-    public interface IGetEligibilityCheckItemUseCase
+    /// <param name="guid">The ID of the eligibility check</param>
+    /// <returns>Eligibility check item details</returns>
+    Task<CheckEligibilityItemResponse> Execute(string guid);
+}
+
+public class GetEligibilityCheckItemUseCase : IGetEligibilityCheckItemUseCase
+{
+    private readonly IAudit _auditGateway;
+    private readonly ICheckEligibility _checkGateway;
+    private readonly ILogger<GetEligibilityCheckItemUseCase> _logger;
+
+    public GetEligibilityCheckItemUseCase(
+        ICheckEligibility checkGateway,
+        IAudit auditGateway,
+        ILogger<GetEligibilityCheckItemUseCase> logger)
     {
-        /// <summary>
-        /// Execute the use case
-        /// </summary>
-        /// <param name="guid">The ID of the eligibility check</param>
-        /// <returns>Eligibility check item details</returns>
-        Task<CheckEligibilityItemResponse> Execute(string guid);
+        _checkGateway = checkGateway;
+        _auditGateway = auditGateway;
+        _logger = logger;
     }
 
-    public class GetEligibilityCheckItemUseCase : IGetEligibilityCheckItemUseCase
+    public async Task<CheckEligibilityItemResponse> Execute(string guid)
     {
-        private readonly ICheckEligibility _checkGateway;
-        private readonly IAudit _auditGateway;
-        private readonly ILogger<GetEligibilityCheckItemUseCase> _logger;
+        if (string.IsNullOrEmpty(guid)) throw new ValidationException(null, "Invalid Request, check ID is required.");
 
-        public GetEligibilityCheckItemUseCase(
-            ICheckEligibility checkGateway,
-            IAudit auditGateway,
-            ILogger<GetEligibilityCheckItemUseCase> logger)
+        var response = await _checkGateway.GetItem<CheckEligibilityItem>(guid);
+        if (response == null)
         {
-            _checkGateway = checkGateway;
-            _auditGateway = auditGateway;
-            _logger = logger;
+            _logger.LogWarning(
+                $"Eligibility check with ID {guid.Replace(Environment.NewLine, "").Replace("\n", "").Replace("\r", "")} not found");
+            throw new NotFoundException(guid);
         }
 
-        public async Task<CheckEligibilityItemResponse> Execute(string guid)
+        await _auditGateway.CreateAuditEntry(AuditType.Check, guid);
+
+        _logger.LogInformation(
+            $"Retrieved eligibility check details for ID: {guid.Replace(Environment.NewLine, "").Replace("\n", "").Replace("\r", "")}");
+
+        return new CheckEligibilityItemResponse
         {
-            if (string.IsNullOrEmpty(guid))
+            Data = response,
+            Links = new CheckEligibilityResponseLinks
             {
-                throw new ValidationException(null, "Invalid Request, check ID is required.");
+                Get_EligibilityCheck = $"{CheckLinks.GetLink}{guid}",
+                Put_EligibilityCheckProcess = $"{CheckLinks.ProcessLink}{guid}",
+                Get_EligibilityCheckStatus = $"{CheckLinks.GetLink}{guid}/Status"
             }
-
-            var response = await _checkGateway.GetItem<CheckEligibilityItem>(guid);
-            if (response == null)
-            {
-                _logger.LogWarning($"Eligibility check with ID {guid.Replace(Environment.NewLine, "").Replace("\n", "").Replace("\r", "")} not found");
-                throw new NotFoundException(guid);
-            }
-            await _auditGateway.CreateAuditEntry(AuditType.Check, guid);
-            
-            _logger.LogInformation($"Retrieved eligibility check details for ID: {guid.Replace(Environment.NewLine, "").Replace("\n", "").Replace("\r", "")}");
-
-            return new CheckEligibilityItemResponse()
-            {
-                Data = response,
-                Links = new CheckEligibilityResponseLinks
-                {
-                    Get_EligibilityCheck = $"{CheckLinks.GetLink}{guid}",
-                    Put_EligibilityCheckProcess = $"{CheckLinks.ProcessLink}{guid}",
-                    Get_EligibilityCheckStatus = $"{CheckLinks.GetLink}{guid}/Status"
-                }
-            };
-        }
+        };
     }
 }

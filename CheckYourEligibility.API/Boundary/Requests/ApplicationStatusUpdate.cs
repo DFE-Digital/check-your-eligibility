@@ -2,17 +2,14 @@
 
 using CheckYourEligibility.API.Domain.Enums;
 
-namespace CheckYourEligibility.API.Boundary.Requests
+namespace CheckYourEligibility.API.Boundary.Requests;
+
+public class ApplicationStatusUpdateRequest
 {
-    public class ApplicationStatusUpdateRequest
-    {
-        public ApplicationStatusData? Data { get; set; }
-    }
+    public ApplicationStatusData? Data { get; set; }
+}
 
-    public class ApplicationStatusData
-    {
-        public ApplicationStatus   Status { get; set; }
-    }
-
-   
+public class ApplicationStatusData
+{
+    public ApplicationStatus Status { get; set; }
 }

@@ -1,17 +1,15 @@
 // Ignore Spelling: Fsm
 
-namespace CheckYourEligibility.API.Domain.Exceptions
+namespace CheckYourEligibility.API.Domain.Exceptions;
+
+public class NotFoundException : Exception
 {
-
-    public class NotFoundException : Exception
+    public NotFoundException()
     {
-        public NotFoundException()
-        {
-        }
+    }
 
-        public NotFoundException(string message)
-            : base(message)
-        {
-        }
+    public NotFoundException(string message)
+        : base(message)
+    {
     }
 }

@@ -1,17 +1,15 @@
+using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
+using System.Text.Json.Serialization;
+using Azure.Extensions.AspNetCore.Configuration.Secrets;
 using Azure.Identity;
-using CheckYourEligibility.API.Data.Mappings;
 using CheckYourEligibility.API;
+using CheckYourEligibility.API.Data.Mappings;
 using CheckYourEligibility.API.Telemetry;
 using CheckYourEligibility.API.UseCases;
 using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
-using Microsoft.Extensions.Azure;
 using Microsoft.OpenApi.Models;
-using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
-using System.Reflection;
-using System.Text.Json.Serialization;
-using Azure.Extensions.AspNetCore.Configuration.Secrets;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
 CultureInfo.DefaultThreadCurrentCulture = new CultureInfo("en-GB");
@@ -48,11 +46,11 @@ if (Environment.GetEnvironmentVariable("API_KEY_VAULT_NAME") != null)
     var kvUri = $"https://{keyVaultName}.vault.azure.net";
 
     builder.Configuration.AddAzureKeyVault(
-        new Uri(kvUri), 
+        new Uri(kvUri),
         new DefaultAzureCredential(),
-        new AzureKeyVaultConfigurationOptions()
+        new AzureKeyVaultConfigurationOptions
         {
-            ReloadInterval = TimeSpan.FromSeconds(60*10)
+            ReloadInterval = TimeSpan.FromSeconds(60 * 10)
         }
     );
 }
@@ -66,19 +64,21 @@ builder.Services.AddSwaggerGen(c =>
         {
             Title = "ECE API - V1",
             Version = "v1-admin",
-            Description = "DFE Eligibility Checking Engine: API to perform Checks determining eligibility for entitlements via integration with OGDs"
+            Description =
+                "DFE Eligibility Checking Engine: API to perform Checks determining eligibility for entitlements via integration with OGDs"
         }
-     );
-    c.SwaggerDoc("v1", 
+    );
+    c.SwaggerDoc("v1",
         new OpenApiInfo
         {
-            Title = "ECE Local Authority API - V1", 
+            Title = "ECE Local Authority API - V1",
             Version = "v1",
-            Description = "DFE Eligibility Checking Engine: API to perform Checks determining eligibility for entitlements via integration with OGDs"
+            Description =
+                "DFE Eligibility Checking Engine: API to perform Checks determining eligibility for entitlements via integration with OGDs"
         });
 
     c.AddSecurityDefinition(
-        "oauth2", 
+        "oauth2",
         new OpenApiSecurityScheme
         {
             Type = SecuritySchemeType.OAuth2,
@@ -86,18 +86,21 @@ builder.Services.AddSwaggerGen(c =>
             {
                 AuthorizationCode = new OpenApiOAuthFlow
                 {
-                    TokenUrl = new Uri(builder.Configuration.GetValue<string>("Host")+"/oauth2/token"),
-                    Scopes = builder.Configuration.GetSection("Jwt").GetSection("Scopes").Get<List<string>>().ToDictionary(x => x, x => x)
+                    TokenUrl = new Uri(builder.Configuration.GetValue<string>("Host") + "/oauth2/token"),
+                    Scopes = builder.Configuration.GetSection("Jwt").GetSection("Scopes").Get<List<string>>()
+                        .ToDictionary(x => x, x => x)
                 }
             }
         });
 
     c.AddSecurityRequirement(
-        new OpenApiSecurityRequirement 
+        new OpenApiSecurityRequirement
         {
             {
-                new OpenApiSecurityScheme{
-                    Reference = new OpenApiReference{
+                new OpenApiSecurityScheme
+                {
+                    Reference = new OpenApiReference
+                    {
                         Id = "oauth2", //The name of the previously defined security scheme.
                         Type = ReferenceType.SecurityScheme
                     }
@@ -108,16 +111,16 @@ builder.Services.AddSwaggerGen(c =>
 
     c.DocInclusionPredicate((docName, apiDesc) =>
     {
-        if (!apiDesc.TryGetMethodInfo(out MethodInfo methodInfo)) return false;
-        
-        if(docName=="v1-admin") return true;
-        if(apiDesc.RelativePath.StartsWith("check/")) return true;
-        if(apiDesc.RelativePath.StartsWith("bulk-check/")) return true;
-        
+        if (!apiDesc.TryGetMethodInfo(out var methodInfo)) return false;
+
+        if (docName == "v1-admin") return true;
+        if (apiDesc.RelativePath.StartsWith("check/")) return true;
+        if (apiDesc.RelativePath.StartsWith("bulk-check/")) return true;
+
         return false;
     });
-    
-    var filePath = Path.Combine(System.AppContext.BaseDirectory, "CheckYourEligibility.API.xml");
+
+    var filePath = Path.Combine(AppContext.BaseDirectory, "CheckYourEligibility.API.xml");
     c.IncludeXmlComments(filePath);
 });
 
@@ -153,10 +156,7 @@ builder.Services.AddScoped<IProcessEligibilityCheckUseCase, ProcessEligibilityCh
 builder.Services.AddScoped<IGetEligibilityCheckItemUseCase, GetEligibilityCheckItemUseCase>();
 
 // Configure IIS and Kestrel server options
-builder.Services.Configure<IISServerOptions>(options =>
-{
-    options.MaxRequestBodySize = int.MaxValue;
-});
+builder.Services.Configure<IISServerOptions>(options => { options.MaxRequestBodySize = int.MaxValue; });
 builder.Services.Configure<KestrelServerOptions>(options =>
 {
     options.Limits.MaxRequestBodySize = int.MaxValue; // Default is 30 MB
@@ -170,10 +170,7 @@ builder.Services.AddAuthorization(builder.Configuration);
 
 builder.Services.AddHealthChecks();
 
-builder.Services.AddSwaggerGen(c =>
-{
-    c.ResolveConflictingActions(apiDescriptions => apiDescriptions.First());
-});
+builder.Services.AddSwaggerGen(c => { c.ResolveConflictingActions(apiDescriptions => apiDescriptions.First()); });
 
 var app = builder.Build();
 
@@ -217,4 +214,6 @@ app.MapControllers();
 app.Run();
 
 [ExcludeFromCodeCoverage]
-public partial class Program { }
+public partial class Program
+{
+}

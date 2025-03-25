@@ -1,35 +1,30 @@
-﻿
+﻿// Ignore Spelling: Fsm
 
-// Ignore Spelling: Fsm
-
-using CheckYourEligibility.API.Domain.Enums;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Diagnostics.CodeAnalysis;
+using CheckYourEligibility.API.Domain.Enums;
 
-namespace CheckYourEligibility.API.Domain
+namespace CheckYourEligibility.API.Domain;
+
+[ExcludeFromCodeCoverage(Justification = "Data Model.")]
+public class EligibilityCheck
 {
-    [ExcludeFromCodeCoverage(Justification = "Data Model.")]
-    public class EligibilityCheck
-    {
-        public string EligibilityCheckID { get; set; }
+    public string EligibilityCheckID { get; set; }
 
-        [Column(TypeName = "varchar(100)")]
-        public CheckEligibilityType Type { get; set; }
+    [Column(TypeName = "varchar(100)")] public CheckEligibilityType Type { get; set; }
 
-        [Column(TypeName = "varchar(100)")]
-        public CheckEligibilityStatus Status { get; set; }
+    [Column(TypeName = "varchar(100)")] public CheckEligibilityStatus Status { get; set; }
 
-        public DateTime Created { get; set; }
+    public DateTime Created { get; set; }
 
-        public DateTime Updated { get; set; }
+    public DateTime Updated { get; set; }
 
-        public  string? EligibilityCheckHashID { get; set; }
+    public string? EligibilityCheckHashID { get; set; }
 
-        public virtual EligibilityCheckHash? EligibilityCheckHash { get; set; }
+    public virtual EligibilityCheckHash? EligibilityCheckHash { get; set; }
 
-        public string? Group { get; set; }
+    public string? Group { get; set; }
 
-        public int? Sequence { get; set; }
-        public string CheckData { get; set; }
-    }
+    public int? Sequence { get; set; }
+    public string CheckData { get; set; }
 }

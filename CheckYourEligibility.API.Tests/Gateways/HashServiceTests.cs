@@ -2,8 +2,10 @@
 
 using AutoFixture;
 using AutoMapper;
-using CheckYourEligibility.API.Domain;
 using CheckYourEligibility.API.Boundary.Requests;
+using CheckYourEligibility.API.Data.Mappings;
+using CheckYourEligibility.API.Domain;
+using CheckYourEligibility.API.Domain.Enums;
 using CheckYourEligibility.API.Gateways;
 using CheckYourEligibility.API.Gateways.Interfaces;
 using FluentAssertions;
@@ -11,108 +13,101 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
-using NetTopologySuite.Index.HPRtree;
-using Newtonsoft.Json;
-using System.Globalization;
-using CheckYourEligibility.API.Data.Mappings;
-using String = System.String;
 
-namespace CheckYourEligibility.API.Tests
+namespace CheckYourEligibility.API.Tests;
+
+public class HashServiceTests : TestBase.TestBase
 {
+    private readonly int _hashCheckDays = 7;
+    private IConfiguration _configuration;
+    private IEligibilityCheckContext _fakeInMemoryDb;
+    private Mock<IAudit> _moqAudit;
+    private HashGateway _sut;
 
-
-    public class HashServiceTests : TestBase.TestBase
+    [SetUp]
+    public void Setup()
     {
-        private IEligibilityCheckContext _fakeInMemoryDb;
-        private IConfiguration _configuration;
-        private HashGateway _sut;
-        private Mock<IAudit> _moqAudit;
-        private int _hashCheckDays = 7;
-
-        [SetUp]
-        public void Setup()
-        {
-            var options = new DbContextOptionsBuilder<EligibilityCheckContext>()
-            .UseInMemoryDatabase(databaseName: "FakeInMemoryDb")
+        var options = new DbContextOptionsBuilder<EligibilityCheckContext>()
+            .UseInMemoryDatabase("FakeInMemoryDb")
             .Options;
 
-            _fakeInMemoryDb = new EligibilityCheckContext(options);
+        _fakeInMemoryDb = new EligibilityCheckContext(options);
 
-            var config = new MapperConfiguration(cfg => cfg.AddProfile<MappingProfile>());
-            var configForSmsApi = new Dictionary<string, string>
-            {
-                {"QueueFsmCheckStandard", "notSet"},
-                {"HashCheckDays", _hashCheckDays.ToString()},
-
-            };
-            _configuration = new ConfigurationBuilder()
-                .AddInMemoryCollection(configForSmsApi)
-                .Build();
-            var webJobsConnection = "DefaultEndpointsProtocol=https;AccountName=none;AccountKey=none;EndpointSuffix=core.windows.net";
-            _moqAudit = new Mock<IAudit>(MockBehavior.Strict);
-            _sut = new HashGateway(new NullLoggerFactory(), _fakeInMemoryDb, _configuration, _moqAudit.Object);
-        }
-
-        [TearDown]
-        public void Teardown()
+        var config = new MapperConfiguration(cfg => cfg.AddProfile<MappingProfile>());
+        var configForSmsApi = new Dictionary<string, string>
         {
-        }
+            { "QueueFsmCheckStandard", "notSet" },
+            { "HashCheckDays", _hashCheckDays.ToString() }
+        };
+        _configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(configForSmsApi)
+            .Build();
+        var webJobsConnection =
+            "DefaultEndpointsProtocol=https;AccountName=none;AccountKey=none;EndpointSuffix=core.windows.net";
+        _moqAudit = new Mock<IAudit>(MockBehavior.Strict);
+        _sut = new HashGateway(new NullLoggerFactory(), _fakeInMemoryDb, _configuration, _moqAudit.Object);
+    }
 
-        [Test]
-        public async Task Given_validRequest_Create_Exists_Should_Return_Hash()
+    [TearDown]
+    public void Teardown()
+    {
+    }
+
+    [Test]
+    public async Task Given_validRequest_Create_Exists_Should_Return_Hash()
+    {
+        // Arrange
+        var request = _fixture.Create<EligibilityCheck>();
+        _moqAudit.Setup(x => x.AuditAdd(It.IsAny<AuditData>())).ReturnsAsync("");
+        var fsm = _fixture.Create<CheckEligibilityRequestData_Fsm>();
+        fsm.DateOfBirth = "1990-01-01";
+        var dataItem = GetCheckProcessData(fsm);
+
+        // Act
+        var id = await _sut.Create(dataItem, CheckEligibilityStatus.parentNotFound, ProcessEligibilityCheckSource.HMRC,
+            new AuditData());
+        await _fakeInMemoryDb.SaveChangesAsync();
+
+        var response = await _sut.Exists(dataItem);
+
+        // Assert
+        response.Should().BeOfType<EligibilityCheckHash>();
+    }
+
+    [Test]
+    public async Task Given_HashIsOld_Exists_Should_Return_null()
+    {
+        // Arrange
+        var request = _fixture.Create<EligibilityCheck>();
+        _moqAudit.Setup(x => x.AuditAdd(It.IsAny<AuditData>())).ReturnsAsync("");
+        var fsm = _fixture.Create<CheckEligibilityRequestData_Fsm>();
+        fsm.DateOfBirth = "1990-01-01";
+        var dataItem = GetCheckProcessData(fsm);
+
+
+        var id = await _sut.Create(dataItem, CheckEligibilityStatus.parentNotFound, ProcessEligibilityCheckSource.HMRC,
+            new AuditData());
+        await _fakeInMemoryDb.SaveChangesAsync();
+        var hashItem = _fakeInMemoryDb.EligibilityCheckHashes.First(x => x.EligibilityCheckHashID.Equals(id));
+        hashItem.TimeStamp = hashItem.TimeStamp.AddDays(-(_hashCheckDays + 1));
+        await _fakeInMemoryDb.SaveChangesAsync();
+
+        // Act
+        var response = await _sut.Exists(dataItem);
+
+        // Assert
+        response.Should().BeNull();
+    }
+
+    private CheckProcessData GetCheckProcessData(CheckEligibilityRequestData_Fsm request)
+    {
+        return new CheckProcessData
         {
-            // Arrange
-            var request = _fixture.Create<EligibilityCheck>();
-            _moqAudit.Setup(x => x.AuditAdd(It.IsAny<AuditData>())).ReturnsAsync("");
-            var fsm = _fixture.Create<CheckEligibilityRequestData_Fsm>();
-            fsm.DateOfBirth = "1990-01-01";
-            var dataItem = GetCheckProcessData(fsm);
-
-            // Act
-            var id = await _sut.Create(dataItem, API.Domain.Enums.CheckEligibilityStatus.parentNotFound, API.Domain.Enums.ProcessEligibilityCheckSource.HMRC, new AuditData());
-            await _fakeInMemoryDb.SaveChangesAsync();
-
-            var response = await _sut.Exists(dataItem);
-
-            // Assert
-            response.Should().BeOfType<EligibilityCheckHash>();
-        }
-
-        [Test]
-        public async Task Given_HashIsOld_Exists_Should_Return_null()
-        {
-            // Arrange
-            var request = _fixture.Create<EligibilityCheck>();
-            _moqAudit.Setup(x => x.AuditAdd(It.IsAny<AuditData>())).ReturnsAsync("");
-            var fsm = _fixture.Create<CheckEligibilityRequestData_Fsm>();
-            fsm.DateOfBirth = "1990-01-01";
-            var dataItem = GetCheckProcessData(fsm);
-
-
-            var id = await _sut.Create(dataItem, API.Domain.Enums.CheckEligibilityStatus.parentNotFound, API.Domain.Enums.ProcessEligibilityCheckSource.HMRC, new AuditData());
-            await _fakeInMemoryDb.SaveChangesAsync();
-            var hashItem = _fakeInMemoryDb.EligibilityCheckHashes.First(x => x.EligibilityCheckHashID.Equals(id));
-                        hashItem.TimeStamp = hashItem.TimeStamp.AddDays(-(_hashCheckDays + 1));
-            await _fakeInMemoryDb.SaveChangesAsync();
-
-            // Act
-            var response = await _sut.Exists(dataItem);
-
-            // Assert
-            response.Should().BeNull();
-        }
-
-        private CheckProcessData GetCheckProcessData(CheckEligibilityRequestData_Fsm request)
-        {
-            return new CheckProcessData
-            {
-                DateOfBirth = request.DateOfBirth,
-                LastName = request.LastName,
-                NationalAsylumSeekerServiceNumber = request.NationalAsylumSeekerServiceNumber,
-                NationalInsuranceNumber = request.NationalInsuranceNumber,
-                Type = new CheckEligibilityRequestData_Fsm().Type
-            };
-        }
-
+            DateOfBirth = request.DateOfBirth,
+            LastName = request.LastName,
+            NationalAsylumSeekerServiceNumber = request.NationalAsylumSeekerServiceNumber,
+            NationalInsuranceNumber = request.NationalInsuranceNumber,
+            Type = new CheckEligibilityRequestData_Fsm().Type
+        };
     }
 }

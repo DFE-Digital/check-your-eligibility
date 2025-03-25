@@ -2,28 +2,24 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Diagnostics.CodeAnalysis;
 
-namespace CheckYourEligibility.API.Domain
+namespace CheckYourEligibility.API.Domain;
+
+[ExcludeFromCodeCoverage(Justification = "Data Model.")]
+public class Establishment
 {
-    [ExcludeFromCodeCoverage(Justification = "Data Model.")]
-    public class Establishment
-    {
-        [Key]
-        public int EstablishmentId { get; set; }
-        public string EstablishmentName { get; set; }
-        public string Postcode { get; set; }
-        public string Street { get; set; }
-        public string Locality { get; set; }
-        public string Town { get; set; }
-        public string County { get; set; }
-        public bool StatusOpen { get; set; }
-        public int LocalAuthorityId { get; set; }
-        public virtual LocalAuthority LocalAuthority { get; set; }
+    [Key] public int EstablishmentId { get; set; }
 
-        [NotMapped]
-        public double? LevenshteinDistance { get; set; }
+    public string EstablishmentName { get; set; }
+    public string Postcode { get; set; }
+    public string Street { get; set; }
+    public string Locality { get; set; }
+    public string Town { get; set; }
+    public string County { get; set; }
+    public bool StatusOpen { get; set; }
+    public int LocalAuthorityId { get; set; }
+    public virtual LocalAuthority LocalAuthority { get; set; }
 
-        [Column(TypeName = "varchar(100)")]
-        public string Type { get; set; }
+    [NotMapped] public double? LevenshteinDistance { get; set; }
 
-    }
+    [Column(TypeName = "varchar(100)")] public string Type { get; set; }
 }

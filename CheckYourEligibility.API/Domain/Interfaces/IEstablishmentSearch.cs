@@ -2,10 +2,9 @@
 
 using CheckYourEligibility.API.Boundary.Responses;
 
-namespace CheckYourEligibility.API.Gateways.Interfaces
+namespace CheckYourEligibility.API.Gateways.Interfaces;
+
+public interface IEstablishmentSearch
 {
-    public interface IEstablishmentSearch
-    {
-        Task<IEnumerable<Establishment>?> Search(string query);
-    }
+    Task<IEnumerable<Establishment>?> Search(string query);
 }

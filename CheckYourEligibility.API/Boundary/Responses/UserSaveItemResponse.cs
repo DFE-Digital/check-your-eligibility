@@ -1,7 +1,6 @@
-﻿namespace CheckYourEligibility.API.Boundary.Responses
+﻿namespace CheckYourEligibility.API.Boundary.Responses;
+
+public class UserSaveItemResponse
 {
-    public class UserSaveItemResponse
-    {
-        public string Data { get; set; }
-    }
+    public string Data { get; set; }
 }

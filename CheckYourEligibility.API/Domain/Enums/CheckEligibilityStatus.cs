@@ -1,13 +1,12 @@
 ﻿// Ignore Spelling: Fsm
 
-namespace CheckYourEligibility.API.Domain.Enums
+namespace CheckYourEligibility.API.Domain.Enums;
+
+public enum CheckEligibilityStatus
 {
-    public enum CheckEligibilityStatus
-    {
-        queuedForProcessing,
-        parentNotFound,
-        eligible,
-        notEligible,
-        Error
-    }
+    queuedForProcessing,
+    parentNotFound,
+    eligible,
+    notEligible,
+    Error
 }

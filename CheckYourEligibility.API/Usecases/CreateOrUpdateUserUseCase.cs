@@ -1,41 +1,40 @@
-using CheckYourEligibility.API.Domain.Enums;
 using CheckYourEligibility.API.Boundary.Requests;
 using CheckYourEligibility.API.Boundary.Responses;
+using CheckYourEligibility.API.Domain.Enums;
 using CheckYourEligibility.API.Gateways.Interfaces;
-using System.Threading.Tasks;
 
-namespace CheckYourEligibility.API.UseCases
+namespace CheckYourEligibility.API.UseCases;
+
+/// <summary>
+///     Interface for creating or updating a user.
+/// </summary>
+public interface ICreateOrUpdateUserUseCase
 {
     /// <summary>
-    /// Interface for creating or updating a user.
+    ///     Execute the use case.
     /// </summary>
-    public interface ICreateOrUpdateUserUseCase
+    /// <param name="model"></param>
+    /// <returns></returns>
+    Task<UserSaveItemResponse> Execute(UserCreateRequest model);
+}
+
+public class CreateOrUpdateUserUseCase : ICreateOrUpdateUserUseCase
+{
+    private readonly IAudit _auditGateway;
+    private readonly IUsers _userGateway;
+
+    public CreateOrUpdateUserUseCase(IUsers userGateway, IAudit auditGateway)
     {
-        /// <summary>
-        /// Execute the use case.
-        /// </summary>
-        /// <param name="model"></param>
-        /// <returns></returns>
-        Task<UserSaveItemResponse> Execute(UserCreateRequest model);
+        _userGateway = userGateway;
+        _auditGateway = auditGateway;
     }
-    public class CreateOrUpdateUserUseCase : ICreateOrUpdateUserUseCase
+
+    public async Task<UserSaveItemResponse> Execute(UserCreateRequest model)
     {
-        private readonly IUsers _userGateway;
-        private readonly IAudit _auditGateway;
+        var response = await _userGateway.Create(model.Data);
 
-        public CreateOrUpdateUserUseCase(IUsers userGateway, IAudit auditGateway)
-        {
-            _userGateway = userGateway;
-            _auditGateway = auditGateway;
-        }
+        await _auditGateway.CreateAuditEntry(AuditType.User, response);
 
-        public async Task<UserSaveItemResponse> Execute(UserCreateRequest model)
-        {
-            var response = await _userGateway.Create(model.Data);
-            
-            await _auditGateway.CreateAuditEntry(AuditType.User, response);
-            
-            return new UserSaveItemResponse { Data = response };
-        }
+        return new UserSaveItemResponse { Data = response };
     }
 }

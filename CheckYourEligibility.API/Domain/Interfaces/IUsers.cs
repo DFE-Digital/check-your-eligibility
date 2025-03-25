@@ -2,10 +2,9 @@
 
 using CheckYourEligibility.API.Boundary.Requests;
 
-namespace CheckYourEligibility.API.Gateways.Interfaces
+namespace CheckYourEligibility.API.Gateways.Interfaces;
+
+public interface IUsers
 {
-    public interface IUsers
-    {
-        Task<string> Create(UserData data);
-    }
+    Task<string> Create(UserData data);
 }

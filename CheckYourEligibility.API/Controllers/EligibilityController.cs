@@ -1,329 +1,328 @@
-﻿using CheckYourEligibility.API.Domain.Constants;
-using CheckYourEligibility.API.Domain.Exceptions;
+﻿using System.Net;
 using CheckYourEligibility.API.Boundary.Requests;
 using CheckYourEligibility.API.Boundary.Responses;
+using CheckYourEligibility.API.Domain.Constants;
+using CheckYourEligibility.API.Domain.Exceptions;
 using CheckYourEligibility.API.Gateways.Interfaces;
 using CheckYourEligibility.API.UseCases;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Net;
 using NotFoundException = CheckYourEligibility.API.Domain.Exceptions.NotFoundException;
 
-namespace CheckYourEligibility.API.Controllers
+namespace CheckYourEligibility.API.Controllers;
+
+[ApiController]
+[Route("[controller]")]
+[Authorize]
+public class EligibilityCheckController : BaseController
 {
-    [ApiController]
-    [Route("[controller]")]
-    [Authorize]
-    public class EligibilityCheckController : BaseController
+    private readonly int _bulkUploadRecordCountLimit;
+    private readonly ICheckEligibilityBulkUseCase _checkEligibilityBulkUseCase;
+    private readonly ICheckEligibilityForFSMUseCase _checkEligibilityForFsmUseCase;
+    private readonly IGetBulkUploadProgressUseCase _getBulkUploadProgressUseCase;
+    private readonly IGetBulkUploadResultsUseCase _getBulkUploadResultsUseCase;
+    private readonly IGetEligibilityCheckItemUseCase _getEligibilityCheckItemUseCase;
+    private readonly IGetEligibilityCheckStatusUseCase _getEligibilityCheckStatusUseCase;
+    private readonly ILogger<EligibilityCheckController> _logger;
+    private readonly IProcessEligibilityCheckUseCase _processEligibilityCheckUseCase;
+
+    // Use case services
+    private readonly IProcessQueueMessagesUseCase _processQueueMessagesUseCase;
+    private readonly IUpdateEligibilityCheckStatusUseCase _updateEligibilityCheckStatusUseCase;
+
+    public EligibilityCheckController(
+        ILogger<EligibilityCheckController> logger,
+        IAudit audit,
+        IConfiguration configuration,
+        IProcessQueueMessagesUseCase processQueueMessagesUseCase,
+        ICheckEligibilityForFSMUseCase checkEligibilityForFsmUseCase,
+        ICheckEligibilityBulkUseCase checkEligibilityBulkUseCase,
+        IGetBulkUploadProgressUseCase getBulkUploadProgressUseCase,
+        IGetBulkUploadResultsUseCase getBulkUploadResultsUseCase,
+        IGetEligibilityCheckStatusUseCase getEligibilityCheckStatusUseCase,
+        IUpdateEligibilityCheckStatusUseCase updateEligibilityCheckStatusUseCase,
+        IProcessEligibilityCheckUseCase processEligibilityCheckUseCase,
+        IGetEligibilityCheckItemUseCase getEligibilityCheckItemUseCase)
+        : base(audit)
     {
-        private readonly ILogger<EligibilityCheckController> _logger;
-        private readonly int _bulkUploadRecordCountLimit;
+        _logger = logger;
+        _bulkUploadRecordCountLimit = configuration.GetValue<int>("BulkEligibilityCheckLimit");
 
-        // Use case services
-        private readonly IProcessQueueMessagesUseCase _processQueueMessagesUseCase;
-        private readonly ICheckEligibilityForFSMUseCase _checkEligibilityForFsmUseCase;
-        private readonly ICheckEligibilityBulkUseCase _checkEligibilityBulkUseCase;
-        private readonly IGetBulkUploadProgressUseCase _getBulkUploadProgressUseCase;
-        private readonly IGetBulkUploadResultsUseCase _getBulkUploadResultsUseCase;
-        private readonly IGetEligibilityCheckStatusUseCase _getEligibilityCheckStatusUseCase;
-        private readonly IUpdateEligibilityCheckStatusUseCase _updateEligibilityCheckStatusUseCase;
-        private readonly IProcessEligibilityCheckUseCase _processEligibilityCheckUseCase;
-        private readonly IGetEligibilityCheckItemUseCase _getEligibilityCheckItemUseCase;
+        // Initialize use cases
+        _processQueueMessagesUseCase = processQueueMessagesUseCase;
+        _checkEligibilityForFsmUseCase = checkEligibilityForFsmUseCase;
+        _checkEligibilityBulkUseCase = checkEligibilityBulkUseCase;
+        _getBulkUploadProgressUseCase = getBulkUploadProgressUseCase;
+        _getBulkUploadResultsUseCase = getBulkUploadResultsUseCase;
+        _getEligibilityCheckStatusUseCase = getEligibilityCheckStatusUseCase;
+        _updateEligibilityCheckStatusUseCase = updateEligibilityCheckStatusUseCase;
+        _processEligibilityCheckUseCase = processEligibilityCheckUseCase;
+        _getEligibilityCheckItemUseCase = getEligibilityCheckItemUseCase;
+    }
 
-        public EligibilityCheckController(
-            ILogger<EligibilityCheckController> logger,
-            IAudit audit,
-            IConfiguration configuration,
-            IProcessQueueMessagesUseCase processQueueMessagesUseCase,
-            ICheckEligibilityForFSMUseCase checkEligibilityForFsmUseCase,
-            ICheckEligibilityBulkUseCase checkEligibilityBulkUseCase,
-            IGetBulkUploadProgressUseCase getBulkUploadProgressUseCase,
-            IGetBulkUploadResultsUseCase getBulkUploadResultsUseCase,
-            IGetEligibilityCheckStatusUseCase getEligibilityCheckStatusUseCase,
-            IUpdateEligibilityCheckStatusUseCase updateEligibilityCheckStatusUseCase,
-            IProcessEligibilityCheckUseCase processEligibilityCheckUseCase,
-            IGetEligibilityCheckItemUseCase getEligibilityCheckItemUseCase)
-            : base(audit)
+    /// <summary>
+    ///     Processes check messages on the specified queue
+    /// </summary>
+    /// <param name="queue"></param>
+    /// <returns></returns>
+    [ProducesResponseType(typeof(MessageResponse), (int)HttpStatusCode.OK)]
+    [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.BadRequest)]
+    [Consumes("application/json", "application/vnd.api+json;version=1.0")]
+    [HttpPost("/engine/process")]
+    [Authorize(Policy = PolicyNames.RequireEngineScope)]
+    public async Task<ActionResult> ProcessQueue(string queue)
+    {
+        var result = await _processQueueMessagesUseCase.Execute(queue);
+
+        if (result.Data == "Invalid Request.")
+            return BadRequest(new ErrorResponse { Errors = [new Error { Title = result.Data }] });
+
+        return new OkObjectResult(result);
+    }
+
+    /// <summary>
+    ///     Posts a FSM Eligibility Check to the processing queue
+    /// </summary>
+    /// <param name="model"></param>
+    /// <remarks>If the check has already been submitted, then the stored Hash is returned</remarks>
+    [ProducesResponseType(typeof(CheckEligibilityResponse), (int)HttpStatusCode.Accepted)]
+    [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.BadRequest)]
+    [Consumes("application/json", "application/vnd.api+json;version=1.0")]
+    [HttpPost("/check/free-school-meals")]
+    [HttpPost("/check/early-year-pupil-premium")]
+    [HttpPost("/check/two-year-offer")]
+    [Authorize(Policy = PolicyNames.RequireCheckScope)]
+    public async Task<ActionResult> CheckEligibility([FromBody] CheckEligibilityRequest_Fsm model)
+    {
+        try
         {
-            _logger = logger;
-            _bulkUploadRecordCountLimit = configuration.GetValue<int>("BulkEligibilityCheckLimit");
+            var result = await _checkEligibilityForFsmUseCase.Execute(model);
 
-            // Initialize use cases
-            _processQueueMessagesUseCase = processQueueMessagesUseCase;
-            _checkEligibilityForFsmUseCase = checkEligibilityForFsmUseCase;
-            _checkEligibilityBulkUseCase = checkEligibilityBulkUseCase;
-            _getBulkUploadProgressUseCase = getBulkUploadProgressUseCase;
-            _getBulkUploadResultsUseCase = getBulkUploadResultsUseCase;
-            _getEligibilityCheckStatusUseCase = getEligibilityCheckStatusUseCase;
-            _updateEligibilityCheckStatusUseCase = updateEligibilityCheckStatusUseCase;
-            _processEligibilityCheckUseCase = processEligibilityCheckUseCase;
-            _getEligibilityCheckItemUseCase = getEligibilityCheckItemUseCase;
+            return new ObjectResult(result) { StatusCode = StatusCodes.Status202Accepted };
         }
 
-        /// <summary>
-        /// Processes check messages on the specified queue
-        /// </summary>
-        /// <param name="queue"></param>
-        /// <returns></returns>
-        [ProducesResponseType(typeof(MessageResponse), (int)HttpStatusCode.OK)]
-        [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.BadRequest)]
-        [Consumes("application/json", "application/vnd.api+json;version=1.0")]
-        [HttpPost("/engine/process")]
-        [Authorize(Policy = PolicyNames.RequireEngineScope)]
-        public async Task<ActionResult> ProcessQueue(string queue)
+        catch (ValidationException ex)
         {
-            var result = await _processQueueMessagesUseCase.Execute(queue);
+            return BadRequest(new ErrorResponse { Errors = ex.Errors });
+        }
+    }
 
-            if (result.Data == "Invalid Request.")
-            {
-                return BadRequest(new ErrorResponse { Errors = [new Error() {Title = result.Data}]});
-            }
+    /// <summary>
+    ///     Posts the array of FSM checks
+    /// </summary>
+    /// <param name="model"></param>
+    /// <returns></returns>
+    [ProducesResponseType(typeof(CheckEligibilityResponseBulk), (int)HttpStatusCode.Accepted)]
+    [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.BadRequest)]
+    [Consumes("application/json", "application/vnd.api+json;version=1.0")]
+    [HttpPost("/bulk-check/free-school-meals")]
+    [HttpPost("/bulk-check/early-year-pupil-premium")]
+    [HttpPost("/bulk-check/two-year-offer")]
+    [Authorize(Policy = PolicyNames.RequireBulkCheckScope)]
+    public async Task<ActionResult> CheckEligibilityBulk([FromBody] CheckEligibilityRequestBulk_Fsm model)
+    {
+        try
+        {
+            var result = await _checkEligibilityBulkUseCase.Execute(model, _bulkUploadRecordCountLimit);
 
-            return new OkObjectResult(result);
+            return new ObjectResult(result) { StatusCode = StatusCodes.Status202Accepted };
         }
 
-        /// <summary>
-        /// Posts a FSM Eligibility Check to the processing queue
-        /// </summary>
-        /// <param name="model"></param>
-        /// <remarks>If the check has already been submitted, then the stored Hash is returned</remarks>
-        [ProducesResponseType(typeof(CheckEligibilityResponse), (int)HttpStatusCode.Accepted)]
-        [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.BadRequest)]
-        [Consumes("application/json", "application/vnd.api+json;version=1.0")]
-        [HttpPost("/check/free-school-meals")]
-        [HttpPost("/check/early-year-pupil-premium")]
-        [HttpPost("/check/two-year-offer")]
-        [Authorize(Policy = PolicyNames.RequireCheckScope)]
-        public async Task<ActionResult> CheckEligibility([FromBody] CheckEligibilityRequest_Fsm model)
+        catch (ValidationException ex)
         {
-            try
-            {
-                var result = await _checkEligibilityForFsmUseCase.Execute(model);
+            return BadRequest(new ErrorResponse { Errors = ex.Errors });
+        }
+    }
 
-                return new ObjectResult(result) { StatusCode = StatusCodes.Status202Accepted };
-            }
+    /// <summary>
+    ///     Bulk Upload status
+    /// </summary>
+    /// <param name="guid"></param>
+    /// <returns></returns>
+    [ProducesResponseType(typeof(CheckEligibilityBulkStatusResponse), (int)HttpStatusCode.OK)]
+    [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.NotFound)]
+    [Consumes("application/json", "application/vnd.api+json;version=1.0")]
+    [HttpGet("/bulk-check/{guid}/progress")]
+    [Authorize(Policy = PolicyNames.RequireBulkCheckScope)]
+    public async Task<ActionResult> BulkUploadProgress(string guid)
+    {
+        try
+        {
+            var result = await _getBulkUploadProgressUseCase.Execute(guid);
 
-            catch (ValidationException ex)
-            {
-                return BadRequest(new ErrorResponse { Errors = ex.Errors });
-            }
+            return new ObjectResult(result) { StatusCode = StatusCodes.Status200OK };
         }
 
-        /// <summary>
-        /// Posts the array of FSM checks
-        /// </summary>
-        /// <param name="model"></param>
-        /// <returns></returns>
-        [ProducesResponseType(typeof(CheckEligibilityResponseBulk), (int)HttpStatusCode.Accepted)]
-        [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.BadRequest)]
-        [Consumes("application/json", "application/vnd.api+json;version=1.0")]
-        [HttpPost("/bulk-check/free-school-meals")]
-        [HttpPost("/bulk-check/early-year-pupil-premium")]
-        [HttpPost("/bulk-check/two-year-offer")]
-        [Authorize(Policy = PolicyNames.RequireBulkCheckScope)]
-        public async Task<ActionResult> CheckEligibilityBulk([FromBody] CheckEligibilityRequestBulk_Fsm model)
+        catch (NotFoundException ex)
         {
-            try {
-                var result = await _checkEligibilityBulkUseCase.Execute(model, _bulkUploadRecordCountLimit);
-    
-                return new ObjectResult(result) { StatusCode = StatusCodes.Status202Accepted };
-            }
-
-            catch (ValidationException ex)
-            {
-                return BadRequest(new ErrorResponse { Errors = ex.Errors });
-            }
+            return NotFound(new ErrorResponse { Errors = [new Error { Title = guid }] });
         }
 
-        /// <summary>
-        /// Bulk Upload status
-        /// </summary>
-        /// <param name="guid"></param>
-        /// <returns></returns>
-        [ProducesResponseType(typeof(CheckEligibilityBulkStatusResponse), (int)HttpStatusCode.OK)]
-        [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.NotFound)]
-        [Consumes("application/json", "application/vnd.api+json;version=1.0")]
-        [HttpGet("/bulk-check/{guid}/progress")]
-        [Authorize(Policy = PolicyNames.RequireBulkCheckScope)]
-        public async Task<ActionResult> BulkUploadProgress(string guid)
+        catch (ValidationException ex)
         {
-            try
-            {
-                var result = await _getBulkUploadProgressUseCase.Execute(guid);
-                
-                return new ObjectResult(result) { StatusCode = StatusCodes.Status200OK };
-            }
+            return BadRequest(new ErrorResponse { Errors = ex.Errors });
+        }
+    }
 
-            catch (NotFoundException ex)
-            {
-                return NotFound(new ErrorResponse { Errors = [new Error() { Title = guid }] });
-            }
-            
-            catch (ValidationException ex)
-            {
-                return BadRequest(new ErrorResponse { Errors = ex.Errors });
-            }
+    /// <summary>
+    ///     Loads results of bulk loads given a group Id
+    /// </summary>
+    /// <param name="guid"></param>
+    /// <returns></returns>
+    [ProducesResponseType(typeof(CheckEligibilityBulkResponse), (int)HttpStatusCode.OK)]
+    [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.NotFound)]
+    [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.BadRequest)]
+    [Consumes("application/json", "application/vnd.api+json;version=1.0")]
+    [HttpGet("/bulk-check/{guid}")]
+    [Authorize(Policy = PolicyNames.RequireBulkCheckScope)]
+    public async Task<ActionResult> BulkUploadResults(string guid)
+    {
+        try
+        {
+            var result = await _getBulkUploadResultsUseCase.Execute(guid);
+
+            return new ObjectResult(result) { StatusCode = StatusCodes.Status200OK };
         }
 
-        /// <summary>
-        /// Loads results of bulk loads given a group Id
-        /// </summary>
-        /// <param name="guid"></param>
-        /// <returns></returns>
-        [ProducesResponseType(typeof(CheckEligibilityBulkResponse), (int)HttpStatusCode.OK)]
-        [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.NotFound)]
-        [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.BadRequest)]
-        [Consumes("application/json", "application/vnd.api+json;version=1.0")]
-        [HttpGet("/bulk-check/{guid}")]
-        [Authorize(Policy = PolicyNames.RequireBulkCheckScope)]
-        public async Task<ActionResult> BulkUploadResults(string guid)
+        catch (NotFoundException ex)
         {
-            try
-            {
-                var result = await _getBulkUploadResultsUseCase.Execute(guid);
-
-                return new ObjectResult(result) { StatusCode = StatusCodes.Status200OK };
-
-            }
-
-            catch (NotFoundException ex)
-            {
-                return NotFound(new ErrorResponse() { Errors = [new Error() { Title = guid, Status = "404" }] });
-            }
-            
-            catch (ValidationException ex)
-            {
-                return BadRequest(new ErrorResponse { Errors = ex.Errors });
-            }
+            return NotFound(new ErrorResponse { Errors = [new Error { Title = guid, Status = "404" }] });
         }
 
-        /// <summary>
-        /// Gets an FSM an Eligibility Check status
-        /// </summary>
-        /// <param name="guid"></param>
-        /// <returns></returns>
-        [ProducesResponseType(typeof(CheckEligibilityStatusResponse), (int)HttpStatusCode.OK)]
-        [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.NotFound)]
-        [Consumes("application/json", "application/vnd.api+json;version=1.0")]
-        [HttpGet("/check/{guid}/status")]
-        [Authorize(Policy = PolicyNames.RequireCheckScope)]
-        public async Task<ActionResult> CheckEligibilityStatus(string guid)
+        catch (ValidationException ex)
         {
-            try
-            {
-                var result = await _getEligibilityCheckStatusUseCase.Execute(guid);
+            return BadRequest(new ErrorResponse { Errors = ex.Errors });
+        }
+    }
 
-                return new ObjectResult(result) { StatusCode = StatusCodes.Status200OK };
-            }
+    /// <summary>
+    ///     Gets an FSM an Eligibility Check status
+    /// </summary>
+    /// <param name="guid"></param>
+    /// <returns></returns>
+    [ProducesResponseType(typeof(CheckEligibilityStatusResponse), (int)HttpStatusCode.OK)]
+    [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.NotFound)]
+    [Consumes("application/json", "application/vnd.api+json;version=1.0")]
+    [HttpGet("/check/{guid}/status")]
+    [Authorize(Policy = PolicyNames.RequireCheckScope)]
+    public async Task<ActionResult> CheckEligibilityStatus(string guid)
+    {
+        try
+        {
+            var result = await _getEligibilityCheckStatusUseCase.Execute(guid);
 
-            catch (NotFoundException ex)
-            {
-                return NotFound(new ErrorResponse { Errors = [new Error() { Title = guid }] });
-            }
-            
-            catch (ValidationException ex)
-            {
-                return BadRequest(new ErrorResponse { Errors = ex.Errors });
-            }
+            return new ObjectResult(result) { StatusCode = StatusCodes.Status200OK };
         }
 
-        /// <summary>
-        /// Updates an Eligibility check status
-        /// </summary>
-        /// <param name="guid"></param>
-        /// <param name="model"></param>
-        /// <returns></returns>
-        [ProducesResponseType(typeof(CheckEligibilityStatusResponse), (int)HttpStatusCode.OK)]
-        [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.NotFound)]
-        [Consumes("application/json", "application/vnd.api+json;version=1.0")]
-        [HttpPatch("/engine/check/{guid}/status")]
-        [Authorize(Policy = PolicyNames.RequireEngineScope)]
-        public async Task<ActionResult> EligibilityCheckStatusUpdate(string guid,
-            [FromBody] EligibilityStatusUpdateRequest model)
+        catch (NotFoundException ex)
         {
-            try
-            {
-                var result = await _updateEligibilityCheckStatusUseCase.Execute(guid, model);
-                return new ObjectResult(result) { StatusCode = StatusCodes.Status200OK };
-            }
-
-            catch (NotFoundException ex)
-            {
-                return NotFound(new ErrorResponse { Errors = [new Error() { Title = "" }] });
-            }
-            
-            catch (ValidationException ex)
-            {
-                return BadRequest(new ErrorResponse { Errors = ex.Errors });
-            }
+            return NotFound(new ErrorResponse { Errors = [new Error { Title = guid }] });
         }
 
-        /// <summary>
-        /// Processes FSM an Eligibility Check producing an outcome status
-        /// </summary>
-        /// <param name="guid"></param>
-        /// <returns></returns>
-        /// <remarks>If a dependent Gateway, ie DWP fails then the status is not updated</remarks>
-        [ProducesResponseType(typeof(CheckEligibilityStatusResponse), (int)HttpStatusCode.OK)]
-        [ProducesResponseType(typeof(CheckEligibilityStatusResponse), (int)HttpStatusCode.ServiceUnavailable)]
-        [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.NotFound)]
-        [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.BadRequest)]
-        [Consumes("application/json", "application/vnd.api+json;version=1.0")]
-        [HttpPut("/engine/process/{guid}")]
-        [Authorize(Policy = PolicyNames.RequireEngineScope)]
-        public async Task<ActionResult> Process(string guid)
+        catch (ValidationException ex)
         {
-            try
-            {
-                var result = await _processEligibilityCheckUseCase.Execute(guid);
+            return BadRequest(new ErrorResponse { Errors = ex.Errors });
+        }
+    }
 
-                return new ObjectResult(result) { StatusCode = StatusCodes.Status200OK };
-            }
-            catch (NotFoundException ex)
-            {
-                return NotFound(new ErrorResponse { Errors = [new Error() { Title = guid }] });
-            }
-            catch (ValidationException ex)
-            {
-                return BadRequest(new ErrorResponse { Errors = ex.Errors });
-            }
-            catch (ApplicationException ex)
-            {
-                return StatusCode(StatusCodes.Status503ServiceUnavailable, new ErrorResponse { Errors = [new Error() { Title = ex.Message }] });
-            }
-            catch (ProcessCheckException ex)
-            {
-                return BadRequest(new ErrorResponse { Errors = [new Error() {Title = guid}]});
-            }
+    /// <summary>
+    ///     Updates an Eligibility check status
+    /// </summary>
+    /// <param name="guid"></param>
+    /// <param name="model"></param>
+    /// <returns></returns>
+    [ProducesResponseType(typeof(CheckEligibilityStatusResponse), (int)HttpStatusCode.OK)]
+    [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.NotFound)]
+    [Consumes("application/json", "application/vnd.api+json;version=1.0")]
+    [HttpPatch("/engine/check/{guid}/status")]
+    [Authorize(Policy = PolicyNames.RequireEngineScope)]
+    public async Task<ActionResult> EligibilityCheckStatusUpdate(string guid,
+        [FromBody] EligibilityStatusUpdateRequest model)
+    {
+        try
+        {
+            var result = await _updateEligibilityCheckStatusUseCase.Execute(guid, model);
+            return new ObjectResult(result) { StatusCode = StatusCodes.Status200OK };
         }
 
-        /// <summary>
-        /// Gets an Eligibility check using the supplied GUID 
-        /// </summary>
-        /// <param name="guid"></param>
-        /// <returns></returns>
-        [ProducesResponseType(typeof(CheckEligibilityItemResponse), (int)HttpStatusCode.OK)]
-        [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.NotFound)]
-        [Consumes("application/json", "application/vnd.api+json;version=1.0")]
-        [HttpGet("/check/{guid}")]
-        [Authorize(Policy = PolicyNames.RequireCheckScope)]
-        public async Task<ActionResult> EligibilityCheck(string guid)
+        catch (NotFoundException ex)
         {
-            try
-            {
-                var result = await _getEligibilityCheckItemUseCase.Execute(guid);
-                
-                return new ObjectResult(result) { StatusCode = StatusCodes.Status200OK };
-            }
+            return NotFound(new ErrorResponse { Errors = [new Error { Title = "" }] });
+        }
 
-            catch(NotFoundException ex) {
-                return NotFound(new ErrorResponse { Errors = [new Error() {Title = guid}]});
-            }
-            
-            catch (ValidationException ex)
-            {
-                return BadRequest(new ErrorResponse { Errors = ex.Errors });
-            }
+        catch (ValidationException ex)
+        {
+            return BadRequest(new ErrorResponse { Errors = ex.Errors });
+        }
+    }
+
+    /// <summary>
+    ///     Processes FSM an Eligibility Check producing an outcome status
+    /// </summary>
+    /// <param name="guid"></param>
+    /// <returns></returns>
+    /// <remarks>If a dependent Gateway, ie DWP fails then the status is not updated</remarks>
+    [ProducesResponseType(typeof(CheckEligibilityStatusResponse), (int)HttpStatusCode.OK)]
+    [ProducesResponseType(typeof(CheckEligibilityStatusResponse), (int)HttpStatusCode.ServiceUnavailable)]
+    [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.NotFound)]
+    [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.BadRequest)]
+    [Consumes("application/json", "application/vnd.api+json;version=1.0")]
+    [HttpPut("/engine/process/{guid}")]
+    [Authorize(Policy = PolicyNames.RequireEngineScope)]
+    public async Task<ActionResult> Process(string guid)
+    {
+        try
+        {
+            var result = await _processEligibilityCheckUseCase.Execute(guid);
+
+            return new ObjectResult(result) { StatusCode = StatusCodes.Status200OK };
+        }
+        catch (NotFoundException ex)
+        {
+            return NotFound(new ErrorResponse { Errors = [new Error { Title = guid }] });
+        }
+        catch (ValidationException ex)
+        {
+            return BadRequest(new ErrorResponse { Errors = ex.Errors });
+        }
+        catch (ApplicationException ex)
+        {
+            return StatusCode(StatusCodes.Status503ServiceUnavailable,
+                new ErrorResponse { Errors = [new Error { Title = ex.Message }] });
+        }
+        catch (ProcessCheckException ex)
+        {
+            return BadRequest(new ErrorResponse { Errors = [new Error { Title = guid }] });
+        }
+    }
+
+    /// <summary>
+    ///     Gets an Eligibility check using the supplied GUID
+    /// </summary>
+    /// <param name="guid"></param>
+    /// <returns></returns>
+    [ProducesResponseType(typeof(CheckEligibilityItemResponse), (int)HttpStatusCode.OK)]
+    [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.NotFound)]
+    [Consumes("application/json", "application/vnd.api+json;version=1.0")]
+    [HttpGet("/check/{guid}")]
+    [Authorize(Policy = PolicyNames.RequireCheckScope)]
+    public async Task<ActionResult> EligibilityCheck(string guid)
+    {
+        try
+        {
+            var result = await _getEligibilityCheckItemUseCase.Execute(guid);
+
+            return new ObjectResult(result) { StatusCode = StatusCodes.Status200OK };
+        }
+
+        catch (NotFoundException ex)
+        {
+            return NotFound(new ErrorResponse { Errors = [new Error { Title = guid }] });
+        }
+
+        catch (ValidationException ex)
+        {
+            return BadRequest(new ErrorResponse { Errors = ex.Errors });
         }
     }
 }

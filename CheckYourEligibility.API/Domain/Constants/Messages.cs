@@ -1,9 +1,8 @@
 ﻿// Ignore Spelling: FSM
 
-namespace CheckYourEligibility.API.Domain.Constants
+namespace CheckYourEligibility.API.Domain.Constants;
+
+public static class Messages
 {
-    public static class Messages
-    {
-        public const string Processing = "Processing";
-    }
+    public const string Processing = "Processing";
 }

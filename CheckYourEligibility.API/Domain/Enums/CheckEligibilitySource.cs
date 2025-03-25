@@ -1,11 +1,10 @@
 ﻿// Ignore Spelling: Fsm
 
-namespace CheckYourEligibility.API.Domain.Enums
+namespace CheckYourEligibility.API.Domain.Enums;
+
+public enum ProcessEligibilityCheckSource
 {
-    public enum ProcessEligibilityCheckSource
-    {
-        HMRC,
-        DWP,
-        HO
-    }
+    HMRC,
+    DWP,
+    HO
 }

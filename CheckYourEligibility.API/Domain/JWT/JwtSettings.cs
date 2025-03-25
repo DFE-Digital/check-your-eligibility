@@ -1,6 +1,5 @@
-using System;
-
 namespace CheckYourEligibility.API.Domain;
+
 public class JwtSettings
 {
     public string Key { get; set; }

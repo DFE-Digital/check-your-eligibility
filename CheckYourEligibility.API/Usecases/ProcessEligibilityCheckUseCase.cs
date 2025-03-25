@@ -1,86 +1,78 @@
-using CheckYourEligibility.API.Domain;
+using CheckYourEligibility.API.Boundary.Responses;
 using CheckYourEligibility.API.Domain.Enums;
 using CheckYourEligibility.API.Domain.Exceptions;
-using CheckYourEligibility.API.Boundary.Responses;
 using CheckYourEligibility.API.Gateways.Interfaces;
-using Microsoft.Extensions.Logging;
-using System.Threading.Tasks;
 
-namespace CheckYourEligibility.API.UseCases
+namespace CheckYourEligibility.API.UseCases;
+
+/// <summary>
+///     Interface for processing eligibility checks
+/// </summary>
+public interface IProcessEligibilityCheckUseCase
 {
     /// <summary>
-    /// Interface for processing eligibility checks
+    ///     Execute the use case
     /// </summary>
-    public interface IProcessEligibilityCheckUseCase
+    /// <param name="guid">The ID of the eligibility check</param>
+    /// <returns>Processed eligibility check status</returns>
+    Task<CheckEligibilityStatusResponse> Execute(string guid);
+}
+
+public class ProcessEligibilityCheckUseCase : IProcessEligibilityCheckUseCase
+{
+    private readonly IAudit _auditGateway;
+    private readonly ICheckEligibility _checkGateway;
+    private readonly ILogger<ProcessEligibilityCheckUseCase> _logger;
+
+    public ProcessEligibilityCheckUseCase(
+        ICheckEligibility checkGateway,
+        IAudit auditGateway,
+        ILogger<ProcessEligibilityCheckUseCase> logger)
     {
-        /// <summary>
-        /// Execute the use case
-        /// </summary>
-        /// <param name="guid">The ID of the eligibility check</param>
-        /// <returns>Processed eligibility check status</returns>
-        Task<CheckEligibilityStatusResponse> Execute(string guid);
+        _checkGateway = checkGateway;
+        _auditGateway = auditGateway;
+        _logger = logger;
     }
 
-    public class ProcessEligibilityCheckUseCase : IProcessEligibilityCheckUseCase
+    public async Task<CheckEligibilityStatusResponse> Execute(string guid)
     {
-        private readonly ICheckEligibility _checkGateway;
-        private readonly IAudit _auditGateway;
-        private readonly ILogger<ProcessEligibilityCheckUseCase> _logger;
+        if (string.IsNullOrEmpty(guid)) throw new ValidationException(null, "Invalid Request, check ID is required.");
 
-        public ProcessEligibilityCheckUseCase(
-            ICheckEligibility checkGateway,
-            IAudit auditGateway,
-            ILogger<ProcessEligibilityCheckUseCase> logger)
+        try
         {
-            _checkGateway = checkGateway;
-            _auditGateway = auditGateway;
-            _logger = logger;
+            var auditItemTemplate = _auditGateway.AuditDataGet(AuditType.Check, string.Empty);
+            var response = await _checkGateway.ProcessCheck(guid, auditItemTemplate);
+
+            if (response == null)
+            {
+                _logger.LogWarning(
+                    $"Eligibility check with ID {guid.Replace(Environment.NewLine, "").Replace("\n", "").Replace("\r", "")} not found");
+                throw new NotFoundException(guid);
+            }
+
+            await _auditGateway.CreateAuditEntry(AuditType.Check, guid);
+
+            _logger.LogInformation(
+                $"Processed eligibility check with ID: {guid.Replace(Environment.NewLine, "").Replace("\n", "").Replace("\r", "")}, status: {response.Value}");
+
+            var resultResponse = new CheckEligibilityStatusResponse
+            {
+                Data = new StatusValue
+                {
+                    Status = response.Value.ToString()
+                }
+            };
+
+            if (response.Value == CheckEligibilityStatus.queuedForProcessing)
+                throw new ApplicationException("Eligibility check still queued for processing.");
+
+            return resultResponse;
         }
-
-        public async Task<CheckEligibilityStatusResponse> Execute(string guid)
+        catch (ProcessCheckException ex)
         {
-            if (string.IsNullOrEmpty(guid))
-            {
-                throw new ValidationException(null, "Invalid Request, check ID is required.");
-            }
-
-            try
-            {
-                var auditItemTemplate = _auditGateway.AuditDataGet(AuditType.Check, string.Empty);
-                var response = await _checkGateway.ProcessCheck(guid, auditItemTemplate);
-                
-                if (response == null)
-                {
-                    _logger.LogWarning($"Eligibility check with ID {guid.Replace(Environment.NewLine, "").Replace("\n", "").Replace("\r", "")} not found");
-                    throw new NotFoundException(guid.ToString());
-                }
-
-                await _auditGateway.CreateAuditEntry(AuditType.Check, guid);
-                
-                _logger.LogInformation($"Processed eligibility check with ID: {guid.Replace(Environment.NewLine, "").Replace("\n", "").Replace("\r", "")}, status: {response.Value}");
-                
-                var resultResponse = new CheckEligibilityStatusResponse() 
-                { 
-                    Data = new StatusValue() 
-                    { 
-                        Status = response.Value.ToString() 
-                    } 
-                };
-                
-                if (response.Value == CheckEligibilityStatus.queuedForProcessing)
-                {
-                    throw new ApplicationException("Eligibility check still queued for processing.");
-                }
-                else
-                {
-                    return resultResponse;
-                }
-            }
-            catch (ProcessCheckException ex)
-            {
-                _logger.LogError(ex, $"Error processing eligibility check with ID: {guid.Replace(Environment.NewLine, "").Replace("\n", "").Replace("\r", "")}");
-                throw new ValidationException(null, "Failed to process eligibility check.");
-            }
+            _logger.LogError(ex,
+                $"Error processing eligibility check with ID: {guid.Replace(Environment.NewLine, "").Replace("\n", "").Replace("\r", "")}");
+            throw new ValidationException(null, "Failed to process eligibility check.");
         }
     }
 }

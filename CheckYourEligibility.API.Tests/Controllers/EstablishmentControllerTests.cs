@@ -1,7 +1,7 @@
 using AutoFixture;
 using CheckYourEligibility.API.Boundary.Responses;
-using CheckYourEligibility.API.Gateways.Interfaces;
 using CheckYourEligibility.API.Controllers;
+using CheckYourEligibility.API.Gateways.Interfaces;
 using CheckYourEligibility.API.UseCases;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
@@ -9,77 +9,78 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Moq;
 
-namespace CheckYourEligibility.API.Tests
+namespace CheckYourEligibility.API.Tests;
+
+public class EstablishmentControllerTests : TestBase.TestBase
 {
-    public class EstablishmentControllerTests : TestBase.TestBase
+    private Fixture _fixture;
+    private Mock<IAudit> _mockAuditGateway;
+    private ILogger<EstablishmentController> _mockLogger;
+    private Mock<ISearchEstablishmentsUseCase> _mockSearchUseCase;
+    private EstablishmentController _sut;
+
+    [SetUp]
+    public void Setup()
     {
-        private Mock<ISearchEstablishmentsUseCase> _mockSearchUseCase;
-        private ILogger<EstablishmentController> _mockLogger;
-        private EstablishmentController _sut;
-        private Mock<IAudit> _mockAuditGateway;
-        private Fixture _fixture;
+        _mockSearchUseCase = new Mock<ISearchEstablishmentsUseCase>(MockBehavior.Strict);
+        _mockLogger = Mock.Of<ILogger<EstablishmentController>>();
+        _mockAuditGateway = new Mock<IAudit>(MockBehavior.Strict);
+        _sut = new EstablishmentController(_mockLogger, _mockSearchUseCase.Object, _mockAuditGateway.Object);
+        _fixture = new Fixture();
+    }
 
-        [SetUp]
-        public void Setup()
-        {
-            _mockSearchUseCase = new Mock<ISearchEstablishmentsUseCase>(MockBehavior.Strict);
-            _mockLogger = Mock.Of<ILogger<EstablishmentController>>();
-            _mockAuditGateway = new Mock<IAudit>(MockBehavior.Strict);
-            _sut = new EstablishmentController(_mockLogger, _mockSearchUseCase.Object, _mockAuditGateway.Object);
-            _fixture = new Fixture();
-        }
+    [TearDown]
+    public void Teardown()
+    {
+        _mockSearchUseCase.VerifyAll();
+    }
 
-        [TearDown]
-        public void Teardown()
-        {
-            _mockSearchUseCase.VerifyAll();
-        }
+    [Test]
+    public async Task Given_Search_Should_Return_Status200OK()
+    {
+        // Arrange
+        var query = _fixture.Create<string>();
+        var result = _fixture.CreateMany<Establishment>().ToList();
+        _mockSearchUseCase.Setup(cs => cs.Execute(query)).ReturnsAsync(result);
 
-        [Test]
-        public async Task Given_Search_Should_Return_Status200OK()
-        {
-            // Arrange
-            var query = _fixture.Create<string>();
-            var result = _fixture.CreateMany<Establishment>().ToList();
-            _mockSearchUseCase.Setup(cs => cs.Execute(query)).ReturnsAsync(result);
+        var expectedResult = new ObjectResult(new EstablishmentSearchResponse { Data = result })
+            { StatusCode = StatusCodes.Status200OK };
 
-            var expectedResult = new ObjectResult(new EstablishmentSearchResponse { Data = result }) { StatusCode = StatusCodes.Status200OK };
+        // Act
+        var response = await _sut.Search(query);
 
-            // Act
-            var response = await _sut.Search(query);
+        // Assert
+        response.Should().BeEquivalentTo(expectedResult);
+    }
 
-            // Assert
-            response.Should().BeEquivalentTo(expectedResult);
-        }
+    [Test]
+    public async Task Given_Search_Should_Return_Status400BadRequest()
+    {
+        // Arrange
+        var query = "A";
 
-        [Test]
-        public async Task Given_Search_Should_Return_Status400BadRequest()
-        {
-            // Arrange
-            var query = "A";
+        // Act
+        var response = await _sut.Search(query);
 
-            // Act
-            var response = await _sut.Search(query);
+        // Assert
+        response.Should().BeOfType<BadRequestObjectResult>();
+    }
 
-            // Assert
-            response.Should().BeOfType<BadRequestObjectResult>();
-        }
+    [Test]
+    public async Task Given_Search_Should_Return_Status200NotFound()
+    {
+        // Arrange
+        var query = _fixture.Create<string>();
+        var result = Enumerable.Empty<Establishment>();
+        _mockSearchUseCase.Setup(cs => cs.Execute(query)).ReturnsAsync(result);
 
-        [Test]
-        public async Task Given_Search_Should_Return_Status200NotFound()
-        {
-            // Arrange
-            var query = _fixture.Create<string>();
-            var result = Enumerable.Empty<Establishment>();
-            _mockSearchUseCase.Setup(cs => cs.Execute(query)).ReturnsAsync(result);
+        var expectedResult = new ObjectResult(new EstablishmentSearchResponse { Data = result })
+            { StatusCode = StatusCodes.Status200OK };
 
-            var expectedResult = new ObjectResult(new EstablishmentSearchResponse { Data = result }) { StatusCode = StatusCodes.Status200OK };
+        // Act
+        var response = await _sut.Search(query);
 
-            // Act
-            var response = await _sut.Search(query);
-
-            // Assert
-            response.Should().BeEquivalentTo(expectedResult);
-        }
+        // Assert
+        response.Should().BeEquivalentTo(expectedResult);
     }
 }

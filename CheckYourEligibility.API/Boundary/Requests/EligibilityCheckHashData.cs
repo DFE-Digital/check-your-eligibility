@@ -2,10 +2,9 @@
 
 using CheckYourEligibility.API.Domain.Enums;
 
-namespace CheckYourEligibility.API.Boundary.Requests
+namespace CheckYourEligibility.API.Boundary.Requests;
+
+public class EligibilityCheckHashData
 {
-    public class EligibilityCheckHashData
-    {
-        public CheckEligibilityStatus Outcome { get; set; }
-    }
+    public CheckEligibilityStatus Outcome { get; set; }
 }

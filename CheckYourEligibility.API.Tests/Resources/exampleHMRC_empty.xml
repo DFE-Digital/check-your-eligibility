@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<FreeSchoolMealsHMRC xsi:schemaLocation="http://www.govtalk.gov.uk/Education/FreeSchoolMeals-200705" xmlns:n1="http://www.govtalk.gov.uk/Education/FreeSchoolMeals-200705" xmlns="http://www.govtalk.gov.uk/Education/FreeSchoolMeals-200705" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<FreeSchoolMealsHMRC xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                     xsi:schemaLocation="http://www.govtalk.gov.uk/Education/FreeSchoolMeals-200705"
+                     xmlns="http://www.govtalk.gov.uk/Education/FreeSchoolMeals-200705">
     <Header>
         <OriginatingSystemID>FS</OriginatingSystemID>
         <ReceivingSystemID>DE</ReceivingSystemID>

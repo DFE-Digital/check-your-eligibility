@@ -1,5 +1,3 @@
-using System;
-
 namespace CheckYourEligibility.API.Domain.Constants;
 
 public static class CSVHeaders

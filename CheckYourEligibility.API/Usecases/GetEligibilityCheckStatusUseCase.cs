@@ -1,67 +1,62 @@
-using CheckYourEligibility.API.Domain;
-using CheckYourEligibility.API.Domain.Exceptions;
-using CheckYourEligibility.API.Domain.Enums;
 using CheckYourEligibility.API.Boundary.Responses;
+using CheckYourEligibility.API.Domain.Enums;
+using CheckYourEligibility.API.Domain.Exceptions;
 using CheckYourEligibility.API.Gateways.Interfaces;
-using Microsoft.Extensions.Logging;
-using System.Threading.Tasks;
 
-namespace CheckYourEligibility.API.UseCases
+namespace CheckYourEligibility.API.UseCases;
+
+/// <summary>
+///     Interface for retrieving eligibility check status
+/// </summary>
+public interface IGetEligibilityCheckStatusUseCase
 {
     /// <summary>
-    /// Interface for retrieving eligibility check status
+    ///     Execute the use case
     /// </summary>
-    public interface IGetEligibilityCheckStatusUseCase
+    /// <param name="guid">The ID of the eligibility check</param>
+    /// <returns>Eligibility check status</returns>
+    Task<CheckEligibilityStatusResponse> Execute(string guid);
+}
+
+public class GetEligibilityCheckStatusUseCase : IGetEligibilityCheckStatusUseCase
+{
+    private readonly IAudit _auditGateway;
+    private readonly ICheckEligibility _checkGateway;
+    private readonly ILogger<GetEligibilityCheckStatusUseCase> _logger;
+
+    public GetEligibilityCheckStatusUseCase(
+        ICheckEligibility checkGateway,
+        IAudit auditGateway,
+        ILogger<GetEligibilityCheckStatusUseCase> logger)
     {
-        /// <summary>
-        /// Execute the use case
-        /// </summary>
-        /// <param name="guid">The ID of the eligibility check</param>
-        /// <returns>Eligibility check status</returns>
-        Task<CheckEligibilityStatusResponse> Execute(string guid);
+        _checkGateway = checkGateway;
+        _auditGateway = auditGateway;
+        _logger = logger;
     }
 
-    public class GetEligibilityCheckStatusUseCase : IGetEligibilityCheckStatusUseCase
+    public async Task<CheckEligibilityStatusResponse> Execute(string guid)
     {
-        private readonly ICheckEligibility _checkGateway;
-        private readonly IAudit _auditGateway;
-        private readonly ILogger<GetEligibilityCheckStatusUseCase> _logger;
+        if (string.IsNullOrEmpty(guid)) throw new ValidationException(null, "Invalid Request, check ID is required.");
 
-        public GetEligibilityCheckStatusUseCase(
-            ICheckEligibility checkGateway,
-            IAudit auditGateway,
-            ILogger<GetEligibilityCheckStatusUseCase> logger)
+        var response = await _checkGateway.GetStatus(guid);
+        if (response == null)
         {
-            _checkGateway = checkGateway;
-            _auditGateway = auditGateway;
-            _logger = logger;
+            _logger.LogWarning(
+                $"Eligibility check with ID {guid.Replace(Environment.NewLine, "").Replace("\n", "").Replace("\r", "")} not found");
+            throw new NotFoundException(guid);
         }
 
-        public async Task<CheckEligibilityStatusResponse> Execute(string guid)
+        await _auditGateway.CreateAuditEntry(AuditType.Check, guid);
+
+        _logger.LogInformation(
+            $"Retrieved eligibility check status for ID: {guid.Replace(Environment.NewLine, "").Replace("\n", "").Replace("\r", "")}");
+
+        return new CheckEligibilityStatusResponse
         {
-            if (string.IsNullOrEmpty(guid))
+            Data = new StatusValue
             {
-                throw new ValidationException(null, "Invalid Request, check ID is required.");
+                Status = response.Value.ToString()
             }
-
-            var response = await _checkGateway.GetStatus(guid);
-            if (response == null)
-            {
-                _logger.LogWarning($"Eligibility check with ID {guid.Replace(Environment.NewLine, "").Replace("\n", "").Replace("\r", "")} not found");
-                throw new NotFoundException(guid.ToString());
-            }
-
-            await _auditGateway.CreateAuditEntry(AuditType.Check, guid);
-            
-            _logger.LogInformation($"Retrieved eligibility check status for ID: {guid.Replace(Environment.NewLine, "").Replace("\n", "").Replace("\r", "")}");
-            
-            return new CheckEligibilityStatusResponse() 
-            { 
-                Data = new StatusValue() 
-                { 
-                    Status = response.Value.ToString() 
-                } 
-            };
-        }
+        };
     }
 }

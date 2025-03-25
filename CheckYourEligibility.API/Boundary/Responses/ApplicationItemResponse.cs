@@ -1,8 +1,7 @@
-﻿namespace CheckYourEligibility.API.Boundary.Responses
+﻿namespace CheckYourEligibility.API.Boundary.Responses;
+
+public class ApplicationItemResponse
 {
-    public class ApplicationItemResponse
-    {
-        public ApplicationResponse Data { get; set; }
-        public ApplicationResponseLinks Links { get; set; }
-    }
+    public ApplicationResponse Data { get; set; }
+    public ApplicationResponseLinks Links { get; set; }
 }

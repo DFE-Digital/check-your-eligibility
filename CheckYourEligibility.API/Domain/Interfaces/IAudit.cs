@@ -1,14 +1,13 @@
 ﻿// Ignore Spelling: Fsm
 
-using CheckYourEligibility.API.Domain.Enums;
 using CheckYourEligibility.API.Boundary.Requests;
+using CheckYourEligibility.API.Domain.Enums;
 
-namespace CheckYourEligibility.API.Gateways.Interfaces
+namespace CheckYourEligibility.API.Gateways.Interfaces;
+
+public interface IAudit
 {
-    public interface IAudit
-    {
-        Task<string> AuditAdd(AuditData auditData);
-        AuditData? AuditDataGet(AuditType type, string id);
-        Task<string> CreateAuditEntry(AuditType type, string id);
-    }
+    Task<string> AuditAdd(AuditData auditData);
+    AuditData? AuditDataGet(AuditType type, string id);
+    Task<string> CreateAuditEntry(AuditType type, string id);
 }

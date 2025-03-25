@@ -1,5 +1,3 @@
-using System;
-
 namespace CheckYourEligibility.API.Domain;
 
 public class ClientSettings

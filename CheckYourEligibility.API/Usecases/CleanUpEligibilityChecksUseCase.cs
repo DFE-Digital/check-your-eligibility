@@ -1,28 +1,27 @@
 using CheckYourEligibility.API.Domain.Enums;
 using CheckYourEligibility.API.Gateways.Interfaces;
 
-namespace CheckYourEligibility.API.UseCases
+namespace CheckYourEligibility.API.UseCases;
+
+public interface ICleanUpEligibilityChecksUseCase
 {
-    public interface ICleanUpEligibilityChecksUseCase
+    Task Execute();
+}
+
+public class CleanUpEligibilityChecksUseCase : ICleanUpEligibilityChecksUseCase
+{
+    private readonly IAudit _auditGateway;
+    private readonly IAdministration _gateway;
+
+    public CleanUpEligibilityChecksUseCase(IAdministration Gateway, IAudit auditGateway)
     {
-        Task Execute();
+        _gateway = Gateway;
+        _auditGateway = auditGateway;
     }
 
-    public class CleanUpEligibilityChecksUseCase : ICleanUpEligibilityChecksUseCase
+    public async Task Execute()
     {
-        private readonly IAdministration _gateway;
-        private readonly IAudit _auditGateway;
-
-        public CleanUpEligibilityChecksUseCase(IAdministration Gateway, IAudit auditGateway)
-        {
-            _gateway = Gateway;
-            _auditGateway = auditGateway;
-        }
-
-        public async Task Execute()
-        {
-            await _gateway.CleanUpEligibilityChecks();
-            await _auditGateway.CreateAuditEntry(AuditType.Administration, string.Empty);
-        }
+        await _gateway.CleanUpEligibilityChecks();
+        await _auditGateway.CreateAuditEntry(AuditType.Administration, string.Empty);
     }
 }

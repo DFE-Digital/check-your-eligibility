@@ -1,7 +1,6 @@
-﻿namespace CheckYourEligibility.API.Boundary.Responses
+﻿namespace CheckYourEligibility.API.Boundary.Responses;
+
+public class EstablishmentSearchResponse
 {
-    public class EstablishmentSearchResponse
-    {
-        public IEnumerable<Establishment> Data { get; set; }
-    }
+    public IEnumerable<Establishment> Data { get; set; }
 }
