@@ -95,6 +95,7 @@ stages:
                 scriptType: 'bash'
                 scriptLocation: 'inlineScript'
                 scriptPath: $(Pipeline.Workspace)
+                failOnStandardError: true
                 inlineScript: |
                   az sql server firewall-rule create -g s203d01-core1 --server ece-dev-database --name ADO-Deploy --start-ip-address $(curl ipinfo.io/ip) --end-ip-address $(curl ipinfo.io/ip)
                   cd D:/a/1/checkYourEligibilityAPI
@@ -182,6 +183,7 @@ stages:
                 azureSubscription: 's203t.azdo.deployment'
                 scriptType: 'bash'
                 scriptLocation: 'inlineScript'
+                failOnStandardError: true
                 inlineScript: |
                   az sql server firewall-rule create -g s203t01-core1 --server ece-test-database --name ADO-Deploy --start-ip-address $(curl ipinfo.io/ip) --end-ip-address $(curl ipinfo.io/ip)
                   cd D:/a/1/checkYourEligibilityAPI
@@ -269,6 +271,7 @@ stages:
                 azureSubscription: 's203t.azdo.deployment'
                 scriptType: 'bash'
                 scriptLocation: 'inlineScript'
+                failOnStandardError: true
                 inlineScript: |
                   az sql server firewall-rule create -g s203t02-core1 --server ece-pp-database --name ADO-Deploy --start-ip-address $(curl ipinfo.io/ip) --end-ip-address $(curl ipinfo.io/ip)
                   cd D:/a/1/checkYourEligibilityAPI
@@ -356,6 +359,7 @@ stages:
                 azureSubscription: 's203p.azdo.deployment'
                 scriptType: 'bash'
                 scriptLocation: 'inlineScript'
+                failOnStandardError: true
                 inlineScript: |
                   az sql server firewall-rule create -g s203p01-core1 --server ece-database --name ADO-Deploy --start-ip-address $(curl ipinfo.io/ip) --end-ip-address $(curl ipinfo.io/ip)
                   cd D:/a/1/checkYourEligibilityAPI
