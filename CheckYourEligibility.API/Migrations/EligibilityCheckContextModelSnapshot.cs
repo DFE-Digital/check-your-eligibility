@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
 
-namespace CheckYourEligibility.API.Data.Migrations.Migrations
+namespace CheckYourEligibility.API.Migrations
 {
     [DbContext(typeof(EligibilityCheckContext))]
     partial class EligibilityCheckContextModelSnapshot : ModelSnapshot

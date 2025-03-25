@@ -2,7 +2,7 @@
 
 #nullable disable
 
-namespace CheckYourEligibility.API.Data.Migrations.Migrations
+namespace CheckYourEligibility.API.Migrations
 {
     /// <inheritdoc />
     public partial class UserReference : Migration

@@ -24,7 +24,7 @@ namespace CheckYourEligibility.API
             services.AddDbContext<IEligibilityCheckContext, EligibilityCheckContext>(options =>
                options.UseSqlServer(
                    connectionString,
-                   x => x.MigrationsAssembly("CheckYourEligibility.API.Data.Migrations"))
+                   x => x.MigrationsAssembly("CheckYourEligibility.API"))
                );
 
             return services;

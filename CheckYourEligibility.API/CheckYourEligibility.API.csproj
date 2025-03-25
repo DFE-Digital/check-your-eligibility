@@ -63,6 +63,7 @@
 
   <ItemGroup>
     <Folder Include="Boundary\" />
+    <Folder Include="Migrations\" />
   </ItemGroup>
 
 </Project>

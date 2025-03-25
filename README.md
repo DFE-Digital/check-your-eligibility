@@ -36,7 +36,7 @@ We have two test-suites - one .NET NUnit for unit tests and one Cypress for inte
 ### .NET
 VisualStudio does most of this for you, there'll be a button in your UI. Correctly set up Rider too.
 `
-cd CheckYourEligibility.APIUnitTests
+cd CheckYourEligibility.API.Tests
 dotnet test
 `
 
@@ -65,9 +65,7 @@ If approved, the original code-creator merges the PR and deletes the branch.
 We don't commit active secrets to this repo. If we do, it is crucial to notify DM/TL/PO, rewrite git history and follow DfE processes.
 
 ## Postman scripts
-You will find a very useful collection under [docs/ECS Dev.postman_collection.json](docs/ECS Dev.postman_collection.json).
-
-Replace `{username}`, `{password}` and `{api_host}` with appropriate values (See Setup > Config).
+User Swagger doc from below
 
 ## Swagger
 You'll find a Swagger page on `/swagger/index.html` once you're running the application.
@@ -95,46 +93,23 @@ The contents is then POSTed to `/importEstablishments`
 #### Migrations
 
 ##### Run Latest migration
-`dotnet ef update-database -project CheckYourEligibility.API.Data.Migrations`
+`dotnet ef update-database`
 
 ##### How to add a migration
-Add-Migration BaseMigration -project CheckYourEligibility.API.Data.Migrations
-Add-Migration establishmentImport -project CheckYourEligibility.API.Data.Migrations
-Add-Migration idxReference -project CheckYourEligibility.API.Data.Migrations
-Add-Migration applicationStatus -project CheckYourEligibility.API.Data.Migrations
-Add-Migration checkHash -project CheckYourEligibility.API.Data.Migrations
-Add-Migration checkHashSource -project CheckYourEligibility.API.Data.Migrations
-Add-Migration checkHashResult -project CheckYourEligibility.API.Data.Migrations
-Add-Migration UserCreate -project CheckYourEligibility.API.Data.Migrations
-Add-Migration Audit -project CheckYourEligibility.API.Data.Migrations
-Add-Migration AuditTypeColumn -project CheckYourEligibility.API.Data.Migrations
-Add-Migration ApplicationHash -project CheckYourEligibility.API.Data.Migrations
-Add-Migration BulkUpload -project CheckYourEligibility.API.Data.Migrations
-Add-Migration BulkUploadItemSequence -project CheckYourEligibility.API.Data.Migrations
-Add-Migration UpdateStatus -project CheckYourEligibility.API.Data.Migrations
-Add-Migration UpdateApplicationStatus -project CheckYourEligibility.API.Data.Migrations
-Add-Migration UserReference -project CheckYourEligibility.API.Data.Migrations
-Add-Migration ApplicationParentEmail -project CheckYourEligibility.API.Data.Migrations
-Add-Migration DeCoupleCheck -project CheckYourEligibility.API.Data.Migrations
-Add-Migration SetApplicationType -project CheckYourEligibility.API.Data.Migrations
-
-Add-Migration ChangeSchoolToEstablishmentMigration -project CheckYourEligibility.API.Data.Migrations
-
-
-
+Add-Migration BaseMigration
 
 ##### Update db to latest migration
-update-database  -project CheckYourEligibility.API.Data.Migrations
+update-database
 
 
 ##### List Migrations
 Get-Migration
 
-Remove-Migration -Force -project CheckYourEligibility.API.Data.Migrations
-Remove-Migration  -project CheckYourEligibility.API.Data.Migrations
+Remove-Migration -Force
+Remove-Migration
 
 ##### Run specific migration
-update-database -migration BaseMigration -project CheckYourEligibility.API.Data.Migrations
+update-database -migration BaseMigration
 
 
 #### MoqDWP
@@ -155,7 +130,7 @@ the following are details used to force results.
         public static string validCitizenNino = "AB123456C";
     }`
 
-#### CURL commands
+##### CURL commands
 
 Using a valid check will enforce a valid result changing the surname to 'Jones' follows a different path
 
@@ -213,11 +188,3 @@ the moq dwp endpoints are as follows, note the headers.
     }
   }
 }'`
-
-## SQL
-delete all data
-
-delete [dbo].[ApplicationStatuses]
-delete [dbo].Applications
-delete EligibilityCheck
-delete EligibilityCheckHashes
