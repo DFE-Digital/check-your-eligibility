@@ -40,6 +40,7 @@ public static class ProgramExtensions
         services.AddTransient<ICheckEligibility, CheckEligibilityGateway>();
         services.AddTransient<IApplication, ApplicationGateway>();
         services.AddTransient<IAdministration, AdministrationGateway>();
+        services.AddTransient<INotify, NotifyGateway>();
         services.AddTransient<IEstablishmentSearch, EstablishmentSearchGateway>();
         services.AddTransient<IUsers, UsersGateway>();
         services.AddTransient<IAudit, AuditGateway>();
