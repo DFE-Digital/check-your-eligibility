@@ -10,7 +10,7 @@ namespace CheckYourEligibility.API.Gateways.Factories
     {
         bool IsTestCase(string eligibilityCode);
         WorkingFamiliesEvent? GenerateTestScenarioClientSide(CheckProcessData checkData);
-        WorkingFamiliesEvent GenerateTestScenarioInternalSide(CheckProcessData checkData);
+        WorkingFamiliesEvent? GenerateTestScenarioInternalSide(CheckProcessData checkData, DateTime checkDate);
 
     }
     public class WorkingFamiliesTestScenarioFactory : IWorkingFamiliesTestScenarioFactory
@@ -82,11 +82,11 @@ namespace CheckYourEligibility.API.Gateways.Factories
 
             return wfEvent;
         }
-        public WorkingFamiliesEvent? GenerateTestScenarioInternalSide(CheckProcessData checkData)
+
+        public WorkingFamiliesEvent? GenerateTestScenarioInternalSide(CheckProcessData checkData, DateTime checkDate)
         {
             WorkingFamiliesEvent wfEvent = null;
             // Get terms
-            var checkDate = DateTime.Today;
             var terms = GetTerms(checkDate);
 
             string eligibilityCode = checkData.EligibilityCode;

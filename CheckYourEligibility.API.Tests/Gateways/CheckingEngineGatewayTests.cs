@@ -1048,7 +1048,7 @@ public class CheckingEngineGatewayTests : TestBase.TestBase
         await _fakeInMemoryDb.SaveChangesAsync();
 
         _moqWFTestScenarioFactory
-            .Setup(x => x.GenerateTestScenarioInternalSide(It.IsAny<CheckProcessData>()))
+            .Setup(x => x.GenerateTestScenarioInternalSide(It.IsAny<CheckProcessData>(), It.IsAny<DateTime>()))
             .Returns(wfEvent);
         _moqEcsGateway.Setup(x => x.UseEcsforChecksWF).Returns("false");
         _moqAudit.Setup(x => x.AuditAdd(It.IsAny<AuditData>(), null)).ReturnsAsync("");
@@ -1057,7 +1057,7 @@ public class CheckingEngineGatewayTests : TestBase.TestBase
 
         status.Should().Be(CheckEligibilityStatus.eligible);
         _moqWFTestScenarioFactory.Verify(
-            x => x.GenerateTestScenarioInternalSide(It.IsAny<CheckProcessData>()), Times.Once);
+            x => x.GenerateTestScenarioInternalSide(It.IsAny<CheckProcessData>(), It.IsAny<DateTime>()), Times.Once);
         _moqEcsGateway.Verify(x => x.EcsWFCheck(It.IsAny<CheckProcessData>(), It.IsAny<string>()), Times.Never);
     }
 
@@ -1069,7 +1069,7 @@ public class CheckingEngineGatewayTests : TestBase.TestBase
         await _fakeInMemoryDb.SaveChangesAsync();
 
         _moqWFTestScenarioFactory
-            .Setup(x => x.GenerateTestScenarioInternalSide(It.IsAny<CheckProcessData>()))
+            .Setup(x => x.GenerateTestScenarioInternalSide(It.IsAny<CheckProcessData>(), It.IsAny<DateTime>()))
             .Returns((WorkingFamiliesEvent)null);
         _moqEcsGateway.Setup(x => x.UseEcsforChecksWF).Returns("true");
         _moqAudit.Setup(x => x.AuditAdd(It.IsAny<AuditData>(), null)).ReturnsAsync("");

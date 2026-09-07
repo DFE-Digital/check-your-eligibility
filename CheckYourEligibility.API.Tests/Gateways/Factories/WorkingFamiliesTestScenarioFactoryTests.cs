@@ -9,6 +9,10 @@ namespace CheckYourEligibility.API.Tests.Gateways.Factories;
 
 public class WorkingFamiliesTestScenarioFactoryTests
 {
+    private static readonly DateTime CheckDate = new(2026, 9, 7);
+    private static readonly WorkingFamiliesCheckHelper.Term CurrentTerm =
+        new(Domain.Enums.WorkingFamilies.TermName.Autumn, new DateTime(2026, 9, 1));
+
     private readonly TestDataConfiguration _configuration = new();
     private WorkingFamiliesTestScenarioFactory _sut = null!;
 
@@ -33,9 +37,9 @@ public class WorkingFamiliesTestScenarioFactoryTests
     [TestCase("70400000000", "AB123456A")]
     public void GenerateTestScenarioInternalSide_GeneratesConfiguredScenario(string eligibilityCode, string nino)
     {
-        var result = _sut.GenerateTestScenarioInternalSide(CreateCheckData(eligibilityCode, nino));
-        var checkDate = DateTime.Today;
-        var currentTerm = WorkingFamiliesCheckHelper.GetTerms(checkDate).Current;
+        var checkDate = CheckDate;
+        var currentTerm = CurrentTerm;
+        var result = _sut.GenerateTestScenarioInternalSide(CreateCheckData(eligibilityCode, nino), CheckDate);
 
         Assert.That(result, Is.Not.Null);
         Assert.That(result!.EligibilityCode, Is.EqualTo(eligibilityCode));
@@ -59,7 +63,7 @@ public class WorkingFamiliesTestScenarioFactoryTests
             case "702": // valid for this term and next
                 Assert.That(result.ValidityStartDate,
                     Is.InRange(currentTerm.StartDate.AddDays(-28), currentTerm.StartDate.AddDays(-1)));
-                Assert.That(result.GracePeriodEndDate, Is.GreaterThan(WorkingFamiliesCheckHelper.GetTerms(checkDate).Next.StartDate));
+                Assert.That(result.GracePeriodEndDate, Is.GreaterThan(new DateTime(2027, 1, 1)));
                 break;
             case "703": // in grace period
                 Assert.That(result.ValidityStartDate, Is.EqualTo(currentTerm.StartDate.AddDays(-1)));
@@ -77,51 +81,49 @@ public class WorkingFamiliesTestScenarioFactoryTests
     [Test]
     public void GenerateTestScenarioInternalSide_CannotBeUsedYet_StartsAfterCurrentTerm()
     {
-        var result = _sut.GenerateTestScenarioInternalSide(CreateCheckData("70000000000"));
-        var currentTerm = WorkingFamiliesCheckHelper.GetTerms(DateTime.Today).Current;
-
-        Assert.That(result!.ValidityStartDate, Is.EqualTo(currentTerm.StartDate.AddDays(15)));
-        Assert.That(result.ValidityEndDate, Is.EqualTo(DateTime.Today.AddMonths(3)));
+        var result = _sut.GenerateTestScenarioInternalSide(CreateCheckData("70000000000"), CheckDate);
+      
+        Assert.That(result!.ValidityStartDate, Is.EqualTo(CurrentTerm.StartDate.AddDays(15)));
+        Assert.That(result.ValidityEndDate, Is.EqualTo(CheckDate.AddMonths(3)));
     }
 
     [Test]
     public void GenerateTestScenarioInternalSide_DueNowNino_GeneratesEndDateInDueWindow()
     {
-        var result = _sut.GenerateTestScenarioInternalSide(CreateCheckData("70100000000", "AB123456C"));
+        var result = _sut.GenerateTestScenarioInternalSide(CreateCheckData("70100000000", "AB123456C"), CheckDate);
 
-        Assert.That(result!.ValidityEndDate, Is.GreaterThanOrEqualTo(DateTime.Today));
-        Assert.That(result.ValidityEndDate, Is.LessThanOrEqualTo(DateTime.Today.AddDays(28)));
+        Assert.That(result!.ValidityEndDate, Is.GreaterThanOrEqualTo(CheckDate));
+        Assert.That(result.ValidityEndDate, Is.LessThanOrEqualTo(CheckDate.AddDays(28)));
     }
 
     [Test]
-    public void GenerateTestScenarioInternalSide_NinoNotDueNow_GeneratesEndDateOutsideDueWindow()
+    public void GenerateTestScenarioInternalSide_NinoNotDueNow_GeneratesEndDateAfterDueWindow()
     {
-        var checkDate = DateTime.Today;
-        var currentTerm = WorkingFamiliesCheckHelper.GetTerms(checkDate).Current;
-        var termEndDate = GetCurrentTermEndDate(currentTerm);
-        var minVed = checkDate.AddDays(29);
+        var termEndDate = GetCurrentTermEndDate(CurrentTerm);
+        var minVed = CheckDate.AddDays(29);
 
-        var result = _sut.GenerateTestScenarioInternalSide(CreateCheckData("70100000000", "AB123456A"));
+        var result = _sut.GenerateTestScenarioInternalSide(CreateCheckData("70100000000", "AB123456A"), CheckDate);
 
-        if (minVed <= termEndDate)
-        {
-            Assert.That(result!.ValidityEndDate, Is.InRange(minVed, termEndDate));
-        }
-        else
-        {
-            Assert.That(result!.ValidityEndDate,
-                Is.InRange(currentTerm.StartDate, checkDate.AddDays(-29)));
-        }
+        Assert.That(result!.ValidityEndDate, Is.InRange(minVed, termEndDate));
+        Assert.That(result.ValidityEndDate, Is.GreaterThan(CheckDate.AddDays(28)));
+    }
 
-        Assert.That(checkDate,
-            Is.LessThan(result.ValidityEndDate.AddDays(-28))
-                .Or.GreaterThan(result.ValidityEndDate));
+    [Test]
+    public void GenerateTestScenarioInternalSide_NinoNotDueNow_GeneratesEndDateBeforeDueWindow()
+    {
+
+     DateTime lateTermCheckDate = new(2026, 12, 20);
+      var result = _sut.GenerateTestScenarioInternalSide(
+            CreateCheckData("70100000000", "AB123456A"), lateTermCheckDate);
+
+        Assert.That(result!.ValidityEndDate, Is.InRange(CurrentTerm.StartDate, lateTermCheckDate.AddDays(-29)));
+        Assert.That(result.ValidityEndDate, Is.LessThan(lateTermCheckDate.AddDays(-28)));
     }
 
     [Test]
     public void GenerateTestScenarioInternalSide_ApplyDvsdNino_UsesTermDvsd()
     {
-        var result = _sut.GenerateTestScenarioInternalSide(CreateCheckData("70100000000", "NN123456A"));
+        var result = _sut.GenerateTestScenarioInternalSide(CreateCheckData("70100000000", "NN123456A"), DateTime.UtcNow);
         var currentTerm = WorkingFamiliesCheckHelper.GetTerms(DateTime.Today).Current;
 
         var expectedDvsd = currentTerm.Name switch
@@ -139,7 +141,7 @@ public class WorkingFamiliesTestScenarioFactoryTests
     public void GenerateTestScenarioInternalSide_WhenCodeDoesNotMatchScenario_Throws()
     {
         Assert.That(
-            () => _sut.GenerateTestScenarioInternalSide(CreateCheckData("99900000000")), Is.Null);
+            () => _sut.GenerateTestScenarioInternalSide(CreateCheckData("99900000000"), CheckDate), Is.Null);
     }
     #region Private
     private static CheckProcessData CreateCheckData(string eligibilityCode, string nino = "AB123456A") => new()
