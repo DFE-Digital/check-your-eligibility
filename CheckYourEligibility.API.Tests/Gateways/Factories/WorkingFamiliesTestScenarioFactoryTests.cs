@@ -148,12 +148,85 @@ public class WorkingFamiliesTestScenarioFactoryTests
     }
 
     [Test]
+    public void GenerateTestScenarioInternalSide_ExpiredReconfirmationOverdue_JanuaryCheckDate_GeneratesExpectedDates()
+    {
+        AssertExpiredReconfirmationScenario(
+            new DateTime(2026, 1, 15), // check date
+            new DateTime(2025, 7, 31), // expected VSD
+            new DateTime(2025, 9, 1), // minimum VED
+            new DateTime(2025, 10, 21), // maximum VED
+            new DateTime(2025, 12, 31)); // expected GPED
+    }
+
+    [Test]
+    public void GenerateTestScenarioInternalSide_ExpiredReconfirmationOverdue_FebruaryCheckDate_GeneratesExpectedDates()
+    {
+        AssertExpiredReconfirmationScenario(
+            new DateTime(2026, 2, 15), // check date
+            new DateTime(2025, 8, 30), // expected VSD
+            new DateTime(2025, 9, 1), // minimum VED
+            new DateTime(2025, 10, 21), // maximum VED
+            new DateTime(2025, 12, 31)); // expected GPED
+    }
+
+    [Test]
+    public void GenerateTestScenarioInternalSide_ExpiredReconfirmationOverdue_JuneCheckDate_GeneratesExpectedDates()
+    {
+        AssertExpiredReconfirmationScenario(
+            new DateTime(2026, 6, 15), // check date
+            new DateTime(2025, 1, 1), // expected VSD
+            new DateTime(2025, 10, 22), // minimum VED
+            new DateTime(2025, 12, 31), // maximum VED
+            new DateTime(2026, 3, 31)); // expected GPED
+    }
+
+    [Test]
+    public void GenerateTestScenarioInternalSide_ExpiredReconfirmationOverdue_SeptemberCheckDate_GeneratesExpectedDates()
+    {
+        AssertExpiredReconfirmationScenario(
+            new DateTime(2026, 9, 15), // check date
+            new DateTime(2026, 1, 20), // expected VSD
+            new DateTime(2026, 2, 11), // minimum VED
+            new DateTime(2026, 5, 26), // maximum VED
+            new DateTime(2026, 8, 31)); // expected GPED
+    }
+
+    [Test]
+    public void GenerateTestScenarioInternalSide_ExpiredReconfirmationOverdue_NovemberCheckDate_GeneratesExpectedDates()
+    {
+        AssertExpiredReconfirmationScenario(
+            new DateTime(2026, 11, 15), // check date
+            new DateTime(2026, 3, 1), // expected VSD
+            new DateTime(2026, 5, 1), // minimum VED
+            new DateTime(2026, 5, 26), // maximum VED
+            new DateTime(2026, 8, 31)); // expected GPED
+    }
+
+    [Test]
     public void GenerateTestScenarioInternalSide_WhenCodeDoesNotMatchScenario_ReturnsNull()
     {
         Assert.That(
             () => _sut.GenerateTestScenarioInternalSide(CreateCheckData("99900000000"), CheckDate), Is.Null);
     }
     #region Private
+    private void AssertExpiredReconfirmationScenario(
+        DateTime checkDate,
+        DateTime expectedValidityStartDate,
+        DateTime minimumValidityEndDate,
+        DateTime maximumValidityEndDate,
+        DateTime expectedGracePeriodEndDate)
+    {
+        var result = _sut.GenerateTestScenarioInternalSide(
+            CreateCheckData("70400000000"), checkDate);
+
+        Assert.That(result, Is.Not.Null);
+        Assert.That(result!.ValidityStartDate, Is.EqualTo(expectedValidityStartDate));
+        Assert.That(result.ValidityEndDate, Is.InRange(minimumValidityEndDate, maximumValidityEndDate));
+        Assert.That(result.ValidityEndDate, Is.GreaterThan(result.ValidityStartDate));
+        Assert.That(result.GracePeriodEndDate, Is.EqualTo(expectedGracePeriodEndDate));
+        Assert.That(result.GracePeriodEndDate, Is.LessThan(checkDate));
+    }
+
     private static CheckProcessData CreateCheckData(string eligibilityCode, string nino = "AB123456A") => new()
     {
         EligibilityCode = eligibilityCode,

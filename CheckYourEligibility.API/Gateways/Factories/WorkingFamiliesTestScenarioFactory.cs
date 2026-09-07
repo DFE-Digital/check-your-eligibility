@@ -10,6 +10,7 @@ namespace CheckYourEligibility.API.Gateways.Factories
     {
         bool IsTestCase(string eligibilityCode);
         WorkingFamiliesEvent? GenerateTestScenarioClientSide(CheckProcessData checkData);
+
         WorkingFamiliesEvent? GenerateTestScenarioInternalSide(CheckProcessData checkData, DateTime checkDate);
 
     }
@@ -82,7 +83,6 @@ namespace CheckYourEligibility.API.Gateways.Factories
 
             return wfEvent;
         }
-
         public WorkingFamiliesEvent? GenerateTestScenarioInternalSide(CheckProcessData checkData, DateTime checkDate)
         {
             WorkingFamiliesEvent wfEvent = null;
@@ -262,7 +262,7 @@ namespace CheckYourEligibility.API.Gateways.Factories
             // Check date 11 Feb - 26 May
             else if (checkDate >= new DateTime(year, 2, 11) && checkDate <= new DateTime(year, 5, 26))
             {
-                wfEvent.ValidityStartDate = new DateTime(year - 1, 10, 30);
+                wfEvent.ValidityStartDate = new DateTime(year - 1, 8, 30);
 
                 // GPED business logic:
                 // If validity end date between 1 Sept – 21 Oct - GPED = 31-Dec the previous year
@@ -271,7 +271,7 @@ namespace CheckYourEligibility.API.Gateways.Factories
             // Check date 27 May – 31 August
             else if (checkDate >= new DateTime(year, 5, 27) && checkDate <= new DateTime(year, 8, 31))
             {
-                wfEvent.ValidityStartDate = new DateTime(year, 1, 1);
+                wfEvent.ValidityStartDate = new DateTime(year - 1, 1, 1);
                 // GPED business logic
                 // If validity end date between 11 Feb – 26 May - GPED = 31-March the same year
                 wfEvent.ValidityEndDate = RandomDateGenerator(new DateTime(year - 1, 10, 22), new DateTime(year - 1, 12, 31));

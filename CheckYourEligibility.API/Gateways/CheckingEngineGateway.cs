@@ -203,7 +203,7 @@ public class CheckingEngineGateway : ICheckingEngine
         // Get event for TEST record internal side
         else if (!string.IsNullOrEmpty(wfTestCodePrefix) && checkData.EligibilityCode.StartsWith("7"))
         {
-            wfEvent = _workingFamiliesTestScenarioFactory.GenerateTestScenarioInternalSide(checkData, DateTime.UtcNow);
+            wfEvent = _workingFamiliesTestScenarioFactory.GenerateTestScenarioInternalSide(checkData, DateTime.UtcNow.Date);
 
             if (wfEvent == null)
             {
