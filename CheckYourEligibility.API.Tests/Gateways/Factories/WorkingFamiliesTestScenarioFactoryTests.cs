@@ -121,24 +121,34 @@ public class WorkingFamiliesTestScenarioFactoryTests
     }
 
     [Test]
-    public void GenerateTestScenarioInternalSide_ApplyDvsdNino_UsesTermDvsd()
+    public void GenerateTestScenarioInternalSide_ApplyDvsdNino_SpringTerm_UsesPreviousDecemberDvsd()
     {
-        var result = _sut.GenerateTestScenarioInternalSide(CreateCheckData("70100000000", "NN123456A"), DateTime.UtcNow);
-        var currentTerm = WorkingFamiliesCheckHelper.GetTerms(DateTime.Today).Current;
+        var result = _sut.GenerateTestScenarioInternalSide(
+            CreateCheckData("70100000000", "NN123456A"), new DateTime(2026, 2, 15));
 
-        var expectedDvsd = currentTerm.Name switch
-        {
-            Domain.Enums.WorkingFamilies.TermName.Spring => new DateTime(currentTerm.StartDate.Year - 1, 12, 31),
-            Domain.Enums.WorkingFamilies.TermName.Summer => new DateTime(currentTerm.StartDate.Year, 3, 31),
-            Domain.Enums.WorkingFamilies.TermName.Autumn => new DateTime(currentTerm.StartDate.Year, 8, 31),
-            _ => throw new InvalidOperationException()
-        };
-
-        Assert.That(result!.DiscretionaryValidityStartDate, Is.EqualTo(expectedDvsd));
+        Assert.That(result!.DiscretionaryValidityStartDate, Is.EqualTo(new DateTime(2025, 12, 31))); //Winter
     }
 
     [Test]
-    public void GenerateTestScenarioInternalSide_WhenCodeDoesNotMatchScenario_Throws()
+    public void GenerateTestScenarioInternalSide_ApplyDvsdNino_SummerTerm_UsesPreviousMarchDvsd()
+    {
+        var result = _sut.GenerateTestScenarioInternalSide(
+            CreateCheckData("70100000000", "NN123456A"), new DateTime(2026, 6, 15));
+
+        Assert.That(result!.DiscretionaryValidityStartDate, Is.EqualTo(new DateTime(2026, 3, 31))); //Spring
+    }
+
+    [Test]
+    public void GenerateTestScenarioInternalSide_ApplyDvsdNino_AutumnTerm_UsesPreviousAugustDvsd()
+    {
+        var result = _sut.GenerateTestScenarioInternalSide(
+            CreateCheckData("70100000000", "NN123456A"), new DateTime(2026, 10, 15));
+
+        Assert.That(result!.DiscretionaryValidityStartDate, Is.EqualTo(new DateTime(2026, 8, 31))); //Summer
+    }
+
+    [Test]
+    public void GenerateTestScenarioInternalSide_WhenCodeDoesNotMatchScenario_ReturnsNull()
     {
         Assert.That(
             () => _sut.GenerateTestScenarioInternalSide(CreateCheckData("99900000000"), CheckDate), Is.Null);
