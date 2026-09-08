@@ -291,7 +291,7 @@ public class CheckController : BaseController
     [ProducesResponseType(typeof(CheckEligibilityItemResponse<CheckEligibilityWorkingFamiliesItem>), (int)HttpStatusCode.OK)]
     [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.NotFound)]
     [Consumes("application/json", "application/vnd.api+json;version=1.0")]
-    [HttpGet("/internal/check/working-families/{guid}")]
+    [HttpGet("/internal/working-families/check/{guid}")]
     [Authorize(Policy = PolicyNames.RequireCheckScope)]
     [Authorize(Policy = PolicyNames.RequireChildCareAdminSource)]
     public async Task<ActionResult> InternalWorkingFamiliesEligibilityCheck(string guid)
