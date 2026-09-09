@@ -5,6 +5,7 @@ using System.Data;
 using System.Globalization;
 using CheckYourEligibility.API.Helpers;
 using CheckYourEligibility.API.Boundary.Responses.Internal;
+using CheckYourEligibility.API.Boundary.Responses;
 
 public class FosterFamiliesGateway : IFosterFamilies
 {
@@ -142,12 +143,7 @@ public class FosterFamiliesGateway : IFosterFamilies
             return new FosterFamilyCreatedResponse()
             {
                 FosterCarerId = fosterCarer.FosterCarerId,
-                ChildName = $"{fosterChild.FirstName} {fosterChild.LastName}",
-                EligibilityCode = workingEvent.EligibilityCode,
-                Status = fosterChild.Status,
-                EligibilityConfirmed = request.SubmissionDate,
-                ReconfirmBetween = $"{reconfirmation.StartDate:dd MMMM yyyy} and {reconfirmation.EndDate:dd MMMM yyyy}",
-                GracePeriodEndDate = workingEvent.GracePeriodEndDate,
+                FosterChildId = fosterChild.FosterChildId
             };
         }
         catch (Exception ex)
@@ -297,7 +293,8 @@ public class FosterFamiliesGateway : IFosterFamilies
             .Take(pageSize)
             .Select(x => new FosterFamiliesSearchItemResponse
             {
-                CarerId = x.FosterCarerId,
+                FosterCarerId = x.FosterCarerId,
+                FosterChildId = x.FosterChildId,
                 ChildName = $"{x.FirstName} {x.LastName}",
                 ChildDateOfBirth = x.DateOfBirth,
                 EligibilityCode = x.EligibilityCode,

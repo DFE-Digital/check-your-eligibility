@@ -1,4 +1,9 @@
-public class FosterChildCreatedResponse : EligibilityCodeResponse
+
+namespace CheckYourEligibility.API.Boundary.Responses
 {
-    public string ChildName { get; init; }
+
+    public class FosterChildCreatedResponse : EligibilityCodeResponse
+    {
+        public string ChildName { get; init; }
+    }
 }
