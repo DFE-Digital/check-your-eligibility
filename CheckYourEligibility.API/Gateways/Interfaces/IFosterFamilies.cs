@@ -20,7 +20,7 @@ public interface IFosterFamilies
 
     Task<FosterChildResponse?> GetFosterChild(Guid fosterChildId, int localAuthorityId, bool includeFosterCarer = false);
 
-    Task<FosterChildCreatedResponse> CreateFosterChild(FosterChildRequest request, int localAutorityId, Guid fosterCarerId, DateTime submissionDate);
+    Task<FosterChildResponse> CreateFosterChild(FosterChildRequest request, int localAutorityId, Guid fosterCarerId, DateTime submissionDate);
 
     Task<FosterChildResponse> UpdateFosterChild(Guid fosterChildId, int localAuthorityId, UpdateFosterChildRequest request);
 

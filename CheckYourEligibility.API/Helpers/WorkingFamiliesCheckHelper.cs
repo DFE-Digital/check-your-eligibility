@@ -1,4 +1,5 @@
-﻿using CheckYourEligibility.API.Boundary.Responses.Internal;
+﻿using CheckYourEligibility.API.Boundary.Responses;
+using CheckYourEligibility.API.Boundary.Responses.Internal;
 using CheckYourEligibility.API.Domain.Enums.WorkingFamilies;
 
 namespace CheckYourEligibility.API.Helpers
@@ -13,16 +14,6 @@ namespace CheckYourEligibility.API.Helpers
     public static class WorkingFamiliesCheckHelper
     {
 
-        public class Term
-        {
-           public TermName Name { get; set; }
-            public DateTime StartDate { get; set; }
-            public Term(TermName name, DateTime startDate) {
-                 Name = name;
-                 StartDate = startDate;
-       
-            }
-        }
         /// <summary>
         /// if VSD == DVSD it means that DVSD logic has not been applied during the event import for this code
         /// return null if not applicable
@@ -30,15 +21,17 @@ namespace CheckYourEligibility.API.Helpers
         /// <param name="validityStartDate"></param>
         /// <param name="discretionaryValidityStartDate"></param>
         /// <returns></returns>
-        public static bool? IsDiscretionaryValidityStartDateApplied(string validityStartDate, string discretionaryValidityStartDate) {
+        public static bool? IsDiscretionaryValidityStartDateApplied(string validityStartDate, string discretionaryValidityStartDate)
+        {
 
-            if (DateTime.TryParse(validityStartDate, out var vsd) && DateTime.TryParse(discretionaryValidityStartDate, out var dvsd)) {
+            if (DateTime.TryParse(validityStartDate, out var vsd) && DateTime.TryParse(discretionaryValidityStartDate, out var dvsd))
+            {
                 if (vsd == dvsd) return false;
                 return true;
             }
             return null;
 
-            
+
         }
         /// <summary>
         /// Calculates the terms for which a code is valid.
@@ -52,35 +45,35 @@ namespace CheckYourEligibility.API.Helpers
         public static TermValidity SetTermValidity(DateTime checkDate, string gracePeriodEndDAte, string validityStartDate, string childDOB)
         {
 
-            if (DateTime.TryParse(gracePeriodEndDAte, out var gpd) && DateTime.TryParse(validityStartDate, out var vsd) && DateTime.TryParse(childDOB, out var dob)) {
-
-              
+            if (DateTime.TryParse(gracePeriodEndDAte, out var gpd) && DateTime.TryParse(validityStartDate, out var vsd) && DateTime.TryParse(childDOB, out var dob))
+            {
                 (Term current, Term next) = GetTerms(checkDate);
 
                 if (ChildIsTooOld(dob, checkDate) || checkDate > gpd)
                 {
-                    return new TermValidity(TermName.None, TermName.None);
+                    return new TermValidity(Term.None, Term.None);
                 }
-                if (ChildIsTooYoung(dob, checkDate) && vsd < dob.AddMonths(9)) {
-
+                if (ChildIsTooYoung(dob, checkDate) && vsd < dob.AddMonths(9))
+                {
                     vsd = dob.AddMonths(9);
                 }
 
-                if (vsd >= current.StartDate) { return new TermValidity(TermName.None, next.Name); }
+                if (vsd >= current.StartDate) { return new TermValidity(Term.None, next); }
 
-                if (gpd > next.StartDate) { return new TermValidity(current.Name, next.Name); }
+                if (gpd > next.StartDate) { return new TermValidity(current, next); }
 
-                return new TermValidity(current.Name, TermName.None);
+                return new TermValidity(current, Term.None);
             }
             return new TermValidity(null, null);
 
         }
-        public static EligibilityCodeType GetEligibilityCodeType(string eligibilityCode) { 
-        
+        public static EligibilityCodeType GetEligibilityCodeType(string eligibilityCode)
+        {
+
             if (eligibilityCode.StartsWith("1")) return EligibilityCodeType.Temporary;
             if (eligibilityCode.StartsWith("4")) return EligibilityCodeType.Foster;
             return EligibilityCodeType.Standard;
-           
+
         }
         public static EligibilityCodeType GetTestEligibilityCodeType(string eligibilityCode)
         {
@@ -99,53 +92,51 @@ namespace CheckYourEligibility.API.Helpers
         /// <param name="codeType"></param>
         /// <param name="childDOB"></param>
         /// <returns></returns>
-        public static ReconfirmationProperties SetReconfirmationProperties(string validityEndDate,string gracePeriodEndDate, DateTime checkDate, EligibilityCodeType? codeType, string childDOB)
+        public static ReconfirmationProperties SetReconfirmationProperties(string validityEndDate, string gracePeriodEndDate, DateTime checkDate, EligibilityCodeType? codeType, string childDOB)
         {
-            if (DateTime.TryParse(gracePeriodEndDate, out var gpd) && DateTime.TryParse(validityEndDate, out var ved) && DateTime.TryParse(childDOB, out var dob)) {
+            if (DateTime.TryParse(gracePeriodEndDate, out var gpd) && DateTime.TryParse(validityEndDate, out var ved) && DateTime.TryParse(childDOB, out var dob))
+            {
+                if (ChildIsTooOld(dob, checkDate))
+                { //child too old - Child has reached compulsory school age
 
-                
-                    
-                    if (ChildIsTooOld(dob, checkDate))
-                    { //child too old - Child has reached compulsory school age
-
-                        return new ReconfirmationProperties()
-                        {
-                            Status = ReconfirmationStatus.ChildTooOld
-                        };
-                    }
-                    if (codeType == EligibilityCodeType.Temporary)
+                    return new ReconfirmationProperties()
                     {
-                        return new ReconfirmationProperties()
-                        {
-                            Status = ReconfirmationStatus.NotApplicable
-                        };
-                    }
-                    DateTime startReconfirmDate = ved.AddDays(-28);
-                    ReconfirmationProperties reconfirmationProperties = new ReconfirmationProperties();
-
-                    if (checkDate.Date > ved.Date)
-                    {
-
-                        reconfirmationProperties.Status = ReconfirmationStatus.Overdue;
-                    }
-
-                    else if (checkDate.Date < startReconfirmDate.Date)
-                    {
-                        reconfirmationProperties.Status = ReconfirmationStatus.NotDueYet;
-                    }
-                    else { reconfirmationProperties.Status = ReconfirmationStatus.Due; }
-
-                    reconfirmationProperties.StartDate =  startReconfirmDate.ToString("yyyy-MM-dd");
-                    reconfirmationProperties.EndDate = ved.ToString("yyyy-MM-dd");
-
-                    return reconfirmationProperties;
+                        Status = ReconfirmationStatus.ChildTooOld
+                    };
                 }
+                if (codeType == EligibilityCodeType.Temporary)
+                {
+                    return new ReconfirmationProperties()
+                    {
+                        Status = ReconfirmationStatus.NotApplicable
+                    };
+                }
+                DateTime startReconfirmDate = ved.AddDays(-28);
+                ReconfirmationProperties reconfirmationProperties = new ReconfirmationProperties();
+
+                if (checkDate.Date > ved.Date)
+                {
+
+                    reconfirmationProperties.Status = ReconfirmationStatus.Overdue;
+                }
+
+                else if (checkDate.Date < startReconfirmDate.Date)
+                {
+                    reconfirmationProperties.Status = ReconfirmationStatus.NotDueYet;
+                }
+                else { reconfirmationProperties.Status = ReconfirmationStatus.Due; }
+
+                reconfirmationProperties.StartDate = startReconfirmDate;
+                reconfirmationProperties.EndDate = ved;
+
+                return reconfirmationProperties;
+            }
 
             return new ReconfirmationProperties()
             {
                 Status = ReconfirmationStatus.NotApplicable
-            }; 
-          
+            };
+
         }
 
 
@@ -174,19 +165,20 @@ namespace CheckYourEligibility.API.Helpers
                 new Term(TermName.Summer, new DateTime(year, 4, 1))
             );
         }
-    #region Private
+        #region Private
         /// <summary>
         ///  Caclculates if child turns 9 months after the start of the current term => child is too young
         /// </summary>
         /// <param name="dateOfBirth"></param>
         /// <param name="checkDate"></param>
         /// <returns></returns>
-        private static bool ChildIsTooYoung(DateTime dateOfBirth, DateTime checkDate) {
+        private static bool ChildIsTooYoung(DateTime dateOfBirth, DateTime checkDate)
+        {
 
             DateTime nineMonthsOld = dateOfBirth.AddMonths(9);
-            var (currentTerm, _) = GetTerms(checkDate);          
-            return nineMonthsOld > currentTerm.StartDate;       
-        
+            var (currentTerm, _) = GetTerms(checkDate);
+            return nineMonthsOld > currentTerm.StartDate;
+
         }
 
         /// <summary>

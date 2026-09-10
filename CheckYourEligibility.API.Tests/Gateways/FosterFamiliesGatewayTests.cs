@@ -652,7 +652,7 @@ public class FosterFamiliesGatewayTests : TestBase.TestBase
         // Assert
         var item = result.Data.Single();
 
-        item.GracePeriodEnds.Should().NotBe(default);
+        item.GracePeriodEndDate.Should().NotBe(default);
     }
 
     [Test]
@@ -741,7 +741,7 @@ public class FosterFamiliesGatewayTests : TestBase.TestBase
 
         // Assert
         result.EligibilityCode.Should().NotBeNullOrWhiteSpace();
-        result.EligibilityConfirmedOn.Should().NotBe(default);
+        result.ValidityStartDate.Should().NotBe(default);
     }
 
     [Test]
@@ -781,7 +781,7 @@ public class FosterFamiliesGatewayTests : TestBase.TestBase
         var result = await _sut.GetFosterChild(fosterChildId, 0, true);
 
         // Assert
-        result.GracePeriodEnds.Should().NotBe(default);
+        result.GracePeriodEndDate.Should().NotBe(default);
     }
 
     [Test]

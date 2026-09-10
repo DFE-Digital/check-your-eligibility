@@ -12,17 +12,18 @@ namespace CheckYourEligibility.API.Boundary.Responses
 
         public string ReconfirmationStatus { get; set; }
 
-        public string CodeStatus { get; set; } = string.Empty;
-
-        public DateTime EligibilityConfirmedOn { get; set; }
+        public Term ValidFromTerm { get; set; }
 
         [JsonIgnore]
         public DateTime ValidityStartDate { get; set; }
         [JsonIgnore]
         public DateTime ValidityEndDate { get; set; }
-        public string ReconfirmBetween { get; set; }
 
-        public DateTime GracePeriodEnds { get; set; }
+        public DateTime ReconfirmBetweenStart { get; set; }
+
+        public DateTime ReconfirmBetweenEnd { get; set; }
+
+        public DateTime GracePeriodEndDate { get; set; }
 
 
         // Child

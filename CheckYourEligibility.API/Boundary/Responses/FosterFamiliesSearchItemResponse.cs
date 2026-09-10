@@ -16,11 +16,13 @@ namespace CheckYourEligibility.API.Boundary.Responses
 
         public Guid FosterChildId { get; set; }
 
-        public DateTime EligibilityConfirmedOn { get; set; }
+        public DateTime ValidityStartDate { get; set; }
 
-        public string ReconfirmBetween { get; set; } = string.Empty;
+        public DateTime ReconfirmBetweenStart { get; set; }
+        
+        public DateTime ReconfirmBetweenEnd { get; set; }
 
-        public DateTime GracePeriodEnds { get; set; }
+        public DateTime GracePeriodEndDate { get; set; }
 
         [JsonIgnore]
         public DateTime? ValidityEndDate { get; set; }

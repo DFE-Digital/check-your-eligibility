@@ -28,6 +28,14 @@ public class PreviewFosterFamilyCodeUseCase : IPreviewFosterFamilyCodeUseCase
 
         var workingEvent = WorkingFamiliesEventHelper.ParseWorkingFamilyFromFosterFamily(request, "PREVIEW");
 
+        // Term validity
+        var termValidity = WorkingFamiliesCheckHelper.SetTermValidity(
+            request.SubmissionDate,
+            workingEvent.GracePeriodEndDate.ToString(),
+            workingEvent.ValidityStartDate.ToString(),
+            request.FosterChild.ChildDateOfBirth.ToString());
+
+        // Reconfirmation properties       
         var reconfirmation = WorkingFamiliesCheckHelper.SetReconfirmationProperties(
             workingEvent.ValidityEndDate.ToString(),
             workingEvent.GracePeriodEndDate.ToString(),
@@ -38,9 +46,10 @@ public class PreviewFosterFamilyCodeUseCase : IPreviewFosterFamilyCodeUseCase
         // Placeholder for actual eligibility code preview logic
         var response = new FosterFamilyCodePreviewResponse
         {
-            EligibilityConfirmed = request.SubmissionDate,
             ValidityStartDate = workingEvent.ValidityStartDate,
-            ReconfirmBetween = $"{reconfirmation.StartDate:dd MMMM yyyy} and {reconfirmation.EndDate:dd MMMM yyyy}",
+            ValidFromTerm = termValidity.Current.Name != TermName.None ? termValidity.Current : termValidity.Next,
+            ReconfirmBetweenStart = reconfirmation.StartDate,
+            ReconfirmBetweenEnd = reconfirmation.EndDate,
             GracePeriodEndDate = workingEvent.GracePeriodEndDate,
         };
 
