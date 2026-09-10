@@ -20,7 +20,7 @@ namespace CheckYourEligibility.API.Boundary.Responses.Internal
         public string GracePeriodEndDate { get; set; }
         public string EligibilityCode { get; set; }
         public string DateOfBirth { get; set; }
-        public bool ChildTooYoung { get; set; }
+        public bool? ChildTooYoung { get; set; }
     }
 
     public class TermValidity { 
