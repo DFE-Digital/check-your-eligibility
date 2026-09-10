@@ -11,7 +11,7 @@ namespace CheckYourEligibility.API.Tests.Helpers
 
         [TestCase("2026-01-02", true)]
         [TestCase("2024-01-02", false)]
-        public void IsChildTooYoung_expected_resutlt(string dob , bool ischildTooYoung) {
+        public void IsChildTooYoung_expected_result(string dob , bool ischildTooYoung) {
 
             var checkDate = new DateTime(2026,9, 9);
             var result = WorkingFamiliesCheckHelper.ChildIsTooYoung(DateTime.Parse(dob),checkDate);
