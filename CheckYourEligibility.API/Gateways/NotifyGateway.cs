@@ -9,14 +9,16 @@ public class NotifyGateway : INotify
 {
     private readonly IConfiguration _configuration;
     private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly ILogger<NotifyGateway> _logger;
     private readonly INotificationClientFactory _notificationClientFactory;
 
     public NotifyGateway(INotificationClientFactory notificationClientFactory, IConfiguration configuration,
-        IHttpContextAccessor httpContextAccessor)
+        IHttpContextAccessor httpContextAccessor, ILogger<NotifyGateway> logger)
     {
         _notificationClientFactory = notificationClientFactory;
         _configuration = configuration;
         _httpContextAccessor = httpContextAccessor;
+        _logger = logger;
     }
 
     public void SendNotification(NotificationRequest notificationRequest)
@@ -41,7 +43,7 @@ public class NotifyGateway : INotify
     // +cypress@service.education.gov.uk"), the username portion are both checked against the configured list.
     // TestModeClients is a single comma-separated value (rather than a config array) so it can be stored as
     // one flat Azure Key Vault secret, e.g. "Cypress,ece.service+cypress@service.education.gov.uk".
-    private string GetApiKey()
+    private string? GetApiKey()
     {
         var user = _httpContextAccessor.HttpContext?.User;
         if (user?.Identity?.IsAuthenticated == true)
@@ -56,6 +58,13 @@ public class NotifyGateway : INotify
             {
                 var testKey = _configuration.GetValue<string>("Notify:TestKey");
                 if (!testKey.IsNullOrEmpty()) return testKey;
+
+                // Fail closed: never fall back to the live key for a test-mode client, that would defeat
+                // the point of Notify:TestModeClients and could send real emails from automated test runs.
+                _logger.LogWarning(
+                    "Notify:TestModeClients includes {ClientIdentifier} but Notify:TestKey is not configured; skipping notification instead of sending a real email.",
+                    userName ?? source);
+                return null;
             }
         }
 
