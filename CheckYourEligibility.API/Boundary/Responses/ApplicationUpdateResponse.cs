@@ -20,4 +20,7 @@ public class ApplicationUpdateDataResponse
     public DateTime? EligibilityEndDate { get; set; }
 
     public int? EstablishmentUrn { get; set; }
+
+    [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+    public int? LocalAuthorityId { get; set; }
 }

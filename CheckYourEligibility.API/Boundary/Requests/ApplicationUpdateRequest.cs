@@ -14,4 +14,6 @@ public class ApplicationUpdateData
     public EligibilityTier? Tier { get; set; }
     
     public int? EstablishmentUrn { get; set; }
+
+    public int? LocalAuthorityId { get; set; }
 }

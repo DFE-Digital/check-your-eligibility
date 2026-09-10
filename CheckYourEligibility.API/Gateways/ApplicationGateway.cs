@@ -201,6 +201,16 @@ public class ApplicationGateway : IApplication
                 result.EstablishmentId = establishment.EstablishmentID;
             }
 
+            if (data.LocalAuthorityId.HasValue)
+            {
+                var localAuthority = await _db.LocalAuthorities.FirstOrDefaultAsync(x => x.LocalAuthorityID == data.LocalAuthorityId.Value);
+                if (localAuthority == null)
+                {
+                    throw new KeyNotFoundException($"Local authority with ID {data.LocalAuthorityId} not found.");
+                }
+                result.LocalAuthorityID = localAuthority.LocalAuthorityID;
+            }
+
             var statusChanged = data.Status.HasValue;
             var tierChanged = data.Tier.HasValue;
 
@@ -236,7 +246,8 @@ public class ApplicationGateway : IApplication
                     Status = result.Status?.ToString(),
                     Tier = result.Tier?.ToString(),
                     EligibilityEndDate = result.EligibilityEndDate,
-                    EstablishmentUrn = data.EstablishmentUrn
+                    EstablishmentUrn = data.EstablishmentUrn,
+                    LocalAuthorityId = data.LocalAuthorityId
                 }
             };
         }
@@ -257,6 +268,16 @@ public class ApplicationGateway : IApplication
                     throw new KeyNotFoundException($"Establishment with URN {data.EstablishmentUrn} not found.");
                 }
                 result.EstablishmentId = establishment.EstablishmentID;
+            }
+
+            if (data.LocalAuthorityId.HasValue)
+            {
+                var localAuthority = await _db.LocalAuthorities.FirstOrDefaultAsync(x => x.LocalAuthorityID == data.LocalAuthorityId.Value);
+                if (localAuthority == null)
+                {
+                    throw new KeyNotFoundException($"Local authority with ID {data.LocalAuthorityId} not found.");
+                }
+                result.LocalAuthorityID = localAuthority.LocalAuthorityID;
             }
 
             var statusChanged = data.Status.HasValue;
@@ -280,7 +301,7 @@ public class ApplicationGateway : IApplication
             result.Updated = DateTime.UtcNow;
             var updates = await _db.SaveChangesAsync();
             return new ApplicationUpdateResponse
-            { Data = new ApplicationUpdateDataResponse { Status = result.Status?.ToString(), EstablishmentUrn = data.EstablishmentUrn } };
+            { Data = new ApplicationUpdateDataResponse { Status = result.Status?.ToString(), EstablishmentUrn = data.EstablishmentUrn, LocalAuthorityId = data.LocalAuthorityId } };
         }
 
         return null;
