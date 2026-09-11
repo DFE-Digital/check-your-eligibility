@@ -35,7 +35,24 @@ public static class WorkingFamiliesEventHelper
 
         return wfEvent;
     }
-
+    /// <summary>
+    /// Map personal data to the summary record from its event record
+    /// </summary>
+    /// <param name="workingFamiliesEvent"></param>
+    /// <returns></returns>
+    public static WorkingFamiliesEventSummary ParsePIWorkingFamilySummaryFromWorkingFamilyEvent(WorkingFamiliesEvent workingFamiliesEvent) { 
+        
+        WorkingFamiliesEventSummary eventSummary = new WorkingFamiliesEventSummary() { 
+           EligibilityCode = workingFamiliesEvent.EligibilityCode,
+           ChildDateOfBirth = workingFamiliesEvent.ChildDateOfBirth,
+           ChildFirstName = workingFamiliesEvent.ChildFirstName,
+           ParentNationalInsuranceNumber = workingFamiliesEvent.ParentNationalInsuranceNumber, //why do we allow null for the event but not for the summary ? ,
+           PartnerNationalInsuranceNumber = workingFamiliesEvent.PartnerNationalInsuranceNumber,
+           ChildPostCode = workingFamiliesEvent.ChildPostCode ?? string.Empty, //why do we allow null for the event but not for the summary ?          
+            
+        };
+        return eventSummary;
+    }
 
     public static WorkingFamiliesEvent ParseWorkingFamiliesEvent(List<string> eventProps, List<string> columnHeaders)
     {

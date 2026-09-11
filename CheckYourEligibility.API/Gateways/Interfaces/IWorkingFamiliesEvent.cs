@@ -25,5 +25,11 @@ public interface IWorkingFamiliesEvent
     /// Soft-deletes a working families event (sets IsDeleted = true and records DeletedDateTime).
     /// Returns false if the event does not exist or is already deleted.
     /// </summary>
-    Task<bool> DeleteWorkingFamiliesEvent(string hmrcId);
+    Task<bool> DeleteWorkingFamiliesEventByHmrcId(string hmrcId);
+
+    /// <summary>
+    /// Get none-deleted WF events by eligiblitycode ordered by submissionDate descen
+    /// </summary>
+    /// <returns>List of events</returns>
+    Task<IList<WorkingFamiliesEvent>> GetWorkingFamiliesEventsByEligibilityCode(string eligibilityCode);
 }

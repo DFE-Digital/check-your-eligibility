@@ -176,4 +176,25 @@ public class AdministrationGateway : IAdministration
 
         await _db.SaveChangesAsync();
     }
+
+    public async Task CreateWorkingFamiliesSummaryRecordAsync(WorkingFamiliesEventSummary record){
+        
+        await _db.WorkingFamiliesEventSummaries.AddAsync(record);
+
+    }
+  
+    public async Task UpdateWorkingFamiliesSummaryRecordAsync(WorkingFamiliesEventSummary record)
+    {
+       
+       _db.WorkingFamiliesEventSummaries.Update(record);
+       await _db.SaveChangesAsync();
+
+    }
+    //Placeholder for future soft deletion
+    //public async Task DeleteWorkingFamiliesSummaryRecordAsync(WorkingFamiliesEventSummary record)
+    //{
+
+    //    _db.WorkingFamiliesEventSummaries.ExecuteUpdateAsync(setters => setters.SetProperty(eventSummary => eventSummary.IsDeleted, true));       
+
+    //}
 }

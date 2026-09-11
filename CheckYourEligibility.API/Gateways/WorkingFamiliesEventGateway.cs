@@ -1,5 +1,6 @@
 using CheckYourEligibility.API.Domain;
 using CheckYourEligibility.API.Gateways.Interfaces;
+using DocumentFormat.OpenXml.Wordprocessing;
 using Microsoft.EntityFrameworkCore;
 
 namespace CheckYourEligibility.API.Gateways;
@@ -23,6 +24,7 @@ public class WorkingFamiliesEventGateway : IWorkingFamiliesEvent
     }
 
     /// <inheritdoc />
+   /// This method is strictly used for syncing WF event data between ECS and ECE
     public async Task<WorkingFamiliesEvent> UpsertWorkingFamiliesEvent(WorkingFamiliesEvent data)
     {
         var existing = await _db.WorkingFamiliesEvents
@@ -64,6 +66,7 @@ public class WorkingFamiliesEventGateway : IWorkingFamiliesEvent
     }
 
     /// <inheritdoc />
+   /// This method is strictly used for syncing WF event data between ECS and ECE
     public async Task<List<WorkingFamiliesEvent>> GetOverlappingEventsByDern(
         string dern, string excludeHmrcId, DateTime validityStart, DateTime validityEnd)
     {
@@ -77,7 +80,7 @@ public class WorkingFamiliesEventGateway : IWorkingFamiliesEvent
     }
 
     /// <inheritdoc />
-    public async Task<bool> DeleteWorkingFamiliesEvent(string hmrcId)
+    public async Task<bool> DeleteWorkingFamiliesEventByHmrcId(string hmrcId)
     {
         var existing = await _db.WorkingFamiliesEvents
             .FirstOrDefaultAsync(x => x.HMRCEligibilityEventId == hmrcId && !x.IsDeleted);
@@ -89,5 +92,12 @@ public class WorkingFamiliesEventGateway : IWorkingFamiliesEvent
         existing.DeletedDateTime = DateTime.UtcNow;
         await _db.SaveChangesAsync();
         return true;
+    }
+    /// <inheritdoc />
+    public async Task<IList<WorkingFamiliesEvent>> GetWorkingFamiliesEventsByEligibilityCode(string eligibilityCode) {
+
+        var events = await _db.WorkingFamiliesEvents.Where(x =>
+            x.EligibilityCode == eligibilityCode && x.IsDeleted == false).OrderByDescending(x => x.SubmissionDate).AsNoTracking().ToListAsync();
+        return events;
     }
 }

@@ -7,6 +7,7 @@ using DocumentFormat.OpenXml.Spreadsheet;
 using FeatureManagement.Domain.Validation;
 using FluentValidation;
 using Newtonsoft.Json;
+using System.Runtime.CompilerServices;
 
 namespace CheckYourEligibility.API.UseCases;
 
@@ -19,12 +20,14 @@ public class ImportWfHMRCDataUseCase : IImportWfHMRCDataUseCase
 {
     private readonly IAudit _auditGateway;
     private readonly IAdministration _gateway;
+    private readonly IWorkingFamiliesEvent _workingFamiliesEventGateway;
     private readonly ILogger<ImportWfHMRCDataUseCase> _logger;
 
-    public ImportWfHMRCDataUseCase(IAdministration Gateway, IAudit auditGateway,
+    public ImportWfHMRCDataUseCase(IAdministration Gateway, IAudit auditGateway,IWorkingFamiliesEvent workingFamiliesEventGateway,
         ILogger<ImportWfHMRCDataUseCase> logger)
     {
         _gateway = Gateway;
+        _workingFamiliesEventGateway = workingFamiliesEventGateway;
         _auditGateway = auditGateway;
         _logger = logger;
     }
@@ -34,7 +37,7 @@ public class ImportWfHMRCDataUseCase : IImportWfHMRCDataUseCase
         List<WorkingFamiliesEvent> DataLoad = new();
         if (file == null || (file.ContentType.ToLower() != "text/xml" && !file.FileName.EndsWith(".xlsm")))
             throw new InvalidDataException($"{Admin.XlsmfileRequired}");
-            
+
         var validator = new WorkingFamiliesEventImportValidator();
         try
         {
@@ -49,8 +52,8 @@ public class ImportWfHMRCDataUseCase : IImportWfHMRCDataUseCase
             var headerRow = sheetData.Elements<Row>().ElementAt(0);
             var columnHeaders = CsvGetHelper.GetColumnHeaders(headerRow, sharedStrings);
             var eventRows = from row in headerRow.ElementsAfter()
-                where row.Elements<Cell>().ElementAt(1).CellValue is not null
-                select row;
+                            where row.Elements<Cell>().ElementAt(1).CellValue is not null
+                            select row;
             foreach (Row row in eventRows)
             {
                 List<string> eventProps = [];
@@ -67,6 +70,7 @@ public class ImportWfHMRCDataUseCase : IImportWfHMRCDataUseCase
                         throw new InvalidDataException($"Failed to parse data at {cell.CellReference}:- {ex.Message}");
                     }
                 }
+
                 var wfEvent = WorkingFamiliesEventHelper.ParseWorkingFamiliesEvent(eventProps, columnHeaders);
                 var validationResults = validator.Validate(wfEvent);
                 if (!validationResults.IsValid) throw new ValidationException($"On row {row.RowIndex}: {validationResults.ToString().ReplaceLineEndings(", ")}");
@@ -81,7 +85,59 @@ public class ImportWfHMRCDataUseCase : IImportWfHMRCDataUseCase
                 $"{file.FileName} - {JsonConvert.SerializeObject(new WorkingFamiliesEvent())} :- {ex.Message}, {ex.InnerException?.Message}");
         }
 
-        await _gateway.ImportWfHMRCData(DataLoad);
+             
+
+        try
+        {
+
+            // for each code check if it is a new event
+            // if old events found
+            // check if the new event is reconfirmed on time (contigous)
+            // true - only update the VED and GPED from the new event
+            // false - update VSD , VED and GPED from the new event
+            // else if no historical event found for this code
+            // create a new summary event using the data from the new event
+            for (int i = 0; i < DataLoad.Count; i++)
+            {
+                // parse PI to the summary record 
+                var eventSummaryRecord = WorkingFamiliesEventHelper.ParsePIWorkingFamilySummaryFromWorkingFamilyEvent(DataLoad[i]);
+                //check for exisitng records
+                var eventRecords = await _workingFamiliesEventGateway.GetWorkingFamiliesEventsByEligibilityCode(DataLoad[i].EligibilityCode);
+                //if older events found, initiate contigous logic
+                if (eventRecords.Any())
+                {                   
+                    //Check if event is contigous and set VSD to earliest VSD of the current contiguous block
+                    // if newEvent.VSD <= olderEvent.VED (reconfirmed before the end of the reconfirmaion window)
+                    // and newEvent.VSD <= olderEvent.GPED (reconfirmation is before the )
+                    for (int e = 0; e < eventRecords.Count; e++)
+                    {
+                        if (DataLoad[i].ValidityStartDate <= eventRecords[e].GracePeriodEndDate)
+                        {
+                            //  DataLoad[i].DiscretionaryValidityStartDate = eventRecords[e].DiscretionaryValidityStartDate;
+                            //  DataLoad[i].ValidityStartDate = eventRecords[e].ValidityStartDate;
+                        }
+                        else
+                        {
+                            break;
+                        }
+                                              
+                    eventSummaryRecord.ValidityEndDate = eventRecords[0].ValidityEndDate;
+                    eventSummaryRecord.GracePeriodEndDate = eventRecords[0].GracePeriodEndDate;
+                    
+                    }
+                }
+
+                await _gateway.ImportWfHMRCData(DataLoad);
+            }
+
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError("ImportWfHMRCData", ex);
+            throw;
+        }
+
+
     }
 
 }
