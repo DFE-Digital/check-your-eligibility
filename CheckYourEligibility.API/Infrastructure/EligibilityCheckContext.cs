@@ -48,8 +48,9 @@ public class EligibilityCheckContext : DbContext, IEligibilityCheckContext
     public virtual DbSet<EligibilityCheckReportItem> EligibilityCheckReportItem { get; set; }
     public virtual DbSet<EligibilityPolicy> EligibilityPolicies { get; set; }
     public virtual DbSet<UserRole> UserRoles { get; set; }
+    public virtual DbSet<TemporaryCodeUpload> TemporaryCodeUploads { get; set; }
 
-    public Task<int> SaveChangesAsync()
+	public Task<int> SaveChangesAsync()
     {
 
         return base.SaveChangesAsync();
