@@ -8,6 +8,7 @@ using CheckYourEligibility.API.Gateways.Factories;
 using CheckYourEligibility.API.Gateways.Factories.Helper;
 using CheckYourEligibility.API.Services;
 using CheckYourEligibility.API.Telemetry;
+using CheckYourEligibility.API.Usecases;
 using CheckYourEligibility.API.UseCases;
 using CheckYourEligibility.API.UseCases.Internal;
 using FeatureManagement.Domain.Validation;
@@ -186,7 +187,6 @@ builder.Services.AddScoped<IProcessEligibilityBulkCheckUseCase, ProcessEligibili
 builder.Services.AddScoped<ICheckEligibilityUseCase, CheckEligibilityUseCase>();
 builder.Services.AddScoped<ICheckEligibilityBulkUseCase, CheckEligibilityBulkUseCase>();
 builder.Services.AddScoped<IPreviewFosterFamilyCodeUseCase, PreviewFosterFamilyCodeUseCase>();
-
 builder.Services.AddScoped<IGetBulkCheckStatusesUseCase, GetBulkCheckStatusesUseCase>();
 builder.Services.AddScoped<IGetAllBulkChecksUseCase, GetAllBulkChecksUseCase>();
 builder.Services.AddScoped<IGetBulkCheckSummaryUseCase, GetBulkCheckSummaryUseCase>();
@@ -209,7 +209,6 @@ builder.Services.AddScoped<IDeleteBulkCheckUseCase, DeleteBulkCheckUseCase>();
 builder.Services.AddScoped<ISendNotificationUseCase, SendNotificationUseCase>();
 builder.Services.AddScoped<ICreateRateLimitEventUseCase, CreateRateLimitEventUseCase>();
 builder.Services.AddScoped<ICleanUpRateLimitEventsUseCase, CleanUpRateLimitEventsUseCase>();
-
 builder.Services.AddScoped<IGetFosterFamilyUseCase, GetFosterFamilyUseCase>();
 builder.Services.AddScoped<ICreateFosterFamilyUseCase, CreateFosterFamilyUseCase>();
 builder.Services.AddScoped<IUpdateFosterCarerUseCase, UpdateFosterCarerUseCase>();
@@ -221,10 +220,9 @@ builder.Services.AddScoped<ICreateFosterChildUseCase, CreateFosterChildUseCase>(
 builder.Services.AddScoped<IUpdateFosterChildUseCase, UpdateFosterChildUseCase>();
 builder.Services.AddScoped<IDeleteFosterChildUseCase, DeleteFosterChildUseCase>();
 builder.Services.AddScoped<IGetCheckWorkingFamiliesUseCase, GetCheckWorkingFamiliesItemUseCase>();
-
 builder.Services.AddScoped<IEligibilityCheckDataResponseMapper, EligibilityCheckDataResponseMapper>();
-
 builder.Services.AddScoped<IValidator<IEligibilityServiceType>, CheckEligibilityRequestDataValidator>();
+builder.Services.AddScoped<ITemporaryCodeUploadUseCase, TemporaryCodeUploadUseCase>();
 
 // Configure IIS and Kestrel server options
 builder.Services.Configure<IISServerOptions>(options => { options.MaxRequestBodySize = int.MaxValue; });
