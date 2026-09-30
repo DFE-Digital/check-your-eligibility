@@ -23,19 +23,18 @@ public sealed class TemporaryCodeUploadGateway : ITemporaryCodeUpload
 	/// Receives a TemporaryCodeUploadCreateRequest and creates a new TemporaryCodeUpload record in the database.
 	/// </summary>
 	/// <param name="request"></param>
-	/// <param name="cancellationToken"></param>
 	/// <returns>TemporaryCodeUpload</returns>
 	//CREATE
-	public async Task<TemporaryCodeUpload> CreateTemporaryCodeUpload(TemporaryCodeUploadCreateRequest request, Guid userID)
+	public async Task<TemporaryCodeUpload> CreateTemporaryCodeUpload(TemporaryCodeUploadCreateRequest request, Guid userID, int numberOfCodes, string firstCode, string lastCode)
 	{
 		var temporaryCodeUpload = new TemporaryCodeUpload
 		{
 			TemporaryCodeUploadId = Guid.NewGuid(),
 			Filename = request.File.FileName,
-			NumberOfCodes = 0,
-			FirstCode = string.Empty,
-			LastCode = string.Empty,
-			DateImported = DateTime.Now,
+			NumberOfCodes = numberOfCodes,
+			FirstCode = firstCode,
+			LastCode = lastCode,
+			DateImported = DateTime.UtcNow,
 			ImportedBy = userID,
 			IsDeleted = false
 		};
