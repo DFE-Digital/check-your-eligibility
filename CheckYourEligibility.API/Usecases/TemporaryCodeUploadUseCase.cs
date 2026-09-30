@@ -1,10 +1,6 @@
 ﻿using CheckYourEligibility.API.Boundary.Requests;
 using CheckYourEligibility.API.Boundary.Responses;
-using CheckYourEligibility.API.Domain;
-using CheckYourEligibility.API.Domain.Enums;
-using CheckYourEligibility.API.Domain.Exceptions;
-using CheckYourEligibility.API.UseCases;
-using FluentValidation;
+using CheckYourEligibility.API.Gateways.Interfaces;
 
 namespace CheckYourEligibility.API.Usecases
 {
@@ -15,19 +11,25 @@ namespace CheckYourEligibility.API.Usecases
 
 	public class TemporaryCodeUploadUseCase : ITemporaryCodeUploadUseCase
 	{
+		private readonly ITemporaryCodeUpload _gateway;
 		private readonly IServiceScopeFactory _scopeFactory;
 		private readonly ILogger<TemporaryCodeUploadUseCase> _logger;
 
 		public TemporaryCodeUploadUseCase(
+		ITemporaryCodeUpload gateway,
 		IServiceScopeFactory scopeFactory,
 		ILogger<TemporaryCodeUploadUseCase> logger)
 		{
+			_gateway = gateway;
 			_scopeFactory = scopeFactory;
 			_logger = logger;
 		}
 
 		public async Task<TemporaryCodeUploadCreateResponse> Execute(TemporaryCodeUploadCreateRequest request)
 		{
+			//call ImportWfHMRCDataUseCase
+			var response = await _gateway.CreateTemporaryCodeUpload(request, CancellationToken.None);
+
 			return new TemporaryCodeUploadCreateResponse
 			{
 				Errors = ["Not implemented"]

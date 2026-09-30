@@ -223,6 +223,7 @@ builder.Services.AddScoped<IGetCheckWorkingFamiliesUseCase, GetCheckWorkingFamil
 builder.Services.AddScoped<IEligibilityCheckDataResponseMapper, EligibilityCheckDataResponseMapper>();
 builder.Services.AddScoped<IValidator<IEligibilityServiceType>, CheckEligibilityRequestDataValidator>();
 builder.Services.AddScoped<ITemporaryCodeUploadUseCase, TemporaryCodeUploadUseCase>();
+builder.Services.AddScoped<IGetTemporaryCodeUploadsUseCase, GetTemporaryCodeUploadsUseCase>();
 
 // Configure IIS and Kestrel server options
 builder.Services.Configure<IISServerOptions>(options => { options.MaxRequestBodySize = int.MaxValue; });

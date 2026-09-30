@@ -1,10 +1,4 @@
-﻿using CheckYourEligibility.API.Boundary.Responses;
-using CheckYourEligibility.API.Migrations;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using static System.Runtime.InteropServices.JavaScript.JSType;
-
-namespace CheckYourEligibility.API.Boundary.Requests
+﻿namespace CheckYourEligibility.API.Boundary.Requests
 {
 	/// <summary>
 	/// Request for importing Temporary Codes from a file
@@ -15,6 +9,7 @@ namespace CheckYourEligibility.API.Boundary.Requests
 		/// The CSV or JSON file containing application data
 		/// </summary>
 		public required IFormFile File { get; set; }
+		public string Password { get; set; }
 	}
 
 	/// <summary>
