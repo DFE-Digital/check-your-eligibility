@@ -26,7 +26,7 @@ public sealed class TemporaryCodeUploadGateway : ITemporaryCodeUpload
 	/// <param name="cancellationToken"></param>
 	/// <returns>TemporaryCodeUpload</returns>
 	//CREATE
-	public async Task<TemporaryCodeUpload> CreateTemporaryCodeUpload(TemporaryCodeUploadCreateRequest request, CancellationToken cancellationToken)
+	public async Task<TemporaryCodeUpload> CreateTemporaryCodeUpload(TemporaryCodeUploadCreateRequest request, Guid userID)
 	{
 		var temporaryCodeUpload = new TemporaryCodeUpload
 		{
@@ -36,12 +36,12 @@ public sealed class TemporaryCodeUploadGateway : ITemporaryCodeUpload
 			FirstCode = string.Empty,
 			LastCode = string.Empty,
 			DateImported = DateTime.Now,
-			ImportedBy = Guid.NewGuid(), // Replace with actual user ID from context
+			ImportedBy = userID,
 			IsDeleted = false
 		};
 
 		_db.TemporaryCodeUploads.Add(temporaryCodeUpload);
-		await _db.SaveChangesAsync(cancellationToken);
+		await _db.SaveChangesAsync();
 
 		return temporaryCodeUpload;
 	}

@@ -6,7 +6,7 @@ namespace CheckYourEligibility.API.Gateways.Interfaces
 {
 	public interface ITemporaryCodeUpload
 	{
-		Task<TemporaryCodeUpload> CreateTemporaryCodeUpload(TemporaryCodeUploadCreateRequest request, CancellationToken cancellationToken);
+		Task<TemporaryCodeUpload> CreateTemporaryCodeUpload(TemporaryCodeUploadCreateRequest request, Guid userID);
 		Task<TemporaryCodeUploadSearchResponse> GetTemporaryCodeUploads(TemporaryCodeUploadsSearchRequest request);
 	}
 }

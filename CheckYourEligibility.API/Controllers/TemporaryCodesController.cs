@@ -2,6 +2,7 @@
 using CheckYourEligibility.API.Boundary.Responses;
 using CheckYourEligibility.API.Domain.Authorization;
 using CheckYourEligibility.API.Domain.Exceptions;
+using CheckYourEligibility.API.Extensions;
 using CheckYourEligibility.API.Gateways.Interfaces;
 using CheckYourEligibility.API.Usecases;
 using Microsoft.AspNetCore.Authorization;
@@ -48,7 +49,7 @@ namespace CheckYourEligibility.API.Controllers
 		{
 			try
 			{
-				var response = await _temporaryCodeUploadUseCase.Execute(request);
+				var response = await _temporaryCodeUploadUseCase.Execute(request, User.GetUserID());
 				return Ok(response);
 			}
 			catch (ValidationException ex)

@@ -6,7 +6,7 @@ namespace CheckYourEligibility.API.Usecases
 {
 	public interface ITemporaryCodeUploadUseCase
 	{
-		Task<TemporaryCodeUploadCreateResponse> Execute(TemporaryCodeUploadCreateRequest request);
+		Task<TemporaryCodeUploadCreateResponse> Execute(TemporaryCodeUploadCreateRequest request, Guid userId);
 	}
 
 	public class TemporaryCodeUploadUseCase : ITemporaryCodeUploadUseCase
@@ -25,10 +25,10 @@ namespace CheckYourEligibility.API.Usecases
 			_logger = logger;
 		}
 
-		public async Task<TemporaryCodeUploadCreateResponse> Execute(TemporaryCodeUploadCreateRequest request)
+		public async Task<TemporaryCodeUploadCreateResponse> Execute(TemporaryCodeUploadCreateRequest request, Guid userId)
 		{
 			//call ImportWfHMRCDataUseCase
-			var response = await _gateway.CreateTemporaryCodeUpload(request, CancellationToken.None);
+			var response = await _gateway.CreateTemporaryCodeUpload(request, userId);
 
 			return new TemporaryCodeUploadCreateResponse
 			{
