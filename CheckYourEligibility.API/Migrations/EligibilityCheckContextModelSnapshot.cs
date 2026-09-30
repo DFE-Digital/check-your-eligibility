@@ -1154,12 +1154,17 @@ namespace CheckYourEligibility.API.Migrations
                     b.Property<DateTime>("ValidityStartDate")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("WorkingFamiliesEventSummaryID")
+                        .HasColumnType("nvarchar(450)");
+
                     b.HasKey("FosterChildId");
 
                     b.HasIndex("EligibilityCode")
                         .IsUnique();
 
                     b.HasIndex("FosterCarerId");
+
+                    b.HasIndex("WorkingFamiliesEventSummaryID");
 
                     b.ToTable("FosterChildren");
                 });
@@ -1345,7 +1350,13 @@ namespace CheckYourEligibility.API.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("CheckYourEligibility.API.Domain.WorkingFamiliesEventSummary", "eventSummary")
+                        .WithMany()
+                        .HasForeignKey("WorkingFamiliesEventSummaryID");
+
                     b.Navigation("FosterCarer");
+
+                    b.Navigation("eventSummary");
                 });
 
             modelBuilder.Entity("UserRole", b =>

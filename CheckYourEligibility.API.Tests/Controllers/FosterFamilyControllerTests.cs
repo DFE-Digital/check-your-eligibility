@@ -313,7 +313,8 @@ public class FosterFamilyControllerTests
         var response = new FosterChildResponse
         {
             FosterChildId = id,
-            ChildFullName = "Tom Smith"
+            ChildFirstName = "Tom",
+            ChildLastName = "Smith"
         };
 
         _mockGetFosterChild
@@ -413,7 +414,8 @@ public class FosterFamilyControllerTests
 
         var response = new FosterChildResponse
         {
-            ChildFullName = "Tom Smith",
+            ChildFirstName = "Tom",
+            ChildLastName = "Smith",
             EligibilityCode = "ABC123",
         };
 
@@ -615,7 +617,8 @@ public class FosterFamilyControllerTests
         var response = new FosterChildResponse
         {
             FosterChildId = fosterChildId,
-            ChildFullName = "Tom Smith"
+            ChildFirstName = "Tom",
+            ChildLastName = "Smith"
         };
 
         _mockUpdateFosterChild
@@ -735,14 +738,16 @@ public class FosterFamilyControllerTests
             .Setup(x => x.Execute(
                 It.Is<FosterFamiliesSearchRequest>(r =>
                     r.PageNumber == 1 &&
-                    r.PageSize == 10),
+                    r.PageSize == 10 &&
+                    r.NINOFilter == ""),
                 201))
             .ReturnsAsync(response);
 
         // Act
         var result = await _sut.SearchFosterFamilies(
             1,
-            10);
+            10,
+            "");
 
         // Assert
         result.Should().BeOfType<OkObjectResult>();
@@ -782,14 +787,16 @@ public class FosterFamilyControllerTests
             .Setup(x => x.Execute(
                 It.Is<FosterFamiliesSearchRequest>(r =>
                     r.PageNumber == 1 &&
-                    r.PageSize == 10),
+                    r.PageSize == 10 &&
+                    r.NINOFilter == ""),
                 201))
             .ReturnsAsync(response);
 
         // Act
         var result = await _sut.SearchFosterFamilies(
             1,
-            10);
+            10,
+            "");
 
         // Assert
         var okResult = (OkObjectResult)result;

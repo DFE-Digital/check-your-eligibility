@@ -1,9 +1,9 @@
-using CheckYourEligibility.API.Domain.Exceptions;
 using CheckYourEligibility.API.Domain.Enums.WorkingFamilies;
+using CheckYourEligibility.API.Domain.Exceptions;
+using CheckYourEligibility.API.Helpers;
 using Microsoft.EntityFrameworkCore;
 using System.Data;
 using System.Globalization;
-using CheckYourEligibility.API.Helpers;
 using CheckYourEligibility.API.Boundary.Responses;
 
 public class FosterFamiliesGateway : IFosterFamilies
@@ -114,11 +114,19 @@ public class FosterFamiliesGateway : IFosterFamilies
         {
             var workingEvent = WorkingFamiliesEventHelper.ParseWorkingFamilyFromFosterFamily(request, eligibilityCode);
 
+            var newWorkingSummaryEvent = WorkingFamiliesEventHelper.MapWorkingFamiliesEventToNewSummaryRecord(workingEvent);
+
+            fosterChild.ValidityStartDate = workingEvent.ValidityStartDate;
             fosterChild.EligibilityCode = eligibilityCode;
             fosterChild.ValidityStartDate = workingEvent.ValidityStartDate;
             fosterChild.ValidityEndDate = workingEvent.ValidityEndDate;
 
             await _db.WorkingFamiliesEvents.AddAsync(workingEvent);
+            await _db.WorkingFamiliesEventSummaries.AddAsync(newWorkingSummaryEvent);
+
+            fosterChild.EligibilityCode = workingEvent.EligibilityCode;
+            fosterChild.WorkingFamiliesEventSummaryID = newWorkingSummaryEvent.WorkingFamiliesEventSummaryID;
+
             await _db.FosterCarers.AddAsync(fosterCarer);
             await _db.FosterChildren.AddAsync(fosterChild);
             await _db.SaveChangesAsync();
@@ -234,39 +242,33 @@ public class FosterFamiliesGateway : IFosterFamilies
         await _db.SaveChangesAsync();
     }
 
-    public async Task<FosterFamiliesSearchResponse> SearchFosterFamilies(
-    int localAuthorityId,
-    FosterFamiliesSearchRequest request)
+    public async Task<FosterFamiliesSearchResponse> SearchFosterFamilies(int localAuthorityId, FosterFamiliesSearchRequest request)
     {
         const int defaultPageSize = 10;
 
-        var pageNumber = request.PageNumber < 1
-            ? 1
-            : request.PageNumber;
+        var pageNumber = request.PageNumber < 1 ? 1 : request.PageNumber;
+        var pageSize = request.PageSize < 1 ? defaultPageSize : request.PageSize;
 
-        var pageSize = request.PageSize < 1
-            ? defaultPageSize
-            : request.PageSize;
-
-        var query = _db.FosterChildren
+        // Construct base query including optional NINO filter
+        var baseQuery = _db.FosterChildren
             .Include(x => x.FosterCarer)
-            .Where(x => x.FosterCarer.LocalAuthorityID == localAuthorityId)
-            .AsQueryable();
+            .Where(x => x.FosterCarer.LocalAuthorityID == localAuthorityId);
 
-        var totalRecords = await query.CountAsync();
-
-        var maxPage = totalRecords == 0
-            ? 1
-            : (int)Math.Ceiling(totalRecords / (double)pageSize);
-
-        if (pageNumber > maxPage)
+        if (!string.IsNullOrWhiteSpace(request.NINOFilter))
         {
-            pageNumber = maxPage;
+            var ninoFilter = request.NINOFilter.Trim();
+            baseQuery = baseQuery.Where(x =>
+                x.FosterCarer.NationalInsuranceNumber == ninoFilter ||
+                x.FosterCarer.PartnerNationalInsuranceNumber == ninoFilter);
         }
 
-        var results = await _db.FosterChildren
-            .Include(x => x.FosterCarer)
-            .Where(x => x.FosterCarer.LocalAuthorityID == localAuthorityId)
+        // Calculate record count and max pages
+        var totalRecords = await baseQuery.CountAsync();
+        var maxPage = totalRecords == 0 ? 1 : (int)Math.Ceiling(totalRecords / (double)pageSize);
+        if (pageNumber > maxPage) { pageNumber = maxPage; }
+
+        // Generate result set
+        var results = await baseQuery
             .OrderByDescending(x => x.SubmissionDate)
             .Skip((pageNumber - 1) * pageSize)
             .Take(pageSize)
@@ -330,8 +332,11 @@ public class FosterFamiliesGateway : IFosterFamilies
                 EligibilityCode = x.EligibilityCode,
                 ValidityStartDate = x.ValidityStartDate,
                 ValidityEndDate = x.ValidityEndDate,
+                ChildFirstName = x.FirstName,
+                ChildLastName = x.LastName,
                 ChildFullName = $"{x.FirstName} {x.LastName}",
                 ChildDateOfBirth = x.DateOfBirth,
+                ChildPostCode = x.PostCode,
                 PostCode = x.PostCode,
                 FosterCarerId = x.FosterCarerId,
                 CarerName = includeFosterCarer ? $"{x.FosterCarer.FirstName} {x.FosterCarer.LastName}" : null,
@@ -622,7 +627,6 @@ public class FosterFamiliesGateway : IFosterFamilies
 
         return code.ToString(CultureInfo.InvariantCulture);
     }
-
 
     #endregion
 }
