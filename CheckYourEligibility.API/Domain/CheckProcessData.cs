@@ -26,12 +26,10 @@ public class CheckProcessData
     public string? ErrorCode { get; set; }
     public string? SubmissionDate { get; set; }
     public string? NationalAsylumSeekerServiceNumber { get; set; }
-
     public bool? IsGracePeriodEndDateApplied { get; set; }
-
     public string? ClientIdentifier { get; set; }
     public int? Order { get; set; }
-
+    public string? Qualifier { get; set; }
     public CheckEligibilityType Type { get; set; }
 
     /// <summary>

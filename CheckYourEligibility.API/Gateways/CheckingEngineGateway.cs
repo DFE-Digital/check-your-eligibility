@@ -355,10 +355,10 @@ public class CheckingEngineGateway : ICheckingEngine
         string ecsStatus;
         string eceStatus;
 
-        object ecsResponseBody;
-        object eceResponseBody;
+        CheckProcessData ecsResponseBody;
+        CheckProcessData eceResponseBody;
 
-        SoapCheckResponse? ecsResult = null;
+        SoapCheckResponse? ecsResponse = null;
         CheckProcessData? eceResponse = null;
 
         if (_ecsAdapter.UseEcsforChecksWF == "true")
@@ -392,12 +392,13 @@ public class CheckingEngineGateway : ICheckingEngine
         {
             string laId = EligibilityCheckHelper.GetOrganisationIdOFTypeLocalAuthority(check.OrganisationType, check.OrganisationID);
 
-            ecsResult =  await _ecsAdapter.EcsWFCheck(processedCheckData, laId);
-            ecsStatus = convertEcsResultStatus(ecsResult, CheckEligibilityType.WorkingFamilies).ToString();
+            ecsResponse =  await _ecsAdapter.EcsWFCheck(processedCheckData, laId);
+            ecsStatus = convertEcsResultStatus(ecsResponse, CheckEligibilityType.WorkingFamilies).ToString();
             eceStatus = check.Status.ToString();
 
-            ecsResponseBody = ecsResult;
-            eceResponseBody = JsonConvert.DeserializeObject(check.CheckData);
+            ecsResponseBody = MapCheckDataHelper.MapCheckDataBasedOnType(CheckEligibilityType.WorkingFamilies,JsonConvert.SerializeObject(ecsResponse));
+            ecsResponseBody.Qualifier = ecsResponse != null ? ecsResponse.Qualifier : null; // map qualifier for dual record
+            eceResponseBody = processedCheckData;
         }
 
         bool isConflict = !string.Equals(
@@ -416,15 +417,15 @@ public class CheckingEngineGateway : ICheckingEngine
             EligibilityCheckID = check.EligibilityCheckID,
             EligibilityCode = processedCheckData.EligibilityCode,
             ECSStatus = ecsStatus,
-            ECSQualifier = ecsResult?.Qualifier,
+            ECSQualifier = ecsResponseBody?.Qualifier,
             ECEStatus = eceStatus,
             ECEResponseBody = JsonConvert.SerializeObject(eceResponseBody),
             ECSResponseBody = JsonConvert.SerializeObject(ecsResponseBody),
             isConflict = isConflict,
-            AreDatesMatching = ecsResult != null && eceResponse != null &&  CalculateAreDatesMatching(ecsResult, eceResponse)
+            AreDatesMatching = eceResponseBody != null && ecsResponseBody != null &&  CalculateAreDatesMatching(ecsResponseBody, eceResponseBody)
         };
     }
-    private bool CalculateAreDatesMatching(SoapCheckResponse ecsDates, CheckProcessData eceDates)
+    private bool CalculateAreDatesMatching(CheckProcessData ecsDates, CheckProcessData eceDates)
     {
         if (ecsDates.ValidityStartDate != eceDates.DiscretionaryValidityStartDate ||
             ecsDates.ValidityEndDate != ecsDates.ValidityEndDate ||

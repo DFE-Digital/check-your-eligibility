@@ -10,6 +10,7 @@ using CheckYourEligibility.API.Domain.Enums;
 using CheckYourEligibility.API.Gateways;
 using CheckYourEligibility.API.Gateways.Factories;
 using CheckYourEligibility.API.Gateways.Interfaces;
+using CheckYourEligibility.API.Helpers;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -1023,7 +1024,8 @@ public class CheckingEngineGatewayTests : TestBase.TestBase
             ValidityEndDate = DateTime.Today.AddDays(1).ToString("yyyy-MM-dd"),
             GracePeriodEndDate = DateTime.Today.AddDays(1).ToString("yyyy-MM-dd")
         };
-
+        var ecsResponseBody = MapCheckDataHelper.MapCheckDataBasedOnType(CheckEligibilityType.WorkingFamilies, JsonConvert.SerializeObject(ecsResponse));
+        ecsResponseBody.Qualifier = ecsResponse.Qualifier;
         _fakeInMemoryDb.CheckEligibilities.Add(item);
         _fakeInMemoryDb.WorkingFamiliesEvents.Add(wfEvent);
         await _fakeInMemoryDb.SaveChangesAsync();
@@ -1070,7 +1072,7 @@ public class CheckingEngineGatewayTests : TestBase.TestBase
         dualRunningCheck.ECSStatus.Should().Be(CheckEligibilityStatus.notEligible.ToString());
         dualRunningCheck.EligibilityCode.Should().Be(submittedCheckData.EligibilityCode);
         dualRunningCheck.ECSQualifier.Should().Be(ecsResponse.Qualifier);
-        dualRunningCheck.ECSResponseBody.Should().Be(JsonConvert.SerializeObject(ecsResponse));
+        dualRunningCheck.ECSResponseBody.Should().Be(JsonConvert.SerializeObject(ecsResponseBody));
         dualRunningCheck.ECEResponseBody.Should().Be(persistedCheck.CheckData);
         dualRunningCheck.isConflict.Should().BeTrue();
     }
