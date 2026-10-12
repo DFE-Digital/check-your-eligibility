@@ -352,7 +352,8 @@ public class FosterFamiliesGateway : IFosterFamilies
                 CarerName = $"{x.FosterCarer.FirstName} {x.FosterCarer.LastName}",
                 ValidityStartDate = x.WorkingFamiliesEventSummary.ValidityStartDate,
                 ValidityEndDate = x.WorkingFamiliesEventSummary.ValidityEndDate,
-                GracePeriodEndDate = x.WorkingFamiliesEventSummary.GracePeriodEndDate.Value
+                GracePeriodEndDate = x.WorkingFamiliesEventSummary.GracePeriodEndDate.Value,
+                IsGracePeriodEndDateApplied = x.WorkingFamiliesEventSummary.GracePeriodEndDateApplied
             })
             .AsNoTracking()
             .ToListAsync();
@@ -364,6 +365,21 @@ public class FosterFamiliesGateway : IFosterFamilies
         var checkDate = GetCheckDate();
         foreach (var item in records)
         {
+            // Calculate child too young
+            item.ChildTooYoung = WorkingFamiliesCheckHelper.ChildIsTooYoung(
+                item.ChildDateOfBirth,
+                checkDate
+            );
+
+            // Calculate term validity
+            item.TermValidity = WorkingFamiliesCheckHelper.SetTermValidity(
+                checkDate,
+                item.GracePeriodEndDate.ToString(),
+                item.ValidityStartDate.ToString(),
+                item.ChildDateOfBirth.ToString(),
+                item.IsGracePeriodEndDateApplied
+            );
+            // Calculate reconfirmation properties
             item.ReconfirmationProperties = WorkingFamiliesCheckHelper.SetReconfirmationProperties(
                 item.ValidityEndDate.ToString(),
                 item.GracePeriodEndDate.ToString(),

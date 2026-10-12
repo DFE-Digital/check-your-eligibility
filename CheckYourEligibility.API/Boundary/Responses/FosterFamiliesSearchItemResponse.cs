@@ -1,5 +1,3 @@
-using System.Text.Json.Serialization;
-
 namespace CheckYourEligibility.API.Boundary.Responses
 {
     public class FosterFamiliesSearchItemResponse
@@ -8,22 +6,27 @@ namespace CheckYourEligibility.API.Boundary.Responses
 
         public DateTime ChildDateOfBirth { get; set; }
 
-        public string EligibilityCode { get; set; } = string.Empty;
-
         public string CarerName { get; set; } = string.Empty;
 
         public Guid FosterCarerId { get; set; }
 
         public Guid FosterChildId { get; set; }
 
+        public string EligibilityCode { get; set; } = string.Empty;
+
         public DateTime ValidityStartDate { get; set; }
 
-        public ReconfirmationProperties ReconfirmationProperties { get; set; }
+        public DateTime ValidityEndDate { get; set; }
 
         public DateTime GracePeriodEndDate { get; set; }
 
-        [JsonIgnore]
-        public DateTime? ValidityEndDate { get; set; }
+        public bool IsGracePeriodEndDateApplied { get; set; }
+
+        public ReconfirmationProperties ReconfirmationProperties { get; set; }
+
+        public TermValidity TermValidity { get; set; }
+        
+        public bool ChildTooYoung { get; set; }
 
     }
 }
