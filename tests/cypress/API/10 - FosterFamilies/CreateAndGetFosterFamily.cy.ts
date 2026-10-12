@@ -125,10 +125,16 @@ describe("Preview Foster Family Code", () => {
         (response) => {
           expect(response.status).to.eq(201);
           expect(response.body.validityStartDate).to.exist;
-          expect(response.body.validFromTerm).to.exist;
-          expect(response.body.reconfirmBetweenStart).to.exist;
-          expect(response.body.reconfirmBetweenEnd).to.exist;
+          expect(response.body.validityEndDate).to.exist;
+          expect(response.body.termValidity).to.exist;
+          expect(response.body.termValidity.current).to.exist;
+          expect(response.body.termValidity.next).to.exist;
+          expect(response.body.reconfirmationProperties).to.exist;
+          expect(response.body.reconfirmationProperties.startDate).to.exist;
+          expect(response.body.reconfirmationProperties.endDate).to.exist;
+          expect(response.body.reconfirmationProperties.status).to.exist;
           expect(response.body.gracePeriodEndDate).to.exist;
+          expect(response.body.isGracePeriodEndDateApplied).to.exist;
 
           cy.apiRequest(
             "GET",

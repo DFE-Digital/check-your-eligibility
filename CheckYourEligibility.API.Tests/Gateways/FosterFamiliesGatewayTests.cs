@@ -1033,6 +1033,85 @@ public class FosterFamiliesGatewayTests : TestBase.TestBase
     }
 
     [Test]
+    public async Task SearchFosterFamilies_Should_Calculate_Term_Validity_And_Child_Too_Young()
+    {
+        // Arrange
+        var checkDate = new DateTime(2026, 9, 10);
+        var childDateOfBirth = new DateTime(2025, 12, 2);
+        var records = new[]
+        {
+            (EligibilityCode: "40000000001", GracePeriodEndDateApplied: true),
+            (EligibilityCode: "40000000002", GracePeriodEndDateApplied: false)
+        };
+
+        foreach (var (eligibilityCode, gracePeriodEndDateApplied) in records)
+        {
+            var fosterCarerId = Guid.NewGuid();
+            var summaryId = Guid.NewGuid().ToString();
+
+            await _fakeInMemoryDb.FosterCarers.AddAsync(new FosterCarer
+            {
+                FosterCarerId = fosterCarerId,
+                FirstName = "Carer",
+                LastName = eligibilityCode,
+                NationalInsuranceNumber = $"AA{eligibilityCode[^6..]}A",
+                LocalAuthorityID = 0
+            });
+
+            await _fakeInMemoryDb.WorkingFamiliesEventSummaries.AddAsync(new WorkingFamiliesEventSummary
+            {
+                WorkingFamiliesEventSummaryID = summaryId,
+                EligibilityCode = eligibilityCode,
+                ChildFirstName = "Child",
+                ChildFirstNameTruncated = "Child",
+                ChildPostCode = "NNU 1AE",
+                ParentNationalInsuranceNumber = "AA123456A",
+                ValidityStartDate = new DateTime(2026, 8, 20),
+                ValidityEndDate = new DateTime(2026, 11, 20),
+                GracePeriodEndDate = new DateTime(2027, 3, 31),
+                GracePeriodEndDateApplied = gracePeriodEndDateApplied
+            });
+
+            await _fakeInMemoryDb.FosterChildren.AddAsync(new FosterChild
+            {
+                FosterChildId = Guid.NewGuid(),
+                FirstName = "Child",
+                LastName = eligibilityCode,
+                DateOfBirth = childDateOfBirth,
+                PostCode = "NNU 1AE",
+                EligibilityCode = eligibilityCode,
+                FosterCarerId = fosterCarerId,
+                WorkingFamiliesEventSummaryID = summaryId
+            });
+        }
+
+        await _fakeInMemoryDb.SaveChangesAsync();
+        var deterministicGateway = new FixedDateFosterFamiliesGateway(
+            _fakeInMemoryDb,
+            _mockWFEventGateway.Object,
+            _mockLogger.Object,
+            checkDate);
+
+        // Act
+        var result = await deterministicGateway.SearchFosterFamilies(
+            0,
+            new FosterFamiliesSearchRequest { PageNumber = 1, PageSize = 10 });
+
+        // Assert
+        var appliedItem = result.Data.Single(item => item.EligibilityCode == "40000000001");
+        appliedItem.IsGracePeriodEndDateApplied.Should().BeTrue();
+        appliedItem.ChildTooYoung.Should().BeTrue();
+        appliedItem.TermValidity.Current!.Name.Should().Be(TermName.None);
+        appliedItem.TermValidity.Next!.Name.Should().Be(TermName.Spring);
+
+        var notAppliedItem = result.Data.Single(item => item.EligibilityCode == "40000000002");
+        notAppliedItem.IsGracePeriodEndDateApplied.Should().BeFalse();
+        notAppliedItem.ChildTooYoung.Should().BeTrue();
+        notAppliedItem.TermValidity.Current!.Name.Should().Be(TermName.None);
+        notAppliedItem.TermValidity.Next!.Name.Should().Be(TermName.None);
+    }
+
+    [Test]
     public async Task SearchFosterFamilies_Should_Return_Correct_Page()
     {
         // Arrange
@@ -1796,7 +1875,7 @@ public class FosterFamiliesGatewayTests : TestBase.TestBase
         reconfirmedResponse.ValidityStartDate.Should().Be(expectedSummaryValidityStartDate);
         reconfirmedResponse.ValidityEndDate.Should().Be(expectedSummaryValidityEndDate);
         reconfirmedResponse.GracePeriodEndDate.Should().Be(expectedGPED);
-        reconfirmedResponse.GracePeriodEndDateApplied.Should().BeTrue();
+        reconfirmedResponse.IsGracePeriodEndDateApplied.Should().BeTrue();
     }
 
     [Test]
