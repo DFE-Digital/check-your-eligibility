@@ -20,4 +20,5 @@ public static class ValidationMessages
     public const string EligibilityCode = "Eligibility code must be 11 digits long";
     public const string SubmissionDate = "Submission date must not be in the future";
     public const string Email = "Invalid Email Address";
+    public const string ReferenceTooLong = "Reference must be 100 characters or fewer.";
 }
