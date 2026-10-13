@@ -6,9 +6,11 @@ namespace CheckYourEligibility.API.Gateways.CsvImport;
 [ExcludeFromCodeCoverage]
 public class HomeOfficeRow
 {
-    public string Nas { get; set; }
-    public string Dob { get; set; }
+    public string FirstName { get; set; }
     public string Surname { get; set; }
+    public string Dob { get; set; }
+    public string AsylumSeekerReferenceNumber { get; set; }
+    public string PortReferenceNumber { get; set; }
 }
 
 [ExcludeFromCodeCoverage]
@@ -16,8 +18,10 @@ public class HomeOfficeRowMap : ClassMap<HomeOfficeRow>
 {
     public HomeOfficeRowMap()
     {
-        Map(m => m.Nas).Index(0);
-        Map(m => m.Dob).Index(1);
-        Map(m => m.Surname).Index(2);
+        Map(m => m.AsylumSeekerReferenceNumber).Name("AS Ref");
+        Map(m => m.PortReferenceNumber).Name("Port Ref");
+        Map(m => m.FirstName).Name("Given Name");
+        Map(m => m.Surname).Name("Family Name");
+        Map(m => m.Dob).Name("DOB");
     }
 }

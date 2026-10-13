@@ -73,7 +73,10 @@ public class CheckingEngineGatewayTests : TestBase.TestBase
             { "Dwp:DefaultEligibilityPolicies:EarlyYearPupilPremium:Criteria", "standard" },
             { "Dwp:DefaultEligibilityPolicies:EarlyYearPupilPremium:Threshold", "61667" },
             { "Dwp:DefaultEligibilityPolicies:TwoYearOffer:Criteria", "standard" },
-            { "Dwp:DefaultEligibilityPolicies:TwoYearOffer:Threshold", "128334" }
+            { "Dwp:DefaultEligibilityPolicies:TwoYearOffer:Threshold", "128334" },
+            { "HomeOffice:CheckTypes:FreeSchoolMeals", "true" },
+            { "HomeOffice:CheckTypes:EarlyYearPupilPremium", "true" },
+            { "HomeOffice:CheckTypes:TwoYearOffer", "false" }
         };
         _configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(configForSmsApi)
@@ -885,8 +888,10 @@ public class CheckingEngineGatewayTests : TestBase.TestBase
         status.Should().Be(CheckEligibilityStatus.eligible);
     }
 
-    [Test]
-    public async Task Given_validRequest_HO_Process_Should_Return_updatedStatus_eligible()
+    [TestCase(CheckEligibilityType.FreeSchoolMeals)]
+    [TestCase(CheckEligibilityType.EarlyYearPupilPremium)]
+    public async Task Given_validRequest_HO_Process_Should_Return_updatedStatus_eligible(
+        CheckEligibilityType checkType)
     {
         // Arrange
         var item = _fixture.Create<EligibilityCheck>();
@@ -895,7 +900,7 @@ public class CheckingEngineGatewayTests : TestBase.TestBase
         fsm.NationalInsuranceNumber = string.Empty;
 
         var dataItem = GetCheckProcessData(fsm);
-        item.Type = CheckEligibilityType.FreeSchoolMeals;
+        item.Type = checkType;
         item.Status = CheckEligibilityStatus.queuedForProcessing;
         item.IsDeleted = false;
         item.CheckData = JsonConvert.SerializeObject(dataItem);
@@ -917,6 +922,43 @@ public class CheckingEngineGatewayTests : TestBase.TestBase
         // Assert
         status.Should().Be(CheckEligibilityStatus.eligible);
         tier.Should().Be(EligibilityTier.targeted);
+    }
+
+    [Test]
+    public async Task Given_TwoYearOfferRequest_HO_Process_Should_Not_Check_HomeOfficeData()
+    {
+        // Arrange
+        var item = _fixture.Create<EligibilityCheck>();
+        var request = _fixture.Create<CheckEligibilityRequestData>();
+        request.DateOfBirth = "1990-01-01";
+        request.NationalInsuranceNumber = string.Empty;
+
+        var dataItem = GetCheckProcessData(request);
+        item.Type = CheckEligibilityType.TwoYearOffer;
+        item.Status = CheckEligibilityStatus.queuedForProcessing;
+        item.IsDeleted = false;
+        item.EligibilityCheckHash = null;
+        item.EligibilityCheckHashID = null;
+        item.CheckData = JsonConvert.SerializeObject(dataItem);
+
+        _fakeInMemoryDb.CheckEligibilities.Add(item);
+        _fakeInMemoryDb.FreeSchoolMealsHO.Add(new FreeSchoolMealsHO
+        {
+            FreeSchoolMealsHOID = "123",
+            NASS = dataItem.NationalAsylumSeekerServiceNumber,
+            LastName = dataItem.LastName,
+            DateOfBirth = DateTime.ParseExact(dataItem.DateOfBirth, "yyyy-MM-dd", null, DateTimeStyles.None)
+        });
+        await _fakeInMemoryDb.SaveChangesAsync();
+        _moqAudit.Setup(x => x.AuditAdd(It.IsAny<AuditData>(), null)).ReturnsAsync("");
+
+        // Act
+        var (status, tier) = await _sut.ProcessCheckAsync(item.EligibilityCheckID);
+
+        // Assert
+        status.Should().Be(CheckEligibilityStatus.parentNotFound);
+        tier.Should().BeNull();
+        _fakeInMemoryDb.EligibilityCheckHashes.Should().BeEmpty();
     }
 
     [Test]
