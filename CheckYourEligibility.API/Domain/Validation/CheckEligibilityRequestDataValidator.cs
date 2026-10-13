@@ -106,7 +106,7 @@ public class CheckEligibilityRequestDataValidator : AbstractValidator<IEligibili
             RuleFor(x => ((CheckEligibilityRequestWorkingFamiliesData)x).EligibilityCode)
                 .NotEmpty()
                 .Must(DataValidation.BeAValidEligibilityCode)
-                .WithMessage(ValidationMessages.EligibilityCode);
+                .WithMessage(ValidationMessages.EligibilityCodeInvalid);
             RuleFor(x => ((CheckEligibilityRequestWorkingFamiliesData)x).NationalInsuranceNumber)
                 .Must(DataValidation.BeAValidNi)
                 .WithMessage(ValidationMessages.NI);

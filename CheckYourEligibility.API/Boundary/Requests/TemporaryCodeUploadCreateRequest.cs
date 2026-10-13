@@ -9,7 +9,7 @@
 		/// The CSV or JSON file containing application data
 		/// </summary>
 		public required IFormFile File { get; set; }
-		public string Password { get; set; }
+		public string? Password { get; set; }
 	}
 
 	/// <summary>

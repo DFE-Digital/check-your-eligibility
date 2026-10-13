@@ -2,12 +2,13 @@
 using CheckYourEligibility.API.Boundary.Responses;
 using CheckYourEligibility.API.Domain;
 using CheckYourEligibility.API.Domain.Constants;
+using CheckYourEligibility.API.Domain.Exceptions;
+using CheckYourEligibility.API.Domain.Validation;
 using CheckYourEligibility.API.Gateways.Interfaces;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using FeatureManagement.Domain.Validation;
 using FluentValidation;
-using Newtonsoft.Json;
 
 namespace CheckYourEligibility.API.Usecases
 {
@@ -23,6 +24,8 @@ namespace CheckYourEligibility.API.Usecases
 		private readonly IWorkingFamiliesEvent _workingFamiliesEventGateway;
 		private readonly IServiceScopeFactory _scopeFactory;
 		private readonly ILogger<TemporaryCodeUploadUseCase> _logger;
+
+		private readonly List<ImportTempCodeValidationError> validationErrors = new();
 
 		public TemporaryCodeUploadUseCase(
 		ITemporaryCodeUpload gateway,
@@ -46,7 +49,6 @@ namespace CheckYourEligibility.API.Usecases
 
 			var validator = new WorkingFamiliesEventImportValidator();
 
-
 			// Validate file content, parse dataload to WorkingFamilyEvent object and import new events to table
 			try
 			{
@@ -67,38 +69,50 @@ namespace CheckYourEligibility.API.Usecases
 				{
 					var nino = row.Elements<Cell>().ElementAt(1);
 					var ninoValueString = CsvGetHelper.getCellValueString(nino, sharedStrings, cellStyles);
-					if (string.IsNullOrEmpty(ninoValueString)) {
+					if (string.IsNullOrEmpty(ninoValueString))
+					{
 						continue;
 					}
 					List<string> eventProps = [];
 					foreach (Cell cell in row.Elements<Cell>().Skip(1))
 					{
-						try
-						{
-							CellFormat style = cellStyles[int.Parse(cell.StyleIndex.InnerText)];
-							var cellValueString = CsvGetHelper.getCellValueString(cell, sharedStrings, cellStyles);
-							eventProps.Add(cellValueString);
-						}
-						catch (Exception ex)
-						{
-							throw new InvalidDataException($"Failed to parse data at {cell.CellReference}:- {ex.Message}");
-						}
+						CellFormat style = cellStyles[int.Parse(cell.StyleIndex.InnerText)];
+						var cellValueString = CsvGetHelper.getCellValueString(cell, sharedStrings, cellStyles);
+						eventProps.Add(cellValueString);
 					}
 
 					var wfEvent = WorkingFamiliesEventHelper.ParseWorkingFamiliesEvent(eventProps, columnHeaders);
 					var validationResults = validator.Validate(wfEvent);
-					if (!validationResults.IsValid) throw new ValidationException($"On row {row.RowIndex}: {validationResults.ToString().ReplaceLineEndings(", ")}");
+					if (!validationResults.IsValid)
+					{
+						validationErrors.Add(new ImportTempCodeValidationError
+						{
+							RowNumber = Convert.ToInt32(row.RowIndex.Value),
+							EligibilityCode = wfEvent.EligibilityCode,
+							ErrorMessages = validationResults.Errors
+								.Select(x => x.ErrorMessage)
+								.ToList()
+						});
+						continue;
+					}
 					DataLoad.Add(wfEvent);
 				}
+				if (validationErrors.Any())
+				{
+					throw new BulkTempCodeValidationException(validationErrors);
+				}
 				if (DataLoad == null || DataLoad.Count == 0) throw new InvalidDataException("Invalid file no content.");
-
 				await _administrationGateway.BulkImportWorkingFamiliesEventHMRCData(DataLoad);
+			}
+			catch (BulkTempCodeValidationException)
+			{
+				throw;
 			}
 			catch (Exception ex)
 			{
 				_logger.LogError("ImportWfHMRCData", ex);
-				throw new InvalidDataException(
-					$"{request.File.FileName} - {ex.Message}, {ex.InnerException?.Message}");
+
+				throw new BulkTempCodeValidationException(validationErrors);
 			}
 			//Run business logic and upsert summary record for each event
 			try
@@ -135,7 +149,8 @@ namespace CheckYourEligibility.API.Usecases
 
 			return new TemporaryCodeUploadCreateResponse
 			{
-				Errors = ["Not implemented"]
+				NumberOfCodes = response.NumberOfCodes,
+				Errors = new List<ImportTempCodeValidationError>()
 			};
 		}
 

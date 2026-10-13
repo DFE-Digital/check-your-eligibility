@@ -60,6 +60,14 @@ namespace CheckYourEligibility.API.Controllers
 			{
 				return BadRequest(new ErrorResponse { Errors = [new Error { Title = ex.Message }] });
 			}
+			catch (BulkTempCodeValidationException ex)
+			{
+				return BadRequest(new TemporaryCodeUploadCreateResponse
+				{
+					NumberOfCodes = 0,
+					Errors = ex.Errors
+				});
+			}
 			catch (Exception ex)
 			{
 				_logger.LogError(ex, "Error during bulk import");
