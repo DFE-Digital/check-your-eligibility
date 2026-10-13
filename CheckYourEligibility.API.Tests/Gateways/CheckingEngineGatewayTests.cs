@@ -67,7 +67,7 @@ public class CheckingEngineGatewayTests : TestBase.TestBase
             { "QueueFsmCheckBulk", "notSet" },
             { "HashCheckDays", "7" },
             { "Dwp:UseEcsforChecksWF", "false" },
-            { "WorkingFamiliesDualRunning:RecordNoneConflict", "false" },
+            { "WorkingFamiliesDualRunning:isEnabled", "false"},
             { "TestData:WFTestCodePrefix", "9" },
             // DefaultEligibilityPolicies mock config
             { "Dwp:DefaultEligibilityPolicies:FreeSchoolMeals:Criteria", "standard" },
@@ -971,12 +971,16 @@ public class CheckingEngineGatewayTests : TestBase.TestBase
     [Test]
     public async Task Given_EcsForWorkingFamiliesChecks_Is_Enabled_Process_Should_Use_Ecs_Result()
     {
+        _configuration["WorkingFamiliesDualRunning:RecordNonConflictResults"] = "true";
+        _configuration["WorkingFamiliesDualRunning:IsEnabled"] = "true";
+        _configuration["Dwp:UseEcsforChecksWF"] = "true";
+
         var item = CreateWorkingFamiliesCheck("50012345678");
         var ecsResponse = new SoapCheckResponse
         {
             Status = "1",
             ErrorCode = "0",
-            Qualifier = "",
+            Qualifier = "Primary ECS qualifier",
             ValidityStartDate = DateTime.Today.AddDays(-1).ToString("yyyy-MM-dd"),
             ValidityEndDate = DateTime.Today.AddDays(1).ToString("yyyy-MM-dd"),
             GracePeriodEndDate = DateTime.Today.AddDays(1).ToString("yyyy-MM-dd")
@@ -993,6 +997,12 @@ public class CheckingEngineGatewayTests : TestBase.TestBase
         var (status, _) = await _sut.ProcessCheckAsync(item.EligibilityCheckID);
 
         status.Should().Be(CheckEligibilityStatus.eligible);
+        var persistedCheck = await _fakeInMemoryDb.CheckEligibilities
+            .SingleAsync(x => x.EligibilityCheckID == item.EligibilityCheckID);
+        var persistedCheckData = JsonConvert.DeserializeObject<CheckProcessData>(persistedCheck.CheckData);
+        persistedCheckData.Qualifier.Should().Be(ecsResponse.Qualifier);
+        persistedCheckData.ECsStatus.Should().Be(ecsResponse.Status);
+        persistedCheckData.EcsErrorCode.Should().Be(ecsResponse.ErrorCode);
         _moqEcsGateway.Verify(
             x => x.EcsWFCheck(It.IsAny<CheckProcessData>(), It.IsAny<string>()), Times.Once);
     }
@@ -1024,8 +1034,6 @@ public class CheckingEngineGatewayTests : TestBase.TestBase
             ValidityEndDate = DateTime.Today.AddDays(1).ToString("yyyy-MM-dd"),
             GracePeriodEndDate = DateTime.Today.AddDays(1).ToString("yyyy-MM-dd")
         };
-        var ecsResponseBody = MapCheckDataHelper.MapCheckDataBasedOnType(CheckEligibilityType.WorkingFamilies, JsonConvert.SerializeObject(ecsResponse));
-        ecsResponseBody.Qualifier = ecsResponse.Qualifier;
         _fakeInMemoryDb.CheckEligibilities.Add(item);
         _fakeInMemoryDb.WorkingFamiliesEvents.Add(wfEvent);
         await _fakeInMemoryDb.SaveChangesAsync();
@@ -1072,7 +1080,10 @@ public class CheckingEngineGatewayTests : TestBase.TestBase
         dualRunningCheck.ECSStatus.Should().Be(CheckEligibilityStatus.notEligible.ToString());
         dualRunningCheck.EligibilityCode.Should().Be(submittedCheckData.EligibilityCode);
         dualRunningCheck.ECSQualifier.Should().Be(ecsResponse.Qualifier);
-        dualRunningCheck.ECSResponseBody.Should().Be(JsonConvert.SerializeObject(ecsResponseBody));
+        var dualRunningEcsResponseBody = JsonConvert.DeserializeObject<CheckProcessData>(dualRunningCheck.ECSResponseBody);
+        dualRunningEcsResponseBody.Qualifier.Should().Be(ecsResponse.Qualifier);
+        dualRunningEcsResponseBody.ECsStatus.Should().Be(ecsResponse.Status);
+        dualRunningEcsResponseBody.EcsErrorCode.Should().Be(ecsResponse.ErrorCode);
         dualRunningCheck.ECEResponseBody.Should().Be(persistedCheck.CheckData);
         dualRunningCheck.isConflict.Should().BeTrue();
     }

@@ -8,7 +8,6 @@ public class WorkingFamiliesDualRunningCheck
 { 
     [Key]
     public int Id { get; set; }
-
     public string EligibilityCheckID { get; set; }
     public string EligibilityCode { get; set; }
     public string ECEStatus { get; set; }
