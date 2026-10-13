@@ -61,7 +61,7 @@ public class CheckProcessData : ECSCheckProcessData
 public class ECSCheckProcessData
 {
 
-    public string? ECsStatus { get; set; }
+    public string? EcsStatus { get; set; }
     public string? EcsErrorCode { get; set; }
     public string? Qualifier { get; set; }
 }

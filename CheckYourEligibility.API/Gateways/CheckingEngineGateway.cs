@@ -451,7 +451,7 @@ public class CheckingEngineGateway : ICheckingEngine
         }
 
         checkData.Qualifier = innerResult != null ? innerResult.Qualifier : null; // map qualifier for dual record
-        checkData.ECsStatus = innerResult != null ? innerResult.Status : null; // map status for dual record
+        checkData.EcsStatus = innerResult != null ? innerResult.Status : null; // map status for dual record
         checkData.EcsErrorCode = innerResult != null ? innerResult.ErrorCode : null; // map error code for dual record
 
         return (wfEvent, status);

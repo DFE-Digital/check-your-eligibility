@@ -1001,7 +1001,7 @@ public class CheckingEngineGatewayTests : TestBase.TestBase
             .SingleAsync(x => x.EligibilityCheckID == item.EligibilityCheckID);
         var persistedCheckData = JsonConvert.DeserializeObject<CheckProcessData>(persistedCheck.CheckData);
         persistedCheckData.Qualifier.Should().Be(ecsResponse.Qualifier);
-        persistedCheckData.ECsStatus.Should().Be(ecsResponse.Status);
+        persistedCheckData.EcsStatus.Should().Be(ecsResponse.Status);
         persistedCheckData.EcsErrorCode.Should().Be(ecsResponse.ErrorCode);
         _moqEcsGateway.Verify(
             x => x.EcsWFCheck(It.IsAny<CheckProcessData>(), It.IsAny<string>()), Times.Once);
@@ -1082,7 +1082,7 @@ public class CheckingEngineGatewayTests : TestBase.TestBase
         dualRunningCheck.ECSQualifier.Should().Be(ecsResponse.Qualifier);
         var dualRunningEcsResponseBody = JsonConvert.DeserializeObject<CheckProcessData>(dualRunningCheck.ECSResponseBody);
         dualRunningEcsResponseBody.Qualifier.Should().Be(ecsResponse.Qualifier);
-        dualRunningEcsResponseBody.ECsStatus.Should().Be(ecsResponse.Status);
+        dualRunningEcsResponseBody.EcsStatus.Should().Be(ecsResponse.Status);
         dualRunningEcsResponseBody.EcsErrorCode.Should().Be(ecsResponse.ErrorCode);
         dualRunningCheck.ECEResponseBody.Should().Be(persistedCheck.CheckData);
         dualRunningCheck.isConflict.Should().BeTrue();
