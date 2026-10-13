@@ -10,6 +10,7 @@ using CheckYourEligibility.API.Domain.Enums;
 using CheckYourEligibility.API.Gateways;
 using CheckYourEligibility.API.Gateways.Factories;
 using CheckYourEligibility.API.Gateways.Interfaces;
+using CheckYourEligibility.API.Helpers;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -66,6 +67,7 @@ public class CheckingEngineGatewayTests : TestBase.TestBase
             { "QueueFsmCheckBulk", "notSet" },
             { "HashCheckDays", "7" },
             { "Dwp:UseEcsforChecksWF", "false" },
+            { "WorkingFamiliesDualRunning:isEnabled", "false"},
             { "TestData:WFTestCodePrefix", "9" },
             // DefaultEligibilityPolicies mock config
             { "Dwp:DefaultEligibilityPolicies:FreeSchoolMeals:Criteria", "standard" },
@@ -92,10 +94,7 @@ public class CheckingEngineGatewayTests : TestBase.TestBase
         _moqStandardTestScenarioFactory = new Mock<IStandardCheckTestScenarioFactory>(MockBehavior.Strict);
         _hashGateway = new HashGateway(new NullLoggerFactory(), _fakeInMemoryDb, _configuration, _moqAudit.Object);
 
-
-        _sut = new CheckingEngineGateway(new NullLoggerFactory(), _fakeInMemoryDb,
-            _configuration, _moqEcsGateway.Object, _moqDwpGateway.Object, _hashGateway, _localAuthority.Object,
-            _eligibilityPolicy.Object, _moqWFTestScenarioFactory.Object, _moqStandardTestScenarioFactory.Object, _moqWorkingFamiliesEventGateway.Object);
+        _sut = CreateCheckingEngineGateway();
     }
 
     [TearDown]
@@ -972,12 +971,16 @@ public class CheckingEngineGatewayTests : TestBase.TestBase
     [Test]
     public async Task Given_EcsForWorkingFamiliesChecks_Is_Enabled_Process_Should_Use_Ecs_Result()
     {
+        _configuration["WorkingFamiliesDualRunning:RecordNonConflictResults"] = "true";
+        _configuration["WorkingFamiliesDualRunning:IsEnabled"] = "true";
+        _configuration["Dwp:UseEcsforChecksWF"] = "true";
+
         var item = CreateWorkingFamiliesCheck("50012345678");
         var ecsResponse = new SoapCheckResponse
         {
             Status = "1",
             ErrorCode = "0",
-            Qualifier = "",
+            Qualifier = "Primary ECS qualifier",
             ValidityStartDate = DateTime.Today.AddDays(-1).ToString("yyyy-MM-dd"),
             ValidityEndDate = DateTime.Today.AddDays(1).ToString("yyyy-MM-dd"),
             GracePeriodEndDate = DateTime.Today.AddDays(1).ToString("yyyy-MM-dd")
@@ -994,9 +997,191 @@ public class CheckingEngineGatewayTests : TestBase.TestBase
         var (status, _) = await _sut.ProcessCheckAsync(item.EligibilityCheckID);
 
         status.Should().Be(CheckEligibilityStatus.eligible);
+        var persistedCheck = await _fakeInMemoryDb.CheckEligibilities
+            .SingleAsync(x => x.EligibilityCheckID == item.EligibilityCheckID);
+        var persistedCheckData = JsonConvert.DeserializeObject<CheckProcessData>(persistedCheck.CheckData);
+        persistedCheckData.Qualifier.Should().Be(ecsResponse.Qualifier);
+        persistedCheckData.EcsStatus.Should().Be(ecsResponse.Status);
+        persistedCheckData.EcsErrorCode.Should().Be(ecsResponse.ErrorCode);
         _moqEcsGateway.Verify(
             x => x.EcsWFCheck(It.IsAny<CheckProcessData>(), It.IsAny<string>()), Times.Once);
     }
+
+    [Test]
+    public async Task Given_WorkingFamiliesDualRunningIsEnabled_Process_Should_Run_Both_Checks_And_Persist_ECE_Result()
+    {
+        _configuration["WorkingFamiliesDualRunning:RecordNonConflictResults"] = "true";
+        _configuration["WorkingFamiliesDualRunning:IsEnabled"] = "true";
+        _configuration["Dwp:UseEcsforChecksWF"] = "false";
+
+        _sut = CreateCheckingEngineGateway();
+
+        var item = CreateWorkingFamiliesCheck("50012345678");
+        var submittedCheckData = JsonConvert.DeserializeObject<CheckProcessData>(item.CheckData);
+        submittedCheckData.ClientIdentifier = "client-123";
+        submittedCheckData.Order = 42;
+        item.CheckData = JsonConvert.SerializeObject(submittedCheckData);
+        var wfEvent = CreateWorkingFamiliesEvent(item);
+        wfEvent.ChildFirstName = "TEST";
+        wfEvent.ChildLastName = "TESTER";
+        wfEvent.ParentFirstName = "PARENT-TESTER";
+        var ecsResponse = new SoapCheckResponse
+        {
+            Status = "0",
+            ErrorCode = "0",
+            Qualifier = "",
+            ValidityStartDate = DateTime.Today.AddDays(-1).ToString("yyyy-MM-dd"),
+            ValidityEndDate = DateTime.Today.AddDays(1).ToString("yyyy-MM-dd"),
+            GracePeriodEndDate = DateTime.Today.AddDays(1).ToString("yyyy-MM-dd")
+        };
+        _fakeInMemoryDb.CheckEligibilities.Add(item);
+        _fakeInMemoryDb.WorkingFamiliesEvents.Add(wfEvent);
+        await _fakeInMemoryDb.SaveChangesAsync();
+
+        _moqEcsGateway.Setup(x => x.UseEcsforChecksWF).Returns("false");
+        _moqEcsGateway
+            .Setup(x => x.EcsWFCheck(It.IsAny<CheckProcessData>(), It.IsAny<string>()))
+            .ReturnsAsync(ecsResponse);
+
+        var (status, _) = await _sut.ProcessCheckAsync(item.EligibilityCheckID);
+
+        status.Should().Be(CheckEligibilityStatus.eligible);
+        _moqEcsGateway.Verify(
+            x => x.EcsWFCheck(
+                It.Is<CheckProcessData>(data => data.EligibilityCode == submittedCheckData.EligibilityCode),
+                string.Empty),
+            Times.Once);
+
+        var persistedCheck = await _fakeInMemoryDb.CheckEligibilities
+            .SingleAsync(x => x.EligibilityCheckID == item.EligibilityCheckID);
+        persistedCheck.Status.Should().Be(CheckEligibilityStatus.eligible);
+        persistedCheck.EligibilityCheckHashID.Should().NotBeNullOrEmpty();
+
+        var persistedCheckData = JsonConvert.DeserializeObject<CheckProcessData>(persistedCheck.CheckData);
+        persistedCheckData.ValidityStartDate.Should().Be(wfEvent.ValidityStartDate.ToString("yyyy-MM-dd"));
+        persistedCheckData.ValidityEndDate.Should().Be(wfEvent.ValidityEndDate.ToString("yyyy-MM-dd"));
+        persistedCheckData.GracePeriodEndDate.Should().Be(wfEvent.GracePeriodEndDate.ToString("yyyy-MM-dd"));
+        persistedCheckData.LastName.Should().Be(wfEvent.ParentLastName);
+        persistedCheckData.DateOfBirth.Should().Be(submittedCheckData.DateOfBirth);
+        persistedCheckData.NationalInsuranceNumber.Should().Be(submittedCheckData.NationalInsuranceNumber);
+        persistedCheckData.EligibilityCode.Should().Be(submittedCheckData.EligibilityCode);
+        persistedCheckData.Type.Should().Be(submittedCheckData.Type);
+        persistedCheckData.ClientIdentifier.Should().Be(submittedCheckData.ClientIdentifier);
+        persistedCheckData.Order.Should().Be(submittedCheckData.Order);
+
+        var hash = await _fakeInMemoryDb.EligibilityCheckHashes
+            .SingleAsync(x => x.EligibilityCheckHashID == persistedCheck.EligibilityCheckHashID);
+        hash.Hash.Should().Be(submittedCheckData.GetHash());
+        hash.Outcome.Should().Be(CheckEligibilityStatus.eligible);
+
+        var dualRunningCheck = await _fakeInMemoryDb.WorkingFamiliesDualRunningChecks
+            .SingleAsync(x => x.EligibilityCheckID == item.EligibilityCheckID);
+        dualRunningCheck.ECEStatus.Should().Be(CheckEligibilityStatus.eligible.ToString());
+        dualRunningCheck.ECSStatus.Should().Be(CheckEligibilityStatus.notEligible.ToString());
+        dualRunningCheck.EligibilityCode.Should().Be(submittedCheckData.EligibilityCode);
+        dualRunningCheck.ECSQualifier.Should().Be(ecsResponse.Qualifier);
+        var dualRunningEcsResponseBody = JsonConvert.DeserializeObject<CheckProcessData>(dualRunningCheck.ECSResponseBody);
+        dualRunningEcsResponseBody.Qualifier.Should().Be(ecsResponse.Qualifier);
+        dualRunningEcsResponseBody.EcsStatus.Should().Be(ecsResponse.Status);
+        dualRunningEcsResponseBody.EcsErrorCode.Should().Be(ecsResponse.ErrorCode);
+        dualRunningCheck.ECEResponseBody.Should().Be(persistedCheck.CheckData);
+        dualRunningCheck.isConflict.Should().BeTrue();
+    }
+
+    [Test]
+    public async Task Given_WorkingFamiliesDualRunningIsEnabled_And_UseEcsAsFinalResult_Is_True_Should_Persist_ECS_Result()
+    {
+        _configuration["WorkingFamiliesDualRunning:RecordNonConflictResults"] = "true";
+        _configuration["WorkingFamiliesDualRunning:IsEnabled"] = "true";
+        _configuration["Dwp:UseEcsforChecksWF"] = "true";
+        _sut = CreateCheckingEngineGateway();
+
+        var item = CreateWorkingFamiliesCheck("50012345678");
+        var wfEvent = CreateWorkingFamiliesEvent(item);
+        wfEvent.ChildFirstName = "TEST";
+        wfEvent.ChildLastName = "TESTER";
+        wfEvent.ParentFirstName = "PARENT-TESTER";
+        var ecsResponse = new SoapCheckResponse
+        {
+            Status = "0",
+            ErrorCode = "0",
+            Qualifier = "",
+            ValidityStartDate = DateTime.Today.AddDays(-2).ToString("yyyy-MM-dd"),
+            ValidityEndDate = DateTime.Today.AddDays(-1).ToString("yyyy-MM-dd"),
+            GracePeriodEndDate = DateTime.Today.AddDays(-1).ToString("yyyy-MM-dd")
+        };
+
+        _fakeInMemoryDb.CheckEligibilities.Add(item);
+        _fakeInMemoryDb.WorkingFamiliesEvents.Add(wfEvent);
+        await _fakeInMemoryDb.SaveChangesAsync();
+
+        _moqEcsGateway.Setup(x => x.UseEcsforChecksWF).Returns("true");
+        _moqEcsGateway
+            .Setup(x => x.EcsWFCheck(It.IsAny<CheckProcessData>(), It.IsAny<string>()))
+            .ReturnsAsync(ecsResponse);
+
+        var (status, _) = await _sut.ProcessCheckAsync(item.EligibilityCheckID);
+
+        status.Should().Be(CheckEligibilityStatus.notEligible);
+
+        var persistedCheck = await _fakeInMemoryDb.CheckEligibilities
+            .SingleAsync(x => x.EligibilityCheckID == item.EligibilityCheckID);
+        persistedCheck.Status.Should().Be(CheckEligibilityStatus.notEligible);
+        var persistedCheckData = JsonConvert.DeserializeObject<CheckProcessData>(persistedCheck.CheckData);
+        persistedCheckData.ValidityStartDate.Should().Be(ecsResponse.ValidityStartDate);
+        persistedCheckData.ValidityEndDate.Should().Be(ecsResponse.ValidityEndDate);
+        persistedCheckData.GracePeriodEndDate.Should().Be(ecsResponse.GracePeriodEndDate);
+
+        var hash = await _fakeInMemoryDb.EligibilityCheckHashes
+            .SingleAsync(x => x.EligibilityCheckHashID == persistedCheck.EligibilityCheckHashID);
+        hash.Outcome.Should().Be(CheckEligibilityStatus.notEligible);
+        hash.Source.Should().Be(ProcessEligibilityCheckSource.ECS);
+
+        var dualRunningCheck = await _fakeInMemoryDb.WorkingFamiliesDualRunningChecks
+            .SingleAsync(x => x.EligibilityCheckID == item.EligibilityCheckID);
+        dualRunningCheck.ECEStatus.Should().Be(CheckEligibilityStatus.eligible.ToString());
+        dualRunningCheck.ECSStatus.Should().Be(CheckEligibilityStatus.notEligible.ToString());
+        dualRunningCheck.ECEResponseBody.Should().Contain(wfEvent.ValidityStartDate.ToString("yyyy-MM-dd"));
+    }
+
+    [Test]
+    public async Task Given_WorkingFamiliesDualRunningIsEnabled_And_RecordNonConflictResults_Is_False_Should_Not_Persist_NonConflict()
+    {
+        _configuration["WorkingFamiliesDualRunning:RecordNonConflictResults"] = "false";
+        _configuration["WorkingFamiliesDualRunning:IsEnabled"] = "true";
+        _sut = CreateCheckingEngineGateway();
+
+        var item = CreateWorkingFamiliesCheck("50012345678");
+        var wfEvent = CreateWorkingFamiliesEvent(item);
+        wfEvent.ChildFirstName = "TEST";
+        wfEvent.ChildLastName = "TESTER";
+        wfEvent.ParentFirstName = "PARENT-TESTER";
+        var ecsResponse = new SoapCheckResponse
+        {
+            Status = "1",
+            ErrorCode = "0",
+            Qualifier = "",
+            ValidityStartDate = DateTime.Today.AddDays(-1).ToString("yyyy-MM-dd"),
+            ValidityEndDate = DateTime.Today.AddDays(1).ToString("yyyy-MM-dd"),
+            GracePeriodEndDate = DateTime.Today.AddDays(1).ToString("yyyy-MM-dd")
+        };
+
+        _fakeInMemoryDb.CheckEligibilities.Add(item);
+        _fakeInMemoryDb.WorkingFamiliesEvents.Add(wfEvent);
+        await _fakeInMemoryDb.SaveChangesAsync();
+
+        _moqEcsGateway.Setup(x => x.UseEcsforChecksWF).Returns("validate");
+        _moqEcsGateway
+            .Setup(x => x.EcsWFCheck(It.IsAny<CheckProcessData>(), It.IsAny<string>()))
+            .ReturnsAsync(ecsResponse);
+
+        var (status, _) = await _sut.ProcessCheckAsync(item.EligibilityCheckID);
+
+        status.Should().Be(CheckEligibilityStatus.eligible);
+        (await _fakeInMemoryDb.WorkingFamiliesDualRunningChecks
+            .AnyAsync(x => x.EligibilityCheckID == item.EligibilityCheckID)).Should().BeFalse();
+    }
+
 
     [Test]
     public async Task Given_ClientSideTestScenario_Returns_Event_Process_Should_Return_Eligible()
@@ -1827,6 +2012,14 @@ public class CheckingEngineGatewayTests : TestBase.TestBase
         response.CheckEligibilityStatus.Should().Be(CheckEligibilityStatus.eligible);
         response.Reason.Should().Be(reason);
         response.ResponseCode.Should().Be(HttpStatusCode.OK);
+    }
+
+    private CheckingEngineGateway CreateCheckingEngineGateway()
+    {
+        return new CheckingEngineGateway(new NullLoggerFactory(), _fakeInMemoryDb,
+            _configuration, _moqEcsGateway.Object, _moqDwpGateway.Object, _hashGateway, _localAuthority.Object,
+            _eligibilityPolicy.Object, _moqWFTestScenarioFactory.Object, _moqStandardTestScenarioFactory.Object,
+            _moqWorkingFamiliesEventGateway.Object, new WorkingFamiliesDualRunningCheckGateway(_fakeInMemoryDb));
     }
 
     private EligibilityCheck CreateWorkingFamiliesCheck(string eligibilityCode)
