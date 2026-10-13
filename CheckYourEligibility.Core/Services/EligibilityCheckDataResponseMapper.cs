@@ -1,4 +1,3 @@
-﻿using CheckYourEligibility.Core.Boundary.Requests;
 using CheckYourEligibility.Core.Boundary.Responses;
 using CheckYourEligibility.Core.Boundary.Responses.Internal;
 using CheckYourEligibility.Core.Domain;
@@ -37,7 +36,7 @@ namespace CheckYourEligibility.Core.Services
 
         public CheckEligibilityWorkingFamiliesItem MapCheckDataToResponseWorkingFamilies(EligibilityCheck eligibilityCheck, bool isInternal = false) {
 
-            var checkData = JsonConvert.DeserializeObject<CheckEligibilityRequestWorkingFamiliesBulkData>(eligibilityCheck.CheckData);
+            var checkData = JsonConvert.DeserializeObject<CheckProcessData>(eligibilityCheck.CheckData);
 
             var item = new CheckEligibilityWorkingFamiliesItem();
 
@@ -50,6 +49,7 @@ namespace CheckYourEligibility.Core.Services
             // NOTE: once we remove hashing this conditional should be removed
             item.ValidityStartDate = checkData.DiscretionaryValidityStartDate ?? checkData.ValidityStartDate; 
             item.ValidityEndDate = checkData.ValidityEndDate;
+            item.ClientIdentifier = checkData?.ClientIdentifier;
             item.GracePeriodEndDate = checkData.GracePeriodEndDate;
             item.NationalInsuranceNumber = checkData.NationalInsuranceNumber;
             item.DateOfBirth = checkData.DateOfBirth;
@@ -59,6 +59,7 @@ namespace CheckYourEligibility.Core.Services
             if (isInternal) {
                 item.ValidityStartDate = checkData.ValidityStartDate;
                 item.DiscretionaryValidityStartDate = checkData.DiscretionaryValidityStartDate;
+                item.IsGracePeriodEndDateApplied = checkData.IsGracePeriodEndDateApplied;
             }
                 
             if (eligibilityCheck.BulkCheckID != null)
@@ -95,7 +96,6 @@ namespace CheckYourEligibility.Core.Services
             item.ChildSchoolURN = checkData.ChildSchoolURN;
             item.EligibilityEndDate = checkData.EligibilityEndDate;
             item.EmailAddress = checkData.EmailAddress;
-
             if (eligibilityCheck.BulkCheckID != null)
                 item.EligibilityCheckID = eligibilityCheck.EligibilityCheckID;
 

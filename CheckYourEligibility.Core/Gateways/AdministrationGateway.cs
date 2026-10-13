@@ -126,7 +126,7 @@ public class AdministrationGateway : IAdministration
         _db.BulkInsert_FreeSchoolMealsHO(data);
     }
 
-    public async Task ImportWfHMRCData(IEnumerable<WorkingFamiliesEvent> data)
+    public async Task BulkImportWorkingFamiliesEventHMRCData(IEnumerable<WorkingFamiliesEvent> data)
     {
         // Don't insert exact duplicates; exclude soft-deleted records from the comparison
         var codesToInsert = data.Select(x => x.EligibilityCode).ToList();
@@ -136,8 +136,8 @@ public class AdministrationGateway : IAdministration
         var codeHashes = codeEvents.Select(x => x.getHash());
         data = data.Where(x => !codeHashes.Contains(x.getHash()));
         _db.BulkInsert_WorkingFamiliesEvent(data);
-    }
 
+    }
     [ExcludeFromCodeCoverage(Justification =
         "In memory db does not support execute update, direct updating causes concurrency error")]
     public async Task UpdateEstablishmentsPrivateBeta(IEnumerable<EstablishmentPrivateBetaRow> data)

@@ -16,6 +16,8 @@ public class FosterFamilyResponse
     public DateTime? PartnerDateOfBirth { get; set; }
     public string? PartnerNationalInsuranceNumber { get; set; }
 
+    public int? LocalAuthorityID { get; set; }
+
     // Populated when includeChildren = true
     public List<FosterChildSummaryResponse> FosterChildren { get; set; } = [];
 }

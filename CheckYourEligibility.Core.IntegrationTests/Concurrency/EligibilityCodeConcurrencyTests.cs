@@ -1,9 +1,10 @@
-﻿using CheckYourEligibility.Core.Boundary.Requests;
+using CheckYourEligibility.Core.Boundary.Requests;
 using CheckYourEligibility.Core.Domain.Enums.WorkingFamilies;
 using CheckYourEligibility.Core.Gateways;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
+using Moq;
 
 namespace CheckYourEligibility.Core.IntegrationTests.Concurrency;
 
@@ -14,9 +15,13 @@ public sealed class EligibilityCodeConcurrencyTests
     private const long RangeStart = 40000000001L;
     private const long RangeEnd = 49999999999L;
 
+    private Mock<IWorkingFamiliesEvent> _mockWFEventGateway = null!;
+
     [SetUp]
     public async Task ResetEligibilityCodeRange()
     {
+        _mockWFEventGateway = new Mock<IWorkingFamiliesEvent>(MockBehavior.Strict);
+
         await using var context = SqlServerFixture.CreateContext();
 
         await context.EligibilityCodeRanges
@@ -45,6 +50,7 @@ public sealed class EligibilityCodeConcurrencyTests
 
                 var gateway = new FosterFamiliesGateway(
                     context,
+                    _mockWFEventGateway.Object,
                     NullLogger<FosterFamiliesGateway>.Instance);
 
                 return await gateway.GetEligibilityCodeForFosterChild();
@@ -118,6 +124,7 @@ public sealed class EligibilityCodeConcurrencyTests
 
                 var gateway = new FosterFamiliesGateway(
                     context,
+                    _mockWFEventGateway.Object,
                     NullLogger<FosterFamiliesGateway>.Instance);
 
                 return await gateway.CreateFosterFamily(

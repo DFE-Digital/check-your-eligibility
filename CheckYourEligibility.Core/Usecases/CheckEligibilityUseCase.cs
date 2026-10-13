@@ -1,3 +1,4 @@
+using CheckYourEligibility.Core.Domain.Validation;
 using CheckYourEligibility.Core.Boundary.Requests;
 using CheckYourEligibility.Core.Boundary.Responses;
 using CheckYourEligibility.Core.Domain.Constants;
@@ -72,8 +73,14 @@ public class CheckEligibilityUseCase : ICheckEligibilityUseCase
                 }
             }
 
-            if (errors.Count > 0) {
+            if (errors.Count > 0)
+            {
                 throw new ValidationException(errors, string.Empty);
+            }
+            if (modelData.Data is CheckEligibilityRequestDataBase checkData)
+            {
+                checkData.NationalInsuranceNumber =
+                    NinoValidation.Normalize(checkData.NationalInsuranceNumber);
             }
             // Execute the check
             var response = await _checkGateway.PostCheck(modelData.Data, meta);
@@ -82,7 +89,7 @@ public class CheckEligibilityUseCase : ICheckEligibilityUseCase
                 _logger.LogInformation($"Eligibility check created with ID: {response.Id}");
                 return new CheckEligibilityResponse
                 {
-                    Data = new StatusValue { Status = response.Status.ToString(), Tier = response.Tier?.ToString()},
+                    Data = new StatusValue { Status = response.Status.ToString(), Tier = response.Tier?.ToString() },
                     Links = new CheckEligibilityResponseLinks
                     {
                         Get_EligibilityCheck = $"{CheckLinks.GetLink}{response.Id}",

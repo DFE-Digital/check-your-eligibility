@@ -8,6 +8,7 @@ using CheckYourEligibility.Core.Database;
 using CheckYourEligibility.Core.Gateways.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
+using Microsoft.Data.SqlClient;
 
 namespace CheckYourEligibility.Core.Gateways;
 
@@ -49,7 +50,7 @@ public class CheckEligibilityGateway : ICheckEligibility
             _ => _configuration[$"Queue:Bulk:{type}"]
         };
     }
-    
+
     public async Task PostCheck<T>(T data, string groupId, CheckMetaData meta) where T : IEnumerable<IEligibilityServiceType>
     {
         _groupId = groupId;
@@ -182,7 +183,7 @@ public class CheckEligibilityGateway : ICheckEligibility
         try
         {
 
-            var baseType = data as CheckEligibilityRequestDataBase;           
+            var baseType = data as CheckEligibilityRequestDataBase;
 
             item.CheckData = JsonConvert.SerializeObject(data);
 
@@ -208,7 +209,6 @@ public class CheckEligibilityGateway : ICheckEligibility
                 await _hashGateway.Exists(checkData);
             if (checkHashResult != null)
             {
-
                 CheckEligibilityStatus hashedStatus = checkHashResult.Outcome;
                 item.Status = hashedStatus;
                 item.Tier = checkHashResult.Tier;
@@ -220,34 +220,32 @@ public class CheckEligibilityGateway : ICheckEligibility
                 {
                     try
                     {
-
                         for (int i = 1; i <= 3; i++)
                         {
-
-                            var firstValidCheck = await _db.CheckEligibilities
-                           .Where(x => x.EligibilityCheckHashID == checkHashResult.EligibilityCheckHashID &&
-                                       x.Status == hashedStatus).OrderByDescending(x => x.Created).AsNoTracking().FirstOrDefaultAsync();
-                            if (firstValidCheck != null)
+                            try
                             {
-
-                                CheckProcessData hashCheckData = JsonConvert.DeserializeObject<CheckProcessData>(firstValidCheck.CheckData);
-                                hashCheckData.ClientIdentifier = checkData.ClientIdentifier;
-                                hashCheckData.Order = checkData.Order;
-                                hashCheckData.FirstName = checkData.FirstName;
-                                hashCheckData.ChildFirstName = checkData.ChildFirstName;
-                                hashCheckData.ChildLastName = checkData.ChildLastName;
-                                hashCheckData.ChildDateOfBirth = checkData.ChildDateOfBirth;
-                                hashCheckData.ChildSchoolURN = checkData.ChildSchoolURN;
-                                hashCheckData.EmailAddress = checkData.EmailAddress;
-                                item.CheckData = JsonConvert.SerializeObject(hashCheckData);
-                                _logger.LogInformation($"Action: Retrieve check with HashID:{checkHashResult.EligibilityCheckHashID}, Status:Found, Attempt:{i} ");
-                                break;
-
+                                var firstValidCheck = await _db.CheckEligibilities
+                                    .Where(x => x.EligibilityCheckHashID == checkHashResult.EligibilityCheckHashID && x.Status == hashedStatus)
+                                    .OrderBy(x => x.Created)
+                                    .AsNoTracking()
+                                    .FirstOrDefaultAsync();
+                                if (firstValidCheck != null)
+                                {
+                                    CheckProcessData hashCheckData = JsonConvert.DeserializeObject<CheckProcessData>(firstValidCheck.CheckData);
+                                    hashCheckData.ClientIdentifier = checkData.ClientIdentifier;
+                                    hashCheckData.Order = checkData.Order;
+                                    item.CheckData = JsonConvert.SerializeObject(hashCheckData);
+                                    _logger.LogInformation($"Action: Retrieve check with HashID:{checkHashResult.EligibilityCheckHashID}, Status:Found, Attempt:{i} ");
+                                    break;
+                                }
+                                _logger.LogWarning($"Action: Retrieve check with HashID:{checkHashResult.EligibilityCheckHashID}, Status:NotFound, Attempt:{i} ");
                             }
-                            _logger.LogWarning($"Action: Retrieve check with HashID:{checkHashResult.EligibilityCheckHashID}, Status:NotFound, Attempt:{i} ");
+                            catch (SqlException ex) when (ex.Number == -2) // SQL timeout
+                            {
+                                _logger.LogWarning($"Action: Retrieve check with HashID:{checkHashResult.EligibilityCheckHashID}, Status:SQLTimeout, Attempt:{i} ");
+                            }
                             await Task.Delay(1000);
                         }
-
                     }
                     catch (Exception ex)
                     {
@@ -260,8 +258,7 @@ public class CheckEligibilityGateway : ICheckEligibility
                     try
                     {
                         var firstValidCheck = await _db.CheckEligibilities
-                            .Where(x => x.EligibilityCheckHashID == checkHashResult.EligibilityCheckHashID &&
-                                        x.Status == hashedStatus)
+                            .Where(x => x.EligibilityCheckHashID == checkHashResult.EligibilityCheckHashID && x.Status == hashedStatus)
                             .OrderByDescending(x => x.Created)
                             .AsNoTracking()
                             .FirstOrDefaultAsync();

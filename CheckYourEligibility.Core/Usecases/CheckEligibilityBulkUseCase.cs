@@ -1,3 +1,4 @@
+using CheckYourEligibility.Core.Domain.Validation;
 using CheckYourEligibility.Core.Boundary.Requests;
 using CheckYourEligibility.Core.Boundary.Responses;
 using CheckYourEligibility.Core.Domain.Constants;
@@ -61,11 +62,11 @@ public class CheckEligibilityBulkUseCase : ICheckEligibilityBulkUseCase
         int recordCountLimit,
         CheckMetaData meta) where T : CheckEligibilityRequestBulk
     {
+        if (model == null || (model as dynamic).Data == null)
+            throw new ValidationException(null, "Invalid Request, data is required.");
+
         var modelBulk = EligibilityBulkModelFactory.CreateBulkFromGeneric(model, type);
         var bulkData = (modelBulk as dynamic).Data;
-        if (modelBulk == null || bulkData == null)
-
-            throw new ValidationException(null, "Invalid Request, data is required.");
 
         if (bulkData.Count > recordCountLimit)
         {
@@ -81,7 +82,6 @@ public class CheckEligibilityBulkUseCase : ICheckEligibilityBulkUseCase
 
         foreach (var item in bulkData)
         {
-            item.NationalInsuranceNumber = item.NationalInsuranceNumber?.ToUpperInvariant();
             if (type != CheckEligibilityType.WorkingFamilies)
             {
                 item.NationalAsylumSeekerServiceNumber = item.NationalAsylumSeekerServiceNumber?.ToUpperInvariant();
@@ -108,8 +108,13 @@ public class CheckEligibilityBulkUseCase : ICheckEligibilityBulkUseCase
         if (errors.Count > 0)
             throw new ValidationException(errors, string.Empty);
 
+        foreach (var item in bulkData)
+        {
+            item.NationalInsuranceNumber = NinoValidation.Normalize(item.NationalInsuranceNumber);
+        }
+
         var groupId = Guid.NewGuid().ToString();
-        
+
         // Create BulkCheck record via gateway
         var bulkCheck = new BulkCheck
         {
@@ -141,7 +146,7 @@ public class CheckEligibilityBulkUseCase : ICheckEligibilityBulkUseCase
             try
             {
                 await gateway.PostCheck(capturedData, groupId, meta);
-            } 
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Background PostCheck failed for bulk check group ID: {GroupId}", groupId);
@@ -157,7 +162,7 @@ public class CheckEligibilityBulkUseCase : ICheckEligibilityBulkUseCase
                 Get_Progress_Check = $"{CheckLinks.BulkCheckLink}{groupId}{CheckLinks.BulkCheckProgress}",
 
                 Get_BulkCheck_Status = $"{CheckLinks.BulkCheckLink}{groupId}{CheckLinks.Status}{Messages.Processing}",
-                
+
                 Get_BulkCheck_Results = $"{CheckLinks.BulkCheckLink}{groupId}{CheckLinks.BulkCheckResults}"
             }
         };

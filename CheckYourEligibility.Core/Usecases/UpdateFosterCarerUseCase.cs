@@ -2,6 +2,7 @@ using FluentValidation;
 using CheckYourEligibility.Core.Domain.Constants.ErrorMessages;
 using CheckYourEligibility.Core.Boundary.Requests;
 using CheckYourEligibility.Core.Gateways.Interfaces;
+using CheckYourEligibility.Core.Domain.Validation;
 
 namespace CheckYourEligibility.Core.UseCases;
 
@@ -47,6 +48,20 @@ public class UpdateFosterCarerUseCase : IUpdateFosterCarerUseCase
             {
                 throw new ValidationException(validationResult.Errors);
             }
+        }
+
+        if (request.FosterCarerRequest is not null)
+        {
+            request.FosterCarerRequest.CarerNationalInsuranceNumber =
+                NinoValidation.Normalize(
+                    request.FosterCarerRequest.CarerNationalInsuranceNumber);
+        }
+
+        if (request.FosterPartnerRequest is not null)
+        {
+            request.FosterPartnerRequest.PartnerNationalInsuranceNumber =
+                NinoValidation.Normalize(
+                    request.FosterPartnerRequest.PartnerNationalInsuranceNumber);
         }
 
         await _gateway.UpdateFosterCarer(fosterCarerId, localAuthorityId, request);

@@ -861,7 +861,7 @@ namespace CheckYourEligibility.Core.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(9)");
 
-                    b.Property<DateTime?>("DiscretionaryValidityStartDate")
+                    b.Property<DateTime>("DiscretionaryValidityStartDate")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("EligibilityCode")
@@ -879,6 +879,9 @@ namespace CheckYourEligibility.Core.Migrations
 
                     b.Property<DateTime?>("GracePeriodEndDate")
                         .HasColumnType("datetime2");
+
+                    b.Property<bool>("GracePeriodEndDateApplied")
+                        .HasColumnType("bit");
 
                     b.Property<bool>("HasCodeBeenCheckedByOwningLA")
                         .HasColumnType("bit");
@@ -898,9 +901,15 @@ namespace CheckYourEligibility.Core.Migrations
                     b.Property<int?>("OwningLocalAuthorityId")
                         .HasColumnType("int");
 
+                    b.Property<string>("ParentLastName")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("ParentNationalInsuranceNumber")
                         .IsRequired()
                         .HasColumnType("nvarchar(9)");
+
+                    b.Property<string>("PartnerLastName")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("PartnerNationalInsuranceNumber")
                         .HasColumnType("nvarchar(9)");
@@ -1121,12 +1130,17 @@ namespace CheckYourEligibility.Core.Migrations
                     b.Property<DateTime>("ValidityStartDate")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("WorkingFamiliesEventSummaryID")
+                        .HasColumnType("nvarchar(450)");
+
                     b.HasKey("FosterChildId");
 
                     b.HasIndex("EligibilityCode")
                         .IsUnique();
 
                     b.HasIndex("FosterCarerId");
+
+                    b.HasIndex("WorkingFamiliesEventSummaryID");
 
                     b.ToTable("FosterChildren");
                 });
@@ -1151,7 +1165,7 @@ namespace CheckYourEligibility.Core.Migrations
                     b.ToTable("UserRoles");
                 });
 
-            modelBuilder.Entity("CheckYourEligibility.API.Domain.Application", b =>
+            modelBuilder.Entity("CheckYourEligibility.Core.Domain.Application", b =>
                 {
                     b.HasOne("CheckYourEligibility.Core.Domain.EligibilityCheckHash", "EligibilityCheckHash")
                         .WithMany()
@@ -1312,12 +1326,18 @@ namespace CheckYourEligibility.Core.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("CheckYourEligibility.Core.Domain.WorkingFamiliesEventSummary", "eventSummary")
+                        .WithMany()
+                        .HasForeignKey("WorkingFamiliesEventSummaryID");
+
                     b.Navigation("FosterCarer");
+
+                    b.Navigation("eventSummary");
                 });
 
             modelBuilder.Entity("UserRole", b =>
                 {
-                    b.HasOne("CheckYourEligibility.API.Domain.User", "User")
+                    b.HasOne("CheckYourEligibility.Core.Domain.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1326,7 +1346,7 @@ namespace CheckYourEligibility.Core.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("CheckYourEligibility.API.Domain.Application", b =>
+            modelBuilder.Entity("CheckYourEligibility.Core.Domain.Application", b =>
                 {
                     b.Navigation("Evidence");
 

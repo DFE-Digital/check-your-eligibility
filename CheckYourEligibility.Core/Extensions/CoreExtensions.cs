@@ -56,6 +56,7 @@ public static class CoreExtensions
         services.AddTransient<IMultiAcademyTrust, MultiAcademyTrustGateway>();
         services.AddTransient<IEligibilityPolicy, EligibilityPolicyGateway>();
         services.AddTransient<IFosterFamilies, FosterFamiliesGateway>();
+        services.AddTransient<INotificationClientFactory, NotificationClientFactory>();
         return services;
     }
 
