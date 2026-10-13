@@ -23,10 +23,10 @@ namespace CheckYourEligibility.Core.Tests.UseCases
         }
 
         [Test]
-        public void Execute_WhenLocalAuthorityNotFound_ThrowsNotFoundException()
+        public async Task Execute_WhenLocalAuthorityNotFound_ThrowsNotFoundException()
         {
             _localAuthorityGatewayMock.Setup(x => x.GetLocalAuthorityById(It.IsAny<int>(), null)).ReturnsAsync((LocalAuthority)null);
-            Assert.ThrowsAsync<NotFoundException>(() => _localAuthoritiesUseCase.Execute(123));
+            await Assert.ThrowsAsync<NotFoundException>(async () => await _localAuthoritiesUseCase.Execute(123));
         }
 
         [Test]

@@ -86,7 +86,7 @@ public class GetEligibilityReportHistoryUseCaseTests : TestBase
         var localAuthorityIds = new List<int> { 201 }; 
 
         // Act + Asserts
-        Assert.ThrowsAsync<UnauthorizedAccessException>(async () =>
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(async () =>
             await _sut.Execute(localAuthorityId, localAuthorityIds, pageNumber: 1));
     }
 
@@ -96,6 +96,6 @@ public class GetEligibilityReportHistoryUseCaseTests : TestBase
         var localAuthorityId = string.Empty;
         var localAuthorityIds = new List<int> { 201 };
 
-        Assert.ThrowsAsync<ValidationException>(async () => await _sut.Execute(localAuthorityId, localAuthorityIds, pageNumber: 1));
+        await Assert.ThrowsAsync<ValidationException>(async () => await _sut.Execute(localAuthorityId, localAuthorityIds, pageNumber: 1));
     }
 }

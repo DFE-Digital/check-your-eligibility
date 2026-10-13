@@ -36,22 +36,22 @@ public class GetEligibilityCheckReportingUseCaseTests : TestBase
     }
 
     [Test]
-    public void Execute_WhenModelIsNull_ThrowsValidationException()
+    public async Task Execute_WhenModelIsNull_ThrowsValidationException()
     {
-        var ex = Assert.ThrowsAsync<System.ComponentModel.DataAnnotations.ValidationException>(
+        var ex = await Assert.ThrowsAsync<System.ComponentModel.DataAnnotations.ValidationException>(
             async () => await _sut.Execute(null,null));
 
         Assert.That(ex.Message, Is.EqualTo("Invalid request, model is required"));
     }
 
     [Test]
-    public void Execute_WhenModelIsInvalid_ThrowsFluentValidationException()
+    public async Task Execute_WhenModelIsInvalid_ThrowsFluentValidationException()
     {
         // Arrange
         var invalidModel = new EligibilityCheckReportRequest();
 
         // Act
-        var ex = Assert.ThrowsAsync<FluentValidation.ValidationException>(
+        var ex = await Assert.ThrowsAsync<FluentValidation.ValidationException>(
             async () => await _sut.Execute(invalidModel, null));
 
         // Assert

@@ -26,13 +26,13 @@ public class GetEstablishmentsByLocalAuthorityIdUseCaseTests : TestBase
     }
 
     [Test]
-    public void Execute_InvalidLocalAuthorityId_ThrowsNotFoundException()
+    public async Task Execute_InvalidLocalAuthorityId_ThrowsNotFoundException()
     {
         // Arrange
         var invalidId = 0;
 
         // Act + Assert
-        var ex = Assert.ThrowsAsync<NotFoundException>(
+        var ex = await Assert.ThrowsAsync<NotFoundException>(
             async () => await _sut.Execute(invalidId)
         );
 

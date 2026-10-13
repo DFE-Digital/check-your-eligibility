@@ -20,19 +20,19 @@ public class GetEligibilityReportStatusUseCaseTests : TestBase
     }
 
     [Test]
-    public void Execute_InvalidGuid_ThrowsValidationException()
+    public async Task Execute_InvalidGuid_ThrowsValidationException()
     {
         var invalidId = "not-a-guid";
-        var ex = Assert.ThrowsAsync<ValidationException>(async () => await _sut.Execute(invalidId));
+        var ex = await Assert.ThrowsAsync<ValidationException>(async () => await _sut.Execute(invalidId));
         Assert.That(ex.Message, Is.EqualTo("Invalid report ID format. Must be a GUID"));
     }
 
     [Test]
-    public void Execute_ReportNotFound_ThrowsNotFoundException()
+    public async Task Execute_ReportNotFound_ThrowsNotFoundException()
     {
         var guid = Guid.NewGuid();
         _mockGateway.Setup(g => g.GetEligibilityReportById(guid)).ReturnsAsync((EligibilityCheckReport)null);
-        Assert.ThrowsAsync<NotFoundException>(async () => await _sut.Execute(guid.ToString()));
+        await Assert.ThrowsAsync<NotFoundException>(async () => await _sut.Execute(guid.ToString()));
     }
 
     [Test]

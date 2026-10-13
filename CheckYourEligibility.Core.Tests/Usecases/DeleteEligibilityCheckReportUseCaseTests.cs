@@ -72,7 +72,7 @@ public class DeleteEligibilityCheckReportUseCaseTests
     }
 
     [Test]
-    public void Execute_ValidGuidWithNonMatchingLocalAuthority_ThrowsUnauthorizedAccessException()
+    public async Task Execute_ValidGuidWithNonMatchingLocalAuthority_ThrowsUnauthorizedAccessException()
     {
         // Arrange
         var reportId = Guid.NewGuid();
@@ -83,7 +83,7 @@ public class DeleteEligibilityCheckReportUseCaseTests
             .ReturnsAsync(reportLocalAuthorityId);
 
         // Act & Assert
-        var exception = Assert.ThrowsAsync<UnauthorizedAccessException>(
+        var exception = await Assert.ThrowsAsync<UnauthorizedAccessException>(
             async () => await _sut.Execute(reportId, localAuthorityIds));
 
         exception.Should().NotBeNull();
@@ -91,7 +91,7 @@ public class DeleteEligibilityCheckReportUseCaseTests
     }
 
     [Test]
-    public void Execute_ReportNotFound_ThrowsNotFoundException()
+    public async Task Execute_ReportNotFound_ThrowsNotFoundException()
     {
         // Arrange
         var reportId = Guid.NewGuid();
@@ -101,7 +101,7 @@ public class DeleteEligibilityCheckReportUseCaseTests
             .ThrowsAsync(new NotFoundException("Eligibility report not found"));
 
         // Act & Assert
-        var exception = Assert.ThrowsAsync<NotFoundException>(
+        var exception = await Assert.ThrowsAsync<NotFoundException>(
             async () => await _sut.Execute(reportId, localAuthorityIds));
 
         exception.Should().NotBeNull();
@@ -109,7 +109,7 @@ public class DeleteEligibilityCheckReportUseCaseTests
     }
 
     [Test]
-    public void Execute_EmptyLocalAuthorityList_ThrowsUnauthorizedAccessException()
+    public async Task Execute_EmptyLocalAuthorityList_ThrowsUnauthorizedAccessException()
     {
         // Arrange
         var reportId = Guid.NewGuid();
@@ -118,7 +118,7 @@ public class DeleteEligibilityCheckReportUseCaseTests
         // No mock setup needed since UnauthorizedAccessException should be thrown immediately
 
         // Act & Assert
-        var exception = Assert.ThrowsAsync<UnauthorizedAccessException>(
+        var exception = await Assert.ThrowsAsync<UnauthorizedAccessException>(
             async () => await _sut.Execute(reportId, localAuthorityIds));
 
         exception.Should().NotBeNull();
@@ -126,7 +126,7 @@ public class DeleteEligibilityCheckReportUseCaseTests
     }
 
     [Test]
-    public void Execute_NullLocalAuthorityList_ThrowsArgumentNullException()
+    public async Task Execute_NullLocalAuthorityList_ThrowsArgumentNullException()
     {
         // Arrange
         var reportId = Guid.NewGuid();
@@ -135,14 +135,14 @@ public class DeleteEligibilityCheckReportUseCaseTests
         // No mock setup needed since ArgumentNullException should be thrown immediately
 
         // Act & Assert
-        var exception = Assert.ThrowsAsync<ArgumentNullException>(
+        var exception = await Assert.ThrowsAsync<ArgumentNullException>(
             async () => await _sut.Execute(reportId, localAuthorityIds));
 
         exception.Should().NotBeNull();
     }
 
     [Test]
-    public void Execute_EmptyGuid_ThrowsArgumentNullException()
+    public async Task Execute_EmptyGuid_ThrowsArgumentNullException()
     {
         // Arrange
         var reportId = Guid.Empty;
@@ -151,7 +151,7 @@ public class DeleteEligibilityCheckReportUseCaseTests
         // No mock setup needed since ArgumentNullException should be thrown immediately
 
         // Act & Assert
-        var exception = Assert.ThrowsAsync<ArgumentNullException>(
+        var exception = await Assert.ThrowsAsync<ArgumentNullException>(
             async () => await _sut.Execute(reportId, localAuthorityIds));
 
         exception.Should().NotBeNull();

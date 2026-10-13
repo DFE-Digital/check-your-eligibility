@@ -685,7 +685,7 @@ public class ImportApplicationsUseCaseTests : TestBase
     }
 
     [Test]
-    public void Execute_Should_Handle_GetEstablishments_Gateway_Exception() // Removed async
+    public async Task Execute_Should_Handle_GetEstablishments_Gateway_Exception() // Removed async
     {
         // Arrange
         var csvContent =
@@ -700,8 +700,7 @@ public class ImportApplicationsUseCaseTests : TestBase
             .ThrowsAsync(new Exception("Database connection error"));
 
         // Act & Assert - The exception should bubble up
-        var exception =
-            Assert.ThrowsAsync<Exception>(async () => await _sut.Execute(request, allowedLocalAuthorityIDs));
+        var exception = await Assert.ThrowsAsync<Exception>(async () => await _sut.Execute(request, allowedLocalAuthorityIDs));
 
         exception.Should().NotBeNull();
         exception!.Message.Should().Be("Database connection error");
@@ -1693,7 +1692,7 @@ public class ImportApplicationsUseCaseTests : TestBase
     }
 
     [Test]
-    public void ExecuteFromJson_Should_Handle_GetEstablishments_Gateway_Exception() // Removed async
+    public async Task ExecuteFromJson_Should_Handle_GetEstablishments_Gateway_Exception() // Removed async
     {
         // Arrange
         var applicationData = new ApplicationBulkImportData
@@ -1718,8 +1717,7 @@ public class ImportApplicationsUseCaseTests : TestBase
             .ThrowsAsync(new Exception("Database connection error"));
 
         // Act & Assert - The exception should bubble up
-        var exception =
-            Assert.ThrowsAsync<Exception>(async () => await _sut.ExecuteFromJson(request, allowedLocalAuthorityIDs));
+        var exception = await Assert.ThrowsAsync<Exception>(async () => await _sut.ExecuteFromJson(request, allowedLocalAuthorityIDs));
 
         exception.Should().NotBeNull();
         exception!.Message.Should().Be("Database connection error");

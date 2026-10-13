@@ -72,7 +72,7 @@ public class DeleteApplicationUseCaseTests
     }
 
     [Test]
-    public void Execute_ValidGuidWithNonMatchingLocalAuthority_ThrowsUnauthorizedAccessException()
+    public async Task Execute_ValidGuidWithNonMatchingLocalAuthority_ThrowsUnauthorizedAccessException()
     {
         // Arrange
         var guid = _fixture.Create<string>();
@@ -83,7 +83,7 @@ public class DeleteApplicationUseCaseTests
             .ReturnsAsync(applicationLocalAuthorityId);
 
         // Act & Assert
-        var exception = Assert.ThrowsAsync<UnauthorizedAccessException>(
+        var exception = await Assert.ThrowsAsync<UnauthorizedAccessException>(
             async () => await _sut.Execute(guid, localAuthorityIds));
 
         exception.Should().NotBeNull();
@@ -91,7 +91,7 @@ public class DeleteApplicationUseCaseTests
     }
 
     [Test]
-    public void Execute_ApplicationNotFound_ThrowsNotFoundException()
+    public async Task Execute_ApplicationNotFound_ThrowsNotFoundException()
     {
         // Arrange
         var guid = _fixture.Create<string>();
@@ -104,7 +104,7 @@ public class DeleteApplicationUseCaseTests
             .ReturnsAsync(false); // Application not found
 
         // Act & Assert
-        var exception = Assert.ThrowsAsync<NotFoundException>(
+        var exception = await Assert.ThrowsAsync<NotFoundException>(
             async () => await _sut.Execute(guid, localAuthorityIds));
 
         exception.Should().NotBeNull();
@@ -112,7 +112,7 @@ public class DeleteApplicationUseCaseTests
     }
 
     [Test]
-    public void Execute_EmptyLocalAuthorityList_ThrowsUnauthorizedAccessException()
+    public async Task Execute_EmptyLocalAuthorityList_ThrowsUnauthorizedAccessException()
     {
         // Arrange
         var guid = _fixture.Create<string>();
@@ -123,7 +123,7 @@ public class DeleteApplicationUseCaseTests
             .ReturnsAsync(applicationLocalAuthorityId);
 
         // Act & Assert
-        var exception = Assert.ThrowsAsync<UnauthorizedAccessException>(
+        var exception = await Assert.ThrowsAsync<UnauthorizedAccessException>(
             async () => await _sut.Execute(guid, localAuthorityIds));
 
         exception.Should().NotBeNull();
@@ -131,7 +131,7 @@ public class DeleteApplicationUseCaseTests
     }
 
     [Test]
-    public void Execute_NullLocalAuthorityList_ThrowsArgumentNullException()
+    public async Task Execute_NullLocalAuthorityList_ThrowsArgumentNullException()
     {
         // Arrange
         var guid = _fixture.Create<string>();
@@ -140,14 +140,14 @@ public class DeleteApplicationUseCaseTests
         // No mock setup needed since ArgumentNullException should be thrown immediately
 
         // Act & Assert
-        var exception = Assert.ThrowsAsync<ArgumentNullException>(
+        var exception = await Assert.ThrowsAsync<ArgumentNullException>(
             async () => await _sut.Execute(guid, localAuthorityIds));
 
         exception.Should().NotBeNull();
     }
 
     [Test]
-    public void Execute_ApplicationGatewayThrowsException_PropagatesException()
+    public async Task Execute_ApplicationGatewayThrowsException_PropagatesException()
     {
         // Arrange
         var guid = _fixture.Create<string>();
@@ -158,7 +158,7 @@ public class DeleteApplicationUseCaseTests
             .ThrowsAsync(expectedException);
 
         // Act & Assert
-        var exception = Assert.ThrowsAsync<Exception>(
+        var exception = await Assert.ThrowsAsync<Exception>(
             async () => await _sut.Execute(guid, localAuthorityIds));
 
         exception.Should().NotBeNull();

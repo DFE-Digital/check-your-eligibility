@@ -501,7 +501,7 @@ public class ApplicationServiceTests : TestBase
 
         // Assert
         response.Data.Should().NotBeEmpty(); // Ensures data is returned
-        response.Data.Count().Should().BeLessOrEqualTo(10); // Ensures correct page size is respected
+        response.Data.Count().Should().BeLessThanOrEqualTo(10); // Ensures correct page size is respected
     }
 
     [Test]
@@ -526,7 +526,7 @@ public class ApplicationServiceTests : TestBase
 
         // Assert
         response.Data.Should().NotBeEmpty(); // Ensures data is returned
-        response.Data.Count().Should().BeLessOrEqualTo(10); // Ensures correct page size is respected
+        response.Data.Count().Should().BeLessThanOrEqualTo(10); // Ensures correct page size is respected
     }
 
     [Test]
