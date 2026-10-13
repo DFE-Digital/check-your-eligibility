@@ -24,6 +24,7 @@ public static class ValidationMessages
 	public const string EligibilityCodeEmpty = "Enter an eligibility code that is 11 digits long";
 	public const string EligibilityCodeLength = "Eligibility code must be 11 digits long";
     public const string EligibilityCodeInvalid = "Eligibility code must only contain numbers";
+	public const string EligibilityCodeAlreadyExists = "Eligibility code has already been imported";
 	public const string ValidityStartDateEmpty = "Enter a validity start date";
 	public const string ValidityStartDateInvalid = "The validity start date must be in yyyy-mm-dd or dd-mm-yyyy format";
 	public const string ValidityEndDateEmpty = "Enter a validity end date";

@@ -1,7 +1,9 @@
 ﻿using CheckYourEligibility.API.Boundary.Requests;
 using CheckYourEligibility.API.Boundary.Responses;
+using CheckYourEligibility.API.Controllers;
 using CheckYourEligibility.API.Domain;
 using CheckYourEligibility.API.Domain.Constants;
+using CheckYourEligibility.API.Domain.Constants.ErrorMessages;
 using CheckYourEligibility.API.Domain.Exceptions;
 using CheckYourEligibility.API.Domain.Validation;
 using CheckYourEligibility.API.Gateways.Interfaces;
@@ -27,15 +29,25 @@ namespace CheckYourEligibility.API.Usecases
 
 		private readonly List<ImportTempCodeValidationError> validationErrors = new();
 
+		private readonly IWorkingFamiliesReporting _workingFamiliesReportingGateway;
+
+		public TemporaryCodeUploadUseCase(
+			IWorkingFamiliesReporting workingFamiliesReportingGateway)
+		{
+			_workingFamiliesReportingGateway = workingFamiliesReportingGateway;
+		}
+
 		public TemporaryCodeUploadUseCase(
 		ITemporaryCodeUpload gateway,
 		IAdministration administrationGateway,
 		IWorkingFamiliesEvent workingFamiliesEventGateway,
+		IWorkingFamiliesReporting workingFamiliesReportingGateway,
 		IServiceScopeFactory scopeFactory,
 		ILogger<TemporaryCodeUploadUseCase> logger)
 		{
 			_gateway = gateway;
 			_administrationGateway = administrationGateway;
+			_workingFamiliesReportingGateway = workingFamiliesReportingGateway;
 			_workingFamiliesEventGateway = workingFamiliesEventGateway;
 			_scopeFactory = scopeFactory;
 			_logger = logger;
@@ -83,6 +95,37 @@ namespace CheckYourEligibility.API.Usecases
 
 					var wfEvent = WorkingFamiliesEventHelper.ParseWorkingFamiliesEvent(eventProps, columnHeaders);
 					var validationResults = validator.Validate(wfEvent);
+					//if wfEvent has a valid eligibility code then check wfevents table to confirm eligibility code does not already exist
+					bool hasDuplicateEligibilityCode = false;
+					if (!string.IsNullOrWhiteSpace(wfEvent.EligibilityCode))
+					{
+						if (!validationResults.Errors.Any(x => x.ErrorMessage.Contains("eligibility", StringComparison.OrdinalIgnoreCase)))
+						{
+							//compare eligibility code to wfevents table to check for duplication.
+							var result = await _workingFamiliesReportingGateway.GetAllWorkingFamiliesEventsByEligibilityCode(wfEvent.EligibilityCode);
+							if (result.Data.Any())
+							{
+								if (validationResults.Errors.Count > 0)
+								{
+									validationResults.Errors.Insert(0, new FluentValidation.Results.ValidationFailure()
+									{
+										AttemptedValue = wfEvent.EligibilityCode,
+										ErrorMessage = ValidationMessages.EligibilityCodeAlreadyExists,
+										PropertyName = nameof(wfEvent.EligibilityCode),
+									});
+								}
+								else
+								{
+									validationErrors.Add(new ImportTempCodeValidationError
+									{
+										RowNumber = Convert.ToInt32(row.RowIndex.Value),
+										EligibilityCode = wfEvent.EligibilityCode,
+										ErrorMessages = new List<string> { ValidationMessages.EligibilityCodeAlreadyExists }
+									});
+								}
+							}
+						}
+					}
 					if (!validationResults.IsValid)
 					{
 						validationErrors.Add(new ImportTempCodeValidationError
