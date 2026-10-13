@@ -1,6 +1,7 @@
 using CheckYourEligibility.Core.Boundary.Requests;
 using CheckYourEligibility.Core.Domain.Enums.WorkingFamilies;
 using CheckYourEligibility.Core.Gateways;
+using CheckYourEligibility.Core.Gateways.Interfaces;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
