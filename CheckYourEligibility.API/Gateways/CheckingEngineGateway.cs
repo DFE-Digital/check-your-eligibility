@@ -387,7 +387,7 @@ public class CheckingEngineGateway : ICheckingEngine
 
             var ecsResponse = requestCheckData;
             
-            if (check.Status != CheckEligibilityStatus.notFound && check.Status != CheckEligibilityStatus.error)
+            if (ecsStatus != CheckEligibilityStatus.notFound && ecsStatus != CheckEligibilityStatus.error)
             {
                    ecsResponse = MapCheckDataHelper.BuildCheckProcessedData_WorkingFamilies(
                     ecsWfEvent,
