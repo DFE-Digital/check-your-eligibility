@@ -482,6 +482,7 @@ public class FosterFamilyControllerTests
     {
         // Arrange
         var fosterCarerId = Guid.NewGuid();
+        var submissionDate = DateTime.Today.AddDays(-1);
 
         SetupControllerWithLocalAuthorityIds(new List<int> { 201 });
 
@@ -490,7 +491,8 @@ public class FosterFamilyControllerTests
             ChildFirstName = "Tom",
             ChildLastName = "Smith",
             ChildDateOfBirth = new DateTime(2022, 1, 1),
-            ChildPostCode = "AB1 2CD"
+            ChildPostCode = "AB1 2CD",
+            SubmissionDate = submissionDate
         };
 
         var response = new FosterChildResponse
@@ -505,7 +507,7 @@ public class FosterFamilyControllerTests
                 request,
                 201,
                 fosterCarerId,
-                It.IsAny<DateTime>()))
+                submissionDate))
             .ReturnsAsync(response);
 
         // Act

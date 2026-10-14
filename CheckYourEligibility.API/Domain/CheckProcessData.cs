@@ -6,7 +6,7 @@ using System.Text;
 namespace CheckYourEligibility.API.Gateways;
 
 [JsonObject(ItemNullValueHandling = NullValueHandling.Ignore)]
-public class CheckProcessData
+public class CheckProcessData : ECSCheckProcessData
 {
     public string? NationalInsuranceNumber { get; set; }
     public string? LastName { get; set; }
@@ -27,12 +27,9 @@ public class CheckProcessData
     public string? ErrorCode { get; set; }
     public string? SubmissionDate { get; set; }
     public string? NationalAsylumSeekerServiceNumber { get; set; }
-
     public bool? IsGracePeriodEndDateApplied { get; set; }
-
     public string? ClientIdentifier { get; set; }
-    public int? Order { get; set; }
-
+    public int? Order { get; set; }  
     public CheckEligibilityType Type { get; set; }
 
     /// <summary>
@@ -60,4 +57,12 @@ public class CheckProcessData
         var inputHash = SHA256.HashData(inputBytes);
         return Convert.ToHexString(inputHash);
     }
+}
+
+public class ECSCheckProcessData
+{
+
+    public string? EcsStatus { get; set; }
+    public string? EcsErrorCode { get; set; }
+    public string? Qualifier { get; set; }
 }

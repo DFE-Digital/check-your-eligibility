@@ -134,12 +134,14 @@ public class CreateFosterChildUseCaseTests
     public async Task Execute_Should_Call_Gateway_And_Return_Response()
     {
         // Arrange
+        var submissionDate = DateTime.Today.AddDays(-7);
         var req = new FosterChildRequest
         {
             ChildFirstName = "Child",
             ChildLastName = "One",
             ChildDateOfBirth = DateTime.UtcNow,
-            ChildPostCode = "AB1 2CD"
+            ChildPostCode = "AB1 2CD",
+            SubmissionDate = submissionDate
         };
 
         var carerId = Guid.NewGuid();
@@ -158,7 +160,7 @@ public class CreateFosterChildUseCaseTests
                 req,
                 1,
                 carerId,
-                It.IsAny<DateTime>()))
+                submissionDate))
             .ReturnsAsync(expected);
 
         // Act
@@ -166,7 +168,7 @@ public class CreateFosterChildUseCaseTests
             req,
             1,
             carerId,
-            DateTime.UtcNow);
+            submissionDate);
 
         // Assert
         result.Should().BeEquivalentTo(expected);

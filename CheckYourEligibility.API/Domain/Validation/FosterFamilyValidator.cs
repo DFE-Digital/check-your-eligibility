@@ -101,6 +101,17 @@ public class FosterChildRequestValidator
         RuleFor(x => x.ChildPostCode)
             .NotEmpty()
             .WithMessage("Child PostCode is required");
+
+        When(x => x.SubmissionDate.HasValue, () =>
+        {
+            RuleFor(x => x.SubmissionDate!.Value)
+                .Must(DataValidation.BeAPastDate)
+                .WithMessage(ValidationMessages.SubmissionDate);
+
+            RuleFor(x => x.SubmissionDate!.Value)
+                .Must(value => value >= DateTime.Today.AddDays(-31))
+                .WithMessage(ValidationMessages.SubmissionDateOutOfRange);
+        });
     }
 }
 

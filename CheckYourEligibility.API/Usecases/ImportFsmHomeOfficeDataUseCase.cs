@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Text.RegularExpressions;
 using CheckYourEligibility.API.Domain;
 using CheckYourEligibility.API.Domain.Constants;
 using CheckYourEligibility.API.Domain.Enums;
@@ -17,6 +18,9 @@ public interface IImportFsmHomeOfficeDataUseCase
 
 public class ImportFsmHomeOfficeDataUseCase : IImportFsmHomeOfficeDataUseCase
 {
+    private static readonly Regex AsylumSeekerReferenceNumberRegex =
+        new(@"^(?:\d{9}|\d{2}/\d{2}/\d{5})$", RegexOptions.Compiled);
+
     private readonly IAudit _auditGateway;
     private readonly IAdministration _gateway;
     private readonly ILogger<ImportFsmHomeOfficeDataUseCase> _logger;
@@ -38,24 +42,31 @@ public class ImportFsmHomeOfficeDataUseCase : IImportFsmHomeOfficeDataUseCase
         {
             var config = new CsvConfiguration(CultureInfo.InvariantCulture)
             {
-                HasHeaderRecord = false,
+                HasHeaderRecord = true,
                 BadDataFound = null,
-                MissingFieldFound = null
+                PrepareHeaderForMatch = args => args.Header.Trim()
             };
             using (var fileStream = file.OpenReadStream())
             using (var csv = new CsvReader(new StreamReader(fileStream), config))
             {
                 csv.Context.RegisterClassMap<HomeOfficeRowMap>();
-                var records = csv.GetRecords<HomeOfficeRow>();
-
-                DataLoad = records.Select(x => new FreeSchoolMealsHO
+                DataLoad = [];
+                while (csv.Read())
                 {
-                    FreeSchoolMealsHOID = Guid.NewGuid().ToString(),
-                    NASS = x.Nas,
-                    LastName = x.Surname,
-                    DateOfBirth = DateTime.ParseExact(x.Dob, "yyyyMMdd", CultureInfo.InvariantCulture)
-                }).ToList();
-                if (DataLoad == null || DataLoad.Count == 0) throw new InvalidDataException("Invalid file content.");
+                    var record = csv.GetRecord<HomeOfficeRow>();
+                    DataLoad.Add(new FreeSchoolMealsHO
+                    {
+                        FreeSchoolMealsHOID = Guid.NewGuid().ToString(),
+                        FirstName = record.FirstName?.Trim(),
+                        LastName = record.Surname?.Trim(),
+                        DateOfBirth = DateTime.ParseExact(record.Dob?.Trim(), "yyyyMMdd",
+                            CultureInfo.InvariantCulture),
+                        NASS = NormalizeAsylumSeekerReferenceNumber(record.AsylumSeekerReferenceNumber),
+                        PortReferenceNumber = record.PortReferenceNumber?.Trim()
+                    });
+                }
+
+                if (DataLoad.Count == 0) throw new InvalidDataException("Invalid file content.");
             }
         }
         catch (Exception ex)
@@ -66,5 +77,18 @@ public class ImportFsmHomeOfficeDataUseCase : IImportFsmHomeOfficeDataUseCase
         }
 
         await _gateway.ImportHomeOfficeData(DataLoad);
+    }
+
+    private static string NormalizeAsylumSeekerReferenceNumber(string value)
+    {
+        var trimmedValue = value?.Trim();
+        if (string.IsNullOrWhiteSpace(trimmedValue) ||
+            !AsylumSeekerReferenceNumberRegex.IsMatch(trimmedValue))
+        {
+            throw new InvalidDataException(
+                "Asylum seeker reference number must contain nine digits, optionally formatted as 00/00/00000.");
+        }
+
+        return trimmedValue.Replace("/", string.Empty);
     }
 }

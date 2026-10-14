@@ -77,10 +77,16 @@ describe("Preview Foster Child Reconfirmation", () => {
           ).then((previewResponse) => {
             expect(previewResponse.status).to.eq(200);
             expect(previewResponse.body.validityStartDate).to.exist;
-            expect(previewResponse.body.validFromTerm).to.exist;
-            expect(previewResponse.body.reconfirmBetweenStart).to.exist;
-            expect(previewResponse.body.reconfirmBetweenEnd).to.exist;
+            expect(previewResponse.body.validityEndDate).to.exist;
+            expect(previewResponse.body.termValidity).to.exist;
+            expect(previewResponse.body.termValidity.current).to.exist;
+            expect(previewResponse.body.termValidity.next).to.exist;
+            expect(previewResponse.body.reconfirmationProperties).to.exist;
+            expect(previewResponse.body.reconfirmationProperties.startDate).to.exist;
+            expect(previewResponse.body.reconfirmationProperties.endDate).to.exist;
+            expect(previewResponse.body.reconfirmationProperties.status).to.exist;
             expect(previewResponse.body.gracePeriodEndDate).to.exist;
+            expect(previewResponse.body.isGracePeriodEndDateApplied).to.exist;
 
             cy.apiRequest(
               "GET",
