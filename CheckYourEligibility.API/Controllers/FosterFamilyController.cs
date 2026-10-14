@@ -403,7 +403,8 @@ public class FosterFamilyController : BaseController
                 return BadRequest(new ErrorResponse { Errors = [new Error { Title = FosterFamilyValidationMessages.NoLocalAuthorityScopeFound }] });
             }
 
-            var response = await _createFosterChild.Execute(model, localAuthorityId.Value, fosterCarerId, DateTime.UtcNow);
+            var submissionDate = model?.SubmissionDate ?? DateTime.UtcNow;
+            var response = await _createFosterChild.Execute(model, localAuthorityId.Value, fosterCarerId, submissionDate);
             return new ObjectResult(response) { StatusCode = StatusCodes.Status201Created };
         }
         catch (ArgumentNullException ex)
