@@ -155,6 +155,56 @@ public class UsersGateway : IUsers
             .ToListAsync();
     }
 
+    public async Task<(IList<User> Users, int TotalRecords)> SearchUsers(string? search, int pageNumber, int pageSize)
+    {
+        IQueryable<User> query = _db.Users;
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var term = search.Trim().ToLower();
+            query = query.Where(u =>
+                (u.UserName != null && u.UserName.ToLower().Contains(term)) ||
+                (u.Email != null && u.Email.ToLower().Contains(term)));
+        }
+
+        var total = await query.CountAsync();
+        var users = await query
+            .OrderBy(u => u.UserName).ThenBy(u => u.UserID)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        return (users, total);
+    }
+
+    public async Task<(User User, IList<UserRole> Roles)> GetUser(string userId)
+    {
+        var user = await _db.Users.SingleOrDefaultAsync(x => x.UserID == userId);
+        if (user is null)
+        {
+            throw new NotFoundException($"User {userId} not found");
+        }
+
+        var roles = await _db.UserRoles
+            .Where(x => x.UserId == userId)
+            .OrderBy(x => x.RoleName)
+            .ToListAsync();
+
+        return (user, roles);
+    }
+
+    public async Task UpdateUserEnabled(string userId, bool isEnabled)
+    {
+        var user = await _db.Users.SingleOrDefaultAsync(x => x.UserID == userId);
+        if (user is null)
+        {
+            throw new NotFoundException($"User {userId} not found");
+        }
+
+        user.IsEnabled = isEnabled;
+        await _db.SaveChangesAsync();
+    }
+
     public async Task<UserRole> AddUserRole(string userId, UserRoleName roleName)
     {
         var user = await _db.Users.SingleOrDefaultAsync(x => x.UserID == userId);

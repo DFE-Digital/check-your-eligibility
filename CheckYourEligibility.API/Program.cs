@@ -162,6 +162,9 @@ builder.Services.AddScoped<ICreateOrUpdateFSMParentUserUseCase, CreateOrUpdateFS
 builder.Services.AddScoped<IGetUserRolesUseCase, GetUserRolesUseCase>();
 builder.Services.AddScoped<IAddUserRoleUseCase, AddUserRoleUseCase>();
 builder.Services.AddScoped<IRemoveUserRoleUseCase, RemoveUserRoleUseCase>();
+builder.Services.AddScoped<ISearchUsersUseCase, SearchUsersUseCase>();
+builder.Services.AddScoped<IGetUserUseCase, GetUserUseCase>();
+builder.Services.AddScoped<IUpdateUserEnabledUseCase, UpdateUserEnabledUseCase>();
 builder.Services.AddScoped<IAuthenticateUserUseCase, AuthenticateUserUseCase>();
 builder.Services.AddScoped<IGetCitizenClaimsUseCase, GetCitizenClaimsUseCase>();
 builder.Services.AddScoped<ISearchEstablishmentsUseCase, SearchEstablishmentsUseCase>();
