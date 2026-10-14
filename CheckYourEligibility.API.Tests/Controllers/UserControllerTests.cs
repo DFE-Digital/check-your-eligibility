@@ -177,6 +177,17 @@ public class UserControllerTests : TestBase.TestBase
         result.Should().BeOfType<NotFoundObjectResult>();
     }
 
+    [Test]
+    public void UserEnums_Should_Serialise_As_Strings_And_Accept_Strings_Or_Numbers()
+    {
+        var json = Newtonsoft.Json.JsonConvert.SerializeObject(
+            new UserRoleItemResponse { RoleName = UserRoleName.Support_UserManagement });
+
+        json.Should().Contain("\"Support_UserManagement\"");
+        Newtonsoft.Json.JsonConvert.DeserializeObject<UserType>("\"API\"").Should().Be(UserType.API);
+        Newtonsoft.Json.JsonConvert.DeserializeObject<UserType>("5").Should().Be(UserType.API);
+    }
+
     [TestCase(nameof(UserController.SearchUsers))]
     [TestCase(nameof(UserController.GetUser))]
     [TestCase(nameof(UserController.PatchUser))]
