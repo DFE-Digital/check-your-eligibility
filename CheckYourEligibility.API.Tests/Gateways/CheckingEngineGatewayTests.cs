@@ -1021,7 +1021,11 @@ public class CheckingEngineGatewayTests : TestBase.TestBase
         submittedCheckData.ClientIdentifier = "client-123";
         submittedCheckData.Order = 42;
         item.CheckData = JsonConvert.SerializeObject(submittedCheckData);
-        var wfEvent = CreateWorkingFamiliesEvent(item);
+        var wfEvent = CreateWorkingFamiliesEvent(
+            item,
+            validityStartDate: DateTime.Today.AddDays(-1),
+            validityEndDate: DateTime.Today.AddDays(1),
+            gracePeriodEndDate: DateTime.Today.AddDays(1));
         wfEvent.ChildFirstName = "TEST";
         wfEvent.ChildLastName = "TESTER";
         wfEvent.ParentFirstName = "PARENT-TESTER";
@@ -1030,9 +1034,9 @@ public class CheckingEngineGatewayTests : TestBase.TestBase
             Status = "0",
             ErrorCode = "0",
             Qualifier = "",
-            ValidityStartDate = DateTime.Today.AddDays(-1).ToString("yyyy-MM-dd"),
-            ValidityEndDate = DateTime.Today.AddDays(1).ToString("yyyy-MM-dd"),
-            GracePeriodEndDate = DateTime.Today.AddDays(1).ToString("yyyy-MM-dd")
+            ValidityStartDate = DateTime.Today.AddDays(-2).ToString("yyyy-MM-dd"),
+            ValidityEndDate = DateTime.Today.AddDays(2).ToString("yyyy-MM-dd"),
+            GracePeriodEndDate = DateTime.Today.AddDays(2).ToString("yyyy-MM-dd")
         };
         _fakeInMemoryDb.CheckEligibilities.Add(item);
         _fakeInMemoryDb.WorkingFamiliesEvents.Add(wfEvent);
@@ -1086,6 +1090,7 @@ public class CheckingEngineGatewayTests : TestBase.TestBase
         dualRunningEcsResponseBody.EcsErrorCode.Should().Be(ecsResponse.ErrorCode);
         dualRunningCheck.ECEResponseBody.Should().Be(persistedCheck.CheckData);
         dualRunningCheck.isConflict.Should().BeTrue();
+        dualRunningCheck.AreDatesMatching.Should().BeFalse();
     }
 
     [Test]
@@ -1097,7 +1102,11 @@ public class CheckingEngineGatewayTests : TestBase.TestBase
         _sut = CreateCheckingEngineGateway();
 
         var item = CreateWorkingFamiliesCheck("50012345678");
-        var wfEvent = CreateWorkingFamiliesEvent(item);
+        var wfEvent = CreateWorkingFamiliesEvent(
+            item,
+            validityStartDate: DateTime.Today.AddDays(-1),
+            validityEndDate: DateTime.Today.AddDays(1),
+            gracePeriodEndDate: DateTime.Today.AddDays(1));
         wfEvent.ChildFirstName = "TEST";
         wfEvent.ChildLastName = "TESTER";
         wfEvent.ParentFirstName = "PARENT-TESTER";
@@ -1152,7 +1161,11 @@ public class CheckingEngineGatewayTests : TestBase.TestBase
         _sut = CreateCheckingEngineGateway();
 
         var item = CreateWorkingFamiliesCheck("50012345678");
-        var wfEvent = CreateWorkingFamiliesEvent(item);
+        var wfEvent = CreateWorkingFamiliesEvent(
+            item,
+            validityStartDate: DateTime.Today.AddDays(-1),
+            validityEndDate: DateTime.Today.AddDays(1),
+            gracePeriodEndDate: DateTime.Today.AddDays(1));
         wfEvent.ChildFirstName = "TEST";
         wfEvent.ChildLastName = "TESTER";
         wfEvent.ParentFirstName = "PARENT-TESTER";
@@ -1181,6 +1194,54 @@ public class CheckingEngineGatewayTests : TestBase.TestBase
         (await _fakeInMemoryDb.WorkingFamiliesDualRunningChecks
             .AnyAsync(x => x.EligibilityCheckID == item.EligibilityCheckID)).Should().BeFalse();
     }
+    [Test]
+    public async Task Given_WorkingFamiliesDualRunningIsEnabled_And_RecordNonConflictResults_Is_False_Should_Persist_Conflict()
+    {
+        _configuration["WorkingFamiliesDualRunning:RecordNonConflictResults"] = "false";
+        _configuration["WorkingFamiliesDualRunning:IsEnabled"] = "true";
+        _configuration["Dwp:UseEcsforChecksWF"] = "false";
+        _sut = CreateCheckingEngineGateway();
+
+        var item = CreateWorkingFamiliesCheck("50012345678");
+        var wfEvent = CreateWorkingFamiliesEvent(
+            item,
+            validityStartDate: DateTime.Today.AddDays(-1),
+            validityEndDate: DateTime.Today.AddDays(1),
+            gracePeriodEndDate: DateTime.Today.AddDays(1),
+            discretionaryValidityStartDate: DateTime.Today.AddDays(1));
+        wfEvent.ChildFirstName = "TEST";
+        wfEvent.ChildLastName = "TESTER";
+        wfEvent.ParentFirstName = "PARENT-TESTER";
+        var ecsResponse = new SoapCheckResponse
+        {
+            Status = "1",
+            ErrorCode = "0",
+            Qualifier = "Discretionay Start",
+            ValidityStartDate = DateTime.Today.AddDays(-2).ToString("yyyy-MM-dd"),
+            ValidityEndDate = DateTime.Today.AddDays(2).ToString("yyyy-MM-dd"),
+            GracePeriodEndDate = DateTime.Today.AddDays(2).ToString("yyyy-MM-dd")
+        };
+
+        _fakeInMemoryDb.CheckEligibilities.Add(item);
+        _fakeInMemoryDb.WorkingFamiliesEvents.Add(wfEvent);
+        await _fakeInMemoryDb.SaveChangesAsync();
+
+        _moqEcsGateway.Setup(x => x.UseEcsforChecksWF).Returns("validate");
+        _moqEcsGateway
+            .Setup(x => x.EcsWFCheck(It.IsAny<CheckProcessData>(), It.IsAny<string>()))
+            .ReturnsAsync(ecsResponse);
+
+        var (status, _) = await _sut.ProcessCheckAsync(item.EligibilityCheckID);
+
+        status.Should().Be(CheckEligibilityStatus.notEligible);
+        var dualRunningCheck = await _fakeInMemoryDb.WorkingFamiliesDualRunningChecks.SingleAsync(x => x.EligibilityCheckID == item.EligibilityCheckID);
+        dualRunningCheck.ECEStatus.Should().Be(CheckEligibilityStatus.notEligible.ToString());
+        dualRunningCheck.ECSStatus.Should().Be(CheckEligibilityStatus.eligible.ToString());
+        dualRunningCheck.ECSQualifier.Should().Be(ecsResponse.Qualifier);
+        dualRunningCheck.isConflict.Should().BeTrue();
+        dualRunningCheck.AreDatesMatching.Should().BeFalse();
+    }
+
 
 
     [Test]
@@ -2043,10 +2104,15 @@ public class CheckingEngineGatewayTests : TestBase.TestBase
         };
     }
 
-    private WorkingFamiliesEvent CreateWorkingFamiliesEvent(EligibilityCheck check)
+    private WorkingFamiliesEvent CreateWorkingFamiliesEvent(
+        EligibilityCheck check,
+        DateTime? validityStartDate = null,
+        DateTime? validityEndDate = null,
+        DateTime? gracePeriodEndDate = null,
+        DateTime? discretionaryValidityStartDate = null)
     {
         var checkData = JsonConvert.DeserializeObject<CheckProcessData>(check.CheckData);
-        var startDate = DateTime.Today.AddDays(-1);
+        var startDate = validityStartDate ?? DateTime.Today.AddDays(-1);
 
         return new WorkingFamiliesEvent
         {
@@ -2057,9 +2123,9 @@ public class CheckingEngineGatewayTests : TestBase.TestBase
             ChildDateOfBirth = DateTime.ParseExact(checkData.DateOfBirth, "yyyy-MM-dd", CultureInfo.InvariantCulture),
             SubmissionDate = startDate,
             ValidityStartDate = startDate,
-            DiscretionaryValidityStartDate = startDate,
-            ValidityEndDate = DateTime.Today.AddDays(1),
-            GracePeriodEndDate = DateTime.Today.AddDays(1)
+            DiscretionaryValidityStartDate = discretionaryValidityStartDate ?? startDate,
+            ValidityEndDate = validityEndDate ?? DateTime.Today.AddDays(1),
+            GracePeriodEndDate = gracePeriodEndDate ?? DateTime.Today.AddDays(1)
         };
     }
 
