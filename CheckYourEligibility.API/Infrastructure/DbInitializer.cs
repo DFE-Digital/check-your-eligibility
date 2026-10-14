@@ -36,13 +36,15 @@ public static class DbInitializer
             {
                 new FreeSchoolMealsHO
                 {
-                    FreeSchoolMealsHOID = Guid.NewGuid().ToString(), LastName = "SIMPSON",
-                    DateOfBirth = DateTime.Parse("1990-01-01"), NASS = "AB123456C"
+                    FreeSchoolMealsHOID = Guid.NewGuid().ToString(), FirstName = "HOMER", LastName = "SIMPSON",
+                    DateOfBirth = DateTime.Parse("1990-01-01"), NASS = "240712349",
+                    PortReferenceNumber = "MST/9011357"
                 },
                 new FreeSchoolMealsHO
                 {
-                    FreeSchoolMealsHOID = Guid.NewGuid().ToString(), LastName = "GRIFFIN",
-                    DateOfBirth = DateTime.Parse("2000-12-31"), NASS = "AC123456D"
+                    FreeSchoolMealsHOID = Guid.NewGuid().ToString(), FirstName = "PETER", LastName = "GRIFFIN",
+                    DateOfBirth = DateTime.Parse("2000-12-31"), NASS = "240712350",
+                    PortReferenceNumber = "TN4/8689288"
                 }
             };
             foreach (var s in fsmHo) context.FreeSchoolMealsHO.Add(s);

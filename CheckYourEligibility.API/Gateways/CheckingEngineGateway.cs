@@ -485,6 +485,7 @@ public class CheckingEngineGateway : ICheckingEngine
         var source = ProcessEligibilityCheckSource.HMRC;
         var checkStatusResult = CheckEligibilityStatus.parentNotFound;
         EligibilityTier? checkTierResult = null;
+        var shouldHashResult = true;
         CAPIClaimResponseBase capiClaimResponse = new();
         // Variables needed for ECS conflict records
         var eceCheckResult = CheckEligibilityStatus.parentNotFound;
@@ -578,12 +579,21 @@ public class CheckingEngineGateway : ICheckingEngine
             }
             else if (!checkData.NationalAsylumSeekerServiceNumber.IsNullOrEmpty())
             {
-                checkStatusResult = await HO_Check(checkData, dbContextFactory);
-                source = ProcessEligibilityCheckSource.HO;
-
-                if (checkStatusResult == CheckEligibilityStatus.eligible)
+                var useHomeOfficeData =
+                    _configuration.GetValue<bool>($"HomeOffice:CheckTypes:{result.Type}");
+                if (useHomeOfficeData)
                 {
-                    checkTierResult = EligibilityTier.targeted;
+                    checkStatusResult = await HO_Check(checkData, dbContextFactory);
+                    source = ProcessEligibilityCheckSource.HO;
+
+                    if (checkStatusResult == CheckEligibilityStatus.eligible)
+                    {
+                        checkTierResult = EligibilityTier.targeted;
+                    }
+                }
+                else
+                {
+                    shouldHashResult = false;
                 }
             }
         }
@@ -614,8 +624,11 @@ public class CheckingEngineGateway : ICheckingEngine
         }
         else
         {
-            result.EligibilityCheckHashID =
-               await _hashGateway.Create(checkData, checkStatusResult, result.Tier, source, dbContextFactory);
+            if (shouldHashResult)
+            {
+                result.EligibilityCheckHashID =
+                    await _hashGateway.Create(checkData, checkStatusResult, result.Tier, source, dbContextFactory);
+            }
 
             // If CAPI returns a different result from ECS
             // Create a record
