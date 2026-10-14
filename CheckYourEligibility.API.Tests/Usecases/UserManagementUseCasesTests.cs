@@ -23,9 +23,9 @@ public class UserManagementUseCasesTests
     public async Task Search_Should_Normalise_Paging_And_Return_Response(int page, int size, int expectedPage, int expectedSize)
     {
         var users = new List<User> { new() { UserID = "1" } };
-        _gateway.Setup(x => x.SearchUsers("a", expectedPage, expectedSize)).ReturnsAsync((users, 7));
+        _gateway.Setup(x => x.SearchUsers("a", UserType.API, expectedPage, expectedSize)).ReturnsAsync((users, 7));
 
-        var result = await new SearchUsersUseCase(_gateway.Object).Execute("a", page, size);
+        var result = await new SearchUsersUseCase(_gateway.Object).Execute("a", UserType.API, page, size);
 
         result.PageNumber.Should().Be(expectedPage);
         result.PageSize.Should().Be(expectedSize);

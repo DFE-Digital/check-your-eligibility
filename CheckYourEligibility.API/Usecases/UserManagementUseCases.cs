@@ -1,11 +1,12 @@
 using CheckYourEligibility.API.Boundary.Responses;
+using CheckYourEligibility.API.Domain.Enums;
 using CheckYourEligibility.API.Gateways.Interfaces;
 
 namespace CheckYourEligibility.API.UseCases;
 
 public interface ISearchUsersUseCase
 {
-    Task<UsersSearchResponse> Execute(string? search, int pageNumber, int pageSize);
+    Task<UsersSearchResponse> Execute(string? search, UserType? userType, int pageNumber, int pageSize);
 }
 
 public class SearchUsersUseCase : ISearchUsersUseCase
@@ -17,13 +18,13 @@ public class SearchUsersUseCase : ISearchUsersUseCase
         _userGateway = userGateway;
     }
 
-    public async Task<UsersSearchResponse> Execute(string? search, int pageNumber, int pageSize)
+    public async Task<UsersSearchResponse> Execute(string? search, UserType? userType, int pageNumber, int pageSize)
     {
         if (pageNumber < 1) pageNumber = 1;
         if (pageSize < 1) pageSize = 10;
         if (pageSize > 100) pageSize = 100;
 
-        var (users, total) = await _userGateway.SearchUsers(search, pageNumber, pageSize);
+        var (users, total) = await _userGateway.SearchUsers(search, userType, pageNumber, pageSize);
 
         return new UsersSearchResponse
         {

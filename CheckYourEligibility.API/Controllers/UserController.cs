@@ -189,10 +189,10 @@ public class UserController : BaseController
     [ProducesResponseType(typeof(UsersSearchResponse), (int)HttpStatusCode.OK)]
     [HttpGet("/users/search")]
     [Authorize(Policy = PolicyNames.RequireUserManagementRole)]
-    public async Task<ActionResult> SearchUsers([FromQuery] string? search, [FromQuery] int pageNumber = 1,
-        [FromQuery] int pageSize = 10)
+    public async Task<ActionResult> SearchUsers([FromQuery] string? search, [FromQuery] UserType? userType,
+            [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
     {
-        return Ok(await _searchUsersUseCase.Execute(search, pageNumber, pageSize));
+        return Ok(await _searchUsersUseCase.Execute(search, userType, pageNumber, pageSize));
     }
 
     /// <summary>

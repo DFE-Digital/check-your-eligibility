@@ -148,17 +148,21 @@ public class UsersGateway : IUsers
         {
             throw new NotFoundException($"User {userId} not found");
         }
-        
+
         return await _db.UserRoles
             .Where(x => x.UserId == userId)
             .OrderBy(x => x.RoleName)
             .ToListAsync();
     }
 
-    public async Task<(IList<User> Users, int TotalRecords)> SearchUsers(string? search, int pageNumber, int pageSize)
+    public async Task<(IList<User> Users, int TotalRecords)> SearchUsers(string? search, UserType? userType, int pageNumber, int pageSize)
     {
         IQueryable<User> query = _db.Users;
 
+        if (userType.HasValue)
+        {
+            query = query.Where(u => u.UserType == userType.Value);
+        }
         if (!string.IsNullOrWhiteSpace(search))
         {
             var term = search.Trim().ToLower();

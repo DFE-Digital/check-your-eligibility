@@ -393,13 +393,29 @@ public class UserGatewayTests : TestBase.TestBase
             NewUser("carol", "c@x.com"));
         await _fakeInMemoryDb.SaveChangesAsync();
 
-        var (all, allTotal) = await _sut.SearchUsers(null, 1, 2);
-        var (matches, matchTotal) = await _sut.SearchUsers("Alice", 1, 10);
+        var (all, allTotal) = await _sut.SearchUsers(null, null, 1, 2);
+        var (matches, matchTotal) = await _sut.SearchUsers("Alice", null, 1, 10);
 
         all.Should().HaveCount(2);
         allTotal.Should().Be(3);
         matchTotal.Should().Be(2);
         matches.Select(u => u.UserName).Should().BeEquivalentTo(new[] { "alice", "bob" });
+    }
+
+    [Test]
+    public async Task SearchUsers_Should_Filter_By_UserType()
+    {
+        var api = NewUser("alice", "a@x.com");
+        api.UserType = UserType.API;
+        var parent = NewUser("alice2", "b@x.com");
+        parent.UserType = UserType.FreeSchoolMealsParent;
+        _fakeInMemoryDb.Users.AddRange(api, parent);
+        await _fakeInMemoryDb.SaveChangesAsync();
+
+        var (users, total) = await _sut.SearchUsers("alice", UserType.API, 1, 10);
+
+        total.Should().Be(1);
+        users.Should().ContainSingle().Which.UserID.Should().Be(api.UserID);
     }
 
     [Test]

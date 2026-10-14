@@ -3,6 +3,7 @@ using AutoFixture;
 using CheckYourEligibility.API.Boundary.Requests;
 using CheckYourEligibility.API.Boundary.Responses;
 using CheckYourEligibility.API.Controllers;
+using CheckYourEligibility.API.Domain.Enums;
 using CheckYourEligibility.API.Domain.Exceptions;
 using CheckYourEligibility.API.Gateways.Interfaces;
 using CheckYourEligibility.API.UseCases;
@@ -120,9 +121,9 @@ public class UserControllerTests : TestBase.TestBase
     public async Task SearchUsers_Should_Return_Ok()
     {
         var response = new UsersSearchResponse { PageNumber = 1, PageSize = 10 };
-        _mockSearchUsersUseCase.Setup(x => x.Execute("a", 1, 10)).ReturnsAsync(response);
+        _mockSearchUsersUseCase.Setup(x => x.Execute("a", UserType.API, 1, 10)).ReturnsAsync(response);
 
-        var result = await _sut.SearchUsers("a", 1, 10);
+        var result = await _sut.SearchUsers("a", UserType.API, 1, 10);
 
         result.Should().BeOfType<OkObjectResult>().Which.Value.Should().BeSameAs(response);
     }

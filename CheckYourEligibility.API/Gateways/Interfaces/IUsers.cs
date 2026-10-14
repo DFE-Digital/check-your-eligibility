@@ -16,7 +16,7 @@ public interface IUsers
 
     Task<bool> RemoveUserRole(string userId, UserRoleName roleName);
 
-    Task<(IList<User> Users, int TotalRecords)> SearchUsers(string? search, int pageNumber, int pageSize);
+    Task<(IList<User> Users, int TotalRecords)> SearchUsers(string? search, UserType? userType, int pageNumber, int pageSize);
 
     Task<(User User, IList<UserRole> Roles)> GetUser(string userId);
 
