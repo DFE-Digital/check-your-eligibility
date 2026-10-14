@@ -569,6 +569,9 @@ namespace CheckYourEligibility.Core.Migrations
                     b.Property<DateTime>("DateOfBirth")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("FirstName")
+                        .HasColumnType("varchar(100)");
+
                     b.Property<string>("LastName")
                         .IsRequired()
                         .HasColumnType("varchar(100)");
@@ -576,6 +579,9 @@ namespace CheckYourEligibility.Core.Migrations
                     b.Property<string>("NASS")
                         .IsRequired()
                         .HasColumnType("varchar(50)");
+
+                    b.Property<string>("PortReferenceNumber")
+                        .HasColumnType("varchar(100)");
 
                     b.HasKey("FreeSchoolMealsHOID");
 

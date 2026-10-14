@@ -53,7 +53,10 @@ public class CheckEligibilityGatewayTests : TestBase
             ["QueueFsmCheckStandard"] = "notSet",
             ["QueueFsmCheckBulk"] = "notSet",
             ["HashCheckDays"] = "7",
-            ["Dwp:UseEcsforChecksWF"] = "false"
+            ["Dwp:UseEcsforChecksWF"] = "false",
+            ["HomeOffice:CheckTypes:FreeSchoolMeals"] = "true",
+            ["HomeOffice:CheckTypes:EarlyYearPupilPremium"] = "true",
+            ["HomeOffice:CheckTypes:TwoYearOffer"] = "false"
         };
 
         var queueConfig = new Dictionary<string, string>
@@ -164,6 +167,69 @@ public class CheckEligibilityGatewayTests : TestBase
 
         // Assert
         response.Result.Id.Should().NotBeNullOrEmpty();
+    }
+
+    [Test]
+    public async Task Given_HomeOfficeCheckTypeDisabled_MapCheck_Should_NotReuseHash()
+    {
+        var request = _fixture.Create<CheckEligibilityRequestData>();
+        request.Type = CheckEligibilityType.TwoYearOffer;
+        request.NationalInsuranceNumber = null;
+        request.NationalAsylumSeekerServiceNumber = "190000001";
+        request.LastName = "Smith";
+        request.DateOfBirth = "1990-01-01";
+
+        var checkData = new CheckProcessData
+        {
+            Type = request.Type,
+            NationalAsylumSeekerServiceNumber = request.NationalAsylumSeekerServiceNumber,
+            LastName = request.LastName,
+            DateOfBirth = request.DateOfBirth
+        };
+        await _hashGateway.Create(
+            checkData,
+            CheckEligibilityStatus.eligible,
+            EligibilityTier.targeted,
+            ProcessEligibilityCheckSource.HO);
+        await _fakeInMemoryDb.SaveChangesAsync();
+
+        var result = await _sut.MapCheck(request, _fixture.Create<CheckMetaData>());
+
+        result.Status.Should().Be(CheckEligibilityStatus.queuedForProcessing);
+        result.Tier.Should().BeNull();
+        result.EligibilityCheckHashID.Should().BeNull();
+        result.EligibilityCheckHash.Should().BeNull();
+    }
+
+    [Test]
+    public async Task Given_HomeOfficeCheckTypeEnabled_MapCheck_Should_ReuseHash()
+    {
+        var request = _fixture.Create<CheckEligibilityRequestData>();
+        request.Type = CheckEligibilityType.FreeSchoolMeals;
+        request.NationalInsuranceNumber = null;
+        request.NationalAsylumSeekerServiceNumber = "190000001";
+        request.LastName = "Smith";
+        request.DateOfBirth = "1990-01-01";
+
+        var checkData = new CheckProcessData
+        {
+            Type = request.Type,
+            NationalAsylumSeekerServiceNumber = request.NationalAsylumSeekerServiceNumber,
+            LastName = request.LastName,
+            DateOfBirth = request.DateOfBirth
+        };
+        var hashId = await _hashGateway.Create(
+            checkData,
+            CheckEligibilityStatus.eligible,
+            EligibilityTier.targeted,
+            ProcessEligibilityCheckSource.HO);
+        await _fakeInMemoryDb.SaveChangesAsync();
+
+        var result = await _sut.MapCheck(request, _fixture.Create<CheckMetaData>());
+
+        result.Status.Should().Be(CheckEligibilityStatus.eligible);
+        result.Tier.Should().Be(EligibilityTier.targeted);
+        result.EligibilityCheckHashID.Should().Be(hashId);
     }
 
     [Test]

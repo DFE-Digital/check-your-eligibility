@@ -170,4 +170,19 @@ public class DataValidationTests
         result.IsValid.Should().BeFalse();
         result.Errors.Should().Contain(e => e.PropertyName.Contains("ChildFirstName"));
     }
+
+    [TestCase("123456789", true)]
+    [TestCase("12345678", false)]
+    [TestCase("1234567890", false)]
+    [TestCase("12/34/56789", false)]
+    public void Asylum_seeker_reference_number_must_be_nine_digits(string referenceNumber, bool expectedIsValid)
+    {
+        var request = ValidRequestWith("Smith");
+        request.NationalInsuranceNumber = null;
+        request.NationalAsylumSeekerServiceNumber = referenceNumber;
+
+        var result = _validator.Validate(request);
+
+        result.IsValid.Should().Be(expectedIsValid);
+    }
 }

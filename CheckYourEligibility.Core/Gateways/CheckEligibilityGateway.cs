@@ -205,8 +205,9 @@ public class CheckEligibilityGateway : ICheckEligibility
             var checkData = JsonConvert.DeserializeObject<CheckProcessData>(item.CheckData);
 
             //TODO: The hashing logic should sit in the use case, targeting the hash gateway
-            var checkHashResult =
-                await _hashGateway.Exists(checkData);
+            var checkHashResult = ShouldUseHash(checkData)
+                ? await _hashGateway.Exists(checkData)
+                : null;
             if (checkHashResult != null)
             {
                 CheckEligibilityStatus hashedStatus = checkHashResult.Outcome;
@@ -392,6 +393,15 @@ public class CheckEligibilityGateway : ICheckEligibility
         }
 
         return null;
+    }
+
+    private bool ShouldUseHash(CheckProcessData checkData)
+    {
+        var isHomeOfficeCheck = string.IsNullOrWhiteSpace(checkData.NationalInsuranceNumber)
+            && !string.IsNullOrWhiteSpace(checkData.NationalAsylumSeekerServiceNumber);
+
+        return !isHomeOfficeCheck
+            || _configuration.GetValue<bool>($"HomeOffice:CheckTypes:{checkData.Type}");
     }
 
     // Delegate to CheckProcessData.GetHash() so hashes created at check time and read at
