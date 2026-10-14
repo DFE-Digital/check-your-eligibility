@@ -52,6 +52,7 @@ public static class CoreExtensions
         services.AddTransient<IHash, HashGateway>();
         services.AddTransient<IRateLimit, RateLimitGateway>();
         services.AddTransient<IWorkingFamiliesReporting, WorkingFamiliesReportingGateway>();
+        services.AddTransient<IWorkingFamiliesDualRunningCheck, WorkingFamiliesDualRunningCheckGateway>();
         services.AddTransient<IWorkingFamiliesEvent, WorkingFamiliesEventGateway>();
         services.AddTransient<IMultiAcademyTrust, MultiAcademyTrustGateway>();
         services.AddTransient<IEligibilityPolicy, EligibilityPolicyGateway>();
