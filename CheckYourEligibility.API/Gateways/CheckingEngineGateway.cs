@@ -342,7 +342,7 @@ public class CheckingEngineGateway : ICheckingEngine
         var source = ProcessEligibilityCheckSource.HMRC;
         var checkStatusResult = CheckEligibilityStatus.parentNotFound;
         EligibilityTier? checkTierResult = null;
-        var shouldCacheResult = true;
+        var shouldHashResult = true;
         CAPIClaimResponseBase capiClaimResponse = new();
         // Variables needed for ECS conflict records
         var eceCheckResult = CheckEligibilityStatus.parentNotFound;
@@ -449,7 +449,7 @@ public class CheckingEngineGateway : ICheckingEngine
                 }
                 else
                 {
-                    shouldCacheResult = false;
+                    shouldHashResult = false;
                 }
             }
         }
@@ -480,7 +480,7 @@ public class CheckingEngineGateway : ICheckingEngine
         }
         else
         {
-            if (shouldCacheResult)
+            if (shouldHashResult)
             {
                 result.EligibilityCheckHashID =
                     await _hashGateway.Create(checkData, checkStatusResult, result.Tier, source, dbContextFactory);
