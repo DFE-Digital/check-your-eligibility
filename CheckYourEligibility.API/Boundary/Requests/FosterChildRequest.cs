@@ -32,4 +32,6 @@ public class FosterChildRequest
 
     public string ChildPostCode { get; set; }
 
+    public DateTime? SubmissionDate { get; set; }
+
 }
