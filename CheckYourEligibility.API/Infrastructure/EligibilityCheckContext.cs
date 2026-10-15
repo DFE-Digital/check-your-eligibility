@@ -113,11 +113,22 @@ public class EligibilityCheckContext  : DbContext, IEligibilityCheckContext
         ManagedBulkInsert(data);
     }
 
-    public void BulkInsert_FreeSchoolMealsHO(IEnumerable<FreeSchoolMealsHO> data)
+    public void BulkInsert_FreeSchoolMealsHO(IEnumerable<FreeSchoolMealsHO> data, int? expireCachedResultsDays = null)
     {
         using var transaction = base.Database.BeginTransaction();
         this.Truncate<FreeSchoolMealsHO>();
         this.BulkInsert(data);
+
+        if (expireCachedResultsDays.HasValue)
+        {
+            // Cached HO results can't be deleted (checks reference them), so push them outside the reuse window.
+            var days = expireCachedResultsDays.Value;
+            var windowStart = DateTime.UtcNow.AddDays(-days);
+            EligibilityCheckHashes
+                .Where(x => x.Source == ProcessEligibilityCheckSource.HO && x.TimeStamp >= windowStart)
+                .ExecuteUpdate(s => s.SetProperty(x => x.TimeStamp, x => x.TimeStamp.AddDays(-days)));
+        }
+
         transaction.Commit();
     }
 
