@@ -25,7 +25,7 @@ public sealed class TemporaryCodeUploadGateway : ITemporaryCodeUpload
 	/// <param name="request"></param>
 	/// <returns>TemporaryCodeUpload</returns>
 	//CREATE
-	public async Task<TemporaryCodeUpload> CreateTemporaryCodeUpload(TemporaryCodeUploadCreateRequest request, Guid userID, int numberOfCodes, string firstCode, string lastCode)
+	public async Task<TemporaryCodeUpload> CreateTemporaryCodeUpload(TemporaryCodeUploadCreateRequest request, string userID, int numberOfCodes, string firstCode, string lastCode)
 	{
 		var temporaryCodeUpload = new TemporaryCodeUpload
 		{
@@ -57,9 +57,11 @@ public sealed class TemporaryCodeUploadGateway : ITemporaryCodeUpload
 
 		try
 		{
+			var cutoffDate = DateTime.UtcNow.Date.AddDays(-30);
+
 			// Base query to get non-deleted temoraryCodeUploads
 			var query = _db.TemporaryCodeUploads
-				.Where(r => !r.IsDeleted);
+				.Where(r => !r.IsDeleted && r.DateImported >= cutoffDate);
 
 			// Get total records
 			var totalRecords = await query.CountAsync();
@@ -79,22 +81,19 @@ public sealed class TemporaryCodeUploadGateway : ITemporaryCodeUpload
 			}
 
 			// Retrieve paginated results
-			var cutoffDate = DateTime.UtcNow.Date.AddDays(-30);
 			var temporaryCodeUploadItems = await query
-				.Where(r => r.DateImported >= cutoffDate)
 				.OrderByDescending(r => r.DateImported)
 				.Skip((pageNumber - 1) * pageSize)
 				.Take(pageSize)
-				.Select(r => new TemporaryCodeUpload
+				.Include(r => r.ImportedByUser)
+				.Select(r => new TemporaryCodeUploadResponse
 				{
-					TemporaryCodeUploadId = r.TemporaryCodeUploadId,
 					Filename = r.Filename,
 					NumberOfCodes = r.NumberOfCodes,
 					FirstCode = r.FirstCode,
 					LastCode = r.LastCode,
 					DateImported = r.DateImported,
-					ImportedBy = r.ImportedBy,
-					IsDeleted = r.IsDeleted
+					ImportedBy = r.ImportedByUser.UserName,
 				})
 				.ToListAsync();
 
@@ -103,7 +102,7 @@ public sealed class TemporaryCodeUploadGateway : ITemporaryCodeUpload
 				PageNumber = pageNumber,
 				PageSize = pageSize,
 				TotalNumberOfRecords = totalRecords,
-				Data = (IEnumerable<TemporaryCodeUpload>)temporaryCodeUploadItems,
+				Data = (IEnumerable<TemporaryCodeUploadResponse>)temporaryCodeUploadItems,
 			};
 		}
 		catch (Exception ex)

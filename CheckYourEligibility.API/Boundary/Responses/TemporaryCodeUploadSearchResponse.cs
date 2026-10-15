@@ -7,6 +7,6 @@ namespace CheckYourEligibility.API.Boundary.Responses
 		public int PageNumber { get; set; }
 		public int PageSize { get; set; }
 		public int TotalNumberOfRecords { get; set; }
-		public IEnumerable<TemporaryCodeUpload> Data { get; set; }
+		public IEnumerable<TemporaryCodeUploadResponse> Data { get; set; }
 	}
 }

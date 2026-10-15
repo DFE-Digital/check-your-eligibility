@@ -24,7 +24,10 @@ namespace CheckYourEligibility.API.Domain
 
 		public DateTime DateImported { get; set; }
 
-		public Guid ImportedBy { get; set; }
+		public virtual User ImportedByUser { get; set; }
+
+		[Column(TypeName = "nvarchar(450)")]
+		public string ImportedBy { get; set; }
 
 		public bool IsDeleted { get; set; }
 	}

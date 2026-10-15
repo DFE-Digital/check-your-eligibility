@@ -16,7 +16,7 @@ namespace CheckYourEligibility.API.Usecases
 {
 	public interface ITemporaryCodeUploadUseCase
 	{
-		Task<TemporaryCodeUploadCreateResponse> Execute(TemporaryCodeUploadCreateRequest request, Guid userId);
+		Task<TemporaryCodeUploadCreateResponse> Execute(TemporaryCodeUploadCreateRequest request, string userId);
 	}
 
 	public class TemporaryCodeUploadUseCase : ITemporaryCodeUploadUseCase
@@ -53,7 +53,7 @@ namespace CheckYourEligibility.API.Usecases
 			_logger = logger;
 		}
 
-		public async Task<TemporaryCodeUploadCreateResponse> Execute(TemporaryCodeUploadCreateRequest request, Guid userId)
+		public async Task<TemporaryCodeUploadCreateResponse> Execute(TemporaryCodeUploadCreateRequest request, string userId)
 		{
 			List<WorkingFamiliesEvent> DataLoad = new();
 			if (request.File == null || (request.File.ContentType.ToLower() != "text/xml" && !request.File.FileName.EndsWith(".xlsm")))

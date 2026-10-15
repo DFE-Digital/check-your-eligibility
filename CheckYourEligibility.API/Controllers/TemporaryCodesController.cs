@@ -49,7 +49,7 @@ namespace CheckYourEligibility.API.Controllers
 		{
 			try
 			{
-				var response = await _temporaryCodeUploadUseCase.Execute(request, User.GetUserID());
+				var response = await _temporaryCodeUploadUseCase.Execute(request, User.GetUserID().ToString());
 				return Ok(response);
 			}
 			catch (ValidationException ex)
