@@ -67,6 +67,7 @@ public static class ProgramExtensions
         services.AddTransient<IHash, HashGateway>();
         services.AddTransient<IRateLimit, RateLimitGateway>();
         services.AddTransient<IWorkingFamiliesReporting, WorkingFamiliesReportingGateway>();
+        services.AddTransient<IWorkingFamiliesDualRunningCheck, WorkingFamiliesDualRunningCheckGateway>();
         services.AddTransient<IWorkingFamiliesEvent, WorkingFamiliesEventGateway>();
         services.AddTransient<IMultiAcademyTrust, MultiAcademyTrustGateway>();
         services.AddTransient<IEligibilityPolicy, EligibilityPolicyGateway>();
@@ -291,6 +292,15 @@ public static class ProgramExtensions
                         )
                     )
                     .Build());
+            });
+
+            options.AddPolicy(PolicyNames.RequireUserManagementRole, policy =>
+            {
+                policy.Requirements.Add(
+                    RuleBuilder.And(
+                        RuleBuilder.UserType(UserType.EligibilityCheckingEngineSupport),
+                        RuleBuilder.Role(UserRoleName.Support_UserManagement)
+                    ).Build());
             });
         });
 

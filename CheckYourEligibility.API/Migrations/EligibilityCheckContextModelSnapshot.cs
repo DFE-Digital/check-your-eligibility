@@ -568,6 +568,9 @@ namespace CheckYourEligibility.API.Migrations
                     b.Property<DateTime>("DateOfBirth")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("FirstName")
+                        .HasColumnType("varchar(100)");
+
                     b.Property<string>("LastName")
                         .IsRequired()
                         .HasColumnType("varchar(100)");
@@ -575,6 +578,9 @@ namespace CheckYourEligibility.API.Migrations
                     b.Property<string>("NASS")
                         .IsRequired()
                         .HasColumnType("varchar(50)");
+
+                    b.Property<string>("PortReferenceNumber")
+                        .HasColumnType("varchar(100)");
 
                     b.HasKey("FreeSchoolMealsHOID");
 
@@ -894,7 +900,7 @@ namespace CheckYourEligibility.API.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(9)");
 
-                    b.Property<DateTime?>("DiscretionaryValidityStartDate")
+                    b.Property<DateTime>("DiscretionaryValidityStartDate")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("EligibilityCode")
@@ -912,6 +918,9 @@ namespace CheckYourEligibility.API.Migrations
 
                     b.Property<DateTime?>("GracePeriodEndDate")
                         .HasColumnType("datetime2");
+
+                    b.Property<bool>("GracePeriodEndDateApplied")
+                        .HasColumnType("bit");
 
                     b.Property<bool>("HasCodeBeenCheckedByOwningLA")
                         .HasColumnType("bit");
@@ -931,9 +940,15 @@ namespace CheckYourEligibility.API.Migrations
                     b.Property<int?>("OwningLocalAuthorityId")
                         .HasColumnType("int");
 
+                    b.Property<string>("ParentLastName")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("ParentNationalInsuranceNumber")
                         .IsRequired()
                         .HasColumnType("nvarchar(9)");
+
+                    b.Property<string>("PartnerLastName")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("PartnerNationalInsuranceNumber")
                         .HasColumnType("nvarchar(9)");
@@ -1189,6 +1204,63 @@ namespace CheckYourEligibility.API.Migrations
                     b.ToTable("UserRoles");
                 });
 
+            modelBuilder.Entity("WorkingFamiliesDualRunningCheck", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("AreDatesMatching")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("Created")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ECEResponseBody")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ECEStatus")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ECSQualifier")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ECSResponseBody")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ECSStatus")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("EligibilityCheckID")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("EligibilityCode")
+                        .IsRequired()
+                        .HasColumnType("nchar(11)");
+
+                    b.Property<bool>("isConflict")
+                        .HasColumnType("bit");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EligibilityCheckID");
+
+                    b.HasIndex(new[] { "EligibilityCode", "isConflict", "Created" }, "IX_WFDualRunningChecks_Code_Conflict_Created");
+
+                    b.HasIndex(new[] { "isConflict", "Created" }, "IX_WFDualRunningChecks_Conflict_Created");
+
+                    b.HasIndex(new[] { "Created" }, "IX_WFDualRunningChecks_Created");
+
+                    b.ToTable("WorkingFamiliesDualRunningChecks");
+                });
+
             modelBuilder.Entity("CheckYourEligibility.API.Domain.Application", b =>
                 {
                     b.HasOne("CheckYourEligibility.API.Domain.EligibilityCheckHash", "EligibilityCheckHash")
@@ -1350,13 +1422,13 @@ namespace CheckYourEligibility.API.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("CheckYourEligibility.API.Domain.WorkingFamiliesEventSummary", "eventSummary")
+                    b.HasOne("CheckYourEligibility.API.Domain.WorkingFamiliesEventSummary", "WorkingFamiliesEventSummary")
                         .WithMany()
                         .HasForeignKey("WorkingFamiliesEventSummaryID");
 
                     b.Navigation("FosterCarer");
 
-                    b.Navigation("eventSummary");
+                    b.Navigation("WorkingFamiliesEventSummary");
                 });
 
             modelBuilder.Entity("UserRole", b =>
@@ -1368,6 +1440,17 @@ namespace CheckYourEligibility.API.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("WorkingFamiliesDualRunningCheck", b =>
+                {
+                    b.HasOne("CheckYourEligibility.API.Domain.EligibilityCheck", "EligibilityCheck")
+                        .WithMany()
+                        .HasForeignKey("EligibilityCheckID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("EligibilityCheck");
                 });
 
             modelBuilder.Entity("CheckYourEligibility.API.Domain.Application", b =>

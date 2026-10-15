@@ -1,4 +1,5 @@
 ﻿using CheckYourEligibility.API.Boundary.Requests;
+using CheckYourEligibility.API.Domain;
 using CheckYourEligibility.API.Domain.Enums;
 using CheckYourEligibility.API.Gateways;
 using Newtonsoft.Json;
@@ -64,6 +65,22 @@ namespace CheckYourEligibility.API.Helpers
                 default:
                     throw new NotImplementedException($"Type:-{type} not supported.");
             }
+        }
+        // map dates to check data from working family event when processing a check
+        public static CheckProcessData BuildCheckProcessedData_WorkingFamilies(
+            WorkingFamiliesEvent wfEvent,
+            bool isGracePeriodEndDateApplied,
+            CheckProcessData? checkData = null)
+        {
+            checkData ??= new CheckProcessData();
+            checkData.DiscretionaryValidityStartDate = wfEvent.DiscretionaryValidityStartDate.ToString("yyyy-MM-dd");
+            checkData.ValidityStartDate = wfEvent.ValidityStartDate.ToString("yyyy-MM-dd");
+            checkData.ValidityEndDate = wfEvent.ValidityEndDate.ToString("yyyy-MM-dd");
+            checkData.GracePeriodEndDate = wfEvent.GracePeriodEndDate.ToString("yyyy-MM-dd");
+            checkData.LastName = wfEvent.ParentLastName;
+            checkData.IsGracePeriodEndDateApplied = isGracePeriodEndDateApplied;
+
+            return checkData;
         }
     }
 }

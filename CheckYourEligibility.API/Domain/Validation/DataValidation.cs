@@ -7,19 +7,13 @@ internal static class DataValidation
 {
     internal static bool BeAValidNi(string? value)
     {
-        if (string.IsNullOrWhiteSpace(value)) return false;
-        value = value.ToUpper();
-        var regexString =
-            @"^(?!BG)(?!GB)(?!NK)(?!KN)(?!TN)(?!NT)(?!ZZ)(?:[A-CEGHJ-PR-TW-Z][A-CEGHJ-NPR-TW-Z])(?:\s*\d\s*){6}([A-D]|\s)$";
-        var rg = new Regex(regexString);
-        var res = rg.Match(value);
-        return res.Success;
+        return NinoValidation.IsValidInput(value);
     }
 
     internal static bool BeAValidNass(string? value)
     {
         if (string.IsNullOrWhiteSpace(value)) return false;
-        var regexString = @"^[0-9]{2}(0[1-9]|1[0-2])[0-9]{5,6}$";
+        var regexString = @"^\d{9}$";
         var rg = new Regex(regexString);
         var res = rg.Match(value);
         return res.Success;

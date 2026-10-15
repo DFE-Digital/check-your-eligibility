@@ -106,6 +106,8 @@ public class WorkingFamiliesEventImportValidator : AbstractValidator<WorkingFami
 			.Must(x => x != ImportDateValues.EmptyDate)
 				.WithMessage(ValidationMessages.SubmissionDateEmpty)
 			.Must(x => x != ImportDateValues.InvalidDate)
-				.WithMessage(ValidationMessages.SubmissionDateInvalid);
+				.WithMessage(ValidationMessages.SubmissionDateInvalid)
+			.Must(DataValidation.BeAPastDate)
+				.WithMessage(ValidationMessages.SubmissionDateInFuture);
 	}
 }

@@ -18,6 +18,7 @@ public static class ValidationMessages
     public const string NASS = "Invalid National Asylum Seeker Service Number";
     public const string NI_or_NASS = "National Insurance Number or National Asylum Seeker Service Number is required";
     public const string SubmissionDate = "Submission date must not be in the future";
+    public const string SubmissionDateOutOfRange = "Submission date must be within the last 31 days";
     public const string Email = "Invalid Email Address";
 
 	//WF import validation messages

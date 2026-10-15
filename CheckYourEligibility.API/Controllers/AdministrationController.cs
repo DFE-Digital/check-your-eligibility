@@ -128,7 +128,8 @@ public class AdministrationController : BaseController
     }
 
     /// <summary>
-    ///     Truncates FsmHomeOfficeData and imports a new data set from CSV input
+    ///     Truncates FsmHomeOfficeData and imports the relevant fields from a Home Office CSV containing AS Ref,
+    ///     Port Ref, Given Name, Family Name and DOB
     /// </summary>
     /// <param name="file"></param>
     /// <returns></returns>

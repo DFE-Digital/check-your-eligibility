@@ -163,6 +163,9 @@ builder.Services.AddScoped<ICreateOrUpdateFSMParentUserUseCase, CreateOrUpdateFS
 builder.Services.AddScoped<IGetUserRolesUseCase, GetUserRolesUseCase>();
 builder.Services.AddScoped<IAddUserRoleUseCase, AddUserRoleUseCase>();
 builder.Services.AddScoped<IRemoveUserRoleUseCase, RemoveUserRoleUseCase>();
+builder.Services.AddScoped<ISearchUsersUseCase, SearchUsersUseCase>();
+builder.Services.AddScoped<IGetUserUseCase, GetUserUseCase>();
+builder.Services.AddScoped<IUpdateUserEnabledUseCase, UpdateUserEnabledUseCase>();
 builder.Services.AddScoped<IAuthenticateUserUseCase, AuthenticateUserUseCase>();
 builder.Services.AddScoped<IGetCitizenClaimsUseCase, GetCitizenClaimsUseCase>();
 builder.Services.AddScoped<ISearchEstablishmentsUseCase, SearchEstablishmentsUseCase>();
@@ -218,7 +221,10 @@ builder.Services.AddScoped<ISearchFosterFamiliesUseCase, SearchFosterFamiliesUse
 builder.Services.AddScoped<IGetFosterChildUseCase, GetFosterChildUseCase>();
 builder.Services.AddScoped<ICreateFosterChildUseCase, CreateFosterChildUseCase>();
 builder.Services.AddScoped<IUpdateFosterChildUseCase, UpdateFosterChildUseCase>();
+builder.Services.AddScoped<IReconfirmFosterChildUseCase, ReconfirmFosterChildUseCase>();
+builder.Services.AddScoped<IPreviewReconfirmFosterChildUseCase, PreviewReconfirmFosterChildUseCase>();
 builder.Services.AddScoped<IDeleteFosterChildUseCase, DeleteFosterChildUseCase>();
+
 builder.Services.AddScoped<IGetCheckWorkingFamiliesUseCase, GetCheckWorkingFamiliesItemUseCase>();
 builder.Services.AddScoped<IEligibilityCheckDataResponseMapper, EligibilityCheckDataResponseMapper>();
 builder.Services.AddScoped<IValidator<IEligibilityServiceType>, CheckEligibilityRequestDataValidator>();

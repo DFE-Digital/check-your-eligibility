@@ -30,6 +30,7 @@ public interface IEligibilityCheckContext
     DbSet<EligibilityPolicy> EligibilityPolicies { get; set; }
     DbSet<UserRole> UserRoles { get; set; }
     DbSet<EligibilityCodeRange> EligibilityCodeRanges { get; set; }
+    DbSet<WorkingFamiliesDualRunningCheck> WorkingFamiliesDualRunningChecks { get; set; }
     DbSet<TemporaryCodeUpload> TemporaryCodeUploads { get; set; }
 
 	void BulkInsert_FreeSchoolMealsHO(IEnumerable<FreeSchoolMealsHO> data);

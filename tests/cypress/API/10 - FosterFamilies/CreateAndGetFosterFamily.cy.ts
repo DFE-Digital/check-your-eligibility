@@ -112,3 +112,57 @@ describe("GET & POST Foster Family - Unhappy path", () => {
     });
   });
 });
+
+describe("Preview Foster Family Code", () => {
+  it("POST - Should return preview dates without creating a foster family", () => {
+    getandVerifyBearerToken(
+      "/oauth2/token",
+      validLoginRequestBodyFosterFamilies,
+    ).then((token) => {
+      const request = validFosterFamilyRequestBody();
+
+      cy.apiRequest("POST", "/foster-family/preview", request, token).then(
+        (response) => {
+          expect(response.status).to.eq(201);
+          expect(response.body.validityStartDate).to.exist;
+          expect(response.body.validityEndDate).to.exist;
+          expect(response.body.termValidity).to.exist;
+          expect(response.body.termValidity.current).to.exist;
+          expect(response.body.termValidity.next).to.exist;
+          expect(response.body.reconfirmationProperties).to.exist;
+          expect(response.body.reconfirmationProperties.startDate).to.exist;
+          expect(response.body.reconfirmationProperties.endDate).to.exist;
+          expect(response.body.reconfirmationProperties.status).to.exist;
+          expect(response.body.gracePeriodEndDate).to.exist;
+          expect(response.body.isGracePeriodEndDateApplied).to.exist;
+
+          cy.apiRequest(
+            "GET",
+            `/foster-family/search?pageNumber=1&pageSize=10&ninoFilter=${encodeURIComponent(request.fosterCarer.carerNationalInsuranceNumber)}`,
+            null,
+            token,
+          ).then((searchResponse) => {
+            expect(searchResponse.status).to.eq(200);
+            expect(searchResponse.body.totalNumberOfRecords).to.eq(0);
+          });
+        },
+      );
+    });
+  });
+
+  it("POST - Should return 400 when the preview request is invalid", () => {
+    getandVerifyBearerToken(
+      "/oauth2/token",
+      validLoginRequestBodyFosterFamilies,
+    ).then((token) => {
+      const request = validFosterFamilyRequestBody();
+      request.fosterCarer.carerFirstName = "";
+
+      cy.apiRequest("POST", "/foster-family/preview", request, token, false).then(
+        (response) => {
+          expect(response.status).to.eq(400);
+        },
+      );
+    });
+  });
+});
