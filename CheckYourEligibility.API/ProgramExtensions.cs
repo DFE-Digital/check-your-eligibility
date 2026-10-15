@@ -1,16 +1,12 @@
-﻿using CheckYourEligibility.API.Adapters;
-using CheckYourEligibility.API.Domain;
-using CheckYourEligibility.API.Domain.Authorization;
-using CheckYourEligibility.API.Domain.Enums;
-using CheckYourEligibility.API.Extensions;
-using CheckYourEligibility.API.Extensions.Authorization;
+﻿using CheckYourEligibility.API.Extensions.Authorization;
 using CheckYourEligibility.API.Filters;
-using CheckYourEligibility.API.Gateways;
-using CheckYourEligibility.API.Gateways.Interfaces;
+using CheckYourEligibility.Core.Adapters;
+using CheckYourEligibility.Core.Domain;
+using CheckYourEligibility.Core.Domain.Authorization;
+using CheckYourEligibility.Core.Domain.Enums;
+using CheckYourEligibility.Core.Extensions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Azure;
 using Microsoft.IdentityModel.Tokens;
 using System.Diagnostics.CodeAnalysis;
 using System.Net.Security;
@@ -21,61 +17,7 @@ namespace CheckYourEligibility.API;
 [ExcludeFromCodeCoverage(Justification = "extension of program")]
 public static class ProgramExtensions
 {
-    public static IServiceCollection AddDatabase(this IServiceCollection services, IConfiguration configuration)
-    {
-        var connectionString = configuration.GetValue<string>("ConnectionString");
-
-        services.AddDbContextFactory<EligibilityCheckContext>(options =>
-          options.UseSqlServer(
-              connectionString,
-              x => x.MigrationsAssembly("CheckYourEligibility.API")), lifetime: ServiceLifetime.Scoped);
-
-        services.AddDbContext<IEligibilityCheckContext, EligibilityCheckContext>(options =>
-            options.UseSqlServer(
-                connectionString,
-                x => x.MigrationsAssembly("CheckYourEligibility.API"))
-
-        );
-
-        return services;
-    }
-
-    public static IServiceCollection AddAzureClients(this IServiceCollection services, IConfiguration configuration)
-    {
-        var connectionString = configuration.GetValue<string>("Queue:ConnectionString");
-        services.AddAzureClients(builder => { builder.AddQueueServiceClient(connectionString); });
-        return services;
-    }
-
-    public static IServiceCollection AddServices(this IServiceCollection services)
-    {
-        services.AddTransient<ICheckEligibility, CheckEligibilityGateway>();
-        services.AddTransient<IEligibilityCheckReporting, EligibilityCheckReportingGateway>();
-        services.AddTransient<IBulkCheck, BulkCheckGateway>();
-        services.AddTransient<ICreateApplicationsFromBulkCheck, CreateApplicationsFromBulkCheckGateway>();
-        services.AddTransient<ICheckingEngine, CheckingEngineGateway>();
-        services.AddTransient<IStorageQueue, StorageQueueGateway>();
-        services.AddTransient<IApplication, ApplicationGateway>();
-        services.AddTransient<ILocalAuthority, LocalAuthorityGateway>();
-        services.AddTransient<IAdministration, AdministrationGateway>();
-        services.AddTransient<INotify, NotifyGateway>();
-        services.AddSingleton<INotificationClientFactory, NotificationClientFactory>();
-        services.AddTransient<IEcsAdapter, EcsAdapter>();
-        services.AddTransient<IEstablishmentSearch, EstablishmentSearchGateway>();
-        services.AddTransient<IUsers, UsersGateway>();
-        services.AddTransient<IAudit, AuditGateway>();
-        services.AddTransient<IHash, HashGateway>();
-        services.AddTransient<IRateLimit, RateLimitGateway>();
-        services.AddTransient<IWorkingFamiliesReporting, WorkingFamiliesReportingGateway>();
-        services.AddTransient<IWorkingFamiliesDualRunningCheck, WorkingFamiliesDualRunningCheckGateway>();
-        services.AddTransient<IWorkingFamiliesEvent, WorkingFamiliesEventGateway>();
-        services.AddTransient<IMultiAcademyTrust, MultiAcademyTrustGateway>();
-        services.AddTransient<IEligibilityPolicy, EligibilityPolicyGateway>();
-        services.AddTransient<IFosterFamilies, FosterFamiliesGateway>();
-        return services;
-    }
-
-
+    
     private static bool ByPassCertErrorsForTestPurposesDoNotDoThisInTheWild(
         HttpRequestMessage httpRequestMsg,
         X509Certificate2 certificate,

@@ -1,0 +1,67 @@
+﻿using System.Globalization;
+using System.Text.RegularExpressions;
+
+namespace CheckYourEligibility.Core.Domain.Validation;
+
+internal static class DataValidation
+{
+    internal static bool BeAValidNi(string? value)
+    {
+        return NinoValidation.IsValidInput(value);
+    }
+
+    internal static bool BeAValidNass(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return false;
+        var regexString = @"^\d{9}$";
+        var rg = new Regex(regexString);
+        var res = rg.Match(value);
+        return res.Success;
+    }
+
+    internal static bool BeAValidEligibilityCode(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return false;
+        var regexString = @"^\d{11}$";
+        var rg = new Regex(regexString);
+        var res = rg.Match(value);
+        return res.Success;
+    }
+
+    internal static bool BeAValidDate(string value)
+    {
+        return DateTime.TryParseExact(value,
+            "yyyy-MM-dd",
+            CultureInfo.InvariantCulture,
+            DateTimeStyles.None,
+            out var temp);
+    }
+
+    internal static bool BeAValidName(string value)
+    {
+        var regexString =
+            @"^[a-zA-Z" +
+            @"ÁáÉéÍíÓóÚúÝýĆćĹĺŃńŔŕŚśŹź" +
+            @"ÀàÈèÌìÒòÙùẀẁỲỳ" +
+            @"ÂâÊêÎîÔôÛûĈĉĜĝĤĥĴĵŜŝŴŵŶŷ" +
+            @"ÃãÑñÕõĨĩŨũẼẽỸỹ" +
+            @"ÄäËëÏïÖöÜüŸÿ" +
+            @"ÇçĢģĶķĻļŅņŖŗŞşŢţ" +
+            @"ÅåŮů" +
+            @"ĀāĒēĪīŌōŪūȲȳ" +
+            @"ĂăĔĕĞğĬĭŎŏŬŭ" +
+            @"ĊċĖėĠġİẊẋŻż" +
+            @"ĄąĘęĮįŲų" +
+            @"ŐőŰű" +
+            @" ,.''\u2018\u2019-]+$";
+
+        var rg = new Regex(regexString);
+        var res = rg.Match(value);
+        return res.Success;
+    }
+
+    internal static bool BeAPastDate(DateTime value)
+    {
+        return value.CompareTo(DateTime.UtcNow) <= 0;
+    }
+}
