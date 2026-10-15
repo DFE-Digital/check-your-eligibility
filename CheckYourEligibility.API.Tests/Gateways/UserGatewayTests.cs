@@ -375,4 +375,82 @@ public class UserGatewayTests : TestBase.TestBase
         // Assert
         act.Should().ThrowExactlyAsync<DbUpdateException>();
     }
+
+    private static User NewUser(string name, string email) => new()
+    {
+        UserID = Guid.NewGuid().ToString(),
+        UserName = name,
+        Email = email,
+        Reference = ""
+    };
+
+    [Test]
+    public async Task SearchUsers_Should_Filter_By_Name_Or_Email_And_Paginate()
+    {
+        _fakeInMemoryDb.Users.AddRange(
+            NewUser("alice", "a@x.com"),
+            NewUser("bob", "ALICE@y.com"),
+            NewUser("carol", "c@x.com"));
+        await _fakeInMemoryDb.SaveChangesAsync();
+
+        var (all, allTotal) = await _sut.SearchUsers(null, null, 1, 2);
+        var (matches, matchTotal) = await _sut.SearchUsers("Alice", null, 1, 10);
+
+        all.Should().HaveCount(2);
+        allTotal.Should().Be(3);
+        matchTotal.Should().Be(2);
+        matches.Select(u => u.UserName).Should().BeEquivalentTo(new[] { "alice", "bob" });
+    }
+
+    [Test]
+    public async Task SearchUsers_Should_Filter_By_UserType()
+    {
+        var api = NewUser("alice", "a@x.com");
+        api.UserType = UserType.API;
+        var parent = NewUser("alice2", "b@x.com");
+        parent.UserType = UserType.FreeSchoolMealsParent;
+        _fakeInMemoryDb.Users.AddRange(api, parent);
+        await _fakeInMemoryDb.SaveChangesAsync();
+
+        var (users, total) = await _sut.SearchUsers("alice", UserType.API, 1, 10);
+
+        total.Should().Be(1);
+        users.Should().ContainSingle().Which.UserID.Should().Be(api.UserID);
+    }
+
+    [Test]
+    public async Task GetUser_Should_Return_User_With_Roles()
+    {
+        var user = NewUser("alice", "a@x.com");
+        _fakeInMemoryDb.Users.Add(user);
+        _fakeInMemoryDb.UserRoles.Add(new UserRole { UserId = user.UserID, RoleName = UserRoleName.Support_TestRole });
+        await _fakeInMemoryDb.SaveChangesAsync();
+
+        var (result, roles) = await _sut.GetUser(user.UserID);
+
+        result.UserID.Should().Be(user.UserID);
+        roles.Should().ContainSingle().Which.RoleName.Should().Be(UserRoleName.Support_TestRole);
+    }
+
+    [Test]
+    public async Task GetUser_And_UpdateUserEnabled_Should_Throw_NotFound_For_Unknown_User()
+    {
+        Func<Task> get = () => _sut.GetUser("missing");
+        Func<Task> update = () => _sut.UpdateUserEnabled("missing", false);
+
+        await get.Should().ThrowAsync<Domain.Exceptions.NotFoundException>();
+        await update.Should().ThrowAsync<Domain.Exceptions.NotFoundException>();
+    }
+
+    [Test]
+    public async Task UpdateUserEnabled_Should_Persist_Value()
+    {
+        var user = NewUser("alice", "a@x.com");
+        _fakeInMemoryDb.Users.Add(user);
+        await _fakeInMemoryDb.SaveChangesAsync();
+
+        await _sut.UpdateUserEnabled(user.UserID, false);
+
+        (await _fakeInMemoryDb.Users.SingleAsync(u => u.UserID == user.UserID)).IsEnabled.Should().BeFalse();
+    }
 }
