@@ -7,88 +7,143 @@ using CheckYourEligibility.Core.Gateways.Interfaces;
 using CsvHelper;
 using CsvHelper.Configuration;
 using Microsoft.AspNetCore.Http;
-using Newtonsoft.Json;
 
-namespace CheckYourEligibility.Core.UseCases;
-
-public interface IImportFsmHomeOfficeDataUseCase
+namespace CheckYourEligibility.Core.UseCases
 {
-    Task Execute(IFormFile file);
-}
 
-public class ImportFsmHomeOfficeDataUseCase : IImportFsmHomeOfficeDataUseCase
-{
-    private static readonly Regex AsylumSeekerReferenceNumberRegex =
-        new(@"^(?:\d{9}|\d{2}/\d{2}/\d{5})$", RegexOptions.Compiled);
+    public record HomeOfficeImportResult(int RowsImported, int RowsWithoutFamilyName);
 
-    private readonly IAudit _auditGateway;
-    private readonly IAdministration _gateway;
-    private readonly ILogger<ImportFsmHomeOfficeDataUseCase> _logger;
-
-    public ImportFsmHomeOfficeDataUseCase(IAdministration Gateway, IAudit auditGateway,
-        ILogger<ImportFsmHomeOfficeDataUseCase> logger)
+    public interface IImportFsmHomeOfficeDataUseCase
     {
-        _gateway = Gateway;
-        _auditGateway = auditGateway;
-        _logger = logger;
+        Task<HomeOfficeImportResult> Execute(IFormFile file);
     }
 
-    public async Task Execute(IFormFile file)
+    public class ImportFsmHomeOfficeDataUseCase : IImportFsmHomeOfficeDataUseCase
     {
-        List<FreeSchoolMealsHO> DataLoad;
-        if (file == null || file.ContentType.ToLower() != "text/csv")
-            throw new InvalidDataException($"{Admin.CsvfileRequired}");
-        try
+        private static readonly Regex AsylumSeekerReferenceNumberRegex =
+            new(@"^(?:\d{9}|\d{2}/\d{2}/\d{5})$", RegexOptions.Compiled);
+
+        private const int MaxReportedRowErrors = 20;
+        private static readonly string[] RequiredColumns = ["AS Ref", "Port Ref", "Given Name", "Family Name", "DOB"];
+        private static readonly string ExpectedColumns = string.Join(", ", RequiredColumns);
+
+        private readonly IAudit _auditGateway;
+        private readonly IAdministration _gateway;
+        private readonly ILogger<ImportFsmHomeOfficeDataUseCase> _logger;
+
+        public ImportFsmHomeOfficeDataUseCase(IAdministration Gateway, IAudit auditGateway,
+            ILogger<ImportFsmHomeOfficeDataUseCase> logger)
         {
-            var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+            _gateway = Gateway;
+            _auditGateway = auditGateway;
+            _logger = logger;
+        }
+
+        public async Task<HomeOfficeImportResult> Execute(IFormFile file)
+        {
+            if (file == null || file.ContentType.ToLower() != "text/csv")
+                throw new InvalidDataException($"{Admin.CsvfileRequired}");
+
+            List<FreeSchoolMealsHO> DataLoad = [];
+            var rowErrors = new List<string>();
+            var missingColumns = new List<string>();
+            var currentRow = 0;
+            try
             {
-                HasHeaderRecord = true,
-                BadDataFound = null,
-                PrepareHeaderForMatch = args => args.Header.Trim()
-            };
-            using (var fileStream = file.OpenReadStream())
-            using (var csv = new CsvReader(new StreamReader(fileStream), config))
-            {
-                csv.Context.RegisterClassMap<HomeOfficeRowMap>();
-                DataLoad = [];
-                while (csv.Read())
+                var config = new CsvConfiguration(CultureInfo.InvariantCulture)
                 {
-                    var record = csv.GetRecord<HomeOfficeRow>();
-                    DataLoad.Add(new FreeSchoolMealsHO
+                    HasHeaderRecord = true,
+                    BadDataFound = null,
+                    PrepareHeaderForMatch = args => args.Header.Trim()
+                };
+                using (var fileStream = file.OpenReadStream())
+                using (var csv = new CsvReader(new StreamReader(fileStream), config))
+                {
+                    csv.Context.RegisterClassMap<HomeOfficeRowMap>();
+                    if (csv.Read())
                     {
-                        FreeSchoolMealsHOID = Guid.NewGuid().ToString(),
-                        FirstName = record.FirstName?.Trim(),
-                        LastName = record.Surname?.Trim(),
-                        DateOfBirth = DateTime.ParseExact(record.Dob?.Trim(), "yyyyMMdd",
-                            CultureInfo.InvariantCulture),
-                        NASS = NormalizeAsylumSeekerReferenceNumber(record.AsylumSeekerReferenceNumber),
-                        PortReferenceNumber = record.PortReferenceNumber?.Trim()
-                    });
+                        csv.ReadHeader();
+                        var presentColumns = csv.HeaderRecord.Select(h => h.Trim()).ToHashSet();
+                        missingColumns = RequiredColumns.Where(c => !presentColumns.Contains(c)).ToList();
+                        while (missingColumns.Count == 0 && csv.Read())
+                        {
+                            currentRow = csv.Context.Parser.Row;
+                            var record = csv.GetRecord<HomeOfficeRow>();
+
+                            var hasValidAsRef =
+                                TryNormalizeAsylumSeekerReferenceNumber(record.AsylumSeekerReferenceNumber, out var nass);
+                            var hasValidDob = TryParseDateOfBirth(record.Dob, out var dateOfBirth);
+                            if (!hasValidAsRef)
+                                rowErrors.Add($"Row {currentRow}: AS Ref must be nine digits, optionally formatted as 00/00/00000.");
+                            if (!hasValidDob)
+                                rowErrors.Add($"Row {currentRow}: DOB must be a valid date in the format dd/MM/yyyy, for example 31/01/1990.");
+                            if (!hasValidAsRef || !hasValidDob) continue;
+
+                            DataLoad.Add(new FreeSchoolMealsHO
+                            {
+                                FreeSchoolMealsHOID = Guid.NewGuid().ToString(),
+                                FirstName = record.FirstName?.Trim(),
+                                LastName = record.Surname?.Trim() ?? string.Empty,
+                                DateOfBirth = dateOfBirth,
+                                NASS = nass,
+                                PortReferenceNumber = record.PortReferenceNumber?.Trim()
+                            });
+                        }
+                    }
                 }
-
-                if (DataLoad.Count == 0) throw new InvalidDataException("Invalid file content.");
             }
+            catch (Exception ex)
+            {
+                // Deliberately not logging the exception message: CsvHelper messages can include row data.
+                _logger.LogError("ImportHomeOfficeData failed at row {Row}: {ExceptionType}", currentRow,
+                    ex.GetType().Name);
+                throw new InvalidDataException(
+                    $"{file.FileName}: the file could not be read near row {currentRow}. Check it is a CSV with the expected columns: {ExpectedColumns}.");
+            }
+
+            if (missingColumns.Count > 0)
+                throw new InvalidDataException(
+                    $"{file.FileName}: missing or misnamed column(s): {string.Join(", ", missingColumns)}. Expected columns: {ExpectedColumns}.");
+
+            if (rowErrors.Count > 0)
+                throw new InvalidDataException(FormatRowErrors(file.FileName, rowErrors));
+
+            if (DataLoad.Count == 0)
+                throw new InvalidDataException($"{file.FileName}: the file contains no data rows.");
+
+            await _gateway.ImportHomeOfficeData(DataLoad);
+
+            // Rows without a family name load fine but can never match, so they are reported back.
+            return new HomeOfficeImportResult(DataLoad.Count, DataLoad.Count(x => x.LastName.Length == 0));
         }
-        catch (Exception ex)
+
+        private static string FormatRowErrors(string fileName, List<string> errors)
         {
-            _logger.LogError("ImportHomeOfficeData", ex);
-            throw new InvalidDataException(
-                $"{file.FileName} - {JsonConvert.SerializeObject(new HomeOfficeRow())} :- {ex.Message}, {ex.InnerException?.Message}");
+            var shown = string.Join(" ", errors.Take(MaxReportedRowErrors));
+            var remaining = errors.Count > MaxReportedRowErrors
+                ? $" ...and {errors.Count - MaxReportedRowErrors} more."
+                : string.Empty;
+            return $"{fileName}: {errors.Count} error(s) found, no data was imported. {shown}{remaining}";
         }
 
-        await _gateway.ImportHomeOfficeData(DataLoad);
-    }
-
-    private static string NormalizeAsylumSeekerReferenceNumber(string value)
-    {
-        var trimmedValue = value?.Trim();
-        if (string.IsNullOrWhiteSpace(trimmedValue) ||
-            !AsylumSeekerReferenceNumberRegex.IsMatch(trimmedValue))
+        private static bool TryParseDateOfBirth(string value, out DateTime dateOfBirth)
         {
-            throw new InvalidDataException(
-                "Asylum seeker reference number must contain nine digits, optionally formatted as 00/00/00000.");
+            return DateTime.TryParseExact(value?.Trim(), "dd/MM/yyyy", CultureInfo.InvariantCulture,
+                DateTimeStyles.None, out dateOfBirth);
         }
 
-        return trimmedValue.Replace("/", string.Empty);
+        private static bool TryNormalizeAsylumSeekerReferenceNumber(string value, out string normalized)
+        {
+            var trimmedValue = value?.Trim();
+            if (string.IsNullOrWhiteSpace(trimmedValue) ||
+                !AsylumSeekerReferenceNumberRegex.IsMatch(trimmedValue))
+            {
+                normalized = string.Empty;
+                return false;
+            }
+
+            normalized = trimmedValue.Replace("/", string.Empty);
+            return true;
+        }
     }
 }

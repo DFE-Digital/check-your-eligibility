@@ -123,7 +123,13 @@ public class AdministrationGateway : IAdministration
 
     public async Task ImportHomeOfficeData(IEnumerable<FreeSchoolMealsHO> data)
     {
-        _db.BulkInsert_FreeSchoolMealsHO(data);
+        var expireCachedResults = _configuration.GetValue<bool>("HomeOffice:ExpireCachedResultsOnImport");
+        // One day beyond the reuse window guarantees expired hashes are never matched again
+        int? expireCachedResultsDays = expireCachedResults
+            ? _configuration.GetValue<int>("HashCheckDays") + 1
+            : null;
+
+        _db.BulkInsert_FreeSchoolMealsHO(data, expireCachedResultsDays);
     }
 
     public async Task BulkImportWorkingFamiliesEventHMRCData(IEnumerable<WorkingFamiliesEvent> data)

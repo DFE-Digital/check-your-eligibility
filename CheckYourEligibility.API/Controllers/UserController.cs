@@ -3,6 +3,7 @@ using CheckYourEligibility.Core.Boundary.Requests;
 using CheckYourEligibility.Core.Boundary.Responses;
 using CheckYourEligibility.Core.Domain.Authorization;
 using CheckYourEligibility.Core.Domain.Enums;
+using CheckYourEligibility.Core.Domain.Exceptions;
 using CheckYourEligibility.Core.Extensions;
 using CheckYourEligibility.Core.Gateways.Interfaces;
 using CheckYourEligibility.Core.UseCases;
@@ -20,13 +21,20 @@ public class UserController : BaseController
     private readonly IGetUserRolesUseCase _getUserRolesUseCase;
     private readonly IAddUserRoleUseCase _addUserRoleUseCase;
     private readonly IRemoveUserRoleUseCase _removeUserRoleUseCase;
+    private readonly ISearchUsersUseCase _searchUsersUseCase;
+    private readonly IGetUserUseCase _getUserUseCase;
+    private readonly IUpdateUserEnabledUseCase _updateUserEnabledUseCase;
     private readonly ILogger<UserController> _logger;
 
     public UserController(ILogger<UserController> logger, ICreateOrUpdateFSMParentUserUseCase createOrUpdateUserUseCase,
         IGetUserRolesUseCase getUserRolesUseCase, IAddUserRoleUseCase addUserRoleUseCase,
-        IRemoveUserRoleUseCase removeUserRoleUseCase, IAudit audit)
+        IRemoveUserRoleUseCase removeUserRoleUseCase, ISearchUsersUseCase searchUsersUseCase,
+        IGetUserUseCase getUserUseCase, IUpdateUserEnabledUseCase updateUserEnabledUseCase, IAudit audit)
         : base(audit)
     {
+        _searchUsersUseCase = searchUsersUseCase;
+        _getUserUseCase = getUserUseCase;
+        _updateUserEnabledUseCase = updateUserEnabledUseCase;
         _logger = logger;
         _createOrUpdateUserUseCase = createOrUpdateUserUseCase;
         _getUserRolesUseCase = getUserRolesUseCase;
@@ -173,5 +181,65 @@ public class UserController : BaseController
         }
 
         return NoContent();
+    }
+
+    /// <summary>
+    ///     Paginated search of users by user name or email.
+    /// </summary>
+    [ProducesResponseType(typeof(UsersSearchResponse), (int)HttpStatusCode.OK)]
+    [HttpGet("/users/search")]
+    [Authorize(Policy = PolicyNames.RequireUserManagementRole)]
+    public async Task<ActionResult> SearchUsers([FromQuery] string? search, [FromQuery] UserType? userType,
+            [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
+    {
+        return Ok(await _searchUsersUseCase.Execute(search, userType, pageNumber, pageSize));
+    }
+
+    /// <summary>
+    ///     Gets a user and their roles.
+    /// </summary>
+    [ProducesResponseType(typeof(UserDetailsResponse), (int)HttpStatusCode.OK)]
+    [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.NotFound)]
+    [HttpGet("/users/{userId}")]
+    [Authorize(Policy = PolicyNames.RequireUserManagementRole)]
+    public async Task<ActionResult> GetUser(string userId)
+    {
+        try
+        {
+            return Ok(await _getUserUseCase.Execute(userId));
+        }
+        catch (NotFoundException ex)
+        {
+            return NotFound(new ErrorResponse { Errors = [new Error { Title = ex.Message }] });
+        }
+    }
+
+    /// <summary>
+    ///     Updates the IsEnabled flag of a user.
+    /// </summary>
+    [ProducesResponseType((int)HttpStatusCode.NoContent)]
+    [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.NotFound)]
+    [HttpPatch("/users/{userId}")]
+    [Authorize(Policy = PolicyNames.RequireUserManagementRole)]
+    public async Task<ActionResult> PatchUser(string userId, [FromBody] UserPatchRequest request)
+    {
+        if (request?.Data?.IsEnabled == null)
+        {
+            return BadRequest(new ErrorResponse
+            {
+                Errors = [new Error { Title = "IsEnabled is required." }]
+            });
+        }
+
+        try
+        {
+            await _updateUserEnabledUseCase.Execute(userId, request.Data.IsEnabled.Value);
+            return NoContent();
+        }
+        catch (NotFoundException ex)
+        {
+            return NotFound(new ErrorResponse { Errors = [new Error { Title = ex.Message }] });
+        }
     }
 }

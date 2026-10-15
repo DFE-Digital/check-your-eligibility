@@ -140,14 +140,23 @@ public class AdministrationController : BaseController
     {
         try
         {
-            await _importFsmHomeOfficeDataUseCase.Execute(file);
-            return new ObjectResult(new MessageResponse { Data = $"{file.FileName} - {Admin.HomeOfficeFileProcessed}" })
+            var result = await _importFsmHomeOfficeDataUseCase.Execute(file);
+            return new ObjectResult(new MessageResponse { Data = HomeOfficeImportMessage(file.FileName, result) })
                 { StatusCode = StatusCodes.Status200OK };
         }
         catch (InvalidDataException ex)
         {
             return BadRequest(new ErrorResponse { Errors = [new Error { Title = ex.Message }] });
         }
+    }
+
+    private static string HomeOfficeImportMessage(string fileName, HomeOfficeImportResult result)
+    {
+        var message =
+            $"{fileName} - {Admin.HomeOfficeFileProcessed} {result.RowsImported} {(result.RowsImported == 1 ? "row" : "rows")} imported";
+        return result.RowsWithoutFamilyName > 0
+            ? $"{message} ({result.RowsWithoutFamilyName} without a family name)."
+            : $"{message}.";
     }
 
     /// <summary>

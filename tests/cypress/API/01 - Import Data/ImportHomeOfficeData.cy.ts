@@ -8,7 +8,7 @@ describe('Testing the API', function () {
         const method = 'POST';
         const url = Cypress.config('baseUrl') + '/admin/import-home-office-data';
         const fileType = 'text/csv'; // CSV file type     
-        const expectedAnswer = '{"data":"HODataSubset.csv - HomeOffice File Processed."}';
+        const expectedAnswer = '{"data":"HODataSubset.csv - HomeOffice File Processed. 42 rows imported."}';
 
         // Get file from fixtures as binary
         cy.fixture(fileName, 'binary').then((excelBin: string) => {

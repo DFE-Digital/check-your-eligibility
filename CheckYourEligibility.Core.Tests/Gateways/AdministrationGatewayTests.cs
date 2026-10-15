@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
+using Moq;
 
 namespace CheckYourEligibility.Core.Tests.Gateways;
 
@@ -205,6 +206,28 @@ public class AdministrationGatewayTests : TestBase
 
         // Assert
         Assert.Pass();
+    }
+
+    [TestCase("true", 8)]
+    [TestCase("false", null)]
+    [TestCase(null, null)]
+    public async Task Given_ImportHomeOfficeData_Should_Pass_CachedResultsExpiry_Based_On_Setting(
+        string? setting, int? expectedExpiryDays)
+    {
+        // Arrange
+        var settings = new Dictionary<string, string?> { ["HashCheckDays"] = "7" };
+        if (setting != null) settings["HomeOffice:ExpireCachedResultsOnImport"] = setting;
+        var configuration = new ConfigurationBuilder().AddInMemoryCollection(settings).Build();
+        var db = new Mock<IEligibilityCheckContext>(MockBehavior.Strict);
+        db.Setup(x => x.BulkInsert_FreeSchoolMealsHO(It.IsAny<IEnumerable<FreeSchoolMealsHO>>(), expectedExpiryDays));
+        var sut = new AdministrationGateway(new NullLoggerFactory(), db.Object, configuration);
+        var data = _fixture.CreateMany<FreeSchoolMealsHO>().ToList();
+
+        // Act
+        await sut.ImportHomeOfficeData(data);
+
+        // Assert
+        db.Verify(x => x.BulkInsert_FreeSchoolMealsHO(data, expectedExpiryDays), Times.Once);
     }
 
     [Test]

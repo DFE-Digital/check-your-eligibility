@@ -1,10 +1,17 @@
-public enum UserType 
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+
+namespace CheckYourEligibility.Core.Domain.Enums
 {
-    NotSpecified,
-    FreeSchoolMealsAdmin,
-    FreeSchoolMealsParent,
-    ChildcareAdmin,
-    EligibilityCheckingEngineSupport,
-    API
+
+    [JsonConverter(typeof(StringEnumConverter))]
+    public enum UserType
+    {
+        NotSpecified,
+        FreeSchoolMealsAdmin,
+        FreeSchoolMealsParent,
+        ChildcareAdmin,
+        EligibilityCheckingEngineSupport,
+        API
+    }
 }
- 

@@ -99,14 +99,18 @@ public class AdministrationControllerTests : ControllerTestBase
 		response.Should().BeEquivalentTo(expectedResult);
 	}
 
-	[Test]
-	public async Task Given_ImportFsmHMRCData_Should_Return_Status200OK()
+	[TestCase(41, 0, "test.csv - HomeOffice File Processed. 41 rows imported.")]
+	[TestCase(1, 0, "test.csv - HomeOffice File Processed. 1 row imported.")]
+	[TestCase(7, 1, "test.csv - HomeOffice File Processed. 7 rows imported (1 without a family name).")]
+	public async Task Given_ImportFsmHomeOfficeData_Should_Return_Status200OK(
+		int rowsImported, int rowsWithoutFamilyName, string expectedMessage)
 	{
 		// Arrange
-		_mockImportFsmHMRCDataUseCase.Setup(cs => cs.Execute(It.IsAny<IFormFile>())).Returns(Task.CompletedTask);
+		_mockImportFsmHomeOfficeDataUseCase.Setup(cs => cs.Execute(It.IsAny<IFormFile>()))
+			.ReturnsAsync(new HomeOfficeImportResult(rowsImported, rowsWithoutFamilyName));
 
-		var content = Resources.exampleHMRC;
-		var fileName = "test.xml";
+		var content = Resources.HO_Data_small;
+		var fileName = "test.csv";
 		var stream = new MemoryStream();
 		var writer = new StreamWriter(stream);
 		writer.Write(content);
@@ -116,14 +120,14 @@ public class AdministrationControllerTests : ControllerTestBase
 		var file = new FormFile(stream, 0, stream.Length, fileName, fileName)
 		{
 			Headers = new HeaderDictionary(),
-			ContentType = "text/xml"
+			ContentType = "text/csv"
 		};
 		var expectedResult =
-			new ObjectResult(new MessageResponse { Data = $"{file.FileName} - {Admin.HMRCFileProcessed}" })
-			{ StatusCode = StatusCodes.Status200OK };
+		   new ObjectResult(new MessageResponse { Data = expectedMessage })
+		   { StatusCode = StatusCodes.Status200OK };
 
 		// Act
-		var response = await _sut.ImportFsmHMRCData(file);
+		var response = await _sut.ImportFsmHomeOfficeData(file);
 
 		// Assert
 		response.Should().BeEquivalentTo(expectedResult);
@@ -144,36 +148,6 @@ public class AdministrationControllerTests : ControllerTestBase
 
 		// Act
 		var response = await _sut.ImportFsmHMRCData(null);
-
-		// Assert
-		response.Should().BeEquivalentTo(expectedResult);
-	}
-
-	[Test]
-	public async Task Given_ImportFsmHomeOfficeData_Should_Return_Status200OK()
-	{
-		// Arrange
-		_mockImportFsmHomeOfficeDataUseCase.Setup(cs => cs.Execute(It.IsAny<IFormFile>())).Returns(Task.CompletedTask);
-
-		var content = Resources.HO_Data_small;
-		var fileName = "test.csv";
-		var stream = new MemoryStream();
-		var writer = new StreamWriter(stream);
-		writer.Write(content);
-		writer.Flush();
-		stream.Position = 0;
-
-		var file = new FormFile(stream, 0, stream.Length, fileName, fileName)
-		{
-			Headers = new HeaderDictionary(),
-			ContentType = "text/csv"
-		};
-		var expectedResult =
-			new ObjectResult(new MessageResponse { Data = $"{file.FileName} - {Admin.HomeOfficeFileProcessed}" })
-			{ StatusCode = StatusCodes.Status200OK };
-
-		// Act
-		var response = await _sut.ImportFsmHomeOfficeData(file);
 
 		// Assert
 		response.Should().BeEquivalentTo(expectedResult);
