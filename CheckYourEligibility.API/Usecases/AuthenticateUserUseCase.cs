@@ -148,6 +148,10 @@ public class AuthenticateUserUseCase : IAuthenticateUserUseCase
             };
             userId = await _usersGateway.CreateOrUpdateUser(userCreateRequest);
         }
+        catch (UserDisabledException)
+        {
+            throw;
+        }
         catch (Exception ex)
         {
             _logger.LogWarning(

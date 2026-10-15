@@ -81,6 +81,27 @@ public class AuthenticateUserUseCaseTests
     }
 
     [Test]
+    public async Task AuthenticateUser_Should_Throw_UserDisabledException_When_User_Is_Disabled()
+    {
+        var login = new SystemUser
+        {
+            client_id = "test_client",
+            client_secret = "correct_password"
+        };
+
+        _mockAuditGateway
+            .Setup(a => a.CreateAuditEntry(AuditType.Client, login.client_id, null))
+            .ReturnsAsync(_fixture.Create<string>());
+
+        _mockUsersGateway
+            .Setup(u => u.CreateOrUpdateUser(It.IsAny<UserCreateRequest>()))
+            .ThrowsAsync(new UserDisabledException());
+
+        await FluentActions.Awaiting(() => _sut.Execute(login))
+            .Should().ThrowAsync<UserDisabledException>();
+    }
+
+    [Test]
     public void AuthenticateUser_Should_Throw_InvalidClientException_When_Authentication_Fails()
     {
         // Arrange

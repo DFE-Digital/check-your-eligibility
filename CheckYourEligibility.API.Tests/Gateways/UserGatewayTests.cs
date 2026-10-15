@@ -120,6 +120,111 @@ public class UserGatewayTests : TestBase.TestBase
     }
 
 
+    [TestCase(true, true)]
+    [TestCase(null, true)]
+    [TestCase(false, false)]
+    public async Task Given_Existing_Portal_User_IsEnabled_Should_Only_Reject_When_False(bool? isEnabled, bool allowed)
+    {
+        var existingUser = new User
+        {
+            UserID = Guid.NewGuid().ToString(),
+            Email = "test@test.com",
+            Reference = "",
+            UserName = "test@test.com",
+            UserType = UserType.FreeSchoolMealsAdmin,
+            OrganisationType = Domain.Enums.OrganisationType.local_authority,
+            OrganisationId = 123,
+            IsEnabled = isEnabled,
+            LastLogin = DateTime.UtcNow.AddDays(-1)
+        };
+        _fakeInMemoryDb.Users.Add(existingUser);
+        await _fakeInMemoryDb.SaveChangesAsync();
+        var originalLastLogin = existingUser.LastLogin;
+
+        var request = new UserCreateRequest
+        {
+            Data = new() { Email = "test@test.com", Reference = "" },
+            MetaData = new()
+            {
+                Source = UserType.FreeSchoolMealsAdmin.ToString(),
+                UserName = "test@test.com",
+                OrganisationType = "local_authority",
+                OrganisationID = 123
+            }
+        };
+
+        Func<Task> act = () => _sut.CreateOrUpdateUser(request);
+
+        if (allowed)
+        {
+            await act.Should().NotThrowAsync();
+            _fakeInMemoryDb.Users.Single().LastLogin.Should().BeAfter(originalLastLogin!.Value);
+        }
+        else
+        {
+            await act.Should().ThrowAsync<Domain.Exceptions.UserDisabledException>();
+            _fakeInMemoryDb.Users.Single().LastLogin.Should().Be(originalLastLogin);
+        }
+    }
+
+    [Test]
+    public async Task Given_Disabled_Api_User_Should_Throw_UserDisabledException()
+    {
+        _fakeInMemoryDb.Users.Add(new User
+        {
+            Email = string.Empty,
+            Reference = string.Empty,
+            UserID = Guid.NewGuid().ToString(),
+            UserName = "production-something",
+            UserType = UserType.API,
+            OrganisationType = Domain.Enums.OrganisationType.local_authority,
+            OrganisationId = 123,
+            IsEnabled = false,
+            LastLogin = DateTime.UtcNow.AddDays(-1)
+        });
+        await _fakeInMemoryDb.SaveChangesAsync();
+
+        var request = new UserCreateRequest
+        {
+            Data = new(),
+            MetaData = new()
+            {
+                Source = UserType.API.ToString(),
+                UserName = "production-something",
+                OrganisationType = "local_authority",
+                OrganisationID = 123
+            }
+        };
+
+        await FluentActions.Awaiting(() => _sut.CreateOrUpdateUser(request))
+            .Should().ThrowAsync<Domain.Exceptions.UserDisabledException>();
+    }
+
+    [Test]
+    public async Task Given_Disabled_FsmParent_User_Should_Throw_UserDisabledException()
+    {
+        _fakeInMemoryDb.Users.Add(new User
+        {
+            Email = "parent@test.com",
+            Reference = "ref1",
+            UserID = Guid.NewGuid().ToString(),
+            UserName = "parent@test.com",
+            UserType = UserType.FreeSchoolMealsParent,
+            IsEnabled = false,
+            LastLogin = DateTime.UtcNow.AddDays(-1)
+        });
+        await _fakeInMemoryDb.SaveChangesAsync();
+
+        var request = new UserCreateRequest
+        {
+            Data = new() { Email = "parent@test.com", Reference = "ref1" },
+            MetaData = new()
+        };
+
+        await FluentActions.Awaiting(() => _sut.CreateOrUpdateFSMParentUser(request))
+            .Should().ThrowAsync<Domain.Exceptions.UserDisabledException>();
+    }
+
     [Test]
     public async Task Given_New_Api_User_Should_Create_User()
     {

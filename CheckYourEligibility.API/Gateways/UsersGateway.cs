@@ -66,6 +66,14 @@ public class UsersGateway : IUsers
 
         if (user != null)
         {
+            if (user.IsEnabled == false)
+            {
+                _logger.LogWarning(
+                    "Rejected login for disabled user {UserName}",
+                    SanitizeForLog(user.UserName));
+                throw new UserDisabledException();
+            }
+
             user.LastLogin = DateTime.UtcNow;
 
             _logger.LogInformation(
@@ -116,6 +124,7 @@ public class UsersGateway : IUsers
 
         if (existingUser != null)
         {
+            if (existingUser.IsEnabled == false) throw new UserDisabledException();
 
             existingUser.LastLogin = DateTime.UtcNow;
             await _db.SaveChangesAsync();

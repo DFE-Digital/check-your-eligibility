@@ -30,6 +30,14 @@ public class InvalidScopeException : AuthenticationException
     }
 }
 
+public class UserDisabledException : AuthenticationException
+{
+    public UserDisabledException(string message = "The user account is disabled")
+        : base("access_denied", message)
+    {
+    }
+}
+
 public class ServerErrorException : AuthenticationException
 {
     public ServerErrorException(string message = "The authorization server encountered an unexpected error")
