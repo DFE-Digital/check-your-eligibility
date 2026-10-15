@@ -33,10 +33,11 @@ public sealed class ManagedBulkInsertTests
             })
             .ToList();
 
-    private static Task<int> CountAsync()
+    private static async Task<int> CountAsync()
     {
-        using var context = SqlServerFixture.CreateContext();
-        return context.RateLimitEvents.CountAsync(e => e.PartitionName == Partition);
+        await using var context = SqlServerFixture.CreateContext();
+        return await context.RateLimitEvents
+            .CountAsync(e => e.PartitionName == Partition);
     }
 
     [Test]
