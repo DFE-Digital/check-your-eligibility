@@ -11,17 +11,10 @@ namespace CheckYourEligibility.API.Usecases
 	public class GetTemporaryCodeUploadsUseCase : IGetTemporaryCodeUploadsUseCase
 	{
 		private readonly ITemporaryCodeUpload _gateway;
-		private readonly IServiceScopeFactory _scopeFactory;
-		private readonly ILogger<GetTemporaryCodeUploadsUseCase> _logger;
 
-		public GetTemporaryCodeUploadsUseCase(
-		ITemporaryCodeUpload gateway,
-		IServiceScopeFactory scopeFactory,
-		ILogger<GetTemporaryCodeUploadsUseCase> logger)
+		public GetTemporaryCodeUploadsUseCase(ITemporaryCodeUpload gateway)
 		{
 			_gateway = gateway;
-			_scopeFactory = scopeFactory;
-			_logger = logger;
 		}
 
 		public async Task<TemporaryCodeUploadSearchResponse> Execute(TemporaryCodeUploadsSearchRequest request)

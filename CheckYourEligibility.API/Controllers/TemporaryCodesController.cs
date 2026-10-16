@@ -52,10 +52,6 @@ namespace CheckYourEligibility.API.Controllers
 				var response = await _temporaryCodeUploadUseCase.Execute(request, User.GetUserID().ToString());
 				return Ok(response);
 			}
-			catch (ValidationException ex)
-			{
-				return BadRequest(new ErrorResponse { Errors = [new Error { Title = ex.Message }] });
-			}
 			catch (UnauthorizedAccessException ex)
 			{
 				return BadRequest(new ErrorResponse { Errors = [new Error { Title = ex.Message }] });
@@ -80,37 +76,20 @@ namespace CheckYourEligibility.API.Controllers
 		/// </summary>
 		/// <returns></returns>
 		[ProducesResponseType(typeof(TemporaryCodeUploadResponse), (int)HttpStatusCode.OK)]
-		[ProducesResponseType(typeof(ErrorResponse), (int)HttpStatusCode.NotFound)]
 		[Consumes("application/json", "application/vnd.api+json;version=1.0")]
 		[HttpGet("/temporary-codes/search")]
 		[Authorize(Policy = PolicyNames.RequireAdminScope)]
 		public async Task<ActionResult> GetTemporaryCodeUploads([FromQuery] int pageNumber, [FromQuery] int pageSize)
 		{
-			try
+			var request = new TemporaryCodeUploadsSearchRequest
 			{
-				var request = new TemporaryCodeUploadsSearchRequest
-				{
-					PageNumber = pageNumber,
-					PageSize = pageSize
-				};
+				PageNumber = pageNumber,
+				PageSize = pageSize
+			};
 
-				var response = await _getTemporaryCodeUploadsUseCase.Execute(request);
+			var response = await _getTemporaryCodeUploadsUseCase.Execute(request);
 
-				return Ok(response);
-			}
-			catch (NotFoundException)
-			{
-				return NotFound(new ErrorResponse { Errors = [new Error { Title = "Not Found" }] });
-			}
-
-			catch (FluentValidation.ValidationException ex)
-			{
-				return BadRequest(new ErrorResponse { Errors = [new Error { Title = ex.Message }] });
-			}
-			catch (ValidationException ex)
-			{
-				return BadRequest(new ErrorResponse { Errors = ex.Errors });
-			}
+			return Ok(response);
 		}
 	}
 }

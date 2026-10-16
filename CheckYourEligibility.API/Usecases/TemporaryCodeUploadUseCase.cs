@@ -1,6 +1,5 @@
 ﻿using CheckYourEligibility.API.Boundary.Requests;
 using CheckYourEligibility.API.Boundary.Responses;
-using CheckYourEligibility.API.Controllers;
 using CheckYourEligibility.API.Domain;
 using CheckYourEligibility.API.Domain.Constants;
 using CheckYourEligibility.API.Domain.Constants.ErrorMessages;
@@ -154,6 +153,20 @@ namespace CheckYourEligibility.API.Usecases
 			catch (Exception ex)
 			{
 				_logger.LogError("ImportWfHMRCData", ex);
+
+				if (!validationErrors.Any())
+				{
+					validationErrors.Add(
+						new ImportTempCodeValidationError
+						{
+							RowNumber = 0,
+							EligibilityCode = string.Empty,
+							ErrorMessages = new List<string>
+							{
+								ex.Message
+							}
+						});
+				}
 
 				throw new BulkTempCodeValidationException(validationErrors);
 			}
