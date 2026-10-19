@@ -179,11 +179,15 @@ public class AdministrationControllerTests : TestBase.TestBase
         response.Should().BeEquivalentTo(expectedResult);
     }
 
-    [Test]
-    public async Task Given_ImportFsmHomeOfficeData_Should_Return_Status200OK()
+    [TestCase(41, 0, "test.csv - HomeOffice File Processed. 41 rows imported.")]
+    [TestCase(1, 0, "test.csv - HomeOffice File Processed. 1 row imported.")]
+    [TestCase(7, 1, "test.csv - HomeOffice File Processed. 7 rows imported (1 without a family name).")]
+    public async Task Given_ImportFsmHomeOfficeData_Should_Return_Status200OK(
+        int rowsImported, int rowsWithoutFamilyName, string expectedMessage)
     {
         // Arrange
-        _mockImportFsmHomeOfficeDataUseCase.Setup(cs => cs.Execute(It.IsAny<IFormFile>())).Returns(Task.CompletedTask);
+        _mockImportFsmHomeOfficeDataUseCase.Setup(cs => cs.Execute(It.IsAny<IFormFile>()))
+            .ReturnsAsync(new HomeOfficeImportResult(rowsImported, rowsWithoutFamilyName));
 
         var content = Resources.HO_Data_small;
         var fileName = "test.csv";
@@ -199,7 +203,7 @@ public class AdministrationControllerTests : TestBase.TestBase
             ContentType = "text/csv"
         };
         var expectedResult =
-            new ObjectResult(new MessageResponse { Data = $"{file.FileName} - {Admin.HomeOfficeFileProcessed}" })
+            new ObjectResult(new MessageResponse { Data = expectedMessage })
                 { StatusCode = StatusCodes.Status200OK };
 
         // Act

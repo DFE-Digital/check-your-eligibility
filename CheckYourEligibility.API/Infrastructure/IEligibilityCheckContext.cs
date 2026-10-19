@@ -33,7 +33,7 @@ public interface IEligibilityCheckContext
     DbSet<WorkingFamiliesDualRunningCheck> WorkingFamiliesDualRunningChecks { get; set; }
     DbSet<TemporaryCodeUpload> TemporaryCodeUploads { get; set; }
 
-	void BulkInsert_FreeSchoolMealsHO(IEnumerable<FreeSchoolMealsHO> data);
+    void BulkInsert_FreeSchoolMealsHO(IEnumerable<FreeSchoolMealsHO> data, int? expireCachedResultsDays = null);
     Task<int> SaveChangesAsync();
     DatabaseFacade Database { get; }
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
