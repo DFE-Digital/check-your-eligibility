@@ -717,8 +717,8 @@ namespace CheckYourEligibility.API.Migrations
                         .IsRequired()
                         .HasColumnType("varchar(12)");
 
-                    b.Property<Guid>("ImportedBy")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<string>("ImportedBy")
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
@@ -731,6 +731,8 @@ namespace CheckYourEligibility.API.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("TemporaryCodeUploadId");
+
+                    b.HasIndex("ImportedBy");
 
                     b.ToTable("TemporaryCodeUploads");
                 });
@@ -1369,6 +1371,15 @@ namespace CheckYourEligibility.API.Migrations
                     b.Navigation("Establishment");
 
                     b.Navigation("MultiAcademyTrust");
+                });
+
+            modelBuilder.Entity("CheckYourEligibility.API.Domain.TemporaryCodeUpload", b =>
+                {
+                    b.HasOne("CheckYourEligibility.API.Domain.User", "ImportedByUser")
+                        .WithMany()
+                        .HasForeignKey("ImportedBy");
+
+                    b.Navigation("ImportedByUser");
                 });
 
             modelBuilder.Entity("EligibilityCheckReport", b =>
