@@ -6,7 +6,6 @@ using CheckYourEligibility.API.Domain.Authorization;
 using CheckYourEligibility.API.Domain.Exceptions;
 using CheckYourEligibility.API.Domain.Validation;
 using CheckYourEligibility.API.Gateways.Interfaces;
-using CheckYourEligibility.API.Usecases;
 using CheckYourEligibility.API.UseCases;
 using FluentAssertions;
 using FluentValidation;

@@ -11,7 +11,7 @@ using DocumentFormat.OpenXml.Spreadsheet;
 using FeatureManagement.Domain.Validation;
 using FluentValidation;
 
-namespace CheckYourEligibility.API.Usecases
+namespace CheckYourEligibility.API.UseCases
 {
 	public interface ITemporaryCodeUploadUseCase
 	{

@@ -53,8 +53,6 @@ public sealed class TemporaryCodeUploadGateway : ITemporaryCodeUpload
 	//SEARCH
 	public async Task<TemporaryCodeUploadSearchResponse> GetTemporaryCodeUploads(TemporaryCodeUploadsSearchRequest request)
 	{
-		const int pageSize = 10;
-
 		try
 		{
 			var cutoffDate = DateTime.UtcNow.Date.AddDays(-30);
@@ -72,7 +70,7 @@ public sealed class TemporaryCodeUploadGateway : ITemporaryCodeUpload
 			// Calculate total pages and adjust page number if it exceeds max
 			var maxPage = totalRecords == 0
 				? 1
-				: (int)Math.Ceiling(totalRecords / (double)pageSize);
+				: (int)Math.Ceiling(totalRecords / (double)request.PageSize);
 
 			// If requested page number exceeds max, return the last page
 			if (pageNumber > maxPage)
@@ -83,8 +81,8 @@ public sealed class TemporaryCodeUploadGateway : ITemporaryCodeUpload
 			// Retrieve paginated results
 			var temporaryCodeUploadItems = await query
 				.OrderByDescending(r => r.DateImported)
-				.Skip((pageNumber - 1) * pageSize)
-				.Take(pageSize)
+				.Skip((pageNumber - 1) * request.PageSize)
+				.Take(request.PageSize)
 				.Include(r => r.ImportedByUser)
 				.Select(r => new TemporaryCodeUploadResponse
 				{
@@ -100,7 +98,7 @@ public sealed class TemporaryCodeUploadGateway : ITemporaryCodeUpload
 			return new TemporaryCodeUploadSearchResponse
 			{
 				PageNumber = pageNumber,
-				PageSize = pageSize,
+				PageSize = request.PageSize,
 				TotalNumberOfRecords = totalRecords,
 				Data = (IEnumerable<TemporaryCodeUploadResponse>)temporaryCodeUploadItems,
 			};
