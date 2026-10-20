@@ -104,16 +104,23 @@ public class CheckEligibilityRequestDataValidator : AbstractValidator<IEligibili
         When(x => x is CheckEligibilityRequestWorkingFamiliesData, () =>
         {
             RuleFor(x => ((CheckEligibilityRequestWorkingFamiliesData)x).EligibilityCode)
-                .NotEmpty()
-                .Must(DataValidation.BeAValidEligibilityCode)
-                .WithMessage(ValidationMessages.EligibilityCode);
-            RuleFor(x => ((CheckEligibilityRequestWorkingFamiliesData)x).NationalInsuranceNumber)
+			.Cascade(CascadeMode.Stop)
+			.NotEmpty()
+				.WithMessage(ValidationMessages.EligibilityCodeEmpty)
+			.Must(DataValidation.BeElevenDigitEligibilityCode)
+				.WithMessage(ValidationMessages.EligibilityCodeLength)
+			.Must(DataValidation.BeAValidEligibilityCode)
+				.WithMessage(ValidationMessages.EligibilityCodeInvalid);
+
+			RuleFor(x => ((CheckEligibilityRequestWorkingFamiliesData)x).NationalInsuranceNumber)
                 .Must(DataValidation.BeAValidNi)
                 .WithMessage(ValidationMessages.NI);
+
             RuleFor(x => ((CheckEligibilityRequestWorkingFamiliesData)x).DateOfBirth)
                 .NotEmpty()
                 .Must(DataValidation.BeAValidDate)
                 .WithMessage(ValidationMessages.DOB);
+
             When(x => !string.IsNullOrEmpty(((CheckEligibilityRequestWorkingFamiliesData)x).LastName), () =>
             {
                 RuleFor(x => ((CheckEligibilityRequestWorkingFamiliesData)x).LastName)
