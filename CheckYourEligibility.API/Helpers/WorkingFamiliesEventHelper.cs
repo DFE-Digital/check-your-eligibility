@@ -1,11 +1,11 @@
 using CheckYourEligibility.API.Boundary.Responses;
 using CheckYourEligibility.API.Domain;
 using CheckYourEligibility.API.Helpers;
+using CheckYourEligibility.API.Domain.Validation;
 
 
 public static class WorkingFamiliesEventHelper
 {
-
     public static WorkingFamiliesEvent ParseWorkingFamilyEventFromFosterFamily(
         FosterCarer fosterCarer,
         FosterChild fosterChild,
@@ -123,13 +123,36 @@ public static class WorkingFamiliesEventHelper
         return eventSummary;
     }
 
+    /// <summary>
+    /// Parses a date value from the import file and returns the appropriate DateTime value.
+    /// </summary>
+    /// <param name="dateValue">The date value to parse.</param>
+    /// <returns>The parsed DateTime value.</returns>
+    public static DateTime ParseImportDate(string? dateValue)
+    {
+        if (string.IsNullOrWhiteSpace(dateValue))
+            return ImportDateValues.EmptyDate;
+        if (double.TryParse(dateValue, out var oaDate))
+            return DateTime.FromOADate(oaDate);
+        return ImportDateValues.InvalidDate;
+    }
+    public static DateTime? ParseOptionalImportDate(string? dateValue)
+    {
+        if (string.IsNullOrWhiteSpace(dateValue))
+            return null;
+        if (double.TryParse(dateValue, out var oaDate))
+            return DateTime.FromOADate(oaDate);
+        return ImportDateValues.InvalidDate;
+    }
     public static WorkingFamiliesEvent ParseWorkingFamiliesEvent(List<string> eventProps, List<string> columnHeaders)
     {
-        var validityStartDate = DateTime.FromOADate(int.Parse(eventProps[columnHeaders.IndexOf("Validity Start Date")]));
-        var validityEndDate = DateTime.FromOADate(int.Parse(eventProps[columnHeaders.IndexOf("Validity End Date")]));
-        var submissionDate = DateTime.FromOADate(int.Parse(eventProps[columnHeaders.IndexOf("Submission Date")]));
-        DateTime? partnerDateOfBirth = !string.IsNullOrEmpty(eventProps[columnHeaders.IndexOf("Partner DOB")]) ? DateTime.FromOADate(int.Parse(eventProps[columnHeaders.IndexOf("Partner DOB")])) : null;
-        DateTime childDateOfBirth = DateTime.FromOADate(int.Parse(eventProps[columnHeaders.IndexOf("Child DOB")]));
+        var validityStartDate = ParseImportDate(eventProps[columnHeaders.IndexOf("Validity Start Date")]);
+        var validityEndDate = ParseImportDate(eventProps[columnHeaders.IndexOf("Validity End Date")]);
+        var submissionDate = ParseImportDate(eventProps[columnHeaders.IndexOf("Submission Date")]);
+        var parentDateOfBirth = ParseImportDate(eventProps[columnHeaders.IndexOf("Parent DOB")]);
+        var childDateOfBirth = ParseImportDate(eventProps[columnHeaders.IndexOf("Child DOB")]);
+        var partnerDateOfBirth = ParseOptionalImportDate(eventProps[columnHeaders.IndexOf("Partner DOB")]);
+
         WorkingFamiliesEvent wfEvent = new WorkingFamiliesEvent
         {
             WorkingFamiliesEventID = Guid.NewGuid().ToString(),
@@ -139,7 +162,7 @@ public static class WorkingFamiliesEventHelper
             ParentNationalInsuranceNumber = eventProps[columnHeaders.IndexOf("Parent NINO")],
             ParentFirstName = eventProps[columnHeaders.IndexOf("Parent Forename")],
             ParentLastName = eventProps[columnHeaders.IndexOf("Parent Surname")],
-            ParentDateOfBirth = DateTime.FromOADate(int.Parse(eventProps[columnHeaders.IndexOf("Parent DOB")])),
+            ParentDateOfBirth = parentDateOfBirth,
             ChildFirstName = eventProps[columnHeaders.IndexOf("Child Forename")],
             ChildLastName = eventProps[columnHeaders.IndexOf("Child Surname")],
             ChildPostCode = eventProps[columnHeaders.IndexOf("Child Postcode")],
@@ -152,9 +175,9 @@ public static class WorkingFamiliesEventHelper
             DiscretionaryValidityStartDate = GetDiscretionaryStartDate(validityStartDate, submissionDate),
             GracePeriodEndDate = GetGracePeriodEndDate(submissionDate, validityEndDate, childDateOfBirth)
         };
-
         return wfEvent;
     }
+
     //If VED >= 1 Jan  and VED <= 10 Feb then GPED = 31-Mar
     //If VED >= 11 Feb and VED <= 26 May then GPED = 31-Aug 
     //If VED >= 27 May and VED <= 31 August then GPED  = 31-Dec 
