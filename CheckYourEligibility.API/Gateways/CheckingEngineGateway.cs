@@ -171,7 +171,7 @@ public class CheckingEngineGateway : ICheckingEngine
                 {
                     summaryRecord.ParentLastName = latestEventRecord.ParentLastName;
                     summaryRecord.PartnerLastName = latestEventRecord.PartnerLastName;
-                    summaryRecord.GracePeriodEndDate = WorkingFamiliesEventHelper.GetGracePeriodEndDate(latestEventRecord.ValidityEndDate);
+                    summaryRecord.GracePeriodEndDate = WorkingFamiliesEventHelper.GetGracePeriodEndDate(latestEventRecord.SubmissionDate, latestEventRecord.ValidityEndDate, latestEventRecord.ChildDateOfBirth);
                     await _workingFamiliesEventGateway.UpdateWorkingFamiliesSummaryRecordAsync(summaryRecord);
                 }
                 return summaryRecord;

@@ -1,3 +1,4 @@
+using CheckYourEligibility.API.Boundary.Responses;
 using CheckYourEligibility.API.Domain;
 using CheckYourEligibility.API.Helpers;
 
@@ -35,7 +36,7 @@ public static class WorkingFamiliesEventHelper
             SubmissionDate = submissionDate,
 
             DiscretionaryValidityStartDate = GetDiscretionaryStartDate(validityStartDate, submissionDate), // validity start date and submmission
-            GracePeriodEndDate = GetGracePeriodEndDate(validityStartDate.AddMonths(3)),
+            GracePeriodEndDate = GetGracePeriodEndDate(submissionDate, validityStartDate.AddMonths(3), fosterChild.DateOfBirth),
 
             CreatedDateTime = DateTime.UtcNow,
             EventDateTime = DateTime.UtcNow
@@ -128,6 +129,7 @@ public static class WorkingFamiliesEventHelper
         var validityEndDate = DateTime.FromOADate(int.Parse(eventProps[columnHeaders.IndexOf("Validity End Date")]));
         var submissionDate = DateTime.FromOADate(int.Parse(eventProps[columnHeaders.IndexOf("Submission Date")]));
         DateTime? partnerDateOfBirth = !string.IsNullOrEmpty(eventProps[columnHeaders.IndexOf("Partner DOB")]) ? DateTime.FromOADate(int.Parse(eventProps[columnHeaders.IndexOf("Partner DOB")])) : null;
+        DateTime childDateOfBirth = DateTime.FromOADate(int.Parse(eventProps[columnHeaders.IndexOf("Child DOB")]));
         WorkingFamiliesEvent wfEvent = new WorkingFamiliesEvent
         {
             WorkingFamiliesEventID = Guid.NewGuid().ToString(),
@@ -141,14 +143,14 @@ public static class WorkingFamiliesEventHelper
             ChildFirstName = eventProps[columnHeaders.IndexOf("Child Forename")],
             ChildLastName = eventProps[columnHeaders.IndexOf("Child Surname")],
             ChildPostCode = eventProps[columnHeaders.IndexOf("Child Postcode")],
-            ChildDateOfBirth = DateTime.FromOADate(int.Parse(eventProps[columnHeaders.IndexOf("Child DOB")])),
+            ChildDateOfBirth = childDateOfBirth,
             PartnerNationalInsuranceNumber = eventProps[columnHeaders.IndexOf("Partner NINO")],
             PartnerFirstName = eventProps[columnHeaders.IndexOf("Partner Forename")],
             PartnerLastName = eventProps[columnHeaders.IndexOf("Partner Surname")],
             PartnerDateOfBirth = partnerDateOfBirth,
             SubmissionDate = submissionDate,
             DiscretionaryValidityStartDate = GetDiscretionaryStartDate(validityStartDate, submissionDate),
-            GracePeriodEndDate = GetGracePeriodEndDate(validityEndDate)
+            GracePeriodEndDate = GetGracePeriodEndDate(submissionDate, validityEndDate, childDateOfBirth)
         };
 
         return wfEvent;
@@ -158,10 +160,27 @@ public static class WorkingFamiliesEventHelper
     //If VED >= 27 May and VED <= 31 August then GPED  = 31-Dec 
     //If VED >= 1 September and VED <= 21 October then GPED = 31-Dec
     //If VED >= 22 October and VED <= 31 Dec then GPED  31-Mar following year
-    public static DateTime GetGracePeriodEndDate(DateTime validityEndDate)
+    public static DateTime GetGracePeriodEndDate(DateTime submissionDate, DateTime validityEndDate, DateTime childDateOfBirth)
     {
+        var submissionDateOnly = submissionDate.Date;
         var validityEndDateOnly = validityEndDate.Date;
 
+        // Get term that submission date and VED fall in
+        var submissionTerm = WorkingFamiliesCheckHelper.GetTerms(submissionDateOnly).Current;
+        var vedTerm = WorkingFamiliesCheckHelper.GetTerms(validityEndDateOnly).Current;
+
+        // Determine whether child will turn 5 during the current term
+        var childFifthBirthday = childDateOfBirth.Date.AddYears(5);
+        var childTurnsFiveDuringSubmissionTerm = childFifthBirthday >= submissionTerm.StartDate && childFifthBirthday <= submissionTerm.EndDate;
+        var childTurnsFiveDuringVEDTerm = childFifthBirthday >= vedTerm.StartDate && childFifthBirthday <= vedTerm.EndDate;
+
+        // If child turns five during submission term then Grace Period End Date should be the term end date
+        if (childTurnsFiveDuringSubmissionTerm) { return submissionTerm.EndDate; }
+
+        // If child turns five during current term then Grace Period End Date should be the term end date
+        if (childTurnsFiveDuringVEDTerm) { return vedTerm.EndDate; }
+
+        // Otherwise calculate the Grace Period End Date based on the validity end date ranges
         if (validityEndDateOnly >= new DateTime(validityEndDateOnly.Year, 10, 22))
         {
             return new DateTime(validityEndDateOnly.Year + 1, 3, 31);

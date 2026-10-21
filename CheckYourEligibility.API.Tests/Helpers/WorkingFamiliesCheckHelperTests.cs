@@ -192,7 +192,7 @@ namespace CheckYourEligibility.API.Tests.Helpers
 
         [TestCase(-1, -1)] // DVSD before term start, VED in current term
         [TestCase(5, 1)]  // DVSD in current term, VED after term end
-        public void CalculateContiguousChainForCodeFromEvents_singleEventNotWithinTheSameTerm_GracePeriodScenarios( int dvsdOffsetFromTermStart, int vedOffset)
+        public void CalculateContiguousChainForCodeFromEvents_singleEventNotWithinTheSameTerm_GracePeriodScenarios(int dvsdOffsetFromTermStart, int vedOffset)
         {
             var currentTerm = WorkingFamiliesCheckHelper.GetTerms(DateTime.UtcNow.Date).Current;
 
@@ -247,9 +247,9 @@ namespace CheckYourEligibility.API.Tests.Helpers
                 submissionDate: new DateTime(2026, 5, 1));
 
 
-            var (result, _) = WorkingFamiliesCheckHelper.CalculateContiguousChainForCodeFromEvents( [latestEvent, lateReconfirmation, firstEvent]);
+            var (result, _) = WorkingFamiliesCheckHelper.CalculateContiguousChainForCodeFromEvents([latestEvent, lateReconfirmation, firstEvent]);
 
-       
+
             result.ValidityStartDate.Should().Be(new DateTime(2026, 9, 2));
             result.DiscretionaryValidityStartDate.Should().Be(new DateTime(2026, 9, 2));
         }
@@ -521,7 +521,7 @@ namespace CheckYourEligibility.API.Tests.Helpers
                 ValidityStartDate = validityStartDate,
                 ValidityEndDate = validityEndDate,
                 DiscretionaryValidityStartDate = discretionaryValidityStartDate,
-                GracePeriodEndDate = WorkingFamiliesEventHelper.GetGracePeriodEndDate(validityEndDate)
+                GracePeriodEndDate = WorkingFamiliesEventHelper.GetGracePeriodEndDate(submissionDate ?? validityStartDate, validityEndDate, childDateOfBirth ?? new DateTime(2000, 1, 1))
             };
         }
 
@@ -530,7 +530,7 @@ namespace CheckYourEligibility.API.Tests.Helpers
         /// Term validity test cases
         /// </summary>
         /// <returns></returns>
-        
+
         private static Term Term_Summer = new Term(TermName.Summer, new DateTime(DateTime.Now.Year, 4, 1), new DateTime(DateTime.Now.Year, 8, 31));
 
         private static Term Term_Spring = new Term(TermName.Spring, new DateTime(DateTime.Now.Year, 1, 1), new DateTime(DateTime.Now.Year, 3, 31));
