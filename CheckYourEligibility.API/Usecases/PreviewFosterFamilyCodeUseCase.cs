@@ -12,12 +12,18 @@ public interface IPreviewFosterFamilyCodeUseCase
 
 public class PreviewFosterFamilyCodeUseCase : IPreviewFosterFamilyCodeUseCase
 {
+    private readonly bool _enforceSubmissionDateWindow;
+
+    public PreviewFosterFamilyCodeUseCase(IConfiguration? configuration = null)
+    {
+        _enforceSubmissionDateWindow = configuration?.GetValue("FosterFamilies:EnforceSubmissionDateWindow", true) ?? true;
+    }
 
     public async Task<FosterCodePreviewResponse> Execute(FosterFamilyRequest request, int localAuthorityId)
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        var validator = new FosterFamilyRequestValidator();
+        var validator = new FosterFamilyRequestValidator(_enforceSubmissionDateWindow);
         var validationResult = validator.Validate(request);
 
         if (!validationResult.IsValid)
