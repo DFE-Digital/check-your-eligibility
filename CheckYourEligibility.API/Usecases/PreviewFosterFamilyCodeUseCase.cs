@@ -12,12 +12,18 @@ public interface IPreviewFosterFamilyCodeUseCase
 
 public class PreviewFosterFamilyCodeUseCase : IPreviewFosterFamilyCodeUseCase
 {
+    private readonly bool _enforceSubmissionDateWindow;
+
+    public PreviewFosterFamilyCodeUseCase(IConfiguration? configuration = null)
+    {
+        _enforceSubmissionDateWindow = configuration?.GetValue("FosterFamilies:EnforceSubmissionDateWindow", true) ?? true;
+    }
 
     public async Task<FosterCodePreviewResponse> Execute(FosterFamilyRequest request, int localAuthorityId)
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        var validator = new FosterFamilyRequestValidator();
+        var validator = new FosterFamilyRequestValidator(_enforceSubmissionDateWindow);
         var validationResult = validator.Validate(request);
 
         if (!validationResult.IsValid)
@@ -58,7 +64,7 @@ public class PreviewFosterFamilyCodeUseCase : IPreviewFosterFamilyCodeUseCase
             GracePeriodEndDate = workingEvent.GracePeriodEndDate,
             TermValidity = termValidity,
             ReconfirmationProperties = reconfirmation,
-            IsGracePeriodEndDateApplied = WorkingFamiliesCheckHelper.isGracePeriodEndDateApplied(workingEvent.DiscretionaryValidityStartDate, workingEvent.ValidityEndDate, 1),
+            IsGracePeriodEndDateApplied = WorkingFamiliesCheckHelper.isGracePeriodEndDateApplied(workingEvent.DiscretionaryValidityStartDate, workingEvent.ValidityEndDate, 1, workingEvent.ChildDateOfBirth, request.SubmissionDate),
             ChildTooYoung = WorkingFamiliesCheckHelper.ChildIsTooYoung(request.FosterChild.ChildDateOfBirth, request.SubmissionDate)
         };
 

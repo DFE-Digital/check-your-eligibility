@@ -124,12 +124,33 @@ namespace CheckYourEligibility.API.Tests.Helpers
         {
             var currentTerm = WorkingFamiliesCheckHelper.GetTerms(DateTime.UtcNow.Date).Current;
 
-            var previousTerm =  WorkingFamiliesCheckHelper.GetTerms(currentTerm.StartDate.AddDays(-1)).Current;
+            var previousTerm = WorkingFamiliesCheckHelper.GetTerms(currentTerm.StartDate.AddDays(-1)).Current;
+            var checkDate = DateTime.UtcNow.Date;
 
             var result = WorkingFamiliesCheckHelper.isGracePeriodEndDateApplied(
                 validityStartDate: previousTerm.StartDate,
                 validityEndDdate: previousTerm.EndDate,
-                eventCount: 1);
+                eventCount: 1,
+                childDateOfBirth: checkDate.AddYears(-2),
+                checkDate: checkDate);
+
+            result.Should().BeFalse();
+        }
+
+        [Test]
+        public void IsGracePeriodEndDateApplied_singleEventForChildTooYoung_doesNotApplyGracePeriod()
+        {
+            var checkDate = DateTime.UtcNow.Date;
+            var currentTerm = WorkingFamiliesCheckHelper.GetTerms(checkDate).Current;
+            var previousTerm = WorkingFamiliesCheckHelper.GetTerms(currentTerm.StartDate.AddDays(-1)).Current;
+            var childDateOfBirth = currentTerm.StartDate.AddMonths(-8);
+
+            var result = WorkingFamiliesCheckHelper.isGracePeriodEndDateApplied(
+                validityStartDate: previousTerm.StartDate,
+                validityEndDdate: currentTerm.StartDate.AddDays(1),
+                eventCount: 1,
+                childDateOfBirth: childDateOfBirth,
+                checkDate: checkDate);
 
             result.Should().BeFalse();
         }
@@ -151,9 +172,27 @@ namespace CheckYourEligibility.API.Tests.Helpers
             gracePeriodEndDateApplied.Should().BeFalse();
         }
 
+        [Test]
+        public void CalculateContiguousChainForCodeFromEvents_singleEventForChildTooYoung_doesNotApplyGracePeriod()
+        {
+            var currentTerm = WorkingFamiliesCheckHelper.GetTerms(DateTime.UtcNow.Date).Current;
+            var previousTerm = WorkingFamiliesCheckHelper.GetTerms(currentTerm.StartDate.AddDays(-1)).Current;
+            var eventRecord = CreateEvent(
+                validityStartDate: previousTerm.StartDate,
+                validityEndDate: currentTerm.StartDate.AddDays(1),
+                discretionaryValidityStartDate: previousTerm.StartDate,
+                childDateOfBirth: currentTerm.StartDate.AddMonths(-8));
+
+            var (result, gracePeriodEndDateApplied) =
+                WorkingFamiliesCheckHelper.CalculateContiguousChainForCodeFromEvents([eventRecord]);
+
+            result.Should().BeSameAs(eventRecord);
+            gracePeriodEndDateApplied.Should().BeFalse();
+        }
+
         [TestCase(-1, -1)] // DVSD before term start, VED in current term
         [TestCase(5, 1)]  // DVSD in current term, VED after term end
-        public void CalculateContiguousChainForCodeFromEvents_singleEventNotWithinTheSameTerm_GracePeriodScenarios( int dvsdOffsetFromTermStart, int vedOffset)
+        public void CalculateContiguousChainForCodeFromEvents_singleEventNotWithinTheSameTerm_GracePeriodScenarios(int dvsdOffsetFromTermStart, int vedOffset)
         {
             var currentTerm = WorkingFamiliesCheckHelper.GetTerms(DateTime.UtcNow.Date).Current;
 
@@ -208,9 +247,9 @@ namespace CheckYourEligibility.API.Tests.Helpers
                 submissionDate: new DateTime(2026, 5, 1));
 
 
-            var (result, _) = WorkingFamiliesCheckHelper.CalculateContiguousChainForCodeFromEvents( [latestEvent, lateReconfirmation, firstEvent]);
+            var (result, _) = WorkingFamiliesCheckHelper.CalculateContiguousChainForCodeFromEvents([latestEvent, lateReconfirmation, firstEvent]);
 
-       
+
             result.ValidityStartDate.Should().Be(new DateTime(2026, 9, 2));
             result.DiscretionaryValidityStartDate.Should().Be(new DateTime(2026, 9, 2));
         }
@@ -472,15 +511,17 @@ namespace CheckYourEligibility.API.Tests.Helpers
             DateTime validityStartDate,
             DateTime validityEndDate,
             DateTime discretionaryValidityStartDate,
-            DateTime? submissionDate = null)
+            DateTime? submissionDate = null,
+            DateTime? childDateOfBirth = null)
         {
             return new WorkingFamiliesEvent
             {
+                ChildDateOfBirth = childDateOfBirth ?? new DateTime(2000, 1, 1),
                 SubmissionDate = submissionDate ?? validityStartDate,
                 ValidityStartDate = validityStartDate,
                 ValidityEndDate = validityEndDate,
                 DiscretionaryValidityStartDate = discretionaryValidityStartDate,
-                GracePeriodEndDate = WorkingFamiliesEventHelper.GetGracePeriodEndDate(validityEndDate)
+                GracePeriodEndDate = WorkingFamiliesEventHelper.GetGracePeriodEndDate(submissionDate ?? validityStartDate, validityEndDate, childDateOfBirth ?? new DateTime(2000, 1, 1))
             };
         }
 
@@ -489,7 +530,7 @@ namespace CheckYourEligibility.API.Tests.Helpers
         /// Term validity test cases
         /// </summary>
         /// <returns></returns>
-        
+
         private static Term Term_Summer = new Term(TermName.Summer, new DateTime(DateTime.Now.Year, 4, 1), new DateTime(DateTime.Now.Year, 8, 31));
 
         private static Term Term_Spring = new Term(TermName.Spring, new DateTime(DateTime.Now.Year, 1, 1), new DateTime(DateTime.Now.Year, 3, 31));

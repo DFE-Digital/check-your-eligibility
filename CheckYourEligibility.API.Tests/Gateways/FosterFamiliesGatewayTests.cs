@@ -1831,10 +1831,10 @@ public class FosterFamiliesGatewayTests : TestBase.TestBase
         // Arrange
         var originalSubmissionDate = new DateTime(2025, 8, 26);
         var reconfirmationDate = new DateTime(2025, 11, 24);
-        
         var expectedSummaryValidityStartDate = originalSubmissionDate;
         var expectedSummaryValidityEndDate = expectedSummaryValidityStartDate.AddMonths(6).AddDays(1);
-        var expectedGPED = WorkingFamiliesEventHelper.GetGracePeriodEndDate(expectedSummaryValidityEndDate);
+        var childDob = expectedSummaryValidityEndDate.AddYears(-3);
+        var expectedGPED = WorkingFamiliesEventHelper.GetGracePeriodEndDate(reconfirmationDate, expectedSummaryValidityEndDate, childDob);
 
         await _sut.CreateFosterFamily(BuildValidRequest(originalSubmissionDate));
         var child = await _fakeInMemoryDb.FosterChildren.Include(x => x.WorkingFamiliesEventSummary).SingleAsync();

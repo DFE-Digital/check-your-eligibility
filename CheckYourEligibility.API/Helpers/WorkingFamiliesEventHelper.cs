@@ -1,3 +1,4 @@
+using CheckYourEligibility.API.Boundary.Responses;
 using CheckYourEligibility.API.Domain;
 using CheckYourEligibility.API.Helpers;
 using CheckYourEligibility.API.Domain.Validation;
@@ -35,7 +36,7 @@ public static class WorkingFamiliesEventHelper
             SubmissionDate = submissionDate,
 
             DiscretionaryValidityStartDate = GetDiscretionaryStartDate(validityStartDate, submissionDate), // validity start date and submmission
-            GracePeriodEndDate = GetGracePeriodEndDate(validityStartDate.AddMonths(3)),
+            GracePeriodEndDate = GetGracePeriodEndDate(submissionDate, validityStartDate.AddMonths(3), fosterChild.DateOfBirth),
 
             CreatedDateTime = DateTime.UtcNow,
             EventDateTime = DateTime.UtcNow
@@ -96,11 +97,11 @@ public static class WorkingFamiliesEventHelper
             DiscretionaryValidityStartDate = workingFamiliesEvent.DiscretionaryValidityStartDate,
             ValidityStartDate = workingFamiliesEvent.ValidityStartDate,
             ValidityEndDate = workingFamiliesEvent.ValidityEndDate,
-            GracePeriodEndDateApplied = WorkingFamiliesCheckHelper.isGracePeriodEndDateApplied(workingFamiliesEvent.DiscretionaryValidityStartDate, workingFamiliesEvent.ValidityEndDate, 1)
+            GracePeriodEndDateApplied = WorkingFamiliesCheckHelper.isGracePeriodEndDateApplied(workingFamiliesEvent.DiscretionaryValidityStartDate, workingFamiliesEvent.ValidityEndDate, 1, workingFamiliesEvent.ChildDateOfBirth, today)
         };
         return newEventSummary;
 
-	}
+    }
 
     /// <summary>
     /// Map personal data to the summary record from its event record
@@ -122,70 +123,87 @@ public static class WorkingFamiliesEventHelper
         return eventSummary;
     }
 
-	/// <summary>
-	/// Parses a date value from the import file and returns the appropriate DateTime value.
-	/// </summary>
-	/// <param name="dateValue">The date value to parse.</param>
-	/// <returns>The parsed DateTime value.</returns>
-	public static DateTime ParseImportDate(string? dateValue)
-	{
-		if (string.IsNullOrWhiteSpace(dateValue))
-			return ImportDateValues.EmptyDate;
-		if (double.TryParse(dateValue, out var oaDate))
-			return DateTime.FromOADate(oaDate);
-		return ImportDateValues.InvalidDate;
-	}
-	public static DateTime? ParseOptionalImportDate(string? dateValue)
-	{
-		if (string.IsNullOrWhiteSpace(dateValue))
-			return null;
-		if (double.TryParse(dateValue, out var oaDate))
-			return DateTime.FromOADate(oaDate);
-		return ImportDateValues.InvalidDate;
-	}
-	public static WorkingFamiliesEvent ParseWorkingFamiliesEvent(List<string> eventProps, List<string> columnHeaders)
-	{
-		var validityStartDate = ParseImportDate(eventProps[columnHeaders.IndexOf("Validity Start Date")]);
-		var validityEndDate = ParseImportDate(eventProps[columnHeaders.IndexOf("Validity End Date")]);
-		var submissionDate = ParseImportDate(eventProps[columnHeaders.IndexOf("Submission Date")]);
-		var parentDateOfBirth = ParseImportDate(eventProps[columnHeaders.IndexOf("Parent DOB")]);
-		var childDateOfBirth = ParseImportDate(eventProps[columnHeaders.IndexOf("Child DOB")]);
-		var partnerDateOfBirth = ParseOptionalImportDate(eventProps[columnHeaders.IndexOf("Partner DOB")]);
+    /// <summary>
+    /// Parses a date value from the import file and returns the appropriate DateTime value.
+    /// </summary>
+    /// <param name="dateValue">The date value to parse.</param>
+    /// <returns>The parsed DateTime value.</returns>
+    public static DateTime ParseImportDate(string? dateValue)
+    {
+        if (string.IsNullOrWhiteSpace(dateValue))
+            return ImportDateValues.EmptyDate;
+        if (double.TryParse(dateValue, out var oaDate))
+            return DateTime.FromOADate(oaDate);
+        return ImportDateValues.InvalidDate;
+    }
+    public static DateTime? ParseOptionalImportDate(string? dateValue)
+    {
+        if (string.IsNullOrWhiteSpace(dateValue))
+            return null;
+        if (double.TryParse(dateValue, out var oaDate))
+            return DateTime.FromOADate(oaDate);
+        return ImportDateValues.InvalidDate;
+    }
+    public static WorkingFamiliesEvent ParseWorkingFamiliesEvent(List<string> eventProps, List<string> columnHeaders)
+    {
+        var validityStartDate = ParseImportDate(eventProps[columnHeaders.IndexOf("Validity Start Date")]);
+        var validityEndDate = ParseImportDate(eventProps[columnHeaders.IndexOf("Validity End Date")]);
+        var submissionDate = ParseImportDate(eventProps[columnHeaders.IndexOf("Submission Date")]);
+        var parentDateOfBirth = ParseImportDate(eventProps[columnHeaders.IndexOf("Parent DOB")]);
+        var childDateOfBirth = ParseImportDate(eventProps[columnHeaders.IndexOf("Child DOB")]);
+        var partnerDateOfBirth = ParseOptionalImportDate(eventProps[columnHeaders.IndexOf("Partner DOB")]);
 
-		WorkingFamiliesEvent wfEvent = new WorkingFamiliesEvent
-		{
-			WorkingFamiliesEventID = Guid.NewGuid().ToString(),
-			EligibilityCode = eventProps[columnHeaders.IndexOf("Eligibility Code")],
-			ValidityStartDate = validityStartDate,
-			ValidityEndDate = validityEndDate,
-			ParentNationalInsuranceNumber = eventProps[columnHeaders.IndexOf("Parent NINO")],
-			ParentFirstName = eventProps[columnHeaders.IndexOf("Parent Forename")],
-			ParentLastName = eventProps[columnHeaders.IndexOf("Parent Surname")],
-			ParentDateOfBirth = parentDateOfBirth,
-			ChildFirstName = eventProps[columnHeaders.IndexOf("Child Forename")],
-			ChildLastName = eventProps[columnHeaders.IndexOf("Child Surname")],
-			ChildPostCode = eventProps[columnHeaders.IndexOf("Child Postcode")],
-			ChildDateOfBirth = childDateOfBirth,
-			PartnerNationalInsuranceNumber = eventProps[columnHeaders.IndexOf("Partner NINO")],
-			PartnerFirstName = eventProps[columnHeaders.IndexOf("Partner Forename")],
-			PartnerLastName = eventProps[columnHeaders.IndexOf("Partner Surname")],
-			PartnerDateOfBirth = partnerDateOfBirth,
-			SubmissionDate = submissionDate,
-			DiscretionaryValidityStartDate = GetDiscretionaryStartDate(validityStartDate, submissionDate),
-			GracePeriodEndDate = GetGracePeriodEndDate(validityEndDate)
-		};
-
+        WorkingFamiliesEvent wfEvent = new WorkingFamiliesEvent
+        {
+            WorkingFamiliesEventID = Guid.NewGuid().ToString(),
+            EligibilityCode = eventProps[columnHeaders.IndexOf("Eligibility Code")],
+            ValidityStartDate = validityStartDate,
+            ValidityEndDate = validityEndDate,
+            ParentNationalInsuranceNumber = eventProps[columnHeaders.IndexOf("Parent NINO")],
+            ParentFirstName = eventProps[columnHeaders.IndexOf("Parent Forename")],
+            ParentLastName = eventProps[columnHeaders.IndexOf("Parent Surname")],
+            ParentDateOfBirth = parentDateOfBirth,
+            ChildFirstName = eventProps[columnHeaders.IndexOf("Child Forename")],
+            ChildLastName = eventProps[columnHeaders.IndexOf("Child Surname")],
+            ChildPostCode = eventProps[columnHeaders.IndexOf("Child Postcode")],
+            ChildDateOfBirth = childDateOfBirth,
+            PartnerNationalInsuranceNumber = eventProps[columnHeaders.IndexOf("Partner NINO")],
+            PartnerFirstName = eventProps[columnHeaders.IndexOf("Partner Forename")],
+            PartnerLastName = eventProps[columnHeaders.IndexOf("Partner Surname")],
+            PartnerDateOfBirth = partnerDateOfBirth,
+            SubmissionDate = submissionDate,
+            DiscretionaryValidityStartDate = GetDiscretionaryStartDate(validityStartDate, submissionDate),
+            GracePeriodEndDate = GetGracePeriodEndDate(submissionDate, validityEndDate, childDateOfBirth)
+        };
         return wfEvent;
     }
+
     //If VED >= 1 Jan  and VED <= 10 Feb then GPED = 31-Mar
     //If VED >= 11 Feb and VED <= 26 May then GPED = 31-Aug 
     //If VED >= 27 May and VED <= 31 August then GPED  = 31-Dec 
     //If VED >= 1 September and VED <= 21 October then GPED = 31-Dec
     //If VED >= 22 October and VED <= 31 Dec then GPED  31-Mar following year
-    public static DateTime GetGracePeriodEndDate(DateTime validityEndDate)
+    public static DateTime GetGracePeriodEndDate(DateTime submissionDate, DateTime validityEndDate, DateTime childDateOfBirth)
     {
+        var submissionDateOnly = submissionDate.Date;
         var validityEndDateOnly = validityEndDate.Date;
 
+        // Get term that submission date and VED fall in
+        var submissionTerm = WorkingFamiliesCheckHelper.GetTerms(submissionDateOnly).Current;
+        var vedTerm = WorkingFamiliesCheckHelper.GetTerms(validityEndDateOnly).Current;
+
+        // Determine whether child will turn 5 during the current term
+        var childFifthBirthday = childDateOfBirth.Date.AddYears(5);
+        var childTurnsFiveDuringSubmissionTerm = childFifthBirthday >= submissionTerm.StartDate && childFifthBirthday <= submissionTerm.EndDate;
+        var childTurnsFiveDuringVEDTerm = childFifthBirthday >= vedTerm.StartDate && childFifthBirthday <= vedTerm.EndDate;
+
+        // If child turns five during submission term then Grace Period End Date should be the term end date
+        if (childTurnsFiveDuringSubmissionTerm) { return submissionTerm.EndDate; }
+
+        // If child turns five during current term then Grace Period End Date should be the term end date
+        if (childTurnsFiveDuringVEDTerm) { return vedTerm.EndDate; }
+
+        // Otherwise calculate the Grace Period End Date based on the validity end date ranges
         if (validityEndDateOnly >= new DateTime(validityEndDateOnly.Year, 10, 22))
         {
             return new DateTime(validityEndDateOnly.Year + 1, 3, 31);
