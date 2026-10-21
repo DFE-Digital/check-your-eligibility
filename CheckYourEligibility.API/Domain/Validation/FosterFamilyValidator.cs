@@ -122,7 +122,7 @@ public class FosterChildReconfirmRequestValidator
     {
         RuleFor(x => x.EligibilityCode)
             .NotEmpty()
-            .WithMessage(ValidationMessages.EligibilityCode);
+            .WithMessage(ValidationMessages.EligibilityCodeLength);
 
         RuleFor(x => x.SubmissionDate)
             .NotEmpty()

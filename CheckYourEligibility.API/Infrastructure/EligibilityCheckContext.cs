@@ -49,8 +49,9 @@ public class EligibilityCheckContext : DbContext, IEligibilityCheckContext
     public virtual DbSet<EligibilityPolicy> EligibilityPolicies { get; set; }
     public virtual DbSet<UserRole> UserRoles { get; set; }
     public virtual DbSet<WorkingFamiliesDualRunningCheck> WorkingFamiliesDualRunningChecks { get; set; }
+    public virtual DbSet<TemporaryCodeUpload> TemporaryCodeUploads { get; set; }
 
-    public Task<int> SaveChangesAsync()
+	public Task<int> SaveChangesAsync()
     {
 
         return base.SaveChangesAsync();
@@ -375,7 +376,13 @@ public class EligibilityCheckContext : DbContext, IEligibilityCheckContext
                 .HasMaxLength(50);
         });
 
-        modelBuilder.Entity<UserRole>()
+        modelBuilder.Entity<TemporaryCodeUpload>()
+        .HasOne(t => t.ImportedByUser)
+        .WithMany()
+        .HasForeignKey(t => t.ImportedBy)
+        .IsRequired(false);
+
+		modelBuilder.Entity<UserRole>()
             .HasIndex(e => e.UserId,
                 "idx_UserRole_UserId");
 

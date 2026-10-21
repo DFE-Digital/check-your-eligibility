@@ -72,6 +72,7 @@ public static class ProgramExtensions
         services.AddTransient<IMultiAcademyTrust, MultiAcademyTrustGateway>();
         services.AddTransient<IEligibilityPolicy, EligibilityPolicyGateway>();
         services.AddTransient<IFosterFamilies, FosterFamiliesGateway>();
+        services.AddTransient<ITemporaryCodeUpload, TemporaryCodeUploadGateway>();
         return services;
     }
 
