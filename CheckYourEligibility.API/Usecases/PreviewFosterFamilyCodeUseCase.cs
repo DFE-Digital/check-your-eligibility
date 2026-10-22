@@ -43,7 +43,7 @@ public class PreviewFosterFamilyCodeUseCase : IPreviewFosterFamilyCodeUseCase
 
         // Term validity
         var termValidity = WorkingFamiliesCheckHelper.SetTermValidity(
-            DateTime.Today,
+            request.SubmissionDate,
             workingEvent.GracePeriodEndDate.ToString(),
             workingEvent.ValidityStartDate.ToString(),
             request.FosterChild.ChildDateOfBirth.ToString(), isGracePeriodEndDateApplied:true);
@@ -64,8 +64,9 @@ public class PreviewFosterFamilyCodeUseCase : IPreviewFosterFamilyCodeUseCase
             GracePeriodEndDate = workingEvent.GracePeriodEndDate,
             TermValidity = termValidity,
             ReconfirmationProperties = reconfirmation,
-            IsGracePeriodEndDateApplied = WorkingFamiliesCheckHelper.isGracePeriodEndDateApplied(workingEvent.DiscretionaryValidityStartDate, workingEvent.ValidityEndDate, 1, workingEvent.ChildDateOfBirth, request.SubmissionDate),
-            ChildTooYoung = WorkingFamiliesCheckHelper.ChildIsTooYoung(request.FosterChild.ChildDateOfBirth, request.SubmissionDate)
+            IsGracePeriodEndDateApplied = WorkingFamiliesCheckHelper.IsGracePeriodEndDateApplied(workingEvent.DiscretionaryValidityStartDate, workingEvent.ValidityEndDate, 1, workingEvent.ChildDateOfBirth, request.SubmissionDate),
+            ChildTooYoung = WorkingFamiliesCheckHelper.ChildIsTooYoung(request.FosterChild.ChildDateOfBirth, request.SubmissionDate),
+            ChildTooOld = WorkingFamiliesCheckHelper.ChildIsTooOld(request.FosterChild.ChildDateOfBirth, request.SubmissionDate)
         };
 
         return response;

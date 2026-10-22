@@ -186,7 +186,7 @@ namespace CheckYourEligibility.API.Helpers
         /// <param name="validityStartDate"></param>
         /// <param name="validityEndDdate"></param>
         /// <returns></returns>
-        public static bool isGracePeriodEndDateApplied(DateTime validityStartDate, DateTime validityEndDdate, int eventCount, DateTime childDateOfBirth, DateTime checkDate)
+        public static bool IsGracePeriodEndDateApplied(DateTime validityStartDate, DateTime validityEndDdate, int eventCount, DateTime childDateOfBirth, DateTime checkDate)
         {
 
             var firstEventVSDTerm = GetTerms(validityStartDate).Current.Name;
@@ -216,7 +216,7 @@ namespace CheckYourEligibility.API.Helpers
         {
             var latestEvent = eventRecords.First();
 
-            bool gracePeriodEndDateApplied = isGracePeriodEndDateApplied(
+            bool gracePeriodEndDateApplied = IsGracePeriodEndDateApplied(
                     latestEvent.DiscretionaryValidityStartDate,
                     latestEvent.ValidityEndDate,
                     eventRecords.Count,
@@ -309,19 +309,20 @@ namespace CheckYourEligibility.API.Helpers
             }
         }
 
-        #region Private
         /// <summary>
         /// Calculates if checkDate is on/after the term following the child's birthday => child is too old
         /// </summary>
         /// <param name="dateOfBirth"></param>
         /// <param name="checkDate"></param>
         /// <returns></returns>
-        private static bool ChildIsTooOld(DateTime dateOfBirth, DateTime checkDate)
+        public static bool ChildIsTooOld(DateTime dateOfBirth, DateTime checkDate)
         {
             DateTime fifthBirthday = dateOfBirth.AddYears(5);
             var (_, termAfterBirthday) = GetTerms(fifthBirthday);
             return checkDate >= termAfterBirthday.StartDate;
         }
+        
+        #region Private
 
         private static bool IsChainBrokenOnSecondEvent(List<WorkingFamiliesEvent> eventRecords)
         {

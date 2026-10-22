@@ -22,6 +22,17 @@ namespace CheckYourEligibility.API.Tests.Helpers
             result.Should().Be(ischildTooYoung);
         }
 
+        [TestCase("2020-04-01", "2025-08-31", false)]
+        [TestCase("2020-04-01", "2025-09-01", true)]
+        public void IsChildTooOld_expected_result(string dob, string checkDate, bool isChildTooOld)
+        {
+            var result = WorkingFamiliesCheckHelper.ChildIsTooOld(
+                DateTime.Parse(dob),
+                DateTime.Parse(checkDate));
+
+            result.Should().Be(isChildTooOld);
+        }
+
         [TestCase("2025-01-01", "2025-01-01", false)]
         [TestCase("2026-01-14", "2025-12-31", true)]
         [TestCase("invalid", "2025-12-31", null)]
@@ -127,7 +138,7 @@ namespace CheckYourEligibility.API.Tests.Helpers
             var previousTerm = WorkingFamiliesCheckHelper.GetTerms(currentTerm.StartDate.AddDays(-1)).Current;
             var checkDate = DateTime.UtcNow.Date;
 
-            var result = WorkingFamiliesCheckHelper.isGracePeriodEndDateApplied(
+            var result = WorkingFamiliesCheckHelper.IsGracePeriodEndDateApplied(
                 validityStartDate: previousTerm.StartDate,
                 validityEndDdate: previousTerm.EndDate,
                 eventCount: 1,
@@ -145,7 +156,7 @@ namespace CheckYourEligibility.API.Tests.Helpers
             var previousTerm = WorkingFamiliesCheckHelper.GetTerms(currentTerm.StartDate.AddDays(-1)).Current;
             var childDateOfBirth = currentTerm.StartDate.AddMonths(-8);
 
-            var result = WorkingFamiliesCheckHelper.isGracePeriodEndDateApplied(
+            var result = WorkingFamiliesCheckHelper.IsGracePeriodEndDateApplied(
                 validityStartDate: previousTerm.StartDate,
                 validityEndDdate: currentTerm.StartDate.AddDays(1),
                 eventCount: 1,
