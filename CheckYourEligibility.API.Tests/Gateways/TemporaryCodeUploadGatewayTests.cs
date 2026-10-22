@@ -1,4 +1,4 @@
-﻿using CheckYourEligibility.API.Domain;
+using CheckYourEligibility.API.Domain;
 using CheckYourEligibility.API.Gateways;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
@@ -15,8 +15,6 @@ namespace CheckYourEligibility.API.Tests.Gateways
 {
 	internal class TemporaryCodeUploadGatewayTests
 	{
-		private static readonly InMemoryDatabaseRoot InMemoryDatabaseRoot = new();
-
 		private Mock<ILogger<TemporaryCodeUploadGateway>> _mockLogger = null!;
 		private IEligibilityCheckContext _fakeInMemoryDb = null!;
 		private TemporaryCodeUploadGateway _sut = null!;
@@ -28,11 +26,7 @@ namespace CheckYourEligibility.API.Tests.Gateways
 		{
 			_mockLogger = new Mock<ILogger<TemporaryCodeUploadGateway>>();
 
-			var options = new DbContextOptionsBuilder<EligibilityCheckContext>()
-				.UseInMemoryDatabase(
-					nameof(TemporaryCodeUploadGatewayTests),
-					InMemoryDatabaseRoot)
-				.Options;
+			var options = TestDbOptions.Create(nameof(TemporaryCodeUploadGatewayTests));
 
 			_user = new User
 			{

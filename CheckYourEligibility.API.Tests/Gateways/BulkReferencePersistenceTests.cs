@@ -30,9 +30,7 @@ public class BulkReferencePersistenceTests
     [SetUp]
     public void SetUp()
     {
-        var options = new DbContextOptionsBuilder<EligibilityCheckContext>()
-            .UseInMemoryDatabase(Guid.NewGuid().ToString())
-            .Options;
+        var options = TestDbOptions.Create();
         _db = new EligibilityCheckContext(options);
         var configuration = new ConfigurationBuilder().AddInMemoryCollection(
             new Dictionary<string, string?>
