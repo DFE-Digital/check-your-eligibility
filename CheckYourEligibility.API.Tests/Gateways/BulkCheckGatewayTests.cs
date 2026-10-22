@@ -27,14 +27,10 @@ public class BulkCheckGatewayTests : TestBase.TestBase
     private Mock<IDwpAdapter> _moqDwpGateway;
     private Mock<ICheckEligibility> _moqCheckEligibility;
     private BulkCheckGateway _sut;
-    private static readonly InMemoryDatabaseRoot InMemoryDatabaseRoot = new();
-
     [SetUp]
     public async Task Setup()
     {
-        var options = new DbContextOptionsBuilder<EligibilityCheckContext>()
-            .UseInMemoryDatabase(nameof(BulkCheckGatewayTests), InMemoryDatabaseRoot)
-            .Options;
+        var options = TestDbOptions.Create(nameof(BulkCheckGatewayTests));
 
         _fakeInMemoryDb = new EligibilityCheckContext(options);
 

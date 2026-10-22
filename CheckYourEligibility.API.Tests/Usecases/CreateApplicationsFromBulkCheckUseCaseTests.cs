@@ -29,9 +29,7 @@ public class CreateApplicationsFromBulkCheckUseCaseTests
     [SetUp]
     public void Setup()
     {
-        _dbContextOptions = new DbContextOptionsBuilder<EligibilityCheckContext>()
-            .UseInMemoryDatabase(Guid.NewGuid().ToString())
-            .Options;
+        _dbContextOptions = TestDbOptions.Create();
 
         _dbContextFactory = new TestDbContextFactory(_dbContextOptions);
 

@@ -43,14 +43,10 @@ public class CheckingEngineGatewayTests : TestBase.TestBase
     private Mock<IWorkingFamiliesTestScenarioFactory> _moqWFTestScenarioFactory;
     private Mock<IStandardCheckTestScenarioFactory> _moqStandardTestScenarioFactory;
     private CheckingEngineGateway _sut;
-    private static readonly InMemoryDatabaseRoot InMemoryDatabaseRoot = new();
-
     [SetUp]
     public async Task Setup()
     {
-        var options = new DbContextOptionsBuilder<EligibilityCheckContext>()
-            .UseInMemoryDatabase(nameof(CheckingEngineGatewayTests), InMemoryDatabaseRoot)
-            .Options;
+        var options = TestDbOptions.Create(nameof(CheckingEngineGatewayTests));
 
         _fakeInMemoryDb = new EligibilityCheckContext(options);
 

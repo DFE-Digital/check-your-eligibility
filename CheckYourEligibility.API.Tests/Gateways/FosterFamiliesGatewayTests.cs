@@ -17,16 +17,10 @@ public class FosterFamiliesGatewayTests : TestBase.TestBase
     private Mock<IWorkingFamiliesEvent> _mockWFEventGateway = null!;
     private FosterFamiliesGateway _sut;
     private Mock<ILogger<FosterFamiliesGateway>> _mockLogger = null!;
-    private static readonly InMemoryDatabaseRoot InMemoryDatabaseRoot = new();
-
     [SetUp]
     public async Task SetUpAsync()
     {
-        var options = new DbContextOptionsBuilder<EligibilityCheckContext>()
-            .UseInMemoryDatabase(nameof(EligibilityCheckReportingGatewayTests), InMemoryDatabaseRoot)
-            .ConfigureWarnings(x => x.Ignore(
-                Microsoft.EntityFrameworkCore.Diagnostics.InMemoryEventId.TransactionIgnoredWarning))
-            .Options;
+        var options = TestDbOptions.Create(nameof(EligibilityCheckReportingGatewayTests));
 
         _fakeInMemoryDb = new EligibilityCheckContext(options);
 
@@ -165,10 +159,7 @@ public class FosterFamiliesGatewayTests : TestBase.TestBase
             $"Database error containing {privateValue}",
             new InvalidOperationException($"Inner error containing {privateValue}"));
 
-        var options = new DbContextOptionsBuilder<EligibilityCheckContext>()
-            .UseInMemoryDatabase(Guid.NewGuid().ToString())
-            .ConfigureWarnings(x => x.Ignore(
-                InMemoryEventId.TransactionIgnoredWarning))
+        var options = TestDbOptions.CreateBuilder()
             .AddInterceptors(new FailWorkingFamiliesEventSaveInterceptor(sourceException))
             .Options;
 
