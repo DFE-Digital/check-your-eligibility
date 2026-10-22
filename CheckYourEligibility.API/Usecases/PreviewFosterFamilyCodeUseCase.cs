@@ -65,7 +65,8 @@ public class PreviewFosterFamilyCodeUseCase : IPreviewFosterFamilyCodeUseCase
             TermValidity = termValidity,
             ReconfirmationProperties = reconfirmation,
             IsGracePeriodEndDateApplied = WorkingFamiliesCheckHelper.isGracePeriodEndDateApplied(workingEvent.DiscretionaryValidityStartDate, workingEvent.ValidityEndDate, 1, workingEvent.ChildDateOfBirth, request.SubmissionDate),
-            ChildTooYoung = WorkingFamiliesCheckHelper.ChildIsTooYoung(request.FosterChild.ChildDateOfBirth, request.SubmissionDate)
+            ChildTooYoung = WorkingFamiliesCheckHelper.ChildIsTooYoung(request.FosterChild.ChildDateOfBirth, request.SubmissionDate),
+            ChildTooOld = WorkingFamiliesCheckHelper.ChildIsTooOld(request.FosterChild.ChildDateOfBirth, request.SubmissionDate)
         };
 
         return response;

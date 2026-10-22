@@ -1024,7 +1024,7 @@ public class FosterFamiliesGatewayTests : TestBase.TestBase
     }
 
     [Test]
-    public async Task SearchFosterFamilies_Should_Calculate_Term_Validity_And_Child_Too_Young()
+    public async Task SearchFosterFamilies_Should_Calculate_Term_Validity_And_Child_Age_Flags()
     {
         // Arrange
         var checkDate = new DateTime(2026, 9, 10);
@@ -1092,12 +1092,14 @@ public class FosterFamiliesGatewayTests : TestBase.TestBase
         var appliedItem = result.Data.Single(item => item.EligibilityCode == "40000000001");
         appliedItem.IsGracePeriodEndDateApplied.Should().BeTrue();
         appliedItem.ChildTooYoung.Should().BeTrue();
+        appliedItem.ChildTooOld.Should().BeFalse();
         appliedItem.TermValidity.Current!.Name.Should().Be(TermName.None);
         appliedItem.TermValidity.Next!.Name.Should().Be(TermName.Spring);
 
         var notAppliedItem = result.Data.Single(item => item.EligibilityCode == "40000000002");
         notAppliedItem.IsGracePeriodEndDateApplied.Should().BeFalse();
         notAppliedItem.ChildTooYoung.Should().BeTrue();
+        notAppliedItem.ChildTooOld.Should().BeFalse();
         notAppliedItem.TermValidity.Current!.Name.Should().Be(TermName.None);
         notAppliedItem.TermValidity.Next!.Name.Should().Be(TermName.None);
     }
@@ -1213,6 +1215,66 @@ public class FosterFamiliesGatewayTests : TestBase.TestBase
         result.TermValidity.Current!.Name.Should().Be(TermName.Autumn);
         result.TermValidity.Next!.Name.Should().NotBe(TermName.Autumn);
         result.ChildTooYoung.Should().BeFalse();
+        result.ChildTooOld.Should().BeFalse();
+    }
+
+    [Test]
+    public async Task GetFosterChild_Should_Calculate_ChildIsTooOld()
+    {
+        // Arrange
+        var fosterCarerId = Guid.NewGuid();
+        var fosterChildId = Guid.NewGuid();
+        var summaryId = Guid.NewGuid().ToString();
+        var checkDate = new DateTime(2026, 9, 10);
+
+        await _fakeInMemoryDb.FosterCarers.AddAsync(new FosterCarer
+        {
+            FosterCarerId = fosterCarerId,
+            FirstName = "John",
+            LastName = "Smith",
+            NationalInsuranceNumber = "AA123456A",
+            LocalAuthorityID = 0
+        });
+
+        await _fakeInMemoryDb.WorkingFamiliesEventSummaries.AddAsync(new WorkingFamiliesEventSummary
+        {
+            WorkingFamiliesEventSummaryID = summaryId,
+            EligibilityCode = "40000000001",
+            ChildDateOfBirth = new DateTime(2020, 4, 1),
+            ChildFirstName = "Tom",
+            ChildFirstNameTruncated = "Tom",
+            ChildPostCode = "NNU 1AE",
+            ParentNationalInsuranceNumber = "AA123456A",
+            ValidityStartDate = new DateTime(2026, 8, 20),
+            ValidityEndDate = new DateTime(2026, 11, 20),
+            GracePeriodEndDate = new DateTime(2027, 3, 31),
+            GracePeriodEndDateApplied = true
+        });
+
+        await _fakeInMemoryDb.FosterChildren.AddAsync(new FosterChild
+        {
+            FosterChildId = fosterChildId,
+            FosterCarerId = fosterCarerId,
+            FirstName = "Tom",
+            LastName = "Smith",
+            DateOfBirth = new DateTime(2020, 4, 1),
+            PostCode = "NNU 1AE",
+            EligibilityCode = "40000000001",
+            WorkingFamiliesEventSummaryID = summaryId
+        });
+
+        await _fakeInMemoryDb.SaveChangesAsync();
+        var deterministicGateway = new FixedDateFosterFamiliesGateway(
+            _fakeInMemoryDb,
+            _mockWFEventGateway.Object,
+            _mockLogger.Object,
+            checkDate);
+
+        // Act
+        var result = await deterministicGateway.GetFosterChild(fosterChildId, 0, false);
+
+        // Assert
+        result.ChildTooOld.Should().BeTrue();
     }
 
     [Test]

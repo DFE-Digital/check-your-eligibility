@@ -309,19 +309,20 @@ namespace CheckYourEligibility.API.Helpers
             }
         }
 
-        #region Private
         /// <summary>
         /// Calculates if checkDate is on/after the term following the child's birthday => child is too old
         /// </summary>
         /// <param name="dateOfBirth"></param>
         /// <param name="checkDate"></param>
         /// <returns></returns>
-        private static bool ChildIsTooOld(DateTime dateOfBirth, DateTime checkDate)
+        public static bool ChildIsTooOld(DateTime dateOfBirth, DateTime checkDate)
         {
             DateTime fifthBirthday = dateOfBirth.AddYears(5);
             var (_, termAfterBirthday) = GetTerms(fifthBirthday);
             return checkDate >= termAfterBirthday.StartDate;
         }
+        
+        #region Private
 
         private static bool IsChainBrokenOnSecondEvent(List<WorkingFamiliesEvent> eventRecords)
         {
