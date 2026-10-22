@@ -138,7 +138,7 @@ namespace CheckYourEligibility.API.Tests.Helpers
             var previousTerm = WorkingFamiliesCheckHelper.GetTerms(currentTerm.StartDate.AddDays(-1)).Current;
             var checkDate = DateTime.UtcNow.Date;
 
-            var result = WorkingFamiliesCheckHelper.isGracePeriodEndDateApplied(
+            var result = WorkingFamiliesCheckHelper.IsGracePeriodEndDateApplied(
                 validityStartDate: previousTerm.StartDate,
                 validityEndDdate: previousTerm.EndDate,
                 eventCount: 1,
@@ -156,7 +156,7 @@ namespace CheckYourEligibility.API.Tests.Helpers
             var previousTerm = WorkingFamiliesCheckHelper.GetTerms(currentTerm.StartDate.AddDays(-1)).Current;
             var childDateOfBirth = currentTerm.StartDate.AddMonths(-8);
 
-            var result = WorkingFamiliesCheckHelper.isGracePeriodEndDateApplied(
+            var result = WorkingFamiliesCheckHelper.IsGracePeriodEndDateApplied(
                 validityStartDate: previousTerm.StartDate,
                 validityEndDdate: currentTerm.StartDate.AddDays(1),
                 eventCount: 1,
